@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Birth Announcement Studio",
+    "slug": "birth-announcement-studio",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": ""   
+      }
+    }
+  }
+}
