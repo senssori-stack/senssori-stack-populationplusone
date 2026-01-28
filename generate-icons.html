@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Population +1 Icon Generator</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+    h1 { color: #4ade80; margin-bottom: 10px; }
+    h2 { color: #888; font-size: 16px; margin-bottom: 40px; }
+    .icon-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+    .icon-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #2a2a4a;
+      padding: 20px;
+      border-radius: 16px;
+    }
+    .icon-item h3 {
+      margin: 15px 0 5px;
+      color: #4ade80;
+    }
+    .icon-item p {
+      margin: 0;
+      color: #888;
+      font-size: 14px;
+    }
+    canvas {
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .instructions {
+      background: #2a2a4a;
+      padding: 30px;
+      border-radius: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: left;
+    }
+    .instructions h3 { color: #4ade80; margin-top: 0; }
+    .instructions ol { padding-left: 20px; }
+    .instructions li { margin: 10px 0; color: #ccc; }
+    .instructions code {
+      background: #1a1a2e;
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: #4ade80;
+    }
+    button {
+      background: #4ade80;
+      color: #1a1a2e;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    button:hover { background: #22c55e; }
+  </style>
+</head>
+<body>
+  <h1>🎉 Population +1 Icon Generator</h1>
+  <h2>Right-click each icon and "Save Image As" to download</h2>
+
+  <div class="icon-grid">
+    <div class="icon-item">
+      <canvas id="icon1024" width="1024" height="1024"></canvas>
+      <h3>icon.png</h3>
+      <p>1024×1024 • iOS App Icon</p>
+      <button onclick="download('icon1024', 'icon.png')">💾 Download</button>
+    </div>
+
+    <div class="icon-item">
+      <canvas id="adaptive1024" width="1024" height="1024"></canvas>
+      <h3>adaptive-icon.png</h3>
+      <p>1024×1024 • Android Adaptive</p>
+      <button onclick="download('adaptive1024', 'adaptive-icon.png')">💾 Download</button>
+    </div>
+
+    <div class="icon-item">
+      <canvas id="splash" width="512" height="512"></canvas>
+      <h3>splash-icon.png</h3>
+      <p>512×512 • Splash Screen</p>
+      <button onclick="download('splash', 'splash-icon.png')">💾 Download</button>
+    </div>
+
+    <div class="icon-item">
+      <canvas id="favicon" width="196" height="196"></canvas>
+      <h3>favicon.png</h3>
+      <p>196×196 • Web Favicon</p>
+      <button onclick="download('favicon', 'favicon.png')">💾 Download</button>
+    </div>
+  </div>
+
+  <div class="instructions">
+    <h3>📁 How to Install Icons:</h3>
+    <ol>
+      <li>Click the <strong>Download</strong> button under each icon (or right-click → Save Image As)</li>
+      <li>Save all 4 files to: <code>BIRTHAPP_CLEAN/assets/</code></li>
+      <li>Replace the existing files when prompted</li>
+      <li>Rebuild your app: <code>npx expo start -c</code> (clear cache)</li>
+    </ol>
+  </div>
+
+  <script>
+    // Brand colors matching the app
+    const DARK_GREEN = '#224c39';      // Background
+    const MID_GREEN = '#3d8c5c';       // Icon fill
+    const WHITE = '#ffffff';           // Border & text
+
+    function drawIcon(canvas, options = {}) {
+      const ctx = canvas.getContext('2d');
+      const size = canvas.width;
+      const {
+        showBackground = true,
+        showBorder = true,
+        paddingRatio = 0.12,
+        cornerRadiusRatio = 0.18,
+        borderWidthRatio = 0.025,
+        isAdaptive = false
+      } = options;
+
+      // Clear
+      ctx.clearRect(0, 0, size, size);
+
+      // Background (dark green gradient for depth)
+      if (showBackground) {
+        const gradient = ctx.createRadialGradient(
+          size * 0.3, size * 0.3, 0,
+          size * 0.5, size * 0.5, size * 0.7
+        );
+        gradient.addColorStop(0, '#2d5a45');
+        gradient.addColorStop(1, DARK_GREEN);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, size, size);
+      }
+
+      // Padding
+      const padding = size * paddingRatio;
+      const innerSize = size - padding * 2;
+      const cornerRadius = innerSize * cornerRadiusRatio;
+
+      // Draw rounded rectangle (the green card)
+      ctx.beginPath();
+      const x = padding;
+      const y = padding;
+      const w = innerSize;
+      const h = innerSize;
+      const r = cornerRadius;
+
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+
+      // Fill with gradient for depth
+      const cardGradient = ctx.createLinearGradient(x, y, x + w, y + h);
+      cardGradient.addColorStop(0, '#4a9e6e');
+      cardGradient.addColorStop(0.5, MID_GREEN);
+      cardGradient.addColorStop(1, '#357a4d');
+      ctx.fillStyle = cardGradient;
+      ctx.fill();
+
+      // White border
+      if (showBorder) {
+        ctx.strokeStyle = WHITE;
+        ctx.lineWidth = size * borderWidthRatio;
+        ctx.stroke();
+      }
+
+      // Draw "+1" text
+      const textSize = innerSize * 0.52;
+      ctx.font = `bold ${textSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      ctx.fillStyle = WHITE;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      // Add subtle shadow for depth
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = size * 0.02;
+      ctx.shadowOffsetX = size * 0.005;
+      ctx.shadowOffsetY = size * 0.01;
+      
+      ctx.fillText('+1', size / 2, size / 2 + textSize * 0.02);
+      
+      // Reset shadow
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+    }
+
+    function drawAdaptiveIcon(canvas) {
+      const ctx = canvas.getContext('2d');
+      const size = canvas.width;
+
+      // Clear with the background color (Android will use this)
+      ctx.fillStyle = DARK_GREEN;
+      ctx.fillRect(0, 0, size, size);
+
+      // For adaptive icons, content should be in the center 66% (safe zone)
+      // Android masks can be circular, squircle, etc.
+      drawIcon(canvas, {
+        showBackground: true,
+        showBorder: true,
+        paddingRatio: 0.17,  // More padding for safe zone
+        cornerRadiusRatio: 0.22,
+        borderWidthRatio: 0.02
+      });
+    }
+
+    function drawSplashIcon(canvas) {
+      const ctx = canvas.getContext('2d');
+      const size = canvas.width;
+
+      // Transparent background for splash
+      ctx.clearRect(0, 0, size, size);
+
+      drawIcon(canvas, {
+        showBackground: false,
+        showBorder: true,
+        paddingRatio: 0.05,
+        cornerRadiusRatio: 0.18,
+        borderWidthRatio: 0.03
+      });
+    }
+
+    function download(canvasId, filename) {
+      const canvas = document.getElementById(canvasId);
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // Generate all icons on load
+    window.onload = function() {
+      // Main icon (1024x1024)
+      drawIcon(document.getElementById('icon1024'), {
+        showBackground: true,
+        showBorder: true,
+        paddingRatio: 0.1,
+        cornerRadiusRatio: 0.2,
+        borderWidthRatio: 0.022
+      });
+
+      // Adaptive icon for Android
+      drawAdaptiveIcon(document.getElementById('adaptive1024'));
+
+      // Splash icon (no background)
+      drawSplashIcon(document.getElementById('splash'));
+
+      // Favicon
+      drawIcon(document.getElementById('favicon'), {
+        showBackground: true,
+        showBorder: true,
+        paddingRatio: 0.08,
+        cornerRadiusRatio: 0.2,
+        borderWidthRatio: 0.03
+      });
+    };
+  </script>
+</body>
+</html>

@@ -15,5 +15,18 @@
     "allowJs": true,
     "baseUrl": "."
   },
+  "exclude": [
+    "BACKUP_*/**/*",
+    "website/**/*",
+    "scripts/**/*",
+    "*.ts",
+    "check-*.ts",
+    "diagnose-*.ts",
+    "test-*.ts",
+    "extract-*.ts",
+    "generate-*.ts",
+    "src/config/firebase.ts",
+    "src/data/utils/tracking.ts"
+  ],
   "extends": "expo/tsconfig.base"
 }

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Splash Screen Images</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #333;
+            color: white;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .canvas-container {
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #666;
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .instructions {
+            background: #444;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Population +1 Splash Screen Generator</h1>
+    
+    <div class="instructions">
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Click each "Download" button to save the image</li>
+            <li>Copy the downloaded files to their respective folders:
+                <ul>
+                    <li><code>splashscreen_logo.png</code> (300px) → android/app/src/main/res/drawable-mdpi/</li>
+                    <li><code>splashscreen_logo.png</code> (450px) → android/app/src/main/res/drawable-hdpi/</li>
+                    <li><code>splashscreen_logo.png</code> (600px) → android/app/src/main/res/drawable-xhdpi/</li>
+                    <li><code>splashscreen_logo.png</code> (900px) → android/app/src/main/res/drawable-xxhdpi/</li>
+                    <li><code>splashscreen_logo.png</code> (1200px) → android/app/src/main/res/drawable-xxxhdpi/</li>
+                    <li><code>splash-icon.png</code> (1200px) → assets/</li>
+                </ul>
+            </li>
+            <li>Rebuild the app with <code>npx expo prebuild --clean</code> then <code>npm run android</code></li>
+        </ol>
+    </div>
+
+    <div class="container">
+        <div class="canvas-container">
+            <h2>MDPI (300px)</h2>
+            <canvas id="canvas-mdpi" width="300" height="300"></canvas>
+            <br>
+            <button onclick="downloadCanvas('canvas-mdpi', 'splashscreen_logo_mdpi.png')">Download MDPI</button>
+        </div>
+        
+        <div class="canvas-container">
+            <h2>HDPI (450px)</h2>
+            <canvas id="canvas-hdpi" width="450" height="450"></canvas>
+            <br>
+            <button onclick="downloadCanvas('canvas-hdpi', 'splashscreen_logo_hdpi.png')">Download HDPI</button>
+        </div>
+        
+        <div class="canvas-container">
+            <h2>XHDPI (600px)</h2>
+            <canvas id="canvas-xhdpi" width="600" height="600"></canvas>
+            <br>
+            <button onclick="downloadCanvas('canvas-xhdpi', 'splashscreen_logo_xhdpi.png')">Download XHDPI</button>
+        </div>
+        
+        <div class="canvas-container">
+            <h2>XXHDPI (900px)</h2>
+            <canvas id="canvas-xxhdpi" width="900" height="900"></canvas>
+            <br>
+            <button onclick="downloadCanvas('canvas-xxhdpi', 'splashscreen_logo_xxhdpi.png')">Download XXHDPI</button>
+        </div>
+        
+        <div class="canvas-container">
+            <h2>XXXHDPI (1200px)</h2>
+            <canvas id="canvas-xxxhdpi" width="1200" height="1200"></canvas>
+            <br>
+            <button onclick="downloadCanvas('canvas-xxxhdpi', 'splashscreen_logo_xxxhdpi.png')">Download XXXHDPI</button>
+        </div>
+        
+        <div class="canvas-container">
+            <h2>Expo Splash (1200px)</h2>
+            <canvas id="canvas-expo" width="1200" height="1200"></canvas>
+            <br>
+            <button onclick="downloadCanvas('canvas-expo', 'splash-icon.png')">Download Expo Splash</button>
+        </div>
+    </div>
+
+    <script>
+        function drawSplashIcon(canvas) {
+            const ctx = canvas.getContext('2d');
+            const size = canvas.width;
+            const scale = size / 300; // Base scale on 300px
+            
+            // Clear canvas (transparent background)
+            ctx.clearRect(0, 0, size, size);
+            
+            // Calculate dimensions
+            const padding = 20 * scale;
+            const signSize = size - (padding * 2);
+            const cornerRadius = 30 * scale;
+            const borderWidth = 8 * scale;
+            
+            // Colors
+            const greenColor = '#3d8c40';  // Lighter green for the sign face
+            const whiteColor = '#ffffff';
+            
+            // Draw outer rounded rectangle (white border)
+            ctx.fillStyle = whiteColor;
+            drawRoundedRect(ctx, padding, padding, signSize, signSize, cornerRadius);
+            ctx.fill();
+            
+            // Draw inner rounded rectangle (green fill)
+            const innerPadding = padding + borderWidth;
+            const innerSize = signSize - (borderWidth * 2);
+            const innerRadius = cornerRadius - (borderWidth * 0.5);
+            
+            ctx.fillStyle = greenColor;
+            drawRoundedRect(ctx, innerPadding, innerPadding, innerSize, innerSize, innerRadius);
+            ctx.fill();
+            
+            // Draw "+1" text
+            ctx.fillStyle = whiteColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Calculate font size to fit nicely
+            const fontSize = size * 0.45;
+            ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+            
+            // Position text in center
+            const centerX = size / 2;
+            const centerY = size / 2;
+            
+            ctx.fillText('+1', centerX, centerY);
+        }
+        
+        function drawRoundedRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+        
+        function downloadCanvas(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Draw all canvases on load
+        window.onload = function() {
+            const canvasIds = ['canvas-mdpi', 'canvas-hdpi', 'canvas-xhdpi', 'canvas-xxhdpi', 'canvas-xxxhdpi', 'canvas-expo'];
+            canvasIds.forEach(id => {
+                const canvas = document.getElementById(id);
+                drawSplashIcon(canvas);
+            });
+        };
+    </script>
+</body>
+</html>

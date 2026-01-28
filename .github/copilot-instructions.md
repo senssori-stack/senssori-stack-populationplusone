@@ -1,110 +1,136 @@
 # Birth Announcement Studio - AI Coding Agent Instructions
 
-## Project Overview
-React Native Expo app that generates personalized birth announcements with historical "time capsule" data (gas prices, presidential info, population stats, etc.) from the baby's birth date. Supports both front-facing announcements and back-side time capsule displays in portrait/landscape orientations.
+**Production React Native Expo app** (4+ months development). Generates personalized birth announcements + birthday "time capsule" gifts with historical data from Google Sheets and 110-year dataset.
 
-## Architecture & Data Flow
+## 🎯 Core Architecture
 
-### Core Data Systems
-- **Google Sheets Integration**: Live data via `src/data/utils/sheets.ts` with published CSV URLs
-  - Current snapshot data: `SNAPSHOT_CSV_URL` (single row of current values)
-  - Population data: `POPULATIONS_CSV_URL` (city population lookup)
-  - Override system: `src/config/sheets-overrides.json` for custom URLs
-- **Historical Data**: Comprehensive 110-year dataset in `src/data/utils/comprehensive-historical-data.ts`
-  - Monthly data from Jan 2020 onwards in `historical-snapshot.ts`
-  - Yearly data pre-2020
-  - Auto-selects appropriate timeframe based on birth date
-
-### Key Components Structure
-- **Form-first flow**: `FormScreen.tsx` → `PreviewScreen.tsx` 
-- **Responsive design**: Separate Portrait/Landscape components (`SignFrontPortrait.tsx`, `TimeCapsuleLandscape.tsx`, etc.)
-- **Auto-fit text**: Custom `AutoFitText` component in sign components handles dynamic text sizing
-- **Theme system**: Color schemes in `src/data/utils/colors.ts` (green/pink/blue themes)
-
-## Development Workflows
-
-### Debug & Testing Commands
-```bash
-# Check Google Sheets connectivity
-node scripts/checkSheets.js
-
-# Debug historical data for specific dates
-npx ts-node diagnose-timecapsule.ts
-
-# Test 1971 boundary data (important historical cutoff)
-npx ts-node check-1971.ts
+### Data Flow (Foundation - Understand First)
+```
+Google Sheets (live) → Historical Data (1914-2026) → Components → Print/Export
 ```
 
-### Build & Run (Expo bare workflow)
-```bash
-npm run android          # Local Android build
-npx expo start          # Development with Expo Go
-eas build -p android    # Production build via EAS
-```
+**Key Data Files:**
+- [sheets.ts](../../src/data/utils/sheets.ts) - Google Sheets Apps Script endpoint + CSV URLs with override mechanism (`src/config/sheets-overrides.json`)
+- [snapshot.ts](../../src/data/utils/snapshot.ts) - Current snapshot fetching with in-memory caching (`SNAP_CACHE`)
+- [historical-snapshot.ts](../../src/data/utils/historical-snapshot.ts) - `getSnapshotWithHistorical(dateString)` merges historical + live data
+- [comprehensive-historical-data.ts](../../src/data/utils/comprehensive-historical-data.ts) - 110-year dataset (yearly pre-2020, monthly 2020+)
 
-## Critical Patterns & Conventions
+**Route Structure:** `FormScreen`/`BirthdayFormScreen` → `PreviewScreen` → `PrintServiceScreen` (with optional Portrait/Landscape variants)
 
-### Data Fetching Pattern
-Always use the canonical data utilities:
-- `getAllSnapshotValues()` - current/live data from sheets
-- `getSnapshotWithHistorical(dateString)` - historical data for birth date
-- `getPopulationForCity(cityName)` - city population lookup
+### Component Organization
+- **Screens** (`src/screens/*Screen.tsx`): Form input + navigation
+  - `FormScreen.tsx` (baby mode) → uses `getAllSnapshotValues()` + `getPopulationForCity()`
+  - `BirthdayFormScreen.tsx` (birthday mode) → uses `getSnapshotWithHistorical()` + `getPopulationWithHistoricalContext()`
+- **Display Components** (`src/components/`): `*Landscape.tsx` / `*Portrait.tsx` pairs
+- **Data Utils** (`src/data/utils/*`): Stateless, kebab-case utilities
+- **Types** (`src/types.ts`): `PreviewParams` typed route navigation, `MilestoneType` enum
 
-### Component Responsiveness
-- Separate components for Portrait vs Landscape orientations
-- Use `useWindowDimensions()` for screen-aware layouts
-- AutoFitText component pattern for dynamic text sizing within fixed layouts
+## 🔧 Critical Patterns (See CRITICAL_PATTERNS.md for examples)
 
-### Data Override System
-- Production uses hardcoded URLs in `sheets.ts`
-- Development can override via `src/config/sheets-overrides.json` (gitignored)
-- Always test sheet connectivity with `scripts/checkSheets.js` before debugging data issues
+### Photo Sizing (SmartPhotoLayout.tsx)
+- **Single/Twin photos**: Use same `totalPhotoSize` for both
+- **Math**: `twinPhotoSize = totalPhotoSize` (not reduced)
+- Twin gap: `totalPhotoSize * 0.08`
+
+### Font Sizing (SignFrontLandscape.tsx)
+- **Base calculation**: `Math.min(screenWidth, screenHeight) * 0.025 * 0.8` (20% reduction applied)
+- **Hierarchy**: baseFontSize multipliers (2.2x title, 1.8x subtitle, 1.4x body, 1.0x small)
+- Reason: Prevents overflow on smaller screens
+
+### Component Positioning (TimeCapsuleLandscape.tsx)
+- **Layout**: `flex: 1` + `justifyContent: 'flex-start'` (NOT 'center' - device inconsistency)
+- **Spacing**: Explicit `paddingTop` (e.g., `screenHeight * 0.05`) over centering
+
+## 📊 Data System Details
+
+### Google Sheets Integration
+- **Preferred endpoint**: Apps Script Web App URL (returns JSON directly with fallback to CSV)
+- **Sheet format**: Must be "Published to web" as CSV (File → Share → "Publish to web")
+- **URL pattern**: `docs.google.com/spreadsheets/d/e/{SHEET_ID}/pub?output=csv`
+- **Override mechanism**: `src/config/sheets-overrides.json` (gitignored) for testing custom URLs
+- **Verification**: Test URL directly in browser - should download raw CSV, not HTML error
 
 ### Historical Data Boundaries
-- **2020+ boundary**: Monthly granular data available
-- **Pre-2020**: Yearly data only
-- **1971 boundary**: Special handling for some datasets (see `check-1971.ts`)
-- Use `getSnapshotWithHistorical()` which automatically selects appropriate timeframe
+- **2020+**: Monthly granular data in `historical-snapshot.ts`
+- **Pre-2020**: Yearly data only in `comprehensive-historical-data.ts`
+- **1971 cutoff**: Special handling for some datasets (electricity prices, etc.) - see `check-1971.ts`
+- **Auto-selection**: `getSnapshotWithHistorical(dateString)` picks correct timeframe automatically
 
-## Integration Points
+### Snapshot Caching
+- First fetch cached in `SNAP_CACHE` (in-memory, `snapshot.ts`)
+- Historical data uses static imports (no caching)
+- **Clear cache**: Restart Metro dev server to reset
 
-### Google Sheets Publication
-- Sheets must be "Published to web" as CSV (not just shared)
-- URLs follow pattern: `docs.google.com/spreadsheets/d/e/{SHEET_ID}/pub?output=csv`
-- Test URLs directly in browser - should download/display raw CSV, not HTML error page
+## 🚀 Development Workflows
 
-### Expo Dependencies
-- Uses bare workflow (has `android/` folder) + Expo managed dependencies
-- Key deps: `expo-print`, `expo-sharing`, `expo-image-picker` for export functionality
-- Navigation: React Navigation 7 with typed route params in `src/types.ts`
+### Before Any Changes
+```bash
+npx tsc --noEmit          # Always verify compilation first
+git status                # Check what changed
+```
 
-### Print/Export System
-- Components render to capture via `expo-print`
-- Print service integration in `PrintServiceScreen.tsx`
-- Multiple export formats (photo, canvas, metal, framed prints)
+### Essential Commands
+```bash
+npm run android           # Build to Android emulator/device
+npx expo start           # Development with Expo Go + Metro
+eas build -p android     # Production via EAS (recommended for testing)
+npm run fresh            # Nuclear option: clear cache + restart
+```
 
-## Common Issues & Solutions
+### Data Debugging
+```bash
+node scripts/checkSheets.js           # Verify Google Sheets connectivity
+npx ts-node diagnose-timecapsule.ts  # Debug historical data by date
+npx ts-node check-1971.ts            # Test 1971 boundary handling
+```
 
-### Sheet Data Problems
-1. Run `node scripts/checkSheets.js` first
-2. Check if sheet is actually published (not just shared)
-3. Verify CSV URL returns raw data, not HTML error page
-4. Use overrides file for testing different sheet configurations
+## ⚠️ Danger Zones & How to Handle
 
-### Historical Data Gaps
-- Always check date boundaries (1971, 2020) when adding new datasets
-- Use fallback logic in `getSnapshotWithHistorical()` for missing data
-- Comprehensive data is in multiple files - check both `comprehensive-historical-data.ts` and `historical-snapshot.ts`
+### Modifying Data Utilities
+**Pattern**: Never directly fetch in components. Always use canonical utilities:
+- `getAllSnapshotValues()` → current/live data (baby mode)
+- `getSnapshotWithHistorical(dateString)` → historical + current merged (birthday mode)
+- `getPopulationForCity(cityName)` → city population lookup (current)
+- `getPopulationWithHistoricalContext(city, dateString)` → historical city population (birthday mode)
 
-### Performance & Caching
-- Snapshot data is cached after first fetch (`SNAP_CACHE` in `snapshot.ts`)
-- Historical data uses static imports (no caching needed)
-- Clear cache by restarting Metro when debugging data issues
+### Layout/Photo Changes
+**Requirement**: Test on BOTH phone and tablet after size changes. Verify:
+- Photos don't intersect borders
+- Text doesn't overflow container
+- Spacing consistent across devices
 
-## File Naming Conventions
-- Screens: `*Screen.tsx` in `src/screens/`
-- Components: PascalCase in `components/` (separate Portrait/Landscape variants)
-- Utils: kebab-case in `src/data/utils/`
-- Debug tools: kebab-case in root (prefix with `diagnose-`, `check-`, `test-`)
+### TypeScript Errors
+**Rule**: NEVER ignore. Run `npx tsc --noEmit` after every edit. Typed route params in `src/types.ts` are strict by design.
 
-When working on this project, prioritize understanding the data flow from Google Sheets → historical data merging → component rendering, as this is the core value proposition of the app.
+## 📝 File Conventions
+- **Screens**: `*Screen.tsx` in `src/screens/`
+- **Components**: `{ComponentName}Portrait/Landscape.tsx` in `src/components/`
+- **Utils**: `kebab-case.ts` in `src/data/utils/`
+- **Debug scripts**: kebab-case root (prefix with `diagnose-`, `check-`, `test-`)
+
+## 🔍 Common Issues & Solutions
+
+| Problem | Solution |
+|---------|----------|
+| Sheet data not updating | Run `node scripts/checkSheets.js` → verify "Publish to web" → check URL pattern |
+| Historical data missing for date | Check if date before 1971 → fallback handled automatically |
+| Photos too small/large | Verify photo size calculation includes all multipliers → see CRITICAL_PATTERNS.md |
+| Layout breaks on tablet | Test `useWindowDimensions()` values → verify separate Landscape component exists |
+| Cache stale after data change | Restart Metro dev server to clear `SNAP_CACHE` |
+
+## 🎁 Project Variants (Know the Modes)
+
+**Baby Mode** (`mode: 'baby'`):
+- Single or multiple babies (twins/triplets)
+- Uses `getAllSnapshotValues()` for current data
+- SmartPhotoLayout handles 1-3 photos
+
+**Birthday/Milestone Mode** (`mode: 'birthday'`):
+- Single person with birthday date
+- Uses `getSnapshotWithHistorical(dobISO)` for historical data
+- Supports extended `milestoneType` options (graduation, wedding, anniversary, etc.)
+- Up to 3 photos in grid
+
+---
+
+**Golden Rule**: Production code with precise layout. Understand component flow before changes. Always run `npx tsc --noEmit` before and after edits.

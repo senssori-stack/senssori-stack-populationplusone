@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Population +1 App Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+            margin: 0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            margin-top: 0;
+            color: #333;
+        }
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .icon-section {
+            text-align: center;
+        }
+        .icon-section h3 {
+            color: #224c39;
+            margin-bottom: 15px;
+        }
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            display: block;
+            margin: 0 auto 10px;
+        }
+        .size-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        button {
+            background: #224c39;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #1a3a2d;
+        }
+        .controls {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        input[type="color"], input[type="text"], input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100%;
+            max-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Population +1 App Icon Generator</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="bgColor">Background Color:</label>
+                <input type="color" id="bgColor" value="#224c39">
+            </div>
+            <div class="control-group">
+                <label for="textColor">Text Color:</label>
+                <input type="color" id="textColor" value="#ffffff">
+            </div>
+            <div class="control-group">
+                <label for="boxColor">Box Background:</label>
+                <input type="color" id="boxColor" value="#224c39">
+            </div>
+            <button onclick="redrawAll()">Update Preview</button>
+        </div>
+
+        <div class="icon-grid">
+            <!-- Main App Icon (512x512) -->
+            <div class="icon-section">
+                <h3>Main App Icon</h3>
+                <div class="size-label">512×512 px</div>
+                <canvas id="mainIcon" width="512" height="512"></canvas>
+                <button onclick="downloadIcon('mainIcon', 'app-icon-512.png')">Download PNG</button>
+                <button onclick="downloadIcon('mainIcon', 'app-icon-512.jpg')">Download JPEG</button>
+            </div>
+
+            <!-- Adaptive Icon Foreground (108x108) -->
+            <div class="icon-section">
+                <h3>Adaptive Icon Foreground</h3>
+                <div class="size-label">108×108 px</div>
+                <canvas id="adaptiveIcon" width="108" height="108"></canvas>
+                <button onclick="downloadIcon('adaptiveIcon', 'adaptive-icon.png')">Download PNG</button>
+                <button onclick="downloadIcon('adaptiveIcon', 'adaptive-icon.jpg')">Download JPEG</button>
+            </div>
+
+            <!-- Preview at 256x256 -->
+            <div class="icon-section">
+                <h3>Preview</h3>
+                <div class="size-label">256×256 px</div>
+                <canvas id="previewIcon" width="256" height="256"></canvas>
+                <button onclick="downloadIcon('previewIcon', 'app-icon-256.png')">Download PNG</button>
+                <button onclick="downloadIcon('previewIcon', 'app-icon-256.jpg')">Download JPEG</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function drawIcon(canvas, bgColor, textColor, boxColor) {
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            
+            const size = canvas.width;
+            
+            // Background
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Draw box with white border - centered and large
+            const padding = size * 0.08;
+            const boxSize = size - (padding * 2);
+            const boxLeft = padding;
+            const boxTop = padding;
+            
+            // Box background
+            ctx.fillStyle = boxColor;
+            ctx.fillRect(boxLeft, boxTop, boxSize, boxSize);
+            
+            // White border - thick
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = size * 0.04;
+            ctx.strokeRect(boxLeft, boxTop, boxSize, boxSize);
+            
+            // Draw "POPULATION" text in box - larger
+            ctx.fillStyle = textColor;
+            ctx.font = `800 ${size * 0.13}px 'Arial Black', Arial, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('POPULATION', size / 2, boxTop + (boxSize * 0.35));
+            
+            // Draw "+1" text in box - much larger
+            ctx.fillStyle = textColor;
+            ctx.font = `900 ${size * 0.65}px 'Arial Black', Arial, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('+1', size / 2, boxTop + (boxSize * 0.70));
+        }
+
+        function redrawAll() {
+            const bgColor = document.getElementById('bgColor').value;
+            const textColor = document.getElementById('textColor').value;
+            const boxColor = document.getElementById('boxColor').value;
+            
+            drawIcon(document.getElementById('mainIcon'), bgColor, textColor, boxColor);
+            drawIcon(document.getElementById('adaptiveIcon'), bgColor, textColor, boxColor);
+            drawIcon(document.getElementById('previewIcon'), bgColor, textColor, boxColor);
+        }
+
+        function downloadIcon(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            const isJpeg = filename.endsWith('.jpg');
+            link.href = canvas.toDataURL(isJpeg ? 'image/jpeg' : 'image/png');
+            link.download = filename;
+            link.click();
+        }
+
+        // Initial draw
+        window.onload = function() {
+            redrawAll();
+        };
+    </script>
+</body>
+</html>
