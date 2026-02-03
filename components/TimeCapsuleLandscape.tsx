@@ -1,0 +1,583 @@
+import React, { useMemo, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
+import { COLOR_SCHEMES } from '../src/data/utils/colors';
+import { formatSnapshotValue } from '../src/data/utils/formatSnapshot';
+import { getSnapshotWithHistorical } from '../src/data/utils/historical-snapshot';
+import { calculateLifePath } from '../src/data/utils/life-path-calculator';
+import { extractStateFromHometown } from '../src/data/utils/state-flags';
+import { getBirthstoneLink, getZodiacLink, getLifePathLink, getSnapshotEmojiLink, getStateFlagLink } from '../src/data/utils/emoji-links';
+import { CITY_COORDINATES } from '../src/data/utils/town-coordinates';
+import type { ThemeName } from '../src/types';
+
+// Landscape 11x8.5 at 300 DPI = 3300x2550 pixels
+export const LANDSCAPE_WIDTH = 3300;
+export const LANDSCAPE_HEIGHT = 2550;
+
+type Props = {
+    theme: ThemeName;
+    babies?: Array<{ first?: string; middle?: string; last?: string; photoUri?: string | null }>;
+    babyName?: string;
+    dobISO: string;
+    motherName: string;
+    fatherName: string;
+    weightLb: string;
+    weightOz: string;
+    lengthIn: string;
+    hometown: string;
+    snapshot: Record<string, string>;
+    zodiac: string;
+    birthstone: string;
+    lifePathNumber?: number;
+    previewScale?: number;
+};
+
+const SNAP_KEYS: { label: string; key: string; emoji: string }[] = [
+    { label: 'Gas (Gallon) — National Avg', key: 'GALLON OF GASOLINE', emoji: '⛽' },
+    { label: 'Minimum Wage', key: 'MINIMUM WAGE', emoji: '💵' },
+    { label: 'Loaf of Bread', key: 'LOAF OF BREAD', emoji: '🍞' },
+    { label: 'Dozen Eggs', key: 'DOZEN EGGS', emoji: '🥚' },
+    { label: 'Milk (Gallon)', key: 'GALLON OF MILK', emoji: '🥛' },
+    { label: 'Gold (oz)', key: 'GOLD OZ', emoji: '🪙' },
+    { label: 'Silver (oz)', key: 'SILVER OZ', emoji: '💍' },
+    { label: 'Dow Jones', key: 'DOW JONES CLOSE', emoji: '📈' },
+    { label: '#1 Song', key: '#1 SONG', emoji: '🎵' },
+    { label: '#1 Movie', key: '#1 MOVIE', emoji: '🎬' },
+    { label: 'Superbowl Champs', key: 'WON LAST SUPERBOWL', emoji: '🏈' },
+    { label: 'World Series Champs', key: 'WON LAST WORLD SERIES', emoji: '⚾' },
+    { label: 'US Population', key: 'US POPULATION', emoji: '🇺🇸' },
+    { label: 'World Population', key: 'WORLD POPULATION', emoji: '🌍' },
+    { label: 'President', key: 'PRESIDENT', emoji: '🏛️' },
+    { label: 'Vice President', key: 'VICE PRESIDENT', emoji: '🏛️' },
+];
+
+// Auto-fit text component for baby names
+function AutoFitName({ text, style, maxWidth }: { text: string; style?: any; maxWidth: number }) {
+    const initialSize = (style && style.fontSize) ? style.fontSize : 14;
+    const [fontSize, setFontSize] = useState<number>(initialSize);
+    const [containerWidth, setContainerWidth] = useState<number | null>(null);
+    const minSize = 8;
+
+    useEffect(() => {
+        const newSize = (style && style.fontSize) ? style.fontSize : 14;
+        setFontSize(newSize);
+    }, [text, style]);
+
+    useEffect(() => {
+        if (containerWidth && containerWidth > maxWidth && fontSize > minSize) {
+            setFontSize(prev => Math.max(minSize, prev - 1));
+        }
+    }, [containerWidth, maxWidth, fontSize, minSize]);
+
+    return (
+        <Text
+            style={[style, { fontSize }]}
+            onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
+        >
+            {text}
+        </Text>
+    );
+}
+
+// Clickable emoji component that opens links
+interface ClickableEmojiProps {
+    emoji: string;
+    url?: string | null;
+    style?: any;
+    tooltip?: string;
+}
+
+function ClickableEmoji({ emoji, url, style, tooltip }: ClickableEmojiProps) {
+    const [showTooltip, setShowTooltip] = React.useState(false);
+
+    if (!url) {
+        return <Text style={style}>{emoji}</Text>;
+    }
+
+    const handlePress = async () => {
+        if (tooltip) {
+            // Show tooltip briefly before opening URL
+            setShowTooltip(true);
+            setTimeout(() => setShowTooltip(false), 1500);
+        }
+
+        try {
+            const canOpen = await Linking.canOpenURL(url);
+            if (canOpen) {
+                await Linking.openURL(url);
+            }
+        } catch (error) {
+            console.warn('Failed to open URL:', error);
+        }
+    };
+
+    return (
+        <View style={{ position: 'relative', alignItems: 'center' }}>
+            {showTooltip && tooltip && (
+                <View style={{
+                    position: 'absolute',
+                    bottom: 30,
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    borderRadius: 6,
+                    marginBottom: 4,
+                    zIndex: 1000,
+                }}>
+                    <Text style={{
+                        color: '#FFFFFF',
+                        fontSize: 11,
+                        fontWeight: '600',
+                    }}>
+                        {tooltip}
+                    </Text>
+                </View>
+            )}
+            <Pressable onPress={handlePress} style={({ pressed }) => [
+                style,
+                { opacity: pressed ? 0.7 : 1 }
+            ]}>
+                <Text style={style}>{emoji}</Text>
+            </Pressable>
+        </View>
+    );
+}
+
+export default function TimeCapsuleLandscape(props: Props) {
+    const {
+        theme,
+        babies,
+        babyName,
+        dobISO,
+        motherName,
+        fatherName,
+        weightLb,
+        weightOz,
+        lengthIn,
+        hometown,
+        zodiac,
+        birthstone,
+        lifePathNumber,
+        snapshot,
+        previewScale = 0.2,
+    } = props;
+
+    // Get historical snapshot data based on birth date
+    const [historicalSnapshot, setHistoricalSnapshot] = useState<Record<string, string>>(snapshot || {});
+    const [currentSnapshot, setCurrentSnapshot] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        const loadHistoricalData = async () => {
+            try {
+                // Get THEN data (birth date)
+                const historicalData = await getSnapshotWithHistorical(dobISO);
+                setHistoricalSnapshot(historicalData);
+
+                // Get NOW data (current date)
+                const todayISO = new Date().toISOString().split('T')[0];
+                const currentData = await getSnapshotWithHistorical(todayISO);
+                setCurrentSnapshot(currentData);
+            } catch (error) {
+                console.warn('Failed to load historical data:', error);
+                setHistoricalSnapshot(snapshot || {});
+            }
+        };
+
+        if (dobISO) {
+            loadHistoricalData();
+        } else {
+            setHistoricalSnapshot(snapshot || {});
+        }
+    }, [dobISO, snapshot]);
+
+    const colors = COLOR_SCHEMES[theme];
+
+    // Calculate dimensions
+    const displayWidth = LANDSCAPE_WIDTH * previewScale;
+    const displayHeight = LANDSCAPE_HEIGHT * previewScale;
+
+    // Font sizes - ALL fonts reduced by 20% for better spacing
+    const titleSize = Math.round(displayHeight * 0.0354 * 2.0 * 0.8 * 0.8); // Baby name: reduced by 20% more
+    const timeCapsuleSize = Math.round(displayHeight * 0.01654 * 4.0 * 0.68 * 0.8); // TIME CAPSULE: reduced by 20% more
+    const bodySize = Math.round(displayHeight * 0.0152 * 1.32 * 0.8); // Body text: reduced by 20%
+    const labelSize = Math.round(displayHeight * 0.016 * 1.2 * 0.8); // Labels: reduced by 20%
+    const valueSize = Math.round(displayHeight * 0.016 * 1.2 * 0.8); // Values: reduced by 20%
+    const sourcesSize = Math.round(displayHeight * 0.01107421875 * 1.2 * 0.8); // Sources: reduced by 20%
+
+    // Border and padding
+    const borderWidth = Math.round(displayHeight * 0.02);
+    const padding = Math.round(displayHeight * 0.02);
+
+    // Build baby names with smart middle initial logic - for twins, no last name on first baby
+    const babyNames: string[] = [];
+    if (babies && babies.length > 0) {
+        for (let i = 0; i < babies.length; i++) {
+            const b = babies[i];
+            const first = b.first || '';
+            const middle = b.middle || '';
+            const last = b.last || '';
+            // Use middle initial for longer names to prevent overflow
+            const middleInitial = middle ? middle.charAt(0) + '.' : '';
+
+            // For the first baby in twins/multiples, skip the last name to save space
+            if (i === 0 && babies.length > 1) {
+                const p = [first, middleInitial].filter(Boolean).join(' ');
+                if (p) babyNames.push(p);
+            } else {
+                const p = [first, middleInitial, last].filter(Boolean).join(' ');
+                if (p) babyNames.push(p);
+            }
+        }
+    } else if (babyName) {
+        babyNames.push(babyName);
+    }
+
+    // Get first name for possessive references
+    let babyFirstOnly = '';
+    if (babies && babies.length > 0) {
+        const f = babies[0].first || '';
+        if (f && f.trim()) babyFirstOnly = f.trim();
+    }
+    if (!babyFirstOnly && babyName) {
+        const tok = babyName.split(' ').map(t => t.trim()).filter(Boolean);
+        if (tok.length > 0) babyFirstOnly = tok[0];
+    }
+
+    // Build intro text with new verbiage
+    const namesForSentence = babyNames.length > 0 ? babyNames.join(' & ') : 'Baby';
+
+    // Format date from dobISO (YYYY-MM-DD)
+    let formattedDate = dobISO;
+    try {
+        const dateObj = new Date(dobISO + 'T00:00:00');
+        formattedDate = dateObj.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    } catch (e) { }
+
+    const parts: string[] = [];
+
+    // Extract state from hometown (City, ST format)
+    let stateCode = '';
+    if (hometown && hometown.trim()) {
+        const extracted = extractStateFromHometown(hometown);
+        stateCode = extracted || '';
+    }
+
+    // Build intro with zodiac, birthstone, and life path number
+    const zodiacEmoji = '♈';
+    const lifepathEmoji = '�'; // Ping pong ball emoji for life path numbers
+    const lifePathStr = lifePathNumber ? `${lifepathEmoji}${lifePathNumber}` : '';
+
+    parts.push(`${namesForSentence} was born on ${formattedDate} in ${hometown}`);
+
+    // No longer adding zodiac/birthstone/life path to intro - will render separately with clickable emojis
+    // This simplifies the text and allows better emoji interactivity
+
+    const parentParts: string[] = [];
+    if (motherName && motherName.trim()) parentParts.push(motherName.trim());
+    if (fatherName && fatherName.trim()) parentParts.push(fatherName.trim());
+    if (parentParts.length > 0) {
+        let parentText = `${babyFirstOnly || namesForSentence}'s parents are `;
+        if (motherName && motherName.trim() && fatherName && fatherName.trim()) {
+            parentText += `mother, ${motherName.trim()} and father, ${fatherName.trim()}`;
+        } else if (motherName && motherName.trim()) {
+            parentText += `mother, ${motherName.trim()}`;
+        } else if (fatherName && fatherName.trim()) {
+            parentText += `father, ${fatherName.trim()}`;
+        }
+        parts.push(parentText);
+    }
+    // "At birth [baby first name] weighed [weight] lbs and [weight ounces] oz and measured [length] inches."
+    // Skip this line for twins/triplets if measurements aren't provided
+    if (weightLb && weightOz && lengthIn && weightLb.trim() && weightOz.trim() && lengthIn.trim()) {
+        parts.push(`At birth ${babyFirstOnly || namesForSentence} weighed ${weightLb} lbs and ${weightOz} oz and measured ${lengthIn} inches`);
+    }
+    parts.push(`Here are some interesting facts associated with your birth ${formattedDate}`);
+    const validParts = parts.filter(part => part && typeof part === 'string' && part.trim().length > 0);
+    const intro = validParts.join('. ').replace(/\.\s*\./g, '.').replace(/\s+\./g, '.');
+
+    // Get coordinates for flag lookup
+    let coordinates = '';
+    if (hometown && hometown.trim()) {
+        // Try to get coordinates from the hometown
+        const coordLookup = CITY_COORDINATES[hometown.toUpperCase()];
+        if (coordLookup) {
+            coordinates = `${coordLookup.lat.toFixed(4)}, ${coordLookup.lng.toFixed(4)}`;
+        }
+    }
+
+    // Build data rows with THEN and NOW columns (no zodiac/birthstone in table)
+    let rows: [string, string, string, string][] = SNAP_KEYS.map(({ label, key, emoji }) => [
+        `${label} ${emoji}`,
+        formatSnapshotValue(key, historicalSnapshot[key] ?? ''),
+        formatSnapshotValue(key, currentSnapshot[key] ?? ''),
+        emoji
+    ]);
+
+    // Insert city population row just before US Population
+    // Find the index of US Population row
+    const usPopIndex = rows.findIndex(row => row[3] === '🇺🇸');
+    if (usPopIndex > -1) {
+        // Get city population from snapshot data
+        const cityPopThen = historicalSnapshot['CITY POPULATION'] ? formatSnapshotValue('CITY POPULATION', historicalSnapshot['CITY POPULATION']) : 'N/A';
+        const cityPopNow = currentSnapshot['CITY POPULATION'] ? formatSnapshotValue('CITY POPULATION', currentSnapshot['CITY POPULATION']) : 'N/A';
+
+        // Insert city population row before US population
+        rows.splice(usPopIndex, 0, [
+            `${hometown} Population 📍`,
+            cityPopThen,
+            cityPopNow,
+            '📍'
+        ]);
+    }
+
+    // ====== GREEN: Center all main content vertically and horizontally, exclude sources ======
+    return (
+        <View style={[styles.container, {
+            width: displayWidth,
+            height: displayHeight,
+            backgroundColor: colors.bg,
+            overflow: 'hidden',
+            position: 'relative'
+        }]}>
+            {/* White outer border */}
+            <View style={[styles.border, {
+                borderWidth,
+                borderColor: colors.border || '#FFFFFF',
+                margin: padding,
+                flex: 1,
+                borderRadius: Math.round(displayHeight * 0.04)
+            }]}>
+                {/* Main content centered vertically and horizontally */}
+                <View style={{
+                    flex: 1,
+                    justifyContent: 'center', // GREEN: center vertically
+                    alignItems: 'center',     // GREEN: center horizontally
+                    width: '100%',
+                    padding: padding * 0.8,
+                    borderRadius: Math.round(displayHeight * 0.03),
+                }}>
+                    {/* Header with baby name and "Time Capsule" */}
+                    <Text style={[styles.title, { fontSize: titleSize, color: colors.text, textAlign: 'center' }]}>
+                        {`${babyNames.join(' & ')}${babyNames.length ? "'s" : ''}`}
+                    </Text>
+                    <Text style={[styles.title, { fontSize: timeCapsuleSize * 0.75, color: colors.text, marginTop: timeCapsuleSize * 0.05 }]}>
+                        Time Capsule
+                    </Text>
+
+                    {/* Body text */}
+                    <Text style={[styles.body, {
+                        fontSize: bodySize,
+                        color: colors.text,
+                        marginTop: padding * 0.2,
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        lineHeight: bodySize * 1.1
+                    }]}>
+                        {intro || 'Welcome to the world!'}
+                    </Text>
+
+                    {/* Zodiac, Birthstone, and Life Path Info with Clickable Emojis */}
+                    <View style={{ width: '100%', alignItems: 'center', marginTop: padding * 0.1 }}>
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
+                            <Text style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 4 }}>
+                                {`${babyFirstOnly || namesForSentence}'s zodiac sign is `}
+                            </Text>
+                            <ClickableEmoji
+                                emoji="♈"
+                                url={getZodiacLink(zodiac)}
+                                tooltip="ABOUT YOUR SIGN AND HOROSCOPES"
+                                style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 2 }}
+                            />
+                            <Text style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 4 }}>
+                                {zodiac}
+                            </Text>
+                            <Text style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 4 }}>
+                                {', their birthstone is '}
+                            </Text>
+                            <ClickableEmoji
+                                emoji="💎"
+                                url={getBirthstoneLink(birthstone)}
+                                style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 2 }}
+                            />
+                            <Text style={{ fontSize: bodySize * 0.8, color: colors.text }}>
+                                {birthstone}
+                            </Text>
+                            {lifePathNumber && (
+                                <>
+                                    <Text style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 4 }}>
+                                        {', and has a life path number of '}
+                                    </Text>
+                                    <ClickableEmoji
+                                        emoji="🎱"
+                                        url={getLifePathLink(lifePathNumber)}
+                                        style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 2 }}
+                                    />
+                                    <Text style={{ fontSize: bodySize * 0.8, color: colors.text }}>
+                                        {lifePathNumber}
+                                    </Text>
+                                </>
+                            )}
+                        </View>
+                    </View>
+
+                    {/* Divider line */}
+                    <View style={[styles.divider, {
+                        backgroundColor: colors.border || '#FFFFFF',
+                        marginVertical: padding * 0.3,
+                        height: 1
+                    }]} />
+
+                    {/* Data rows with THEN and NOW columns */}
+                    <View style={{ width: '100%' }}>
+                        {/* Location Row - City, ST, Flag, Coordinates (All on one line, equally spaced) */}
+                        <View style={{
+                            width: '100%',
+                            paddingVertical: Math.round(displayHeight * 0.0001),
+                            borderBottomWidth: 1.0,
+                            borderBottomColor: colors.border || '#FFFFFF',
+                            backgroundColor: 'transparent',
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            paddingHorizontal: padding * 0.5
+                        }}>
+                            {/* City, ST + Flag */}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                <Text style={{ fontSize: labelSize * 0.85, color: colors.text }}>
+                                    {hometown}
+                                </Text>
+                                {stateCode && (
+                                    <ClickableEmoji
+                                        emoji="🚩"
+                                        url={getStateFlagLink(stateCode)}
+                                        tooltip="ABOUT THIS STATE FLAG"
+                                        style={{ fontSize: labelSize * 0.85, color: colors.text, marginLeft: 8 }}
+                                    />
+                                )}
+                            </View>
+                            {/* Coordinates */}
+                            <Text style={{ fontSize: labelSize * 0.7, color: colors.text, flex: 1, textAlign: 'center' }}>
+                                {coordinates || 'N/A'}
+                            </Text>
+                        </View>
+
+                        {/* Column Headers */}
+                        <View style={[styles.row, {
+                            paddingVertical: Math.round(displayHeight * 0.0001),
+                            borderBottomWidth: 1.2,
+                            borderBottomColor: colors.border || '#FFFFFF',
+                            backgroundColor: 'transparent'
+                        }]}>
+                            <Text style={[styles.label, { fontSize: labelSize * 0.9, color: colors.text, flex: 1, fontWeight: '900' }]}>
+                                {/* Empty space for label column */}
+                            </Text>
+                            <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, minWidth: '28%', textAlign: 'right', fontWeight: '900' }]}>
+                                THEN
+                            </Text>
+                            <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, minWidth: '28%', textAlign: 'right', fontWeight: '900' }]}>
+                                NOW
+                            </Text>
+                        </View>
+
+                        {rows.map(([label, thenValue, nowValue, emoji]) => {
+                            const emojiUrl = getSnapshotEmojiLink(emoji);
+                            // Extract the label text without emoji for display
+                            const labelText = label.replace(/\s+[^\s]*$/g, '').trim();
+
+                            return (
+                                <View key={label} style={[styles.row, {
+                                    paddingVertical: Math.round(displayHeight * 0.0001),
+                                    borderBottomWidth: 0.8,
+                                    borderBottomColor: colors.border || '#FFFFFF'
+                                }]}>
+                                    <View style={[styles.label, { fontSize: labelSize, color: colors.text, flex: 1, flexDirection: 'row', alignItems: 'center' }]}>
+                                        <Text style={{ fontSize: labelSize, color: colors.text }}>
+                                            {labelText}
+                                        </Text>
+                                        <ClickableEmoji
+                                            emoji={emoji}
+                                            url={emojiUrl}
+                                            style={{ fontSize: labelSize, color: colors.text, marginLeft: 4 }}
+                                        />
+                                    </View>
+                                    <Text style={[styles.value, { fontSize: valueSize, color: colors.text, minWidth: '28%', textAlign: 'right' }]}>
+                                        {thenValue}
+                                    </Text>
+                                    <Text style={[styles.value, { fontSize: valueSize, color: colors.text, minWidth: '28%', textAlign: 'right' }]}>
+                                        {nowValue}
+                                    </Text>
+                                </View>
+                            );
+                        })}
+                    </View>
+                </View>
+
+                {/* Sources/info at the bottom, not centered */}
+                <View style={{
+                    width: '100%',
+                    position: 'absolute',
+                    bottom: padding * 2,
+                    left: 0,
+                    alignItems: 'center',
+                }}>
+                    <Text style={[styles.sources, {
+                        fontSize: sourcesSize,
+                        color: colors.text,
+                        marginTop: padding * 0.2
+                    }]}>
+                        SOURCES: bls.gov, eia.gov, fred.stlouisfed.org, census.gov, archives.gov, billboard.com, wikipedia.org
+                    </Text>
+                </View>
+            </View>
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    border: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    content: {
+        // flex, justifyContent, alignItems set inline above
+    },
+    title: {
+        fontWeight: '900',
+        textAlign: 'center',
+        marginBottom: 8,
+    },
+    body: {
+        lineHeight: 16,
+    },
+    divider: {
+        width: '100%',
+        opacity: 0.9,
+    },
+    row: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        paddingHorizontal: 8,
+        gap: 8,
+    },
+    label: {
+        fontWeight: '800',
+        paddingRight: 8,
+    },
+    value: {
+        fontWeight: '800',
+    },
+    sources: {
+        textAlign: 'center',
+        opacity: 0.7,
+        fontWeight: '400',
+    },
+});
