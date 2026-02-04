@@ -157,20 +157,20 @@ export const COMPREHENSIVE_HISTORICAL_DATA = {
         1917: '103,268,000', 1916: '101,961,000', 1915: '100,546,000', 1914: '99,111,000'
     },
 
-    // Wikipedia Super Bowl Winners (1967-2025, game played in following year)
+    // Wikipedia Super Bowl Winners (1967-2026, game played in following year) with Roman Numerals
     superBowlWinners: {
-        2025: 'TBD - Season In Progress', 2024: 'Kansas City Chiefs', 2023: 'Kansas City Chiefs', 2022: 'Los Angeles Rams', 2021: 'Tampa Bay Buccaneers', 2020: 'Kansas City Chiefs',
-        2019: 'New England Patriots', 2018: 'Philadelphia Eagles', 2017: 'New England Patriots', 2016: 'Denver Broncos', 2015: 'New England Patriots',
-        2014: 'Seattle Seahawks', 2013: 'Baltimore Ravens', 2012: 'New York Giants', 2011: 'Green Bay Packers', 2010: 'New Orleans Saints',
-        2009: 'Pittsburgh Steelers', 2008: 'New York Giants', 2007: 'Indianapolis Colts', 2006: 'Pittsburgh Steelers', 2005: 'New England Patriots',
-        2004: 'New England Patriots', 2003: 'Tampa Bay Buccaneers', 2002: 'New England Patriots', 2001: 'Baltimore Ravens', 2000: 'St. Louis Rams',
-        1999: 'Denver Broncos', 1998: 'Denver Broncos', 1997: 'Green Bay Packers', 1996: 'Dallas Cowboys', 1995: 'San Francisco 49ers',
-        1994: 'Dallas Cowboys', 1993: 'Dallas Cowboys', 1992: 'Washington Redskins', 1991: 'New York Giants', 1990: 'San Francisco 49ers',
-        1989: 'San Francisco 49ers', 1988: 'Washington Redskins', 1987: 'New York Giants', 1986: 'Chicago Bears', 1985: 'San Francisco 49ers',
-        1984: 'Los Angeles Raiders', 1983: 'Washington Redskins', 1982: 'San Francisco 49ers', 1981: 'Oakland Raiders', 1980: 'Pittsburgh Steelers',
-        1979: 'Pittsburgh Steelers', 1978: 'Dallas Cowboys', 1977: 'Oakland Raiders', 1976: 'Pittsburgh Steelers', 1975: 'Pittsburgh Steelers',
-        1974: 'Miami Dolphins', 1973: 'Miami Dolphins', 1972: 'Dallas Cowboys', 1971: 'Baltimore Colts', 1970: 'Kansas City Chiefs',
-        1969: 'New York Jets', 1968: 'Green Bay Packers', 1967: 'Green Bay Packers'
+        2026: 'Philadelphia Eagles (LX)', 2025: 'Philadelphia Eagles (LIX)', 2024: 'Kansas City Chiefs (LVIII)', 2023: 'Kansas City Chiefs (LVII)', 2022: 'Los Angeles Rams (LVI)', 2021: 'Tampa Bay Buccaneers (LV)', 2020: 'Kansas City Chiefs (LIV)',
+        2019: 'New England Patriots (LIII)', 2018: 'Philadelphia Eagles (LII)', 2017: 'New England Patriots (LI)', 2016: 'Denver Broncos (L)', 2015: 'New England Patriots (XLIX)',
+        2014: 'Seattle Seahawks (XLVIII)', 2013: 'Baltimore Ravens (XLVII)', 2012: 'New York Giants (XLVI)', 2011: 'Green Bay Packers (XLV)', 2010: 'New Orleans Saints (XLIV)',
+        2009: 'Pittsburgh Steelers (XLIII)', 2008: 'New York Giants (XLII)', 2007: 'Indianapolis Colts (XLI)', 2006: 'Pittsburgh Steelers (XL)', 2005: 'New England Patriots (XXXIX)',
+        2004: 'New England Patriots (XXXVIII)', 2003: 'Tampa Bay Buccaneers (XXXVII)', 2002: 'New England Patriots (XXXVI)', 2001: 'Baltimore Ravens (XXXV)', 2000: 'St. Louis Rams (XXXIV)',
+        1999: 'Denver Broncos (XXXIII)', 1998: 'Denver Broncos (XXXII)', 1997: 'Green Bay Packers (XXXI)', 1996: 'Dallas Cowboys (XXX)', 1995: 'San Francisco 49ers (XXIX)',
+        1994: 'Dallas Cowboys (XXVIII)', 1993: 'Dallas Cowboys (XXVII)', 1992: 'Washington Redskins (XXVI)', 1991: 'New York Giants (XXV)', 1990: 'San Francisco 49ers (XXIV)',
+        1989: 'San Francisco 49ers (XXIII)', 1988: 'Washington Redskins (XXII)', 1987: 'New York Giants (XXI)', 1986: 'Chicago Bears (XX)', 1985: 'San Francisco 49ers (XIX)',
+        1984: 'Los Angeles Raiders (XVIII)', 1983: 'Washington Redskins (XVII)', 1982: 'San Francisco 49ers (XVI)', 1981: 'Oakland Raiders (XV)', 1980: 'Pittsburgh Steelers (XIV)',
+        1979: 'Pittsburgh Steelers (XIII)', 1978: 'Dallas Cowboys (XII)', 1977: 'Oakland Raiders (XI)', 1976: 'Pittsburgh Steelers (X)', 1975: 'Pittsburgh Steelers (IX)',
+        1974: 'Miami Dolphins (VIII)', 1973: 'Miami Dolphins (VII)', 1972: 'Dallas Cowboys (VI)', 1971: 'Baltimore Colts (V)', 1970: 'Kansas City Chiefs (IV)',
+        1969: 'New York Jets (III)', 1968: 'Green Bay Packers (II)', 1967: 'Green Bay Packers (I)'
     }
 };
 

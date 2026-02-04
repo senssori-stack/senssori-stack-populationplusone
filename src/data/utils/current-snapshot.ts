@@ -25,6 +25,6 @@ export const CURRENT_SNAPSHOT_DATA: Record<string, string> = {
     'WORLD POPULATION': '8,200,000,000',
 
     // Government
-    'PRESIDENT': 'Donald J Trump',
+    'PRESIDENT': 'Donald Trump',
     'VICE PRESIDENT': 'JD Vance',
 };

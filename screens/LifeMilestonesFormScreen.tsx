@@ -279,10 +279,68 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
     };
 
     const getFinalMessage = () => {
-        if (selectedMessage === 'custom') return customMessage;
+        // Calculate age from DOB
+        const today = new Date();
+        const birthDate = dobDate;
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        // Get zodiac sign (simplified)
+        const month = birthDate.getMonth() + 1;
+        const day = birthDate.getDate();
+        let zodiac = '';
+        let zodiacEmoji = '';
+        if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) { zodiac = 'Aries'; zodiacEmoji = '♈'; }
+        else if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) { zodiac = 'Taurus'; zodiacEmoji = '♉'; }
+        else if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) { zodiac = 'Gemini'; zodiacEmoji = '♊'; }
+        else if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) { zodiac = 'Cancer'; zodiacEmoji = '♋'; }
+        else if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) { zodiac = 'Leo'; zodiacEmoji = '♌'; }
+        else if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) { zodiac = 'Virgo'; zodiacEmoji = '♍'; }
+        else if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) { zodiac = 'Libra'; zodiacEmoji = '♎'; }
+        else if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) { zodiac = 'Scorpio'; zodiacEmoji = '♏'; }
+        else if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) { zodiac = 'Sagittarius'; zodiacEmoji = '♐'; }
+        else if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) { zodiac = 'Capricorn'; zodiacEmoji = '♑'; }
+        else if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) { zodiac = 'Aquarius'; zodiacEmoji = '♒'; }
+        else { zodiac = 'Pisces'; zodiacEmoji = '♓'; }
+
+        // Get birthstone
+        const birthstones = ['Garnet 💎', 'Amethyst 💜', 'Aquamarine 💙', 'Diamond 💎', 'Emerald 💚', 'Pearl 🤍', 'Ruby ❤️', 'Peridot 💚', 'Sapphire 💙', 'Opal 🤍', 'Topaz 🧡', 'Turquoise 💙'];
+        const birthstone = birthstones[month - 1] || 'Gemstone';
+
+        // Calculate life path number
+        const dateStr = `${birthDate.getMonth() + 1}${birthDate.getDate()}${birthDate.getFullYear()}`;
+        let sum = dateStr.split('').reduce((acc, digit) => acc + parseInt(digit), 0);
+        while (sum > 9 && sum !== 11 && sum !== 22 && sum !== 33) {
+            sum = sum.toString().split('').reduce((acc, digit) => acc + parseInt(digit), 0);
+        }
+        const lifePathNumber = sum;
+
+        // Build intro text
+        const firstName = personName.split(' ')[0];
+        const dobFormatted = `${month}/${day}/${birthDate.getFullYear()}`;
+        const intro = `${personName} turned ${age} years old on ${dobFormatted}. ${firstName}'s zodiac sign is ${zodiac} ${zodiacEmoji} and has a life path number of ${lifePathNumber} 🎱. Their birthstone is ${birthstone}. Below are some interesting facts surrounding your birthday. `;
+
+        // If custom message, prepend intro and return
+        if (selectedMessage === 'custom') {
+            return intro + customMessage;
+        }
+
+        // For prewritten messages, get the message and prepend intro
         const milestoneMessages = getMilestoneMessages(selectedMilestone);
         let msg = milestoneMessages[selectedMessage as keyof typeof milestoneMessages] || '';
         msg = msg.replace('{name}', personName || 'you');
+
+        // Prepend intro to prewritten message
+        msg = intro + msg;
+
+        // Append custom message if provided
+        if (customMessage.trim()) {
+            msg = `${msg} ${customMessage.trim()}`;
+        }
+
         return msg;
     };
 
@@ -334,7 +392,7 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
             recipient: selectedRecipient,
             message: getFinalMessage(),
             photos: photos,
-            motherName: '',
+            motherName: personName.trim(), // Use personName as the header for milestones
             fatherName: '',
             weightLb: '',
             weightOz: '',
@@ -721,18 +779,21 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
             </View>
 
             {/* Custom Message Input */}
-            {selectedMessage === 'custom' && (
-                <>
-                    <Text style={styles.label}>Write Your Message</Text>
-                    <TextInput
-                        style={[styles.input, styles.messageInput]}
-                        placeholder="Enter your custom message..."
-                        value={customMessage}
-                        onChangeText={setCustomMessage}
-                        multiline
-                    />
-                </>
-            )}
+            <Text style={styles.label}>Add Custom Message (Optional)</Text>
+            <Text style={styles.hint}>
+                {selectedMessage === 'custom'
+                    ? 'Write your own message from scratch'
+                    : 'Add additional text to the pre-written message above'}
+            </Text>
+            <TextInput
+                style={[styles.input, styles.messageInput]}
+                placeholder={selectedMessage === 'custom'
+                    ? "Enter your custom message..."
+                    : "Add your own personal touch..."}
+                value={customMessage}
+                onChangeText={setCustomMessage}
+                multiline
+            />
 
             {/* Color Picker */}
             <Text style={styles.label}>Background Color</Text>

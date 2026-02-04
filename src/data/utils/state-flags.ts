@@ -55,9 +55,69 @@ export const STATE_FLAG_URLS: Record<string, string> = {
     'DC': 'https://www.infoplease.com/state-flags/district-of-columbia',
 };
 
+// State flag images from flagcdn.com
+export const STATE_FLAG_IMAGES: Record<string, string> = {
+    'AL': 'https://flagcdn.com/w320/us-al.png',
+    'AK': 'https://flagcdn.com/w320/us-ak.png',
+    'AZ': 'https://flagcdn.com/w320/us-az.png',
+    'AR': 'https://flagcdn.com/w320/us-ar.png',
+    'CA': 'https://flagcdn.com/w320/us-ca.png',
+    'CO': 'https://flagcdn.com/w320/us-co.png',
+    'CT': 'https://flagcdn.com/w320/us-ct.png',
+    'DE': 'https://flagcdn.com/w320/us-de.png',
+    'FL': 'https://flagcdn.com/w320/us-fl.png',
+    'GA': 'https://flagcdn.com/w320/us-ga.png',
+    'HI': 'https://flagcdn.com/w320/us-hi.png',
+    'ID': 'https://flagcdn.com/w320/us-id.png',
+    'IL': 'https://flagcdn.com/w320/us-il.png',
+    'IN': 'https://flagcdn.com/w320/us-in.png',
+    'IA': 'https://flagcdn.com/w320/us-ia.png',
+    'KS': 'https://flagcdn.com/w320/us-ks.png',
+    'KY': 'https://flagcdn.com/w320/us-ky.png',
+    'LA': 'https://flagcdn.com/w320/us-la.png',
+    'ME': 'https://flagcdn.com/w320/us-me.png',
+    'MD': 'https://flagcdn.com/w320/us-md.png',
+    'MA': 'https://flagcdn.com/w320/us-ma.png',
+    'MI': 'https://flagcdn.com/w320/us-mi.png',
+    'MN': 'https://flagcdn.com/w320/us-mn.png',
+    'MS': 'https://flagcdn.com/w320/us-ms.png',
+    'MO': 'https://flagcdn.com/w320/us-mo.png',
+    'MT': 'https://flagcdn.com/w320/us-mt.png',
+    'NE': 'https://flagcdn.com/w320/us-ne.png',
+    'NV': 'https://flagcdn.com/w320/us-nv.png',
+    'NH': 'https://flagcdn.com/w320/us-nh.png',
+    'NJ': 'https://flagcdn.com/w320/us-nj.png',
+    'NM': 'https://flagcdn.com/w320/us-nm.png',
+    'NY': 'https://flagcdn.com/w320/us-ny.png',
+    'NC': 'https://flagcdn.com/w320/us-nc.png',
+    'ND': 'https://flagcdn.com/w320/us-nd.png',
+    'OH': 'https://flagcdn.com/w320/us-oh.png',
+    'OK': 'https://flagcdn.com/w320/us-ok.png',
+    'OR': 'https://flagcdn.com/w320/us-or.png',
+    'PA': 'https://flagcdn.com/w320/us-pa.png',
+    'RI': 'https://flagcdn.com/w320/us-ri.png',
+    'SC': 'https://flagcdn.com/w320/us-sc.png',
+    'SD': 'https://flagcdn.com/w320/us-sd.png',
+    'TN': 'https://flagcdn.com/w320/us-tn.png',
+    'TX': 'https://flagcdn.com/w320/us-tx.png',
+    'UT': 'https://flagcdn.com/w320/us-ut.png',
+    'VT': 'https://flagcdn.com/w320/us-vt.png',
+    'VA': 'https://flagcdn.com/w320/us-va.png',
+    'WA': 'https://flagcdn.com/w320/us-wa.png',
+    'WV': 'https://flagcdn.com/w320/us-wv.png',
+    'WI': 'https://flagcdn.com/w320/us-wi.png',
+    'WY': 'https://flagcdn.com/w320/us-wy.png',
+    'DC': 'https://flagcdn.com/w320/us-dc.png',
+};
+
 export function getStateFlagURL(stateAbbr: string): string | null {
     const upper = stateAbbr.toUpperCase().trim();
     return STATE_FLAG_URLS[upper] || null;
+}
+
+export function getStateFlagImage(stateAbbr: string): string | null {
+    const upper = stateAbbr.toUpperCase().trim();
+    return STATE_FLAG_IMAGES[upper] || null;
 }
 
 /**

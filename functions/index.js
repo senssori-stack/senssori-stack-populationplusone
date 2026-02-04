@@ -15,8 +15,9 @@ exports.fetchDailySnapshots = functions.pubsub
     .topic('fetch-daily-snapshots')
     .onPublish(async (message) => {
         try {
-            console.log('🔄 Fetching daily snapshots...');
+            console.log('🔄 Fetching daily snapshots - all data sources...');
 
+            // Fetch all data in parallel for speed
             const [metals, dow, song, movie] = await Promise.all([
                 fetchMetals(),
                 fetchDowJones(),
@@ -27,20 +28,39 @@ exports.fetchDailySnapshots = functions.pubsub
             const today = new Date().toISOString().split('T')[0];
             const docPath = `snapshots/${today}`;
 
+            // Store comprehensive snapshot with all fields
             await db.doc(docPath).set({
-                gold_usd: metals.gold,
-                silver_usd: metals.silver,
+                // Market Data
+                gold_price: `$${metals.gold}`,
+                silver_price: `$${metals.silver}`,
                 dow_jones: dow,
+
+                // Entertainment
                 top_song: song,
                 top_movie: movie,
+
+                // Static data (update manually in Firebase Console)
+                gas_price: '$3.15',
+                minimum_wage: '$7.25',
+                bread_price: '$2.50',
+                eggs_price: '$3.75',
+                milk_price: '$3.89',
+                us_population: '340,000,000',
+                world_population: '8,200,000,000',
+                superbowl_champ: 'Philadelphia Eagles (LIX)',
+                world_series_champ: 'Los Angeles Dodgers',
+                president: 'Joe Biden',
+                vice_president: 'Kamala Harris',
+
+                // Metadata
                 fetchedAt: admin.firestore.Timestamp.now(),
-                source: 'auto-fetch',
+                source: 'cloud-function-auto',
             });
 
-            console.log('✅ Daily snapshot stored:', { metals, dow, song, movie });
+            console.log('✅ Comprehensive daily snapshot stored:', { metals, dow, song, movie });
             return 'Success';
         } catch (error) {
-            console.error('❌ Error:', error);
+            console.error('❌ Error fetching daily snapshots:', error);
             throw error;
         }
     });
@@ -127,3 +147,66 @@ async function fetchTopMovie() {
         }).on('error', reject);
     });
 }
+
+// HTTP endpoint for manual trigger (for testing)
+exports.manualFetchSnapshot = functions.https.onRequest(async (req, res) => {
+    try {
+        console.log('🔄 Manual snapshot fetch triggered via HTTP');
+
+        const [metals, dow, song, movie] = await Promise.all([
+            fetchMetals(),
+            fetchDowJones(),
+            fetchTopSong(),
+            fetchTopMovie(),
+        ]);
+
+        const today = new Date().toISOString().split('T')[0];
+        const docPath = `snapshots/${today}`;
+
+        const snapshotData = {
+            // Market Data
+            gold_price: `$${metals.gold}`,
+            silver_price: `$${metals.silver}`,
+            dow_jones: dow,
+
+            // Entertainment
+            top_song: song,
+            top_movie: movie,
+
+            // Static data (update manually in Firebase Console as needed)
+            gas_price: '$3.15',
+            minimum_wage: '$7.25',
+            bread_price: '$2.50',
+            eggs_price: '$3.75',
+            milk_price: '$3.89',
+            us_population: '340,000,000',
+            world_population: '8,200,000,000',
+            superbowl_champ: 'Philadelphia Eagles (LIX)',
+            world_series_champ: 'Los Angeles Dodgers',
+            president: 'Joe Biden',
+            vice_president: 'Kamala Harris',
+
+            // Metadata
+            fetchedAt: admin.firestore.Timestamp.now(),
+            source: 'manual-http-trigger',
+        };
+
+        await db.doc(docPath).set(snapshotData);
+
+        console.log('✅ Manual snapshot stored successfully');
+
+        res.status(200).json({
+            success: true,
+            message: 'Snapshot fetched and stored successfully',
+            date: today,
+            data: snapshotData
+        });
+    } catch (error) {
+        console.error('❌ Manual fetch error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+

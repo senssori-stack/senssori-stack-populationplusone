@@ -118,18 +118,15 @@ export default function FormScreen({ navigation, route }: Props) {
 
     function openDate() {
         if (Platform.OS === 'web') {
-            // On web, show a date input
-            const dateString = dobDate.toISOString().split('T')[0];
-            const input = document.createElement('input');
-            input.type = 'date';
-            input.value = dateString;
-            input.onchange = (e: any) => {
-                const newDate = new Date(e.target.value);
+            // On web, prompt for date
+            const currentDateStr = dobDate.toISOString().split('T')[0];
+            const newDateStr = prompt('Enter date (YYYY-MM-DD):', currentDateStr);
+            if (newDateStr) {
+                const newDate = new Date(newDateStr);
                 if (!isNaN(newDate.getTime())) {
                     setDobDate(newDate);
                 }
-            };
-            input.click();
+            }
         } else {
             // On Android/iOS, use the native picker
             DateTimePickerAndroid.open({
@@ -253,6 +250,13 @@ export default function FormScreen({ navigation, route }: Props) {
 
     return (
         <ScrollView style={[styles.page, { backgroundColor: '#f5f5f5' }]} contentContainerStyle={styles.container}>
+
+            {/* VERSION CHECK */}
+            <View style={{ backgroundColor: 'lime', padding: 10, marginBottom: 10 }}>
+                <Text style={{ color: 'black', fontSize: 20, fontWeight: 'bold', textAlign: 'center' }}>
+                    VERSION: Feb 3, 2026 - 9:15 PM - DATE INPUTS FIXED ✅
+                </Text>
+            </View>
 
             {/* Instructions */}
             <Text style={[styles.h1, { fontSize: 14, marginBottom: 20, textAlign: 'center', lineHeight: 20 }]}>
@@ -419,11 +423,65 @@ export default function FormScreen({ navigation, route }: Props) {
             <Text style={styles.h1}>
                 {mode === 'baby' ? 'Date of Birth' : 'Birthday Date'}
             </Text>
-            <TouchableOpacity style={[styles.btn, styles.whiteBtn]} onPress={openDate}>
-                <Text style={[styles.btnText, styles.darkText]}>
-                    {dobDate.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "2-digit", year: "numeric" })}
-                </Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+                <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#fff', marginBottom: 4, fontSize: 12 }}>Month (1-12)</Text>
+                    <TextInput
+                        style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a', textAlign: 'center' }]}
+                        value={String(dobDate.getMonth() + 1)}
+                        onChangeText={(text) => {
+                            const month = parseInt(text);
+                            if (month >= 1 && month <= 12) {
+                                const newDate = new Date(dobDate);
+                                newDate.setMonth(month - 1);
+                                setDobDate(newDate);
+                            }
+                        }}
+                        keyboardType="number-pad"
+                        maxLength={2}
+                        placeholder="MM"
+                        placeholderTextColor="#999"
+                    />
+                </View>
+                <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#fff', marginBottom: 4, fontSize: 12 }}>Day (1-31)</Text>
+                    <TextInput
+                        style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a', textAlign: 'center' }]}
+                        value={String(dobDate.getDate())}
+                        onChangeText={(text) => {
+                            const day = parseInt(text);
+                            if (day >= 1 && day <= 31) {
+                                const newDate = new Date(dobDate);
+                                newDate.setDate(day);
+                                setDobDate(newDate);
+                            }
+                        }}
+                        keyboardType="number-pad"
+                        maxLength={2}
+                        placeholder="DD"
+                        placeholderTextColor="#999"
+                    />
+                </View>
+                <View style={{ flex: 1.5 }}>
+                    <Text style={{ color: '#fff', marginBottom: 4, fontSize: 12 }}>Year</Text>
+                    <TextInput
+                        style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a', textAlign: 'center' }]}
+                        value={String(dobDate.getFullYear())}
+                        onChangeText={(text) => {
+                            const year = parseInt(text);
+                            if (year >= 1900 && year <= 2100) {
+                                const newDate = new Date(dobDate);
+                                newDate.setFullYear(year);
+                                setDobDate(newDate);
+                            }
+                        }}
+                        keyboardType="number-pad"
+                        maxLength={4}
+                        placeholder="YYYY"
+                        placeholderTextColor="#999"
+                    />
+                </View>
+            </View>
 
             {/* Weight and Length only shown for baby announcements */}
             {mode === 'baby' && (

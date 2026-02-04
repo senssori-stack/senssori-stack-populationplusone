@@ -1,11 +1,12 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Linking, Image, Alert } from 'react-native';
 import { COLOR_SCHEMES } from '../src/data/utils/colors';
 import { formatSnapshotValue } from '../src/data/utils/formatSnapshot';
 import { getSnapshotWithHistorical } from '../src/data/utils/historical-snapshot';
 import { calculateLifePath } from '../src/data/utils/life-path-calculator';
-import { extractStateFromHometown } from '../src/data/utils/state-flags';
-import { getBirthstoneLink, getZodiacLink, getLifePathLink, getSnapshotEmojiLink, getStateFlagLink } from '../src/data/utils/emoji-links';
+import { extractStateFromHometown, getStateFlagImage } from '../src/data/utils/state-flags';
+import { getBirthstoneLink, getZodiacLink, getLifePathLink, getSnapshotEmojiLink, getStateFlagLink, ZODIAC_EMOJIS, BIRTHSTONE_EMOJIS } from '../src/data/utils/emoji-links';
+import { getCurrentGovernor } from '../src/data/utils/current-governors';
 import { CITY_COORDINATES } from '../src/data/utils/town-coordinates';
 import type { ThemeName } from '../src/types';
 
@@ -30,6 +31,24 @@ type Props = {
     lifePathNumber?: number;
     previewScale?: number;
 };
+
+/**
+ * Convert hometown to Title Case (e.g., "NEW YORK, NY" -> "New York, NY")
+ */
+function toTitleCase(str: string): string {
+    return str
+        .toLowerCase()
+        .split(/\b/)
+        .map(word => {
+            // Capitalize first letter of each word, but preserve state abbreviations
+            if (word.match(/^[a-z]{2}$/)) {
+                // State abbreviation (2 letters after comma)
+                return word.toUpperCase();
+            }
+            return word.charAt(0).toUpperCase() + word.slice(1);
+        })
+        .join('');
+}
 
 const SNAP_KEYS: { label: string; key: string; emoji: string }[] = [
     { label: 'Gas (Gallon) — National Avg', key: 'GALLON OF GASOLINE', emoji: '⛽' },
@@ -164,6 +183,13 @@ export default function TimeCapsuleLandscape(props: Props) {
     // Get historical snapshot data based on birth date
     const [historicalSnapshot, setHistoricalSnapshot] = useState<Record<string, string>>(snapshot || {});
     const [currentSnapshot, setCurrentSnapshot] = useState<Record<string, string>>({});
+    const [cityPopThen, setCityPopThen] = useState<string>('N/A');
+    const [cityPopNow, setCityPopNow] = useState<string>('N/A');
+    const [cityNotFound, setCityNotFound] = useState<boolean>(false);
+
+    // Get current governor based on state code
+    const stateCode = extractStateFromHometown(hometown);
+    const currentGovernor = stateCode ? getCurrentGovernor(stateCode) : 'Governor';
 
     useEffect(() => {
         const loadHistoricalData = async () => {
@@ -171,11 +197,53 @@ export default function TimeCapsuleLandscape(props: Props) {
                 // Get THEN data (birth date)
                 const historicalData = await getSnapshotWithHistorical(dobISO);
                 setHistoricalSnapshot(historicalData);
+                console.log('Historical (THEN) data loaded:', Object.keys(historicalData).length, 'keys');
 
-                // Get NOW data (current date)
-                const todayISO = new Date().toISOString().split('T')[0];
-                const currentData = await getSnapshotWithHistorical(todayISO);
+                // Get NOW data (current/live data - don't pass date to get fresh data)
+                const { getAllSnapshotValues } = await import('../src/data/utils/snapshot');
+                const currentData = await getAllSnapshotValues();
                 setCurrentSnapshot(currentData);
+                console.log('Current (NOW) data loaded:', Object.keys(currentData).length, 'keys');
+                console.log('NOW data keys:', Object.keys(currentData));
+                console.log('Sample NOW data - Gas:', currentData['GALLON OF GASOLINE']);
+                console.log('Sample NOW data - President:', currentData['PRESIDENT']);
+
+                // Fetch city population data separately
+                if (hometown && hometown.trim()) {
+                    const { getHistoricalPopulationForCity } = await import('../src/data/utils/historical-populations');
+
+                    // Get birth year from dobISO
+                    const birthYear = new Date(dobISO).getFullYear();
+                    const currentYear = new Date().getFullYear();
+
+                    console.log(`📍 Fetching city population for ${hometown}`);
+                    console.log(`   Birth year: ${birthYear}, Current year: ${currentYear}`);
+
+                    // Fetch historical (THEN) city population
+                    const popThen = await getHistoricalPopulationForCity(hometown, birthYear);
+
+                    // Fetch current (NOW) city population  
+                    const popNow = await getHistoricalPopulationForCity(hometown, currentYear);
+
+                    console.log(`📊 Population results - THEN: ${popThen}, NOW: ${popNow}`);
+
+                    if (popThen === null && popNow === null) {
+                        // City not found at all
+                        console.warn(`⚠️ City not found in database: ${hometown}`);
+                        setCityNotFound(true);
+                        setCityPopThen('CITY NOT FOUND');
+                        setCityPopNow('CITY NOT FOUND');
+                    } else {
+                        // City found - format populations (NO ALERT)
+                        setCityNotFound(false);
+                        setCityPopThen(popThen !== null ? popThen.toLocaleString() : 'N/A');
+                        setCityPopNow(popNow !== null ? popNow.toLocaleString() : 'N/A');
+                        console.log(`✅ City found: ${hometown} - THEN: ${popThen?.toLocaleString()}, NOW: ${popNow?.toLocaleString()}`);
+                    }
+                } else {
+                    setCityPopThen('N/A');
+                    setCityPopNow('N/A');
+                }
             } catch (error) {
                 console.warn('Failed to load historical data:', error);
                 setHistoricalSnapshot(snapshot || {});
@@ -187,7 +255,7 @@ export default function TimeCapsuleLandscape(props: Props) {
         } else {
             setHistoricalSnapshot(snapshot || {});
         }
-    }, [dobISO, snapshot]);
+    }, [dobISO, snapshot, hometown]);
 
     const colors = COLOR_SCHEMES[theme];
 
@@ -258,22 +326,39 @@ export default function TimeCapsuleLandscape(props: Props) {
 
     const parts: string[] = [];
 
-    // Extract state from hometown (City, ST format)
-    let stateCode = '';
-    if (hometown && hometown.trim()) {
-        const extracted = extractStateFromHometown(hometown);
-        stateCode = extracted || '';
+    // Calculate age from DOB
+    const birthDate = new Date(dobISO + 'T00:00:00');
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
     }
 
-    // Build intro with zodiac, birthstone, and life path number
-    const zodiacEmoji = '♈';
-    const lifepathEmoji = '�'; // Ping pong ball emoji for life path numbers
-    const lifePathStr = lifePathNumber ? `${lifepathEmoji}${lifePathNumber}` : '';
+    // Get zodiac and birthstone emojis
+    const zodiacEmoji = ZODIAC_EMOJIS[zodiac] || '♈';
+    const birthstoneEmoji = BIRTHSTONE_EMOJIS[birthstone] || '💎';
+    const lifepathEmoji = '🎱'; // Ping pong ball emoji for life path numbers
 
-    parts.push(`${namesForSentence} was born on ${formattedDate} in ${hometown}`);
+    // NEW FORMAT: Full name turned [age] years old on [DOB]
+    parts.push(`${namesForSentence} turned ${age} years old on ${formattedDate}`);
 
-    // No longer adding zodiac/birthstone/life path to intro - will render separately with clickable emojis
-    // This simplifies the text and allows better emoji interactivity
+    // Zodiac sign with emoji
+    parts.push(`${babyFirstOnly || namesForSentence}'s zodiac sign is ${zodiac} ${zodiacEmoji}`);
+
+    // Life path number with emoji (if provided)
+    if (lifePathNumber) {
+        parts.push(`${babyFirstOnly || 'They'} has a life path number of ${lifePathNumber} ${lifepathEmoji}`);
+    }
+
+    // Birthstone with emoji
+    parts.push(`Their birthstone is ${birthstone} ${birthstoneEmoji}`);
+
+    // Add: "Below are some interesting facts surrounding your birthday"
+    parts.push(`Below are some interesting facts surrounding your birthday`);
+
+    // Keep existing content (parents, birth weight, location)
+    parts.push(`${namesForSentence} was born in ${toTitleCase(hometown)}`);
 
     const parentParts: string[] = [];
     if (motherName && motherName.trim()) parentParts.push(motherName.trim());
@@ -294,7 +379,6 @@ export default function TimeCapsuleLandscape(props: Props) {
     if (weightLb && weightOz && lengthIn && weightLb.trim() && weightOz.trim() && lengthIn.trim()) {
         parts.push(`At birth ${babyFirstOnly || namesForSentence} weighed ${weightLb} lbs and ${weightOz} oz and measured ${lengthIn} inches`);
     }
-    parts.push(`Here are some interesting facts associated with your birth ${formattedDate}`);
     const validParts = parts.filter(part => part && typeof part === 'string' && part.trim().length > 0);
     const intro = validParts.join('. ').replace(/\.\s*\./g, '.').replace(/\s+\./g, '.');
 
@@ -316,17 +400,24 @@ export default function TimeCapsuleLandscape(props: Props) {
         emoji
     ]);
 
+    // Debug: log first few rows to check NOW values
+    console.log('Row sample - Gas:', rows[0]);
+    console.log('Row sample - Dow Jones:', rows.find(r => r[0].includes('Dow Jones')));
+    console.log('Current snapshot keys:', Object.keys(currentSnapshot).length);
+    console.log('Historical snapshot keys:', Object.keys(historicalSnapshot).length);
+
+    // City population is now loaded via state (cityPopThen, cityPopNow)
+    console.log('City Population THEN:', cityPopThen);
+    console.log('City Population NOW:', cityPopNow);
+    console.log('City not found:', cityNotFound);
+
     // Insert city population row just before US Population
     // Find the index of US Population row
     const usPopIndex = rows.findIndex(row => row[3] === '🇺🇸');
     if (usPopIndex > -1) {
-        // Get city population from snapshot data
-        const cityPopThen = historicalSnapshot['CITY POPULATION'] ? formatSnapshotValue('CITY POPULATION', historicalSnapshot['CITY POPULATION']) : 'N/A';
-        const cityPopNow = currentSnapshot['CITY POPULATION'] ? formatSnapshotValue('CITY POPULATION', currentSnapshot['CITY POPULATION']) : 'N/A';
-
         // Insert city population row before US population
         rows.splice(usPopIndex, 0, [
-            `${hometown} Population 📍`,
+            `${toTitleCase(hometown)} Population 📍`,
             cityPopThen,
             cityPopNow,
             '📍'
@@ -359,10 +450,20 @@ export default function TimeCapsuleLandscape(props: Props) {
                     padding: padding * 0.8,
                     borderRadius: Math.round(displayHeight * 0.03),
                 }}>
-                    {/* Header with baby name and "Time Capsule" */}
-                    <Text style={[styles.title, { fontSize: titleSize, color: colors.text, textAlign: 'center' }]}>
-                        {`${babyNames.join(' & ')}${babyNames.length ? "'s" : ''}`}
-                    </Text>
+                    {/* Customer Name Header */}
+                    {(motherName || fatherName) && (
+                        <Text style={[styles.title, {
+                            fontSize: titleSize * 0.7,
+                            color: colors.text,
+                            textAlign: 'center',
+                            marginBottom: padding * 0.3,
+                            fontWeight: '600'
+                        }]}>
+                            {[motherName, fatherName].filter(Boolean).join(' & ')}
+                        </Text>
+                    )}
+
+                    {/* "Time Capsule" title */}
                     <Text style={[styles.title, { fontSize: timeCapsuleSize * 0.75, color: colors.text, marginTop: timeCapsuleSize * 0.05 }]}>
                         Time Capsule
                     </Text>
@@ -387,7 +488,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                             </Text>
                             <ClickableEmoji
                                 emoji="♈"
-                                url={getZodiacLink(zodiac)}
+                                url={getZodiacLink(zodiac, dobISO)}
                                 tooltip="ABOUT YOUR SIGN AND HOROSCOPES"
                                 style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 2 }}
                             />
@@ -423,50 +524,63 @@ export default function TimeCapsuleLandscape(props: Props) {
                         </View>
                     </View>
 
-                    {/* Divider line */}
-                    <View style={[styles.divider, {
-                        backgroundColor: colors.border || '#FFFFFF',
-                        marginVertical: padding * 0.3,
-                        height: 1
-                    }]} />
-
                     {/* Data rows with THEN and NOW columns */}
-                    <View style={{ width: '100%' }}>
-                        {/* Location Row - City, ST, Flag, Coordinates (All on one line, equally spaced) */}
+                    <View style={{ width: '90%', alignSelf: 'center' }}>
+                        {/* Location Row - City, ST with Governor */}
                         <View style={{
                             width: '100%',
-                            paddingVertical: Math.round(displayHeight * 0.0001),
-                            borderBottomWidth: 1.0,
-                            borderBottomColor: colors.border || '#FFFFFF',
+                            paddingVertical: Math.round(displayHeight * 0.003),
                             backgroundColor: 'transparent',
                             flexDirection: 'row',
                             justifyContent: 'space-between',
                             alignItems: 'center',
                             paddingHorizontal: padding * 0.5
                         }}>
-                            {/* City, ST + Flag */}
+                            {/* City, ST */}
                             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                                 <Text style={{ fontSize: labelSize * 0.85, color: colors.text }}>
-                                    {hometown}
+                                    {toTitleCase(hometown)}
                                 </Text>
-                                {stateCode && (
-                                    <ClickableEmoji
-                                        emoji="🚩"
-                                        url={getStateFlagLink(stateCode)}
-                                        tooltip="ABOUT THIS STATE FLAG"
-                                        style={{ fontSize: labelSize * 0.85, color: colors.text, marginLeft: 8 }}
-                                    />
-                                )}
                             </View>
-                            {/* Coordinates */}
-                            <Text style={{ fontSize: labelSize * 0.7, color: colors.text, flex: 1, textAlign: 'center' }}>
-                                {coordinates || 'N/A'}
+                            {/* Governor of State */}
+                            <Text style={{ fontSize: labelSize * 0.75, color: colors.text, flex: 1, textAlign: 'right', opacity: 0.85 }}>
+                                Gov {currentGovernor}
                             </Text>
+                        </View>
+
+                        {/* State Flag above THEN */}
+                        <View style={{
+                            width: '100%',
+                            flexDirection: 'row',
+                            alignItems: 'flex-end',
+                            paddingVertical: Math.round(displayHeight * 0.001)
+                        }}>
+                            <View style={{ flex: 1 }} />
+                            {stateCode && (
+                                <View style={{ minWidth: '28%', alignItems: 'center' }}>
+                                    <Pressable
+                                        onPress={() => {
+                                            const url = getStateFlagLink(stateCode);
+                                            if (url) Linking.openURL(url);
+                                        }}
+                                    >
+                                        <Image
+                                            source={{ uri: getStateFlagImage(stateCode) || '' }}
+                                            style={{
+                                                width: labelSize * 2.5,
+                                                height: labelSize * 1.7,
+                                                resizeMode: 'contain'
+                                            }}
+                                        />
+                                    </Pressable>
+                                </View>
+                            )}
+                            <View style={{ minWidth: '28%' }} />
                         </View>
 
                         {/* Column Headers */}
                         <View style={[styles.row, {
-                            paddingVertical: Math.round(displayHeight * 0.0001),
+                            paddingVertical: Math.round(displayHeight * 0.003),
                             borderBottomWidth: 1.2,
                             borderBottomColor: colors.border || '#FFFFFF',
                             backgroundColor: 'transparent'
@@ -474,10 +588,10 @@ export default function TimeCapsuleLandscape(props: Props) {
                             <Text style={[styles.label, { fontSize: labelSize * 0.9, color: colors.text, flex: 1, fontWeight: '900' }]}>
                                 {/* Empty space for label column */}
                             </Text>
-                            <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, minWidth: '28%', textAlign: 'right', fontWeight: '900' }]}>
+                            <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, minWidth: '28%', textAlign: 'center', fontWeight: '900' }]}>
                                 THEN
                             </Text>
-                            <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, minWidth: '28%', textAlign: 'right', fontWeight: '900' }]}>
+                            <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, minWidth: '28%', textAlign: 'center', fontWeight: '900' }]}>
                                 NOW
                             </Text>
                         </View>
@@ -487,9 +601,20 @@ export default function TimeCapsuleLandscape(props: Props) {
                             // Extract the label text without emoji for display
                             const labelText = label.replace(/\s+[^\s]*$/g, '').trim();
 
+                            // Extract Roman numerals for Super Bowl and World Series from THEN and NOW values
+                            let thenRomanNumeral = '';
+                            let nowRomanNumeral = '';
+                            if (emoji === '🏈' || emoji === '⚾') {
+                                // Extract Roman numeral from value like "Kansas City Chiefs (LVIII)"
+                                const thenMatch = thenValue.match(/\(([IVXLCDM]+)\)/);
+                                const nowMatch = nowValue.match(/\(([IVXLCDM]+)\)/);
+                                if (thenMatch) thenRomanNumeral = thenMatch[1];
+                                if (nowMatch) nowRomanNumeral = nowMatch[1];
+                            }
+
                             return (
                                 <View key={label} style={[styles.row, {
-                                    paddingVertical: Math.round(displayHeight * 0.0001),
+                                    paddingVertical: Math.round(displayHeight * 0.004),
                                     borderBottomWidth: 0.8,
                                     borderBottomColor: colors.border || '#FFFFFF'
                                 }]}>
@@ -503,11 +628,11 @@ export default function TimeCapsuleLandscape(props: Props) {
                                             style={{ fontSize: labelSize, color: colors.text, marginLeft: 4 }}
                                         />
                                     </View>
-                                    <Text style={[styles.value, { fontSize: valueSize, color: colors.text, minWidth: '28%', textAlign: 'right' }]}>
-                                        {thenValue}
+                                    <Text style={[styles.value, { fontSize: valueSize, color: colors.text, minWidth: '28%', textAlign: 'center' }]}>
+                                        {thenRomanNumeral ? `${thenRomanNumeral} ` : ''}{thenValue}
                                     </Text>
-                                    <Text style={[styles.value, { fontSize: valueSize, color: colors.text, minWidth: '28%', textAlign: 'right' }]}>
-                                        {nowValue}
+                                    <Text style={[styles.value, { fontSize: valueSize, color: colors.text, minWidth: '28%', textAlign: 'center' }]}>
+                                        {nowRomanNumeral ? `${nowRomanNumeral} ` : ''}{nowValue}
                                     </Text>
                                 </View>
                             );

@@ -6,6 +6,8 @@ import type { RootStackParamList } from '../types';
 import SignFrontLandscape from '../../components/SignFrontLandscape';
 import TimeCapsuleLandscape from '../../components/TimeCapsuleLandscape';
 import NatalChartView from './NatalChartView';
+import BirthChartPrintable from '../../components/BirthChartPrintable';
+import AstrologyComprehensive from '../../components/AstrologyComprehensive';
 import { getZodiacFromISO } from '../data/utils/zodiac';
 import { birthstoneFromISO } from '../data/utils/birthstone';
 import { calculateLifePath } from '../data/utils/life-path-calculator';
@@ -14,7 +16,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Preview'>;
 
 export default function PreviewScreen({ navigation, route }: Props) {
     const params = route.params || {};
-    const [viewMode, setViewMode] = useState<'front' | 'back' | 'natal'>('front');
+    const [viewMode, setViewMode] = useState<'front' | 'back' | 'natal' | 'chart' | 'astro'>('front');
 
     // Always landscape for this app
     const currentOrientation = 'landscape';
@@ -263,7 +265,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
                     />
                 </View>
             );
-        } else {
+        } else if (viewMode === 'natal') {
             // Natal Chart view
             return (
                 <View style={styles.announcementContainer}>
@@ -271,6 +273,47 @@ export default function PreviewScreen({ navigation, route }: Props) {
                         birthDate={formData.dobDate}
                         hometown={formData.hometown}
                         theme={formData.theme}
+                        previewScale={finalScale}
+                    />
+                </View>
+            );
+        } else if (viewMode === 'chart') {
+            // Birth Chart Certificate (full astrology data)
+            const timeOfBirth = formData.dobDate.toTimeString().substring(0, 5); // HH:MM
+            const latitude = 40.7128; // Default NYC - replace with actual location data
+            const longitude = -74.0060;
+
+            return (
+                <View style={styles.announcementContainer}>
+                    <BirthChartPrintable
+                        theme={formData.theme}
+                        babyName={`${formData.babyFirst} ${formData.babyMiddle ? formData.babyMiddle + ' ' : ''}${formData.babyLast}`.trim()}
+                        dobISO={dobISO}
+                        timeOfBirth={timeOfBirth}
+                        latitude={latitude}
+                        longitude={longitude}
+                        hometown={formData.hometown}
+                        previewScale={finalScale}
+                    />
+                </View>
+            );
+        } else {
+            // Complete Astrology Profile
+            const timeOfBirth = formData.dobDate.toTimeString().substring(0, 5); // HH:MM
+            const latitude = 40.7128; // Default NYC - replace with actual location data
+            const longitude = -74.0060;
+
+            return (
+                <View style={styles.announcementContainer}>
+                    <AstrologyComprehensive
+                        theme={formData.theme}
+                        babyName={`${formData.babyFirst} ${formData.babyMiddle ? formData.babyMiddle + ' ' : ''}${formData.babyLast}`.trim()}
+                        dobISO={dobISO}
+                        timeOfBirth={timeOfBirth}
+                        latitude={latitude}
+                        longitude={longitude}
+                        hometown={formData.hometown}
+                        zodiacSign={zodiac}
                         previewScale={finalScale}
                     />
                 </View>
@@ -283,7 +326,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
             {/* Page title */}
             <View style={styles.titleContainer}>
                 <Text style={styles.title}>
-                    {viewMode === 'front' ? 'Birth Announcement' : viewMode === 'back' ? 'Time Capsule' : 'Natal Chart'} {viewMode !== 'natal' && '- 11" × 8.5"'}
+                    {viewMode === 'front' ? 'Birth Announcement' : viewMode === 'back' ? 'Time Capsule' : viewMode === 'natal' ? 'Natal Chart' : viewMode === 'chart' ? 'Birth Chart Certificate' : 'Complete Astrology Profile'} {(viewMode === 'front' || viewMode === 'back' || viewMode === 'chart' || viewMode === 'astro') && '- 11" × 8.5"'}
                 </Text>
             </View>
 
@@ -308,6 +351,20 @@ export default function PreviewScreen({ navigation, route }: Props) {
                     onPress={() => { setViewMode('natal'); resetView(); }}
                 >
                     <Text style={[styles.buttonText, viewMode === 'natal' && styles.activeButtonText]}>Natal Chart</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.button, viewMode === 'chart' && styles.activeButton]}
+                    onPress={() => { setViewMode('chart'); resetView(); }}
+                >
+                    <Text style={[styles.buttonText, viewMode === 'chart' && styles.activeButtonText]}>Birth Chart ⭐</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.button, viewMode === 'astro' && styles.activeButton]}
+                    onPress={() => { setViewMode('astro'); resetView(); }}
+                >
+                    <Text style={[styles.buttonText, viewMode === 'astro' && styles.activeButtonText]}>Full Astro 🔮</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity

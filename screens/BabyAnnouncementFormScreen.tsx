@@ -262,12 +262,6 @@ export default function BabyAnnouncementFormScreen() {
                 ))}
             </View>
 
-            {/* Layout Options */}
-            <Text style={styles.label}>Front Layout</Text>
-            <View style={styles.toggleGroup}>
-
-            </View>
-
             {/* Build Button */}
             <TouchableOpacity style={styles.buildBtn} onPress={handleBuild} disabled={loading}>
                 <Text style={styles.buildBtnText}>{loading ? 'Building...' : '🎉 Build Announcement'}</Text>
@@ -315,7 +309,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     toggleActive: { backgroundColor: '#007AFF' },
-    toggleText: { fontWeight: '700', color: '#333' },
+    toggleText: { fontWeight: '700', color: '#333', fontSize: 14 },
     toggleActiveText: { color: '#fff' },
     dateBtn: {
         backgroundColor: '#fff',

@@ -4,8 +4,7 @@ import { SNAPSHOT_CSV_URL } from './sheets';
 import SNAPSHOT_CANONICAL_MAP from './snapshot-mapping';
 import { getHistoricalSnapshotForDate } from './historical-snapshot';
 import { CURRENT_SNAPSHOT_DATA } from './current-snapshot';
-import { getSnapshotFromFirebase } from './firebase-snapshot';
-import { getMetalsPrices, getDowJonesPrice } from './external-apis';
+import { getFromCache, saveToCache } from './cache-manager';
 
 // last applied mappings for debug visibility
 export let LAST_SNAPSHOT_MAPPINGS: Array<{ from: string; to: string }> = [];
@@ -22,44 +21,24 @@ export async function getSnapshotForBirthDate(dobISO: string): Promise<Record<st
 }
 
 /**
- * Get current snapshot from Firebase (preferred), then CSV, then local fallback
- * Also fetches live metal prices and Dow Jones data
+ * Get current snapshot from Google Sheets (fast), with AsyncStorage cache for speed
+ * Firebase is only used for auth and customer data, NOT snapshot data
  */
 export async function getAllSnapshotValues(): Promise<Record<string, string>> {
     if (SNAP_CACHE) return SNAP_CACHE;
 
     LAST_SNAPSHOT_MAPPINGS = [];
 
-    // Try Firebase first (most reliable)
-    try {
-        console.log('🔥 Attempting to fetch snapshot from Firebase...');
-        const firebaseData = await getSnapshotFromFirebase();
-
-        // Enhance with live metal prices and Dow Jones
-        const [metalsPrices, dowJones] = await Promise.all([
-            getMetalsPrices(),
-            getDowJonesPrice()
-        ]);
-
-        if (metalsPrices) {
-            firebaseData['GOLD'] = metalsPrices.gold;
-            firebaseData['SILVER'] = metalsPrices.silver;
-        }
-        if (dowJones) {
-            firebaseData['DOW_JONES'] = dowJones;
-        }
-
-        if (Object.keys(firebaseData).length > 0) {
-            console.log('✅ Using Firebase snapshot data with live prices');
-            return (SNAP_CACHE = firebaseData);
-        }
-    } catch (error) {
-        console.warn('⚠️ Firebase fetch failed, trying Google Sheets...');
+    // Check cache first for instant load
+    const cached = await getFromCache();
+    if (cached) {
+        console.log('✅ Using cached snapshot data (instant load)');
+        return (SNAP_CACHE = cached);
     }
 
-    // Fall back to Google Sheets CSV
+    // Fetch from Google Sheets CSV (primary source)
     try {
-        console.log('📊 Attempting to fetch snapshot from Google Sheets...');
+        console.log('📊 Fetching snapshot from Google Sheets...');
         const csv = await fetchCSV(SNAPSHOT_CSV_URL);
         if (csv.length === 0) {
             throw new Error('CSV is empty');
@@ -67,10 +46,12 @@ export async function getAllSnapshotValues(): Promise<Record<string, string>> {
 
         const out: Record<string, string> = {};
 
-        // Detect orientation
-        const isHorizontal = csv[0].length >= 2 && csv.length >= 2;
+        // Detect orientation: Check if first row contains "Field Name" or similar
+        const firstRowFirstCol = (csv[0]?.[0] ?? '').trim().toUpperCase();
+        const isVerticalFormat = firstRowFirstCol === 'FIELD NAME' || firstRowFirstCol === 'KEY' || firstRowFirstCol === 'NAME';
 
-        if (isHorizontal) {
+        if (!isVerticalFormat && csv[0].length >= 2 && csv.length >= 2) {
+            // Horizontal format: First row = headers, second row = values
             const headers = csv[0].map(h => h.trim());
 
             let valuesRowIndex = -1;
@@ -99,11 +80,22 @@ export async function getAllSnapshotValues(): Promise<Record<string, string>> {
                 }
             }
         } else {
-            for (const row of csv) {
+            // Vertical format - skip header row
+            console.log('📋 Using VERTICAL format parser (Field Name | Value)');
+            for (let i = 0; i < csv.length; i++) {
+                const row = csv[i];
                 const rawKey = (row[0] ?? '').trim();
                 const keyUpper = rawKey.toUpperCase();
+
+                // Skip header row (contains "Field Name", "Value", etc.)
+                if (i === 0 && (keyUpper === 'FIELD NAME' || keyUpper === 'KEY' || keyUpper === 'NAME')) {
+                    console.log('⏭️ Skipping header row:', rawKey);
+                    continue;
+                }
+
                 const val = (row[1] ?? '').trim();
                 if (!rawKey) continue;
+
                 out[rawKey] = val;
                 out[keyUpper] = val;
 
@@ -113,52 +105,22 @@ export async function getAllSnapshotValues(): Promise<Record<string, string>> {
                     LAST_SNAPSHOT_MAPPINGS.push({ from: rawKey, to: mapped });
                 }
             }
+            console.log('✅ Parsed vertical format:', Object.keys(out).length, 'total keys');
         }
 
         console.log('✅ Using Google Sheets snapshot data');
 
-        // Enhance with live metal prices and Dow Jones
-        const [metalsPrices, dowJones] = await Promise.all([
-            getMetalsPrices(),
-            getDowJonesPrice()
-        ]);
-
-        if (metalsPrices) {
-            out['GOLD'] = metalsPrices.gold;
-            out['SILVER'] = metalsPrices.silver;
-        }
-        if (dowJones) {
-            out['DOW_JONES'] = dowJones;
-        }
+        // Save to cache for next time (instant load)
+        await saveToCache(out);
 
         return (SNAP_CACHE = out);
     } catch (error) {
         console.warn('⚠️ Google Sheets fetch failed, using local fallback data');
     }
 
-    // Final fallback to local data with live prices if possible
-    const localData = { ...CURRENT_SNAPSHOT_DATA };
-
-    // Try to enhance local fallback with live prices
-    try {
-        const [metalsPrices, dowJones] = await Promise.all([
-            getMetalsPrices(),
-            getDowJonesPrice()
-        ]);
-
-        if (metalsPrices) {
-            localData['GOLD'] = metalsPrices.gold;
-            localData['SILVER'] = metalsPrices.silver;
-        }
-        if (dowJones) {
-            localData['DOW_JONES'] = dowJones;
-        }
-    } catch (error) {
-        console.warn('⚠️ Could not fetch live prices, using local data values');
-    }
-
+    // Final fallback to local data
     console.log('📱 Using local fallback snapshot data');
-    return (SNAP_CACHE = localData);
+    return (SNAP_CACHE = { ...CURRENT_SNAPSHOT_DATA });
 }
 
 /**

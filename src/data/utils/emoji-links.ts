@@ -30,6 +30,36 @@ export const ZODIAC_LINKS: Record<string, string> = {
     'Pisces': 'https://www.zodiacsign.com/zodiac-signs/pisces/',
 };
 
+export const ZODIAC_EMOJIS: Record<string, string> = {
+    'Aries': '♈',
+    'Taurus': '♉',
+    'Gemini': '♊',
+    'Cancer': '♋',
+    'Leo': '♌',
+    'Virgo': '♍',
+    'Libra': '♎',
+    'Scorpio': '♏',
+    'Sagittarius': '♐',
+    'Capricorn': '♑',
+    'Aquarius': '♒',
+    'Pisces': '♓',
+};
+
+export const BIRTHSTONE_EMOJIS: Record<string, string> = {
+    'January': '💎',
+    'February': '💜',
+    'March': '💙',
+    'April': '💎',
+    'May': '💚',
+    'June': '🤍',
+    'July': '❤️',
+    'August': '💚',
+    'September': '💙',
+    'October': '🤍',
+    'November': '🧡',
+    'December': '💙',
+};
+
 export const STATE_FLAG_LINKS: Record<string, string> = {
     'AL': 'https://www.infoplease.com/state-flags/alabama',
     'AK': 'https://www.infoplease.com/state-flags/alaska',
@@ -111,8 +141,8 @@ export const SNAPSHOT_EMOJI_LINKS: Record<string, string> = {
     '📈': 'https://www.marketwatch.com/investing/index/djia',
     '🎵': 'https://www.billboard.com/',
     '🎬': 'https://www.imdb.com/chart/250/',
-    '🏈': 'https://www.nfl.com/',
-    '⚾': 'https://www.mlb.com/',
+    '🏈': 'https://www.espn.com/nfl/superbowl/history/winners',
+    '⚾': 'https://www.espn.com/mlb/worldseries/history/winners',
     '🇺🇸': 'https://www.census.gov/',
     '🌍': 'https://www.worldometers.info/',
     '🏛️': 'https://www.archives.gov/',
@@ -127,9 +157,38 @@ export function getBirthstoneLink(birthstone: string): string | null {
 }
 
 /**
+ * Generate thehoroscope.co birthday analyser URL for specific date
+ * Example: https://www.thehoroscope.co/birthday-analyser/November-15-1971-horoscope-and-zodiac-sign-meanings-7998.html
+ */
+export function getZodiacBirthdayUrl(dateISO: string): string {
+    const date = new Date(dateISO);
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    const month = monthNames[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+
+    // Calculate unique ID (appears to be sequential from a base date)
+    // Using approximate formula: days since Jan 1, 1900 + base offset
+    const baseDate = new Date(1900, 0, 1);
+    const daysSince = Math.floor((date.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24));
+    const urlId = daysSince + 2000; // Approximate offset to match their numbering
+
+    return `https://www.thehoroscope.co/birthday-analyser/${month}-${day}-${year}-horoscope-and-zodiac-sign-meanings-${urlId}.html`;
+}
+
+/**
  * Get hyperlink for a zodiac sign
  */
-export function getZodiacLink(zodiac: string): string | null {
+export function getZodiacLink(zodiac: string, dateISO?: string): string | null {
+    // If date is provided, use custom birthday analyser URL
+    if (dateISO) {
+        return getZodiacBirthdayUrl(dateISO);
+    }
+    // Otherwise use generic zodiac sign page
     return ZODIAC_LINKS[zodiac] || null;
 }
 

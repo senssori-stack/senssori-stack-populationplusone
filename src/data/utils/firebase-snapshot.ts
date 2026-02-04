@@ -4,12 +4,20 @@
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebase-config';
 import { CURRENT_SNAPSHOT_DATA } from './current-snapshot';
+import { getFromCache, saveToCache } from './cache-manager';
 
 /**
  * Fetch current snapshot from Firebase Firestore
  * Falls back to local data if Firebase is unavailable
+ * Uses cache to speed up repeated loads
  */
 export async function getSnapshotFromFirebase(): Promise<Record<string, string>> {
+    // First, try cache for instant load
+    const cached = await getFromCache();
+    if (cached) {
+        return cached;
+    }
+
     if (!db) {
         console.warn('⚠️ Firebase not initialized, using local snapshot data');
         return CURRENT_SNAPSHOT_DATA;
@@ -30,7 +38,7 @@ export async function getSnapshotFromFirebase(): Promise<Record<string, string>>
             console.log('✅ Snapshot loaded from Firebase:', dateStr);
 
             // Ensure all required keys are present, use fallback for missing data
-            return {
+            const snapshot = {
                 'GALLON OF GASOLINE': data['gas_price'] || CURRENT_SNAPSHOT_DATA['GALLON OF GASOLINE'],
                 'MINIMUM WAGE': data['minimum_wage'] || CURRENT_SNAPSHOT_DATA['MINIMUM WAGE'],
                 'LOAF OF BREAD': data['bread_price'] || CURRENT_SNAPSHOT_DATA['LOAF OF BREAD'],
@@ -48,6 +56,10 @@ export async function getSnapshotFromFirebase(): Promise<Record<string, string>>
                 'PRESIDENT': data['president'] || CURRENT_SNAPSHOT_DATA['PRESIDENT'],
                 'VICE PRESIDENT': data['vice_president'] || CURRENT_SNAPSHOT_DATA['VICE PRESIDENT'],
             };
+
+            // Cache for next time
+            await saveToCache(snapshot);
+            return snapshot;
         } else {
             console.warn(`⚠️ No snapshot found for ${dateStr}, using local data`);
             return CURRENT_SNAPSHOT_DATA;
