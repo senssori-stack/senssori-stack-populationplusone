@@ -1,0 +1,203 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Population +1 | The Perfect Birth Announcement</title>
+    <meta name="description" content="Create beautiful population sign birth announcements with historical time capsule data. Gas prices, #1 songs, who was president, and more from the day they were born.">
+    <meta name="keywords" content="population plus one, population +1, +1, birth announcement app, digital birth announcement, baby time capsule, newborn keepsake, personalized baby announcement, baby milestone app, new baby gift, family history app, baby memory book, birth stats sign, custom baby sign, baby announcement ideas, unique birth announcement, baby arrival announcement, baby photo announcement">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #2d5016 0%, #3d6b1f 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        .container { max-width: 500px; margin: 0 auto; padding: 40px 16px; }
+        .hero-section {
+            min-height: 50vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .icon-box {
+            width: 120px; height: 120px;
+            background: #4a7c2c;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #fff;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .icon-text { font-size: 56px; font-weight: 700; color: #fff; }
+        .main-title { font-size: 38px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+        .tagline { font-size: 16px; color: #fff; margin-bottom: 8px; font-weight: 500; margin-top: 12px; }
+        .tagline-second { font-size: 14px; color: #fff; font-weight: 500; margin-top: 12px; }
+        .content-section { padding: 32px 0; }
+        .section-title { font-size: 22px; font-weight: 700; color: #fff; text-align: center; margin-bottom: 24px; }
+        .card-button {
+            margin-bottom: 20px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            text-decoration: none;
+            display: block;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card-button:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+        .card-content { display: flex; align-items: center; padding: 10px 13px; }
+        .card-icon-box {
+            width: 46px; height: 46px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .card-emoji { font-size: 23px; }
+        .card-text-container { flex: 1; }
+        .card-title { font-size: 12px; font-weight: 700; color: #2d5016; margin-bottom: 4px; }
+        .card-description { font-size: 9px; color: #666; line-height: 13px; }
+        .card-arrow { font-size: 13px; color: #2d5016; font-weight: 700; margin-left: 5px; }
+        .features-section { padding: 32px 0; }
+        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; }
+        .feature-item { background: rgba(255,255,255,0.1); border-radius: 12px; padding: 16px 8px; text-align: center; }
+        .feature-icon { font-size: 24px; margin-bottom: 8px; }
+        .feature-title { font-size: 10px; font-weight: 600; color: #fff; }
+        .cta-section { background: rgba(255,255,255,0.15); border-radius: 24px; padding: 32px 24px; margin: 32px 0; text-align: center; }
+        .cta-section h2 { font-size: 20px; margin-bottom: 20px; color: #fff; }
+        .store-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .store-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            color: #2d5016;
+            padding: 12px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .store-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+        .store-btn svg { width: 20px; height: 20px; }
+        .store-btn.disabled { opacity: 0.6; pointer-events: none; }
+        .how-section { padding: 32px 0; }
+        .steps { display: flex; flex-direction: column; gap: 16px; margin-top: 24px; }
+        .step { display: flex; align-items: flex-start; gap: 12px; background: rgba(255,255,255,0.1); border-radius: 12px; padding: 16px; }
+        .step-number { width: 32px; height: 32px; background: #fff; color: #2d5016; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+        .step-content h3 { font-size: 14px; margin-bottom: 4px; color: #fff; }
+        .step-content p { color: rgba(255,255,255,0.8); font-size: 12px; line-height: 1.4; }
+        .footer-section { text-align: center; padding: 24px 0; }
+        .footer-text { font-size: 14px; color: rgba(255,255,255,0.5); font-weight: 500; }
+        .footer-links { margin-top: 12px; font-size: 12px; }
+        .footer-links a { color: rgba(255,255,255,0.7); text-decoration: none; margin: 0 8px; }
+        .footer-links a:hover { color: #fff; text-decoration: underline; }
+        @media (max-width: 500px) { .main-title { font-size: 32px; } .features-grid { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero-section">
+            <div class="icon-box"><span class="icon-text">+1</span></div>
+            <h1 class="main-title">Population +1</h1>
+            <p class="tagline">Welcome to The +1 Announcement App Creator Studio!</p>
+            <p class="tagline-second">CREATE - EDUCATE - GIFT - REMINISCE</p>
+            <p class="tagline-second">ENCAPSULATE MAJOR LIFE MILESTONES THAT WILL ENDURE THE TEST OF TIME!</p>
+        </div>
+        <div class="content-section">
+            <h2 class="section-title">What would you like to create?</h2>
+            <a href="#download" class="card-button">
+                <div class="card-content">
+                    <div class="card-icon-box"><span class="card-emoji">👶</span></div>
+                    <div class="card-text-container">
+                        <div class="card-title">+1 New Baby Announcement</div>
+                        <div class="card-description">Welcome your +1 to friends and family with a custom announcement!</div>
+                    </div>
+                    <span class="card-arrow">→</span>
+                </div>
+            </a>
+            <a href="#download" class="card-button">
+                <div class="card-content">
+                    <div class="card-icon-box"><span class="card-emoji">🎉</span></div>
+                    <div class="card-text-container">
+                        <div class="card-title">Life Milestones</div>
+                        <div class="card-description">Birthday, Sweet 16, Graduation, Anniversary and more!</div>
+                    </div>
+                    <span class="card-arrow">→</span>
+                </div>
+            </a>
+            <a href="#download" class="card-button">
+                <div class="card-content">
+                    <div class="card-icon-box"><span class="card-emoji">🎲</span></div>
+                    <div class="card-text-container">
+                        <div class="card-title">Just For Fun!</div>
+                        <div class="card-description">Life Path Numbers, Lucky Numbers, Roman Numerals and more!</div>
+                    </div>
+                    <span class="card-arrow">→</span>
+                </div>
+            </a>
+            <a href="#download" class="card-button">
+                <div class="card-content">
+                    <div class="card-icon-box"><span class="card-emoji">🕊️</span></div>
+                    <div class="card-text-container">
+                        <div class="card-title">-1 Memorial Announcement</div>
+                        <div class="card-description">Funeral Home Portal: Create dignified memorial announcements</div>
+                    </div>
+                    <span class="card-arrow">→</span>
+                </div>
+            </a>
+        </div>
+        <div class="features-section">
+            <h2 class="section-title">What's Included</h2>
+            <div class="features-grid">
+                <div class="feature-item"><div class="feature-icon">⛽</div><div class="feature-title">Gas Prices</div></div>
+                <div class="feature-item"><div class="feature-icon">🏛️</div><div class="feature-title">President</div></div>
+                <div class="feature-item"><div class="feature-icon">🎵</div><div class="feature-title">#1 Song</div></div>
+                <div class="feature-item"><div class="feature-icon">🎬</div><div class="feature-title">#1 Movie</div></div>
+                <div class="feature-item"><div class="feature-icon">🏆</div><div class="feature-title">Champions</div></div>
+                <div class="feature-item"><div class="feature-icon">📍</div><div class="feature-title">City Pop.</div></div>
+            </div>
+        </div>
+        <div id="download" class="cta-section">
+            <h2>Download the App</h2>
+            <div class="store-buttons">
+                <a href="#" class="store-btn">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/></svg>
+                    Google Play
+                </a>
+                <a href="#" class="store-btn disabled">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.09,16.67C20.06,16.74 19.67,18.11 18.71,19.5M13,3.5C13.73,2.67 14.94,2.04 15.94,2C16.07,3.17 15.6,4.35 14.9,5.19C14.21,6.04 13.07,6.7 11.95,6.61C11.8,5.46 12.36,4.26 13,3.5Z"/></svg>
+                    iOS Coming Soon
+                </a>
+            </div>
+        </div>
+        <div class="how-section">
+            <h2 class="section-title">How It Works</h2>
+            <div class="steps">
+                <div class="step"><div class="step-number">1</div><div class="step-content"><h3>Enter the Details</h3><p>Baby's name, birth date, time, weight, length, and hometown</p></div></div>
+                <div class="step"><div class="step-number">2</div><div class="step-content"><h3>We Find the History</h3><p>Our database pulls accurate data from that exact date - gas prices, president, top songs, and more</p></div></div>
+                <div class="step"><div class="step-number">3</div><div class="step-content"><h3>Save and Share</h3><p>Download your beautiful announcement and time capsule. Print it, frame it, share it!</p></div></div>
+            </div>
+        </div>
+        <div class="footer-section">
+            <p class="footer-text">WWW.POPULATIONPLUSONE.COM</p>
+            <div class="footer-links"><a href="privacy.html">Privacy Policy</a><a href="mailto:hello@populationplusone.com">Contact</a></div>
+            <p class="footer-text" style="margin-top: 16px;">© 2026 Population +1</p>
+        </div>
+    </div>
+</body>
+</html>
