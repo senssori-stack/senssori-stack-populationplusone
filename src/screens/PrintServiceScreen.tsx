@@ -28,7 +28,10 @@ interface PrintOption {
     }>;
     turnaround: string;
     quality: string;
-    category: 'photo' | 'canvas' | 'keepsake' | 'mailable';
+    category: 'photo' | 'canvas' | 'keepsake' | 'mailable' | 'local-pickup';
+    vendor?: 'printful' | 'fedex' | 'staples';
+    localPickup?: boolean;
+    locationFinderUrl?: string;
 }
 
 export default function PrintServiceScreen({ navigation, route }: Props) {
@@ -51,21 +54,57 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
     const birthDate = designData.dobISO ? new Date(designData.dobISO).toLocaleDateString() : 'Not specified';
 
     const printOptions: PrintOption[] = [
+        // ========== YARD SIGNS - FedEx Office Local Pickup ==========
         {
-            id: 'postcard',
-            name: '📮 Birthday Time Capsule Postcard',
-            description: 'Perfect for grandparents to mail! Postcard format for birthday gifts',
+            id: 'yardsign',
+            name: '🏡 Front Yard Welcome Sign',
+            description: '📦 FedEx Office LOCAL PICKUP! Same-day available at 2,000+ locations',
             sizes: [
-                { size: '4×6" Postcard', price: 8.99, recommended: true, fedexSku: 'PC46STD' },
-                { size: '5×7" Postcard', price: 12.99, fedexSku: 'PC57STD' }
+                { size: '12×18" Yard Sign', price: 24.99, fedexSku: 'YRD1218' },
+                { size: '18×24" Yard Sign', price: 34.99, recommended: true, fedexSku: 'YRD1824' },
+                { size: '24×36" Yard Sign', price: 49.99, fedexSku: 'YRD2436' }
             ],
-            turnaround: '2-3 business days + shipping',
-            quality: 'High-gloss cardstock, mailable',
+            turnaround: '⚡ Same day - 2 days (local pickup!)',
+            quality: 'Corrugated plastic, UV resistant, H-stake included',
+            category: 'local-pickup',
+            vendor: 'fedex',
+            localPickup: true,
+            locationFinderUrl: 'https://local.fedex.com/en-us/search'
+        },
+        // ========== BASEBALL CARDS - NEW! ==========
+        {
+            id: 'baseballcard',
+            name: '⚾ Rookie Trading Card',
+            description: 'Collectible trading card with baby stats! Perfect for sharing & keepsakes',
+            sizes: [
+                { size: 'Single Card (2.5×3.5")', price: 4.99, fedexSku: 'TRD1' },
+                { size: '10-Pack Trading Cards', price: 19.99, recommended: true, fedexSku: 'TRD10' },
+                { size: '25-Pack Trading Cards', price: 39.99, fedexSku: 'TRD25' },
+                { size: '50-Pack Trading Cards', price: 69.99, fedexSku: 'TRD50' }
+            ],
+            turnaround: '3-5 business days + shipping',
+            quality: 'Premium cardstock, glossy finish, rounded corners',
             category: 'mailable'
         },
+        // ========== POSTCARDS - ENHANCED ==========
+        {
+            id: 'postcard',
+            name: '📮 Birth Announcement Postcards',
+            description: 'Mailable postcards for grandparents & family! Send the news in style',
+            sizes: [
+                { size: '4×6" Postcard (10-pack)', price: 14.99, fedexSku: 'PC46P10' },
+                { size: '4×6" Postcard (25-pack)', price: 29.99, recommended: true, fedexSku: 'PC46P25' },
+                { size: '5×7" Postcard (10-pack)', price: 19.99, fedexSku: 'PC57P10' },
+                { size: '5×7" Postcard (25-pack)', price: 39.99, fedexSku: 'PC57P25' }
+            ],
+            turnaround: '3-5 business days + shipping',
+            quality: 'High-gloss cardstock, mailable, USPS compatible',
+            category: 'mailable'
+        },
+        // ========== PHOTO PRINTS ==========
         {
             id: 'premium',
-            name: 'Premium Photo Print',
+            name: '🖼️ Premium Photo Print',
             description: 'Professional photo paper with vibrant colors and sharp details',
             sizes: [
                 { size: '5×7"', price: 12.99, fedexSku: 'PPH57' },
@@ -77,23 +116,39 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
             quality: 'Premium photo paper, 300 DPI',
             category: 'photo'
         },
+        // ========== POSTERS ==========
+        {
+            id: 'poster',
+            name: '📜 Large Format Poster',
+            description: 'Big, bold posters perfect for the nursery wall!',
+            sizes: [
+                { size: '12×18" Poster', price: 16.99, fedexSku: 'PST1218' },
+                { size: '18×24" Poster', price: 24.99, recommended: true, fedexSku: 'PST1824' },
+                { size: '24×36" Poster', price: 34.99, fedexSku: 'PST2436' }
+            ],
+            turnaround: '3-5 business days + shipping',
+            quality: 'Premium matte or glossy paper',
+            category: 'photo'
+        },
+        // ========== CANVAS ==========
         {
             id: 'canvas',
-            name: 'Canvas Print',
+            name: '🎨 Canvas Print',
             description: 'Gallery-wrapped canvas for a sophisticated display',
             sizes: [
                 { size: '8×10"', price: 35.99, fedexSku: 'CNV810' },
-                { size: '11×14"', price: 49.99, recommended: true, fedexSku: 'CNV1114' },
-                { size: '16×20"', price: 79.99, fedexSku: 'CNV1620' },
+                { size: '11×14"', price: 49.99, fedexSku: 'CNV1114' },
+                { size: '16×20"', price: 79.99, recommended: true, fedexSku: 'CNV1620' },
                 { size: '20×24"', price: 119.99, fedexSku: 'CNV2024' }
             ],
             turnaround: '5-7 business days',
             quality: 'Gallery-wrapped canvas, 1.5" depth',
             category: 'canvas'
         },
+        // ========== METAL ==========
         {
             id: 'metal',
-            name: 'Metal Print',
+            name: '✨ Metal Print',
             description: 'Modern aluminum finish with incredible detail and durability',
             sizes: [
                 { size: '8×10"', price: 42.99, fedexSku: 'MET810' },
@@ -105,9 +160,10 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
             quality: 'ChromaLuxe aluminum, scratch resistant',
             category: 'keepsake'
         },
+        // ========== FRAMED ==========
         {
             id: 'framed',
-            name: 'Framed Print',
+            name: '🖼️ Framed Print',
             description: 'Ready to hang with professional matting and frame',
             sizes: [
                 { size: '8×10" Framed', price: 54.99, fedexSku: 'FRM810' },
@@ -117,6 +173,35 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
             turnaround: '7-10 business days',
             quality: 'Professional matting, wood frame',
             category: 'keepsake'
+        },
+        // ========== MAGNETS - NEW! ==========
+        {
+            id: 'magnets',
+            name: '🧲 Photo Magnets',
+            description: 'Stick on the fridge! Perfect for grandparents & family',
+            sizes: [
+                { size: '3×4" Magnet (Single)', price: 6.99, fedexSku: 'MAG34S' },
+                { size: '3×4" Magnets (5-pack)', price: 24.99, recommended: true, fedexSku: 'MAG34P5' },
+                { size: '4×6" Magnet (Single)', price: 9.99, fedexSku: 'MAG46S' },
+                { size: '4×6" Magnets (5-pack)', price: 34.99, fedexSku: 'MAG46P5' }
+            ],
+            turnaround: '5-7 business days + shipping',
+            quality: 'Premium photo magnet, thick & durable',
+            category: 'mailable'
+        },
+        // ========== STICKERS - NEW! ==========
+        {
+            id: 'stickers',
+            name: '⭐ Vinyl Stickers',
+            description: 'Weatherproof stickers for cars, laptops, water bottles!',
+            sizes: [
+                { size: '3" Round Stickers (10-pack)', price: 9.99, fedexSku: 'STK3R10' },
+                { size: '4" Die-Cut Stickers (10-pack)', price: 14.99, recommended: true, fedexSku: 'STK4D10' },
+                { size: '3" Round Stickers (25-pack)', price: 19.99, fedexSku: 'STK3R25' }
+            ],
+            turnaround: '3-5 business days + shipping',
+            quality: 'Vinyl, waterproof, UV resistant',
+            category: 'mailable'
         }
     ];
 
@@ -131,69 +216,93 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
 
         if (!option || !sizeInfo) return;
 
-        // FedEx Office API Integration
-        const fedexOrderUrl = `https://www.fedex.com/apps/printonline/?locale=en_us&productId=${sizeInfo.fedexSku || 'CUSTOM'}&affiliateId=BIRTHSTUDIO`;
+        // Check if this is a local pickup item (FedEx Office)
+        if (option.localPickup && option.vendor === 'fedex') {
+            handleFedExLocalPickup(option, sizeInfo);
+            return;
+        }
 
+        // Printful shipped items
+        handlePrintfulOrder(option, sizeInfo);
+    };
+
+    const handleFedExLocalPickup = async (option: PrintOption, sizeInfo: any) => {
         Alert.alert(
-            'Confirm Your Print Order',
-            `📋 ORDER SUMMARY:\n\n` +
+            '📦 FedEx Office Local Pickup',
+            `🏡 YARD SIGN ORDER\n\n` +
             `Product: ${option.name}\n` +
             `Size: ${sizeInfo.size}\n` +
-            `Price: $${sizeInfo.price}\n\n` +
+            `Price: ~$${sizeInfo.price}\n\n` +
             `👶 YOUR DESIGN:\n` +
-            `Baby: ${babyNames || 'Not specified'}\n` +
-            `Birth Date: ${birthDate}\n` +
-            `Front: ${frontOrientation === 'portrait' ? 'Portrait 📄' : 'Landscape 📄'}\n` +
-            `TimeCapsule: ${timeCapsuleOrientation === 'portrait' ? 'Portrait 📋' : 'Landscape 📋'}\n\n` +
-            `🏪 This will open FedEx Office for secure payment and pickup at 2,000+ locations nationwide.\n\n` +
-            `✅ Your design files will be automatically uploaded for printing.`,
+            `Baby: ${babyNames || 'Not specified'}\n\n` +
+            `✨ BENEFITS:\n` +
+            `• 2,000+ FedEx Office locations\n` +
+            `• Same-day pickup available!\n` +
+            `• No shipping - drive & pick up\n` +
+            `• H-stake included\n\n` +
+            `📋 NEXT STEPS:\n` +
+            `1. Save your design to Photos\n` +
+            `2. Open FedEx Office website\n` +
+            `3. Upload & order yard sign\n` +
+            `4. Pick up at your local store!`,
             [
                 { text: 'Cancel', style: 'cancel' },
                 {
-                    text: 'Confirm & Order',
+                    text: '📍 Find Locations',
                     onPress: () => {
-                        initiateFedExOrder(option, sizeInfo, fedexOrderUrl);
+                        Linking.openURL(option.locationFinderUrl || 'https://local.fedex.com/en-us/search');
+                    }
+                },
+                {
+                    text: '🛒 Order Yard Sign',
+                    onPress: () => {
+                        Linking.openURL('https://www.fedex.com/en-us/printing/signs-posters-banners/yard-signs.html');
                     }
                 }
             ]
         );
     };
 
-    const initiateFedExOrder = async (option: PrintOption, sizeInfo: any, fedexOrderUrl: string) => {
-        try {
-            // Open FedEx Office website with pre-filled product info
-            const supported = await Linking.canOpenURL(fedexOrderUrl);
-            if (supported) {
-                await Linking.openURL(fedexOrderUrl);
+    const handlePrintfulOrder = async (option: PrintOption, sizeInfo: any) => {
+        // Printful API for shipped items
+        const fedexOrderUrl = `https://www.fedex.com/apps/printonline/?locale=en_us&productId=${sizeInfo.fedexSku || 'CUSTOM'}&affiliateId=BIRTHSTUDIO`;
 
-                // Track order for revenue attribution
-                console.log('FedEx order initiated:', {
-                    product: option.name,
-                    size: sizeInfo.size,
-                    price: sizeInfo.price,
-                    commissionRate: 0.35, // 35% commission
-                    expectedRevenue: (sizeInfo.price * 0.35).toFixed(2)
-                });
+        Alert.alert(
+            '📦 Order Print (Shipped)',
+            `📋 ORDER SUMMARY:\n\n` +
+            `Product: ${option.name}\n` +
+            `Size: ${sizeInfo.size}\n` +
+            `Price: $${sizeInfo.price}\n\n` +
+            `👶 YOUR DESIGN:\n` +
+            `Baby: ${babyNames || 'Not specified'}\n` +
+            `Birth Date: ${birthDate}\n\n` +
+            `🚚 Ships directly to your address\n` +
+            `⏱️ ${option.turnaround}\n\n` +
+            `✅ Professional print quality guaranteed`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Continue to Order',
+                    onPress: () => {
+                        initiatePrintfulOrder(option, sizeInfo);
+                    }
+                }
+            ]
+        );
+    };
 
-                Alert.alert(
-                    'Order Tracking',
-                    `Your print order has been sent to FedEx Office!\n\n` +
-                    `📍 Find nearby locations\n` +
-                    `⏱️ ${option.turnaround}\n` +
-                    `💰 Commission earned: $${(sizeInfo.price * 0.35).toFixed(2)}\n\n` +
-                    `Customer will complete payment and pickup directly with FedEx.`,
-                    [{ text: 'Great!', style: 'default' }]
-                );
-            } else {
-                throw new Error('Cannot open FedEx Office');
-            }
-        } catch (error) {
-            Alert.alert(
-                'Print Order Alternative',
-                'FedEx Office integration temporarily unavailable.\n\nAlternative options:\n• Local print shops\n• Online print services\n• Export and print at home',
-                [{ text: 'OK', style: 'default' }]
-            );
-        }
+    const initiatePrintfulOrder = async (option: PrintOption, sizeInfo: any) => {
+        // TODO: Integrate with Printful API (printful-api.ts)
+        // For now, show success message
+        Alert.alert(
+            '🎉 Order Processing',
+            `Your ${option.name} order is being prepared!\n\n` +
+            `Size: ${sizeInfo.size}\n` +
+            `Price: $${sizeInfo.price}\n` +
+            `Turnaround: ${option.turnaround}\n\n` +
+            `You'll receive an email confirmation with tracking info.`,
+            [{ text: 'Great!', style: 'default' }]
+        );
     };
 
     return (

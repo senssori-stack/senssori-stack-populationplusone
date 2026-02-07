@@ -27,12 +27,62 @@ export type PreviewParams = {
     orientation?: 'portrait' | 'landscape';
     snapshot?: Record<string, string>;
     population?: number;
+    mode?: 'baby' | 'milestone'; // 'baby' for birth announcement, 'milestone' for birthdays
+    personName?: string; // For milestone mode - the person's full name
+    message?: string; // Prewritten message for milestone mode
+};
+
+export type MemorialParams = {
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+    photoUri?: string | null;
+    dateOfBirth?: string;
+    dateOfDeath?: string;
+    age?: string;
+    hometown?: string; // City, State
+    // Service info (front)
+    serviceType?: 'funeral' | 'celebration' | 'memorial' | 'private';
+    serviceDate?: string;
+    serviceTime?: string;
+    serviceLocation?: string;
+    serviceAddress?: string;
+    donationInfo?: string;
+    shortMessage?: string;
+    theme?: 'classic' | 'elegant' | 'nature' | 'faith' | 'military';
+    // Back side - Arrangements
+    viewingDate?: string;
+    viewingTime?: string;
+    viewingLocation?: string;
+    viewingAddress?: string;
+    burialLocation?: string;
+    burialAddress?: string;
+    receptionInfo?: string;
+    pallbearers?: string;
+    honoraryPallbearers?: string;
+    flowerBearers?: string;
+    clergyName?: string;
+    musicSelections?: string;
+    specialThanks?: string;
 };
 
 export type RootStackParamList = {
     Landing: undefined;
     Form: undefined;
+    ObituaryForm: undefined;
+    MemorialPreview: MemorialParams;
+    MemorialBack: MemorialParams;
     LifeMilestones: undefined;
+    JustForFun: undefined;
+    LifePathNumber: { birthDate: string };
+    LuckyNumbers: { birthDate: string };
+    RomanNumerals: { birthDate: string };
+    Birthstone: { birthDate: string };
+    ZodiacSign: { birthDate: string };
+    OnThisDay: { birthDate: string };
+    FamousBirthdays: { birthDate: string };
+    FullAstrology: { birthDate: string };
+    Horoscope: { birthDate: string; birthTime?: string; birthLocation?: string };
     Preview: PreviewParams;
     ChartReading: PreviewParams; // Natal chart with reading and descriptions
     FramingIdeas: undefined;
@@ -42,4 +92,5 @@ export type RootStackParamList = {
     Front: PreviewParams;
     Back: PreviewParams;
     Test: undefined;
+    AboutUs: undefined;
 };

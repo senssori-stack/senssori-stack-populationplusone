@@ -780,7 +780,103 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
             { date: '2013', value: '16,576.66' },
             { date: '2012', value: '13,104.14' },
             { date: '2011', value: '12,217.56' },
-            { date: '2010', value: '11,577.51' }
+            { date: '2010', value: '11,577.51' },
+            { date: '2009', value: '10,428.05' },
+            { date: '2008', value: '8,776.39' },
+            { date: '2007', value: '13,264.82' },
+            { date: '2006', value: '12,463.15' },
+            { date: '2005', value: '10,717.50' },
+            { date: '2004', value: '10,783.01' },
+            { date: '2003', value: '10,453.92' },
+            { date: '2002', value: '8,341.63' },
+            { date: '2001', value: '10,021.50' },
+            { date: '2000', value: '10,786.85' },
+            { date: '1999', value: '11,497.12' },
+            { date: '1998', value: '9,181.43' },
+            { date: '1997', value: '7,908.25' },
+            { date: '1996', value: '6,448.27' },
+            { date: '1995', value: '5,117.12' },
+            { date: '1994', value: '3,834.44' },
+            { date: '1993', value: '3,754.09' },
+            { date: '1992', value: '3,301.11' },
+            { date: '1991', value: '3,168.83' },
+            { date: '1990', value: '2,633.66' },
+            { date: '1989', value: '2,753.20' },
+            { date: '1988', value: '2,168.57' },
+            { date: '1987', value: '1,938.83' },
+            { date: '1986', value: '1,895.95' },
+            { date: '1985', value: '1,546.67' },
+            { date: '1984', value: '1,211.57' },
+            { date: '1983', value: '1,258.64' },
+            { date: '1982', value: '1,046.54' },
+            { date: '1981', value: '875.00' },
+            { date: '1980', value: '963.99' },
+            { date: '1979', value: '838.74' },
+            { date: '1978', value: '805.01' },
+            { date: '1977', value: '831.17' },
+            { date: '1976', value: '1,004.65' },
+            { date: '1975', value: '852.41' },
+            { date: '1974', value: '616.24' },
+            { date: '1973', value: '850.86' },
+            { date: '1972', value: '1,020.02' },
+            { date: '1971', value: '890.20' },
+            { date: '1970', value: '838.92' },
+            { date: '1969', value: '800.36' },
+            { date: '1968', value: '943.75' },
+            { date: '1967', value: '905.11' },
+            { date: '1966', value: '785.69' },
+            { date: '1965', value: '969.26' },
+            { date: '1964', value: '874.13' },
+            { date: '1963', value: '762.95' },
+            { date: '1962', value: '652.10' },
+            { date: '1961', value: '731.14' },
+            { date: '1960', value: '615.89' },
+            { date: '1959', value: '679.36' },
+            { date: '1958', value: '583.65' },
+            { date: '1957', value: '435.69' },
+            { date: '1956', value: '499.47' },
+            { date: '1955', value: '488.40' },
+            { date: '1954', value: '404.39' },
+            { date: '1953', value: '280.90' },
+            { date: '1952', value: '291.90' },
+            { date: '1951', value: '269.23' },
+            { date: '1950', value: '235.41' },
+            { date: '1949', value: '200.13' },
+            { date: '1948', value: '177.30' },
+            { date: '1947', value: '181.16' },
+            { date: '1946', value: '192.91' },
+            { date: '1945', value: '192.91' },
+            { date: '1944', value: '152.32' },
+            { date: '1943', value: '135.89' },
+            { date: '1942', value: '119.40' },
+            { date: '1941', value: '110.96' },
+            { date: '1940', value: '131.13' },
+            { date: '1939', value: '150.24' },
+            { date: '1938', value: '154.76' },
+            { date: '1937', value: '120.85' },
+            { date: '1936', value: '179.90' },
+            { date: '1935', value: '144.13' },
+            { date: '1934', value: '104.04' },
+            { date: '1933', value: '99.90' },
+            { date: '1932', value: '59.93' },
+            { date: '1931', value: '77.90' },
+            { date: '1930', value: '164.58' },
+            { date: '1929', value: '248.48' },
+            { date: '1928', value: '300.00' },
+            { date: '1927', value: '202.40' },
+            { date: '1926', value: '157.20' },
+            { date: '1925', value: '156.66' },
+            { date: '1924', value: '120.51' },
+            { date: '1923', value: '95.52' },
+            { date: '1922', value: '98.73' },
+            { date: '1921', value: '81.10' },
+            { date: '1920', value: '71.95' },
+            { date: '1919', value: '107.23' },
+            { date: '1918', value: '82.16' },
+            { date: '1917', value: '74.38' },
+            { date: '1916', value: '95.00' },
+            { date: '1915', value: '99.15' },
+            { date: '1914', value: '53.17' }
         ]
     },
 
@@ -849,9 +945,39 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
     },
 
     // Government officials (these don't have prices but are important data)
+    // NOTE: Trump/Vance took office January 20, 2025
     {
         key: 'PRESIDENT',
         monthlyData: [
+            // 2026 - Trump Administration
+            { date: '2026-12', value: 'Donald Trump' },
+            { date: '2026-11', value: 'Donald Trump' },
+            { date: '2026-10', value: 'Donald Trump' },
+            { date: '2026-09', value: 'Donald Trump' },
+            { date: '2026-08', value: 'Donald Trump' },
+            { date: '2026-07', value: 'Donald Trump' },
+            { date: '2026-06', value: 'Donald Trump' },
+            { date: '2026-05', value: 'Donald Trump' },
+            { date: '2026-04', value: 'Donald Trump' },
+            { date: '2026-03', value: 'Donald Trump' },
+            { date: '2026-02', value: 'Donald Trump' },
+            { date: '2026-01', value: 'Donald Trump' },
+            // 2025 - Transition on Jan 20
+            { date: '2025-12', value: 'Donald Trump' },
+            { date: '2025-11', value: 'Donald Trump' },
+            { date: '2025-10', value: 'Donald Trump' },
+            { date: '2025-09', value: 'Donald Trump' },
+            { date: '2025-08', value: 'Donald Trump' },
+            { date: '2025-07', value: 'Donald Trump' },
+            { date: '2025-06', value: 'Donald Trump' },
+            { date: '2025-05', value: 'Donald Trump' },
+            { date: '2025-04', value: 'Donald Trump' },
+            { date: '2025-03', value: 'Donald Trump' },
+            { date: '2025-02', value: 'Donald Trump' },
+            { date: '2025-01', value: 'Joe Biden' },  // Jan 1-19 was Biden, Jan 20+ is Trump (handled by override)
+            // 2024
+            { date: '2024-12', value: 'Joe Biden' },
+            { date: '2024-11', value: 'Joe Biden' },
             { date: '2024-10', value: 'Joe Biden' },
             { date: '2024-09', value: 'Joe Biden' },
             { date: '2024-08', value: 'Joe Biden' },
@@ -895,8 +1021,45 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
     {
         key: 'VICE PRESIDENT',
         monthlyData: [
+            // 2026 - Trump Administration
+            { date: '2026-12', value: 'JD Vance' },
+            { date: '2026-11', value: 'JD Vance' },
+            { date: '2026-10', value: 'JD Vance' },
+            { date: '2026-09', value: 'JD Vance' },
+            { date: '2026-08', value: 'JD Vance' },
+            { date: '2026-07', value: 'JD Vance' },
+            { date: '2026-06', value: 'JD Vance' },
+            { date: '2026-05', value: 'JD Vance' },
+            { date: '2026-04', value: 'JD Vance' },
+            { date: '2026-03', value: 'JD Vance' },
+            { date: '2026-02', value: 'JD Vance' },
+            { date: '2026-01', value: 'JD Vance' },
+            // 2025 - Transition on Jan 20
+            { date: '2025-12', value: 'JD Vance' },
+            { date: '2025-11', value: 'JD Vance' },
+            { date: '2025-10', value: 'JD Vance' },
+            { date: '2025-09', value: 'JD Vance' },
+            { date: '2025-08', value: 'JD Vance' },
+            { date: '2025-07', value: 'JD Vance' },
+            { date: '2025-06', value: 'JD Vance' },
+            { date: '2025-05', value: 'JD Vance' },
+            { date: '2025-04', value: 'JD Vance' },
+            { date: '2025-03', value: 'JD Vance' },
+            { date: '2025-02', value: 'JD Vance' },
+            { date: '2025-01', value: 'Kamala Harris' },  // Jan 1-19 was Harris, Jan 20+ is Vance (handled by override)
+            // 2024
+            { date: '2024-12', value: 'Kamala Harris' },
+            { date: '2024-11', value: 'Kamala Harris' },
             { date: '2024-10', value: 'Kamala Harris' },
             { date: '2024-09', value: 'Kamala Harris' },
+            { date: '2024-08', value: 'Kamala Harris' },
+            { date: '2024-07', value: 'Kamala Harris' },
+            { date: '2024-06', value: 'Kamala Harris' },
+            { date: '2024-05', value: 'Kamala Harris' },
+            { date: '2024-04', value: 'Kamala Harris' },
+            { date: '2024-03', value: 'Kamala Harris' },
+            { date: '2024-02', value: 'Kamala Harris' },
+            { date: '2024-01', value: 'Kamala Harris' },
             // Continue pattern...
             { date: '2021-01', value: 'Kamala Harris' },
             { date: '2020-12', value: 'Mike Pence' },
@@ -1125,16 +1288,18 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
 
 /**
  * Get historical data for a specific date
+ * Handles inauguration date transitions precisely
  */
 export function getHistoricalSnapshotForDate(targetDate: string): Record<string, string> {
     const result: Record<string, string> = {};
 
     // Parse target date (YYYY-MM-DD to YYYY-MM)
-    const dateMatch = targetDate.match(/^(\d{4})-(\d{2})-\d{2}$/);
+    const dateMatch = targetDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (!dateMatch) return result;
 
     const targetYear = parseInt(dateMatch[1]);
     const targetMonth = parseInt(dateMatch[2]);
+    const targetDay = parseInt(dateMatch[3]);
     const targetYearMonth = `${targetYear}-${targetMonth.toString().padStart(2, '0')}`;
 
     for (const item of HISTORICAL_SNAPSHOT_DATA) {
@@ -1159,6 +1324,13 @@ export function getHistoricalSnapshotForDate(targetDate: string): Record<string,
         }
     }
 
+    // INAUGURATION DATE OVERRIDE: Trump/Vance took office January 20, 2025
+    // For births on or after January 20, 2025, override to show Trump/Vance
+    if (targetYear === 2025 && targetMonth === 1 && targetDay >= 20) {
+        result['PRESIDENT'] = 'Donald Trump';
+        result['VICE PRESIDENT'] = 'JD Vance';
+    }
+
     return result;
 }
 
@@ -1177,12 +1349,18 @@ export async function getSnapshotWithHistorical(targetDate?: string): Promise<Re
     // Get historical data for the target date
     const historicalData = getHistoricalSnapshotForDate(targetDate);
 
-    // For dates 1914-2004, get extended historical data
+    // For dates 1914-2019, get extended historical data to fill any gaps
+    // (yearlyData in HISTORICAL_SNAPSHOT_DATA may have gaps for some categories before 2020)
     const targetYear = new Date(targetDate).getFullYear();
-    if (targetYear >= 1914 && targetYear <= 2004) {
+    if (targetYear >= 1914 && targetYear <= 2019) {
         const extendedData = getExtendedHistoricalData(targetYear);
-        // Merge extended data with existing historical data
-        Object.assign(historicalData, extendedData);
+        // Merge: existing historical data takes precedence over extended data
+        // This ensures specific yearlyData values are kept, but gaps are filled
+        Object.keys(extendedData).forEach(key => {
+            if (!historicalData[key] || historicalData[key] === '' || historicalData[key] === 'Unknown') {
+                historicalData[key] = extendedData[key];
+            }
+        });
     }
 
     // Get current data as fallback

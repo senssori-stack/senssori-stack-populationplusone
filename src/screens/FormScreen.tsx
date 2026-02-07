@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity,
-    useWindowDimensions, Image, Alert, Platform,
+    useWindowDimensions, Image, Alert, Platform, Modal, Animated,
 } from "react-native";
-import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -15,9 +15,110 @@ import { getSnapshotWithHistorical } from '../data/utils/historical-snapshot';
 
 type Props = NativeStackScreenProps<RootStackParamList, "Form">;
 
+// Animated Color Box with cascading glow effect
+const AnimatedColorBox = ({
+    themeName,
+    isSelected,
+    onPress,
+    delay,
+    glowAnim
+}: {
+    themeName: ThemeName;
+    isSelected: boolean;
+    onPress: () => void;
+    delay: number;
+    glowAnim: Animated.Value;
+}) => {
+    const bgColor = COLOR_SCHEMES[themeName].bg;
+
+    // Create interpolated glow based on delay offset
+    const glowOpacity = glowAnim.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [0.3, 1, 0.3],
+    });
+
+    const glowScale = glowAnim.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [1, 1.15, 1],
+    });
+
+    return (
+        <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+            <Animated.View
+                style={[
+                    {
+                        width: 28,
+                        height: 28,
+                        borderRadius: 6,
+                        backgroundColor: bgColor,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        borderWidth: isSelected ? 3 : 1,
+                        borderColor: isSelected ? '#fff' : 'rgba(255,255,255,0.3)',
+                        transform: [{ scale: glowScale }],
+                        shadowColor: bgColor,
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: glowOpacity as any,
+                        shadowRadius: 8,
+                        elevation: 8,
+                    }
+                ]}
+            >
+                <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>+1</Text>
+            </Animated.View>
+        </TouchableOpacity>
+    );
+};
+
 export default function FormScreen({ navigation, route }: Props) {
     const [theme, setTheme] = useState<ThemeName>("green");
     const [mode, setMode] = useState<'baby' | 'birthday'>('baby'); // NEW: Mode toggle
+
+    // Cascading glow animation for color palette
+    const glowAnims = useRef(
+        Array.from({ length: 25 }, () => new Animated.Value(0))
+    ).current;
+
+    // Start cascading animation on mount
+    useEffect(() => {
+        const runCascade = () => {
+            // Reset all animations
+            glowAnims.forEach(anim => anim.setValue(0));
+
+            // 5x5 grid: column by column, top to bottom
+            const animations: Animated.CompositeAnimation[] = [];
+
+            for (let col = 0; col < 5; col++) {
+                for (let row = 0; row < 5; row++) {
+                    const index = row * 5 + col; // Grid index
+                    const delay = (col * 5 + row) * 80; // 80ms stagger
+
+                    animations.push(
+                        Animated.sequence([
+                            Animated.delay(delay),
+                            Animated.timing(glowAnims[index], {
+                                toValue: 1,
+                                duration: 400,
+                                useNativeDriver: true,
+                            }),
+                            Animated.timing(glowAnims[index], {
+                                toValue: 0,
+                                duration: 400,
+                                useNativeDriver: true,
+                            }),
+                        ])
+                    );
+                }
+            }
+
+            Animated.parallel(animations).start(() => {
+                // Repeat after a pause
+                setTimeout(runCascade, 2000);
+            });
+        };
+
+        runCascade();
+    }, []);
 
     // TEST DATA - Prefilled for easy testing
     // 🧪 For testing long names, uncomment these lines:
@@ -43,11 +144,13 @@ export default function FormScreen({ navigation, route }: Props) {
         },
     ]);
     const [babyCount, setBabyCount] = useState<number>(1); // Default to single baby
+    const [showBabyCountModal, setShowBabyCountModal] = useState(false);
     const [motherName, setMotherName] = useState("Sarah Johnson");
     const [fatherName, setFatherName] = useState("Michael Johnson");
     const [email, setEmail] = useState("sarah.johnson@email.com"); // For marketing
     const [hometown, setHometown] = useState("Bellefontaine Neighbors, MO");
     const [dobDate, setDobDate] = useState<Date>(new Date()); // Today's date
+    const [showDatePicker, setShowDatePicker] = useState(false);
     const [weightLb, setWeightLb] = useState("7");
     const [weightOz, setWeightOz] = useState("8");
     const [lengthIn, setLengthIn] = useState("20");
@@ -115,28 +218,6 @@ export default function FormScreen({ navigation, route }: Props) {
         }, 1000);
         return () => clearTimeout(timeoutId);
     }, [hometown, dobDate]);
-
-    function openDate() {
-        if (Platform.OS === 'web') {
-            // On web, prompt for date
-            const currentDateStr = dobDate.toISOString().split('T')[0];
-            const newDateStr = prompt('Enter date (YYYY-MM-DD):', currentDateStr);
-            if (newDateStr) {
-                const newDate = new Date(newDateStr);
-                if (!isNaN(newDate.getTime())) {
-                    setDobDate(newDate);
-                }
-            }
-        } else {
-            // On Android/iOS, use the native picker
-            DateTimePickerAndroid.open({
-                value: dobDate,
-                onChange: (_e, d) => { if (d) setDobDate(d); },
-                mode: "date",
-                is24Hour: true,
-            });
-        }
-    }
 
     async function pickPhotoForBaby(index?: number) {
         try {
@@ -251,67 +332,88 @@ export default function FormScreen({ navigation, route }: Props) {
     return (
         <ScrollView style={[styles.page, { backgroundColor: '#f5f5f5' }]} contentContainerStyle={styles.container}>
 
-            {/* VERSION CHECK */}
-            <View style={{ backgroundColor: 'lime', padding: 10, marginBottom: 10 }}>
-                <Text style={{ color: 'black', fontSize: 20, fontWeight: 'bold', textAlign: 'center' }}>
-                    VERSION: Feb 3, 2026 - 9:15 PM - DATE INPUTS FIXED ✅
+            <Text style={styles.h1}>{mode === 'baby' ? 'Please choose Single, Twins or Triplets' : 'How many people?'}</Text>
+            <TouchableOpacity
+                onPress={() => setShowBabyCountModal(true)}
+                style={[styles.input, { backgroundColor: '#FFFFFF', justifyContent: 'center', marginBottom: 8 }]}
+            >
+                <Text style={{ color: '#0a0a0a', fontSize: 14 }}>
+                    {mode === 'baby'
+                        ? (babyCount === 1 ? 'Single' : babyCount === 2 ? 'Twins' : 'Triplets')
+                        : (babyCount === 1 ? 'One' : babyCount === 2 ? 'Two' : 'Three')
+                    }
                 </Text>
-            </View>
+            </TouchableOpacity>
 
-            {/* Instructions */}
-            <Text style={[styles.h1, { fontSize: 14, marginBottom: 20, textAlign: 'center', lineHeight: 20 }]}>
-                FOR BEST RESULTS PLEASE FILL OUT ALL FIELDS ON THIS FORM IN ORDER TO SHOWCASE YOUR ABILITY AS A CREATOR & TO MAXIMIZE THE EMOTIONAL IMPACT ON THE PERSON YOU ARE CREATING THIS KEEPSAKE FOR.
-            </Text>
-
-            <Text style={styles.h1}>{mode === 'baby' ? 'How many babies?' : 'How many people?'}</Text>
-            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 8 }}>
-                {[1, 2, 3].map(n => (
-                    <TouchableOpacity key={n} onPress={() => setBabyCount(n)} style={[styles.themeBtn, { paddingVertical: 10, borderWidth: 1, borderColor: babyCount === n ? '#fff' : '#666' }]}>
-                        <Text style={[styles.themeText, { color: '#fff' }]}>
-                            {mode === 'baby'
-                                ? (n === 1 ? 'Single' : n === 2 ? 'Twins' : 'Triplets')
-                                : (n === 1 ? 'One' : n === 2 ? 'Two' : 'Three')
-                            }
+            <Modal visible={showBabyCountModal} transparent animationType="slide">
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 20, width: '80%' }}>
+                        <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' }}>
+                            {mode === 'baby' ? 'Select Number of Babies' : 'Select Number of People'}
                         </Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
+                        {[1, 2, 3].map(n => (
+                            <TouchableOpacity
+                                key={n}
+                                onPress={() => { setBabyCount(n); setShowBabyCountModal(false); }}
+                                style={{ paddingVertical: 12, borderBottomWidth: n < 3 ? 1 : 0, borderBottomColor: '#eee' }}
+                            >
+                                <Text style={{ fontSize: 16, textAlign: 'center', color: babyCount === n ? '#007AFF' : '#333' }}>
+                                    {mode === 'baby'
+                                        ? (n === 1 ? 'Single' : n === 2 ? 'Twins' : 'Triplets')
+                                        : (n === 1 ? 'One' : n === 2 ? 'Two' : 'Three')
+                                    }
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                        <TouchableOpacity onPress={() => setShowBabyCountModal(false)} style={{ marginTop: 16, paddingVertical: 10 }}>
+                            <Text style={{ textAlign: 'center', color: '#999' }}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
             {babies.map((b, idx) => (
                 <View key={idx} style={{ marginBottom: 10 }}>
-                    <Text style={[styles.h1, { fontSize: 16 }]}>
-                        {mode === 'baby' ? 'Baby First Name' : 'Person First Name'}
-                    </Text>
-                    <TextInput
-                        style={[styles.input, {
-                            backgroundColor: '#FFFFFF',
-                            color: '#0a0a0a',
-                            borderColor: touched.babyFirst && !(b.first || '').trim() ? '#ff6b6b' : 'rgba(255,255,255,0.8)'
-                        }]}
-                        placeholder="First name"
-                        placeholderTextColor="#999"
-                        value={b.first}
-                        onChangeText={t => setBabies(bs => { const copy = [...bs]; copy[idx] = { ...copy[idx], first: t }; return copy; })}
-                    />
-                    <Text style={[styles.h1, { fontSize: 16 }]}>
-                        {mode === 'baby' ? 'Baby Middle (optional)' : 'Person Middle (optional)'}
-                    </Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Middle name (optional)"
-                        placeholderTextColor="#999"
-                        value={b.middle || ''}
-                        onChangeText={t => setBabies(bs => { const copy = [...bs]; copy[idx] = { ...copy[idx], middle: t }; return copy; })}
-                    />
-                    <Text style={[styles.h1, { fontSize: 16 }]}>
-                        {mode === 'baby' ? 'Baby Last (optional)' : 'Person Last (optional)'}
-                    </Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Last name (optional)"
-                        placeholderTextColor="#999"
-                        value={b.last || ''}
-                        onChangeText={t => setBabies(bs => { const copy = [...bs]; copy[idx] = { ...copy[idx], last: t }; return copy; })}
-                    />
+                    {babyCount > 1 && (
+                        <Text style={[styles.h1, { fontSize: 14, marginBottom: 4 }]}>
+                            {mode === 'baby' ? `Baby ${idx + 1}` : `Person ${idx + 1}`}
+                        </Text>
+                    )}
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <View style={{ flex: 1 }}>
+                            <Text style={[styles.h1, { fontSize: 12 }]}>First</Text>
+                            <TextInput
+                                style={[styles.input, {
+                                    backgroundColor: '#FFFFFF',
+                                    color: '#0a0a0a',
+                                    borderColor: touched.babyFirst && !(b.first || '').trim() ? '#ff6b6b' : 'rgba(255,255,255,0.8)'
+                                }]}
+                                placeholder="First"
+                                placeholderTextColor="#999"
+                                value={b.first}
+                                onChangeText={t => setBabies(bs => { const copy = [...bs]; copy[idx] = { ...copy[idx], first: t }; return copy; })}
+                            />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <Text style={[styles.h1, { fontSize: 12 }]}>Middle</Text>
+                            <TextInput
+                                style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
+                                placeholder="Middle"
+                                placeholderTextColor="#999"
+                                value={b.middle || ''}
+                                onChangeText={t => setBabies(bs => { const copy = [...bs]; copy[idx] = { ...copy[idx], middle: t }; return copy; })}
+                            />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <Text style={[styles.h1, { fontSize: 12 }]}>Last</Text>
+                            <TextInput
+                                style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
+                                placeholder="Last"
+                                placeholderTextColor="#999"
+                                value={b.last || ''}
+                                onChangeText={t => setBabies(bs => { const copy = [...bs]; copy[idx] = { ...copy[idx], last: t }; return copy; })}
+                            />
+                        </View>
+                    </View>
 
                     {/* Individual Photo Upload */}
                     <Text style={[styles.h1, { fontSize: 16 }]}>
@@ -360,23 +462,28 @@ export default function FormScreen({ navigation, route }: Props) {
                 </View>
             ))}
 
-            <Text style={styles.h1}>Mother&apos;s Name</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Mother's name (optional)"
-                placeholderTextColor="#999"
-                value={motherName}
-                onChangeText={setMotherName}
-            />
-
-            <Text style={styles.h1}>Father&apos;s Name</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Father's name (optional)"
-                placeholderTextColor="#999"
-                value={fatherName}
-                onChangeText={setFatherName}
-            />
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                    <Text style={[styles.h1, { fontSize: 12 }]}>Mother&apos;s Name</Text>
+                    <TextInput
+                        style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
+                        placeholder="Mother's name"
+                        placeholderTextColor="#999"
+                        value={motherName}
+                        onChangeText={setMotherName}
+                    />
+                </View>
+                <View style={{ flex: 1 }}>
+                    <Text style={[styles.h1, { fontSize: 12 }]}>Father&apos;s Name</Text>
+                    <TextInput
+                        style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
+                        placeholder="Father's name"
+                        placeholderTextColor="#999"
+                        value={fatherName}
+                        onChangeText={setFatherName}
+                    />
+                </View>
+            </View>
 
             <Text style={styles.h1}>Hometown (City, State) — required</Text>
             <TextInput
@@ -423,74 +530,33 @@ export default function FormScreen({ navigation, route }: Props) {
             <Text style={styles.h1}>
                 {mode === 'baby' ? 'Date of Birth' : 'Birthday Date'}
             </Text>
-            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
-                <View style={{ flex: 1 }}>
-                    <Text style={{ color: '#fff', marginBottom: 4, fontSize: 12 }}>Month (1-12)</Text>
-                    <TextInput
-                        style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a', textAlign: 'center' }]}
-                        value={String(dobDate.getMonth() + 1)}
-                        onChangeText={(text) => {
-                            const month = parseInt(text);
-                            if (month >= 1 && month <= 12) {
-                                const newDate = new Date(dobDate);
-                                newDate.setMonth(month - 1);
-                                setDobDate(newDate);
-                            }
-                        }}
-                        keyboardType="number-pad"
-                        maxLength={2}
-                        placeholder="MM"
-                        placeholderTextColor="#999"
-                    />
-                </View>
-                <View style={{ flex: 1 }}>
-                    <Text style={{ color: '#fff', marginBottom: 4, fontSize: 12 }}>Day (1-31)</Text>
-                    <TextInput
-                        style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a', textAlign: 'center' }]}
-                        value={String(dobDate.getDate())}
-                        onChangeText={(text) => {
-                            const day = parseInt(text);
-                            if (day >= 1 && day <= 31) {
-                                const newDate = new Date(dobDate);
-                                newDate.setDate(day);
-                                setDobDate(newDate);
-                            }
-                        }}
-                        keyboardType="number-pad"
-                        maxLength={2}
-                        placeholder="DD"
-                        placeholderTextColor="#999"
-                    />
-                </View>
-                <View style={{ flex: 1.5 }}>
-                    <Text style={{ color: '#fff', marginBottom: 4, fontSize: 12 }}>Year</Text>
-                    <TextInput
-                        style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a', textAlign: 'center' }]}
-                        value={String(dobDate.getFullYear())}
-                        onChangeText={(text) => {
-                            const year = parseInt(text);
-                            if (year >= 1900 && year <= 2100) {
-                                const newDate = new Date(dobDate);
-                                newDate.setFullYear(year);
-                                setDobDate(newDate);
-                            }
-                        }}
-                        keyboardType="number-pad"
-                        maxLength={4}
-                        placeholder="YYYY"
-                        placeholderTextColor="#999"
-                    />
-                </View>
-            </View>
+            <TouchableOpacity
+                style={[styles.input, { backgroundColor: '#FFFFFF', paddingVertical: 12 }]}
+                onPress={() => setShowDatePicker(true)}
+            >
+                <Text style={{ color: '#0a0a0a', fontSize: 14 }}>
+                    {dobDate.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "2-digit", year: "numeric" })}
+                </Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+                <DateTimePicker
+                    value={dobDate}
+                    onChange={(_e, d) => {
+                        setShowDatePicker(false);
+                        if (d) setDobDate(d);
+                    }}
+                    mode="date"
+                    display="default"
+                />
+            )}
 
             {/* Weight and Length only shown for baby announcements */}
             {mode === 'baby' && (
                 <>
-                    <Text style={styles.h1}>Weight</Text>
                     {babyCount > 1 ? (
                         <View style={{
                             backgroundColor: 'rgba(255,255,255,0.1)',
-                            padding: 20,
+                            padding: 16,
                             borderRadius: 12,
                             marginBottom: 16,
                             borderWidth: 1,
@@ -499,79 +565,48 @@ export default function FormScreen({ navigation, route }: Props) {
                             <Text style={{
                                 color: '#fff',
                                 textAlign: 'center',
-                                fontSize: 16,
-                                fontWeight: '600',
-                                marginBottom: 8
-                            }}>
-                                ⚖️ Weight not available for {babyCount === 2 ? 'twins' : 'multiple babies'}
-                            </Text>
-                            <Text style={{
-                                color: 'rgba(255,255,255,0.8)',
-                                textAlign: 'center',
                                 fontSize: 14,
-                                lineHeight: 20
+                                fontWeight: '600'
                             }}>
-                                Individual measurements would be confusing on the announcement
+                                ⚖️📏 Weight & Length not available for {babyCount === 2 ? 'twins' : 'multiple babies'}
                             </Text>
                         </View>
                     ) : (
-                        <View style={styles.row}>
-                            <TextInput
-                                style={[styles.input, styles.half]}
-                                placeholder="7 lbs"
-                                placeholderTextColor="#999"
-                                keyboardType="numeric"
-                                value={weightLb}
-                                onChangeText={setWeightLb}
-                            />
-                            <TextInput
-                                style={[styles.input, styles.half]}
-                                placeholder="8 oz"
-                                placeholderTextColor="#999"
-                                keyboardType="numeric"
-                                value={weightOz}
-                                onChangeText={setWeightOz}
-                            />
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={[styles.h1, { fontSize: 12 }]}>Weight (lbs)</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
+                                    placeholder="7"
+                                    placeholderTextColor="#999"
+                                    keyboardType="numeric"
+                                    value={weightLb}
+                                    onChangeText={setWeightLb}
+                                />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={[styles.h1, { fontSize: 12 }]}>Weight (oz)</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
+                                    placeholder="8"
+                                    placeholderTextColor="#999"
+                                    keyboardType="numeric"
+                                    value={weightOz}
+                                    onChangeText={setWeightOz}
+                                />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={[styles.h1, { fontSize: 12 }]}>Length (in)</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
+                                    placeholder="20"
+                                    placeholderTextColor="#999"
+                                    keyboardType="numeric"
+                                    value={lengthIn}
+                                    onChangeText={setLengthIn}
+                                />
+                            </View>
                         </View>
-                    )}
-
-                    <Text style={styles.h1}>Length (inches)</Text>
-                    {babyCount > 1 ? (
-                        <View style={{
-                            backgroundColor: 'rgba(255,255,255,0.1)',
-                            padding: 20,
-                            borderRadius: 12,
-                            marginBottom: 16,
-                            borderWidth: 1,
-                            borderColor: 'rgba(255,255,255,0.2)'
-                        }}>
-                            <Text style={{
-                                color: '#fff',
-                                textAlign: 'center',
-                                fontSize: 16,
-                                fontWeight: '600',
-                                marginBottom: 8
-                            }}>
-                                📏 Length not available for {babyCount === 2 ? 'twins' : 'multiple babies'}
-                            </Text>
-                            <Text style={{
-                                color: 'rgba(255,255,255,0.8)',
-                                textAlign: 'center',
-                                fontSize: 14,
-                                lineHeight: 20
-                            }}>
-                                Individual measurements would be confusing on the announcement
-                            </Text>
-                        </View>
-                    ) : (
-                        <TextInput
-                            style={styles.input}
-                            placeholder="20 inches"
-                            placeholderTextColor="#999"
-                            keyboardType="numeric"
-                            value={lengthIn}
-                            onChangeText={setLengthIn}
-                        />
                     )}
                 </>
             )}
@@ -581,155 +616,80 @@ export default function FormScreen({ navigation, route }: Props) {
                 Choose your announcement background color (all text will be white)
             </Text>
 
-            {/* Color Grid - 5 rows x 5 columns */}
-            <View style={{ alignSelf: 'center', width: '37.5%' }}>
-                <View style={{ gap: 1.5, marginBottom: 4 }}>
+            {/* Color Grid - 5 rows x 5 columns with cascading animation */}
+            <View style={{ alignSelf: 'center', width: '45%' }}>
+                <View style={{ gap: 4, marginBottom: 4 }}>
                     {/* Row 1 - Blues */}
-                    <View style={{ flexDirection: 'row', gap: 1.5 }}>
-                        {(['lightBlue', 'royalBlue', 'mediumBlue', 'navyBlue', 'teal'] as ThemeName[]).map(t => (
-                            <TouchableOpacity
+                    <View style={{ flexDirection: 'row', gap: 4, justifyContent: 'center' }}>
+                        {(['lightBlue', 'royalBlue', 'mediumBlue', 'navyBlue', 'teal'] as ThemeName[]).map((t, colIndex) => (
+                            <AnimatedColorBox
                                 key={t}
+                                themeName={t}
+                                isSelected={theme === t}
                                 onPress={() => setTheme(t)}
-                                style={[
-                                    styles.colorBox,
-                                    {
-                                        backgroundColor: COLOR_SCHEMES[t].bg,
-                                        opacity: theme === t ? 1 : 0.85,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        shadowColor: COLOR_SCHEMES[t].bg,
-                                        shadowOffset: { width: 0, height: 0 },
-                                        shadowOpacity: 0.8,
-                                        shadowRadius: 4,
-                                        elevation: 6,
-                                    }
-                                ]}
-                            >
-                                <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>+1</Text>
-                            </TouchableOpacity>
+                                delay={colIndex * 80}
+                                glowAnim={glowAnims[0 * 5 + colIndex]}
+                            />
                         ))}
                     </View>
 
                     {/* Row 2 - Greens */}
-                    <View style={{ flexDirection: 'row', gap: 1.5 }}>
-                        {(['darkGreen', 'forestGreen', 'green', 'limeGreen', 'mintGreen'] as ThemeName[]).map(t => (
-                            <TouchableOpacity
+                    <View style={{ flexDirection: 'row', gap: 4, justifyContent: 'center' }}>
+                        {(['darkGreen', 'forestGreen', 'green', 'limeGreen', 'mintGreen'] as ThemeName[]).map((t, colIndex) => (
+                            <AnimatedColorBox
                                 key={t}
+                                themeName={t}
+                                isSelected={theme === t}
                                 onPress={() => setTheme(t)}
-                                style={[
-                                    styles.colorBox,
-                                    {
-                                        backgroundColor: COLOR_SCHEMES[t].bg,
-                                        opacity: theme === t ? 1 : 0.85,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        shadowColor: COLOR_SCHEMES[t].bg,
-                                        shadowOffset: { width: 0, height: 0 },
-                                        shadowOpacity: 0.8,
-                                        shadowRadius: 4,
-                                        elevation: 6,
-                                    }
-                                ]}
-                            >
-                                <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>+1</Text>
-                            </TouchableOpacity>
+                                delay={(5 + colIndex) * 80}
+                                glowAnim={glowAnims[1 * 5 + colIndex]}
+                            />
                         ))}
                     </View>
 
                     {/* Row 3 - Pinks/Purples */}
-                    <View style={{ flexDirection: 'row', gap: 1.5 }}>
-                        {(['lavender', 'hotPink', 'rose', 'purple', 'violet'] as ThemeName[]).map(t => (
-                            <TouchableOpacity
+                    <View style={{ flexDirection: 'row', gap: 4, justifyContent: 'center' }}>
+                        {(['lavender', 'hotPink', 'rose', 'purple', 'violet'] as ThemeName[]).map((t, colIndex) => (
+                            <AnimatedColorBox
                                 key={t}
+                                themeName={t}
+                                isSelected={theme === t}
                                 onPress={() => setTheme(t)}
-                                style={[
-                                    styles.colorBox,
-                                    {
-                                        backgroundColor: COLOR_SCHEMES[t].bg,
-                                        opacity: theme === t ? 1 : 0.85,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        shadowColor: COLOR_SCHEMES[t].bg,
-                                        shadowOffset: { width: 0, height: 0 },
-                                        shadowOpacity: 0.8,
-                                        shadowRadius: 4,
-                                        elevation: 6,
-                                    }
-                                ]}
-                            >
-                                <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>+1</Text>
-                            </TouchableOpacity>
+                                delay={(10 + colIndex) * 80}
+                                glowAnim={glowAnims[2 * 5 + colIndex]}
+                            />
                         ))}
                     </View>
 
                     {/* Row 4 - Reds/Oranges */}
-                    <View style={{ flexDirection: 'row', gap: 1.5 }}>
-                        {(['coral', 'red', 'maroon', 'orange', 'gold'] as ThemeName[]).map(t => (
-                            <TouchableOpacity
+                    <View style={{ flexDirection: 'row', gap: 4, justifyContent: 'center' }}>
+                        {(['coral', 'red', 'maroon', 'orange', 'gold'] as ThemeName[]).map((t, colIndex) => (
+                            <AnimatedColorBox
                                 key={t}
+                                themeName={t}
+                                isSelected={theme === t}
                                 onPress={() => setTheme(t)}
-                                style={[
-                                    styles.colorBox,
-                                    {
-                                        backgroundColor: COLOR_SCHEMES[t].bg,
-                                        opacity: theme === t ? 1 : 0.85,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        shadowColor: COLOR_SCHEMES[t].bg,
-                                        shadowOffset: { width: 0, height: 0 },
-                                        shadowOpacity: 0.8,
-                                        shadowRadius: 4,
-                                        elevation: 6,
-                                    }
-                                ]}
-                            >
-                                <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>+1</Text>
-                            </TouchableOpacity>
+                                delay={(15 + colIndex) * 80}
+                                glowAnim={glowAnims[3 * 5 + colIndex]}
+                            />
                         ))}
                     </View>
 
                     {/* Row 5 - Grays */}
-                    <View style={{ flexDirection: 'row', gap: 1.5 }}>
-                        {(['charcoal', 'slate', 'gray', 'silver', 'lightGray'] as ThemeName[]).map(t => (
-                            <TouchableOpacity
+                    <View style={{ flexDirection: 'row', gap: 4, justifyContent: 'center' }}>
+                        {(['charcoal', 'slate', 'gray', 'silver', 'lightGray'] as ThemeName[]).map((t, colIndex) => (
+                            <AnimatedColorBox
                                 key={t}
+                                themeName={t}
+                                isSelected={theme === t}
                                 onPress={() => setTheme(t)}
-                                style={[
-                                    styles.colorBox,
-                                    {
-                                        backgroundColor: COLOR_SCHEMES[t].bg,
-                                        opacity: theme === t ? 1 : 0.85,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        shadowColor: COLOR_SCHEMES[t].bg,
-                                        shadowOffset: { width: 0, height: 0 },
-                                        shadowOpacity: 0.8,
-                                        shadowRadius: 4,
-                                        elevation: 6,
-                                    }
-                                ]}
-                            >
-                                <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>+1</Text>
-                            </TouchableOpacity>
+                                delay={(20 + colIndex) * 80}
+                                glowAnim={glowAnims[4 * 5 + colIndex]}
+                            />
                         ))}
                     </View>
                 </View>
             </View>
-
-            {/* Selected Color Label */}
-            <View style={{
-                backgroundColor: COLOR_SCHEMES[theme].bg,
-                padding: 16,
-                borderRadius: 12,
-                marginBottom: 20,
-                alignItems: 'center',
-            }}>
-                <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', textTransform: 'capitalize' }}>
-                    {theme.replace(/([A-Z])/g, ' $1').trim()}
-                </Text>
-            </View>
-
-
 
             {loading && hometown.trim() && (
                 <View style={{
@@ -750,19 +710,6 @@ export default function FormScreen({ navigation, route }: Props) {
                     </Text>
                 </View>
             )}
-
-            <Text style={styles.h1}>Email Address (for order updates & special offers)</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="your.email@example.com"
-                placeholderTextColor="#999"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="email"
-            />
 
             <TouchableOpacity
                 style={[
@@ -789,80 +736,80 @@ export default function FormScreen({ navigation, route }: Props) {
 
 const styles = StyleSheet.create({
     page: { flex: 1 },
-    container: { padding: 20, paddingBottom: 40 },
+    container: { padding: 12, paddingBottom: 24 },
     h1: {
         color: "#000000",
-        fontSize: 18,
+        fontSize: 13,
         fontWeight: "700",
-        marginTop: 20,
-        marginBottom: 12,
-        letterSpacing: 0.5
+        marginTop: 8,
+        marginBottom: 4,
+        letterSpacing: 0.3
     },
     input: {
         backgroundColor: "#FFFFFF",
         color: "#0a0a0a",
-        borderRadius: 12,
-        paddingHorizontal: 18,
-        paddingVertical: 16,
-        fontSize: 16,
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        fontSize: 14,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.8)',
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3
+        shadowRadius: 2,
+        elevation: 2
     },
-    row: { flexDirection: "row", gap: 12 },
+    row: { flexDirection: "row", gap: 8 },
     half: { flex: 1 },
     btn: {
         backgroundColor: "rgba(255,255,255,0.1)",
-        borderRadius: 12,
-        paddingVertical: 16,
+        borderRadius: 8,
+        paddingVertical: 10,
         alignItems: "center",
-        marginTop: 8,
+        marginTop: 4,
         borderWidth: 1,
         borderColor: "rgba(255,255,255,0.3)"
     },
     btnText: {
         color: "white",
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: "600",
-        letterSpacing: 0.3
+        letterSpacing: 0.2
     },
     buildBtn: {
-        marginTop: 24,
+        marginTop: 16,
         backgroundColor: "rgba(255,255,255,0.95)",
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 6
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 4
     },
     buildText: {
         color: "#0a0a0a",
         fontWeight: "800",
-        fontSize: 18,
+        fontSize: 15,
         textAlign: "center",
-        letterSpacing: 0.5
+        letterSpacing: 0.3
     },
     themeBtn: {
         flex: 1,
-        paddingVertical: 14,
-        borderRadius: 12,
+        paddingVertical: 10,
+        borderRadius: 8,
         alignItems: "center",
         backgroundColor: "rgba(255,255,255,0.1)"
     },
     themeText: {
         color: "white",
         fontWeight: "700",
-        fontSize: 15,
-        letterSpacing: 0.3
+        fontSize: 13,
+        letterSpacing: 0.2
     },
     errorText: {
         color: '#ffcccc',
-        marginTop: 8,
-        fontSize: 14,
+        marginTop: 4,
+        fontSize: 12,
         fontStyle: 'italic'
     },
     btnDisabled: { opacity: 0.6 },

@@ -5,6 +5,7 @@ import SNAPSHOT_CANONICAL_MAP from './snapshot-mapping';
 import { getHistoricalSnapshotForDate } from './historical-snapshot';
 import { CURRENT_SNAPSHOT_DATA } from './current-snapshot';
 import { getFromCache, saveToCache } from './cache-manager';
+import { getMetalsPrices } from './external-apis';
 
 // last applied mappings for debug visibility
 export let LAST_SNAPSHOT_MAPPINGS: Array<{ from: string; to: string }> = [];
@@ -110,6 +111,19 @@ export async function getAllSnapshotValues(): Promise<Record<string, string>> {
 
         console.log('✅ Using Google Sheets snapshot data');
 
+        // Fetch live metals prices and override Google Sheets values
+        const liveMetals = await getMetalsPrices();
+        if (liveMetals) {
+            console.log('💰 Overriding with live metals prices:', liveMetals);
+            out['GOLD OZ'] = liveMetals.gold;
+            out['SILVER OZ'] = liveMetals.silver;
+        }
+
+        // ALWAYS use hardcoded President/VP - never trust Google Sheets for this
+        out['PRESIDENT'] = CURRENT_SNAPSHOT_DATA['PRESIDENT'];
+        out['VICE PRESIDENT'] = CURRENT_SNAPSHOT_DATA['VICE PRESIDENT'];
+        console.log('🏛️ Using hardcoded President/VP:', out['PRESIDENT'], '/', out['VICE PRESIDENT']);
+
         // Save to cache for next time (instant load)
         await saveToCache(out);
 
@@ -118,9 +132,23 @@ export async function getAllSnapshotValues(): Promise<Record<string, string>> {
         console.warn('⚠️ Google Sheets fetch failed, using local fallback data');
     }
 
-    // Final fallback to local data
+    // Final fallback to local data - also try to get live metals
     console.log('📱 Using local fallback snapshot data');
-    return (SNAP_CACHE = { ...CURRENT_SNAPSHOT_DATA });
+    const fallbackData = { ...CURRENT_SNAPSHOT_DATA };
+
+    // Try to get live metals even when using fallback
+    try {
+        const liveMetals = await getMetalsPrices();
+        if (liveMetals) {
+            console.log('💰 Overriding fallback with live metals prices:', liveMetals);
+            fallbackData['GOLD OZ'] = liveMetals.gold;
+            fallbackData['SILVER OZ'] = liveMetals.silver;
+        }
+    } catch (e) {
+        console.warn('⚠️ Metals API also failed, using static prices');
+    }
+
+    return (SNAP_CACHE = fallbackData);
 }
 
 /**

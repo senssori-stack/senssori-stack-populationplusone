@@ -1,22 +1,20 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Platform, Animated, Alert } from 'react-native';
-import { PanGestureHandler, PinchGestureHandler, TapGestureHandler, State, GestureHandlerRootView } from 'react-native-gesture-handler';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../types';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Platform, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { GestureHandlerRootView, PanGestureHandler, PinchGestureHandler, State, TapGestureHandler } from 'react-native-gesture-handler';
+import NatalChartPrintable from '../../components/NatalChartPrintable';
 import SignFrontLandscape from '../../components/SignFrontLandscape';
 import TimeCapsuleLandscape from '../../components/TimeCapsuleLandscape';
-import NatalChartView from './NatalChartView';
-import BirthChartPrintable from '../../components/BirthChartPrintable';
-import AstrologyComprehensive from '../../components/AstrologyComprehensive';
-import { getZodiacFromISO } from '../data/utils/zodiac';
 import { birthstoneFromISO } from '../data/utils/birthstone';
 import { calculateLifePath } from '../data/utils/life-path-calculator';
+import { getZodiacFromISO } from '../data/utils/zodiac';
+import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Preview'>;
 
 export default function PreviewScreen({ navigation, route }: Props) {
     const params = route.params || {};
-    const [viewMode, setViewMode] = useState<'front' | 'back' | 'natal' | 'chart' | 'astro'>('front');
+    const [viewMode, setViewMode] = useState<'front' | 'back' | 'natal'>('front');
 
     // Always landscape for this app
     const currentOrientation = 'landscape';
@@ -54,19 +52,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
         return Math.min(scaleByWidth, scaleByHeight);
     };
 
-    // Calculate what scale makes natal chart FILL THE SCREEN (this is 100%)
-    const calculateNatalFullScreenScale = () => {
-        const availableWidth = screenWidth;
-        const availableHeight = screenHeight - 120;
-        const chartBaseSize = 400;
-
-        const scaleByHeight = availableHeight / chartBaseSize;
-        const scaleByWidth = availableWidth / chartBaseSize;
-
-        return Math.min(scaleByHeight, scaleByWidth);
-    };
-
-    const fullScreenScale = viewMode === 'natal' ? calculateNatalFullScreenScale() : calculateFullScreenScale();
+    const fullScreenScale = calculateFullScreenScale();
     const finalScale = fullScreenScale * zoomScale;
 
     // Handle screen rotation - reset to full screen when dimensions change
@@ -110,16 +96,9 @@ export default function PreviewScreen({ navigation, route }: Props) {
             if (lastScale.current > 1.1) {
                 // Calculate max pan based on current zoom level
                 const actualScale = fullScreenScale * lastScale.current;
-                let contentWidth, contentHeight;
-                if (viewMode === 'natal') {
-                    // Natal chart is 400x400
-                    contentWidth = 400 * actualScale;
-                    contentHeight = 400 * actualScale;
-                } else {
-                    // Birth announcement is 3300x2550
-                    contentWidth = 3300 * actualScale;
-                    contentHeight = 2550 * actualScale;
-                }
+                // Birth announcement is 3300x2550
+                const contentWidth = 3300 * actualScale;
+                const contentHeight = 2550 * actualScale;
 
                 const maxX = Math.max(0, (contentWidth - screenWidth) / 2);
                 const maxY = Math.max(0, (contentHeight - screenHeight) / 2);
@@ -205,6 +184,8 @@ export default function PreviewScreen({ navigation, route }: Props) {
         photoUri: params.babies?.[0]?.photoUri || params.photoUri || null,
         snapshot: params.snapshot || {},
         population: params.population || null,
+        mode: params.mode || 'baby',
+        message: params.message || '',
         // Keep the original babies array if it exists
         babies: params.babies || null,
     };
@@ -262,58 +243,21 @@ export default function PreviewScreen({ navigation, route }: Props) {
                         birthstone={birthstone}
                         lifePathNumber={lifePathNumber}
                         previewScale={finalScale}
+                        mode={formData.mode}
+                        message={formData.message}
                     />
                 </View>
             );
         } else if (viewMode === 'natal') {
             // Natal Chart view
+            const babyName = `${formData.babyFirst} ${formData.babyMiddle ? formData.babyMiddle + ' ' : ''}${formData.babyLast}`.trim() || params.personName || 'Baby';
             return (
                 <View style={styles.announcementContainer}>
-                    <NatalChartView
-                        birthDate={formData.dobDate}
-                        hometown={formData.hometown}
+                    <NatalChartPrintable
                         theme={formData.theme}
-                        previewScale={finalScale}
-                    />
-                </View>
-            );
-        } else if (viewMode === 'chart') {
-            // Birth Chart Certificate (full astrology data)
-            const timeOfBirth = formData.dobDate.toTimeString().substring(0, 5); // HH:MM
-            const latitude = 40.7128; // Default NYC - replace with actual location data
-            const longitude = -74.0060;
-
-            return (
-                <View style={styles.announcementContainer}>
-                    <BirthChartPrintable
-                        theme={formData.theme}
-                        babyName={`${formData.babyFirst} ${formData.babyMiddle ? formData.babyMiddle + ' ' : ''}${formData.babyLast}`.trim()}
+                        babyName={babyName}
                         dobISO={dobISO}
-                        timeOfBirth={timeOfBirth}
-                        latitude={latitude}
-                        longitude={longitude}
                         hometown={formData.hometown}
-                        previewScale={finalScale}
-                    />
-                </View>
-            );
-        } else {
-            // Complete Astrology Profile
-            const timeOfBirth = formData.dobDate.toTimeString().substring(0, 5); // HH:MM
-            const latitude = 40.7128; // Default NYC - replace with actual location data
-            const longitude = -74.0060;
-
-            return (
-                <View style={styles.announcementContainer}>
-                    <AstrologyComprehensive
-                        theme={formData.theme}
-                        babyName={`${formData.babyFirst} ${formData.babyMiddle ? formData.babyMiddle + ' ' : ''}${formData.babyLast}`.trim()}
-                        dobISO={dobISO}
-                        timeOfBirth={timeOfBirth}
-                        latitude={latitude}
-                        longitude={longitude}
-                        hometown={formData.hometown}
-                        zodiacSign={zodiac}
                         previewScale={finalScale}
                     />
                 </View>
@@ -326,7 +270,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
             {/* Page title */}
             <View style={styles.titleContainer}>
                 <Text style={styles.title}>
-                    {viewMode === 'front' ? 'Birth Announcement' : viewMode === 'back' ? 'Time Capsule' : viewMode === 'natal' ? 'Natal Chart' : viewMode === 'chart' ? 'Birth Chart Certificate' : 'Complete Astrology Profile'} {(viewMode === 'front' || viewMode === 'back' || viewMode === 'chart' || viewMode === 'astro') && '- 11" × 8.5"'}
+                    {viewMode === 'front' ? 'Birth Announcement' : viewMode === 'back' ? 'Time Capsule' : 'Natal Chart'} - 11" × 8.5"
                 </Text>
             </View>
 
@@ -354,31 +298,10 @@ export default function PreviewScreen({ navigation, route }: Props) {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    style={[styles.button, viewMode === 'chart' && styles.activeButton]}
-                    onPress={() => { setViewMode('chart'); resetView(); }}
-                >
-                    <Text style={[styles.buttonText, viewMode === 'chart' && styles.activeButtonText]}>Birth Chart ⭐</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.button, viewMode === 'astro' && styles.activeButton]}
-                    onPress={() => { setViewMode('astro'); resetView(); }}
-                >
-                    <Text style={[styles.buttonText, viewMode === 'astro' && styles.activeButtonText]}>Full Astro 🔮</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
                     style={[styles.button]}
                     onPress={resetView}
                 >
                     <Text style={[styles.buttonText]}>Reset</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.button]}
-                    onPress={() => navigation.navigate('ChartReading', params)}
-                >
-                    <Text style={[styles.buttonText]}>Chart Reading</Text>
                 </TouchableOpacity>
             </View>
 

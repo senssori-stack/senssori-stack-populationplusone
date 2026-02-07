@@ -4,9 +4,9 @@
 import { getComprehensiveHistoricalData } from './comprehensive-historical-data';
 
 export const EXTENDED_HISTORICAL_DATA = {
-    // US Presidents by year
+    // US Presidents by year (Trump took office January 20, 2025)
     presidents: {
-        2025: 'Donald J. Trump', 2024: 'Joe Biden', 2023: 'Joe Biden', 2022: 'Joe Biden', 2021: 'Joe Biden',
+        2026: 'Donald J. Trump', 2025: 'Joe Biden', 2024: 'Joe Biden', 2023: 'Joe Biden', 2022: 'Joe Biden', 2021: 'Joe Biden',
         2020: 'Donald Trump', 2019: 'Donald Trump', 2018: 'Donald Trump', 2017: 'Donald Trump',
         2016: 'Barack Obama', 2015: 'Barack Obama', 2014: 'Barack Obama', 2013: 'Barack Obama',
         2012: 'Barack Obama', 2011: 'Barack Obama', 2010: 'Barack Obama', 2009: 'Barack Obama',
@@ -168,14 +168,69 @@ export const EXTENDED_HISTORICAL_DATA = {
         1920: 'Whispering by Paul Whiteman', 1919: 'A Pretty Girl Is Like a Melody by John Steel', 1918: 'Till We Meet Again by Henry Burr',
         1917: 'Over There by George M. Cohan', 1916: 'There\'s a Broken Heart by Henry Burr', 1915: 'I\'m Always Chasing Rainbows by Harry Fox',
         1914: 'St. Louis Blues by W.C. Handy'
+    },
+
+    // #1 Movie by Year (highest-grossing film of the year)
+    movie: {
+        2024: 'Inside Out 2', 2023: 'Barbie', 2022: 'Top Gun: Maverick', 2021: 'Spider-Man: No Way Home',
+        2020: 'Bad Boys for Life', 2019: 'Avengers: Endgame', 2018: 'Black Panther', 2017: 'Star Wars: The Last Jedi',
+        2016: 'Rogue One: A Star Wars Story', 2015: 'Star Wars: The Force Awakens', 2014: 'American Sniper',
+        2013: 'The Hunger Games: Catching Fire', 2012: 'The Avengers', 2011: 'Harry Potter: Deathly Hallows Pt 2',
+        2010: 'Toy Story 3', 2009: 'Avatar', 2008: 'The Dark Knight', 2007: 'Spider-Man 3',
+        2006: 'Pirates of the Caribbean: Dead Man\'s Chest', 2005: 'Star Wars: Episode III', 2004: 'Shrek 2',
+        2003: 'The Lord of the Rings: The Return of the King', 2002: 'Spider-Man', 2001: 'Harry Potter: Sorcerer\'s Stone',
+        2000: 'How the Grinch Stole Christmas', 1999: 'Star Wars: Episode I', 1998: 'Saving Private Ryan',
+        1997: 'Titanic', 1996: 'Independence Day', 1995: 'Toy Story', 1994: 'The Lion King',
+        1993: 'Jurassic Park', 1992: 'Aladdin', 1991: 'Terminator 2: Judgment Day', 1990: 'Home Alone',
+        1989: 'Batman', 1988: 'Rain Man', 1987: 'Three Men and a Baby', 1986: 'Top Gun',
+        1985: 'Back to the Future', 1984: 'Beverly Hills Cop', 1983: 'Return of the Jedi', 1982: 'E.T.',
+        1981: 'Raiders of the Lost Ark', 1980: 'The Empire Strikes Back', 1979: 'Kramer vs. Kramer',
+        1978: 'Grease', 1977: 'Star Wars', 1976: 'Rocky', 1975: 'Jaws', 1974: 'The Towering Inferno',
+        1973: 'The Exorcist', 1972: 'The Godfather', 1971: 'Fiddler on the Roof', 1970: 'Love Story',
+        1969: 'Butch Cassidy and the Sundance Kid', 1968: '2001: A Space Odyssey', 1967: 'The Graduate',
+        1966: 'Who\'s Afraid of Virginia Woolf?', 1965: 'The Sound of Music', 1964: 'Mary Poppins',
+        1963: 'Cleopatra', 1962: 'Lawrence of Arabia', 1961: 'West Side Story', 1960: 'Spartacus',
+        1959: 'Ben-Hur', 1958: 'South Pacific', 1957: 'The Bridge on the River Kwai', 1956: 'The Ten Commandments',
+        1955: 'Lady and the Tramp', 1954: 'White Christmas', 1953: 'Peter Pan', 1952: 'The Greatest Show on Earth',
+        1951: 'Quo Vadis', 1950: 'Cinderella', 1949: 'Samson and Delilah', 1948: 'The Red Shoes',
+        1947: 'The Egg and I', 1946: 'Song of the South', 1945: 'The Bells of St. Mary\'s', 1944: 'Going My Way',
+        1943: 'For Whom the Bell Tolls', 1942: 'Bambi', 1941: 'Sergeant York', 1940: 'Fantasia',
+        1939: 'Gone with the Wind', 1938: 'Snow White and the Seven Dwarfs', 1937: 'Snow White and the Seven Dwarfs',
+        1936: 'San Francisco', 1935: 'Mutiny on the Bounty', 1934: 'It Happened One Night', 1933: 'King Kong',
+        1932: 'Grand Hotel', 1931: 'Frankenstein', 1930: 'All Quiet on the Western Front', 1929: 'The Broadway Melody',
+        1928: 'The Singing Fool', 1927: 'Wings', 1926: 'Ben-Hur: A Tale of the Christ', 1925: 'The Gold Rush',
+        1924: 'The Thief of Bagdad', 1923: 'The Covered Wagon', 1922: 'Robin Hood', 1921: 'The Four Horsemen',
+        1920: 'The Mark of Zorro', 1919: 'Broken Blossoms', 1918: 'Tarzan of the Apes', 1917: 'Cleopatra',
+        1916: 'Intolerance', 1915: 'The Birth of a Nation', 1914: 'Tillie\'s Punctured Romance'
     }
 };
 
 // Function to get extended historical data for a specific year
-export function getExtendedHistoricalData(year: number): Record<string, string> {
-    // Historical Vice Presidents (Complete 1914-2025) - Source: Wikipedia/Government Records
+// Optional dateString (YYYY-MM-DD) for precise inauguration date handling
+export function getExtendedHistoricalData(year: number, dateString?: string): Record<string, string> {
+    // Handle 2025 inauguration date (January 20, 2025)
+    // Trump/Vance took office on January 20, 2025
+    let effectivePresident = '';
+    let effectiveVP = '';
+
+    if (year === 2025 && dateString) {
+        const inaugurationDate = new Date('2025-01-20');
+        const birthDate = new Date(dateString);
+        if (birthDate >= inaugurationDate) {
+            effectivePresident = 'Donald Trump';
+            effectiveVP = 'JD Vance';
+        } else {
+            effectivePresident = 'Joe Biden';
+            effectiveVP = 'Kamala Harris';
+        }
+    } else if (year >= 2026) {
+        effectivePresident = 'Donald Trump';
+        effectiveVP = 'JD Vance';
+    }
+
+    // Historical Vice Presidents (Complete 1914-2026) - Source: Wikipedia/Government Records
     const vicePresidents: Record<number, string> = {
-        2024: 'Kamala Harris', 2023: 'Kamala Harris', 2022: 'Kamala Harris', 2021: 'Kamala Harris',
+        2026: 'JD Vance', 2025: 'Kamala Harris', 2024: 'Kamala Harris', 2023: 'Kamala Harris', 2022: 'Kamala Harris', 2021: 'Kamala Harris',
         2020: 'Mike Pence', 2019: 'Mike Pence', 2018: 'Mike Pence', 2017: 'Mike Pence',
         2016: 'Joe Biden', 2015: 'Joe Biden', 2014: 'Joe Biden', 2013: 'Joe Biden',
         2012: 'Joe Biden', 2011: 'Joe Biden', 2010: 'Joe Biden', 2009: 'Joe Biden',
@@ -324,8 +379,8 @@ export function getExtendedHistoricalData(year: number): Record<string, string> 
     const comprehensiveData = getComprehensiveHistoricalData(year);
 
     return {
-        'PRESIDENT': (EXTENDED_HISTORICAL_DATA.presidents as any)[year] || 'Unknown',
-        'VICE PRESIDENT': (vicePresidents as any)[year] || 'Unknown',
+        'PRESIDENT': effectivePresident || (EXTENDED_HISTORICAL_DATA.presidents as any)[year] || 'Unknown',
+        'VICE PRESIDENT': effectiveVP || (vicePresidents as any)[year] || 'Unknown',
         'US POPULATION': (EXTENDED_HISTORICAL_DATA.population as any)[year] || 'Unknown',
         'WORLD POPULATION': comprehensiveData['WORLD POPULATION'],
         'GOLD OZ': (EXTENDED_HISTORICAL_DATA.gold as any)[year] || 'Unknown',
@@ -334,6 +389,7 @@ export function getExtendedHistoricalData(year: number): Record<string, string> 
         'WON LAST SUPERBOWL': comprehensiveData['WON LAST SUPERBOWL'],
         'WON LAST WORLD SERIES': (EXTENDED_HISTORICAL_DATA.worldseries as any)[year] || 'Unknown',
         '#1 SONG': (EXTENDED_HISTORICAL_DATA.song as any)[year] || 'Unknown',
+        '#1 MOVIE': (EXTENDED_HISTORICAL_DATA.movie as any)[year] || 'Unknown',
         'GALLON OF GASOLINE': getGasPrice(year),
         'LOAF OF BREAD': comprehensiveData['LOAF OF BREAD'],
         'DOZEN EGGS': comprehensiveData['DOZEN EGGS'],

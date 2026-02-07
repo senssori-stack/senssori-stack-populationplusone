@@ -35,7 +35,7 @@ export default function TimeCapsule({
 
     // Responsive font sizing
     const baseFontSize = height * 0.0675 * 0.5 * 1.15 * 0.8;
-    const titleSize = baseFontSize * 1.25;
+    const titleSize = baseFontSize * 1.25 * 1.3;
     const messageSize = baseFontSize * 0.7;
     const rowLabelSize = baseFontSize * 0.75;
     const rowDataSize = baseFontSize * 0.8;
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
         borderWidth: 8,
         borderColor: '#fff',
         borderRadius: 24,
-        padding: 4,
+        padding: 0,
     },
     innerBorder: {
         flex: 1,
@@ -126,19 +126,22 @@ const styles = StyleSheet.create({
         borderColor: '#fff',
         borderRadius: 20,
         overflow: 'hidden',
+        padding: 0,
     },
     content: {
         flex: 1,
     },
     contentInner: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingHorizontal: 8,
+        paddingTop: 0,
+        paddingBottom: 4,
     },
     title: {
         color: '#fff',
         fontWeight: '900',
         textAlign: 'center',
-        marginBottom: 12,
+        marginBottom: 2,
+        marginTop: 0,
     },
     message: {
         color: '#fff',
@@ -149,11 +152,12 @@ const styles = StyleSheet.create({
     divider: {
         height: 1,
         backgroundColor: '#fff',
-        marginVertical: 8,
+        marginTop: 8,
+        marginBottom: 12,
     },
     row: {
         flexDirection: 'row',
-        paddingVertical: 6,
+        paddingVertical: 4,
         borderBottomWidth: 1,
         borderBottomColor: '#fff',
     },
@@ -168,7 +172,7 @@ const styles = StyleSheet.create({
     },
     rowLabel: {
         color: '#fff',
-        fontWeight: '600',
+        fontWeight: '900',
     },
     rowData: {
         color: '#fff',

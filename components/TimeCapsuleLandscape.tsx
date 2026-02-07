@@ -6,8 +6,9 @@ import { getSnapshotWithHistorical } from '../src/data/utils/historical-snapshot
 import { calculateLifePath } from '../src/data/utils/life-path-calculator';
 import { extractStateFromHometown, getStateFlagImage } from '../src/data/utils/state-flags';
 import { getBirthstoneLink, getZodiacLink, getLifePathLink, getSnapshotEmojiLink, getStateFlagLink, ZODIAC_EMOJIS, BIRTHSTONE_EMOJIS } from '../src/data/utils/emoji-links';
+import { getMinimumWage, getFederalMinimumWage } from '../src/data/utils/minimum-wage';
 import { getCurrentGovernor } from '../src/data/utils/current-governors';
-import { CITY_COORDINATES } from '../src/data/utils/town-coordinates';
+import { CITY_COORDINATES, getCityCoordinatesAsync } from '../src/data/utils/town-coordinates';
 import type { ThemeName } from '../src/types';
 
 // Landscape 11x8.5 at 300 DPI = 3300x2550 pixels
@@ -30,6 +31,8 @@ type Props = {
     birthstone: string;
     lifePathNumber?: number;
     previewScale?: number;
+    mode?: 'baby' | 'milestone'; // 'baby' for birth announcement, 'milestone' for birthdays
+    message?: string; // Prewritten message for milestone mode
 };
 
 /**
@@ -178,6 +181,8 @@ export default function TimeCapsuleLandscape(props: Props) {
         lifePathNumber,
         snapshot,
         previewScale = 0.2,
+        mode,
+        message,
     } = props;
 
     // Get historical snapshot data based on birth date
@@ -277,6 +282,7 @@ export default function TimeCapsuleLandscape(props: Props) {
 
     // Build baby names with smart middle initial logic - for twins, no last name on first baby
     const babyNames: string[] = [];
+    const babyFullNames: string[] = []; // Full names for milestone mode (no middle initial)
     if (babies && babies.length > 0) {
         for (let i = 0; i < babies.length; i++) {
             const b = babies[i];
@@ -285,6 +291,10 @@ export default function TimeCapsuleLandscape(props: Props) {
             const last = b.last || '';
             // Use middle initial for longer names to prevent overflow
             const middleInitial = middle ? middle.charAt(0) + '.' : '';
+
+            // Build full name (for milestones - use complete middle name)
+            const fullName = [first, middle, last].filter(Boolean).join(' ');
+            if (fullName) babyFullNames.push(fullName);
 
             // For the first baby in twins/multiples, skip the last name to save space
             if (i === 0 && babies.length > 1) {
@@ -297,6 +307,7 @@ export default function TimeCapsuleLandscape(props: Props) {
         }
     } else if (babyName) {
         babyNames.push(babyName);
+        babyFullNames.push(babyName);
     }
 
     // Get first name for possessive references
@@ -312,6 +323,7 @@ export default function TimeCapsuleLandscape(props: Props) {
 
     // Build intro text with new verbiage
     const namesForSentence = babyNames.length > 0 ? babyNames.join(' & ') : 'Baby';
+    const fullNamesForSentence = babyFullNames.length > 0 ? babyFullNames.join(' & ') : 'Baby';
 
     // Format date from dobISO (YYYY-MM-DD)
     let formattedDate = dobISO;
@@ -340,65 +352,121 @@ export default function TimeCapsuleLandscape(props: Props) {
     const birthstoneEmoji = BIRTHSTONE_EMOJIS[birthstone] || '💎';
     const lifepathEmoji = '🎱'; // Ping pong ball emoji for life path numbers
 
-    // NEW FORMAT: Full name turned [age] years old on [DOB]
-    parts.push(`${namesForSentence} turned ${age} years old on ${formattedDate}`);
+    // Check if this is a milestone (birthday) or baby announcement
+    // Detect milestone mode: either explicit mode prop OR no birth measurements (weight/length)
+    const isMilestoneMode = mode === 'milestone' || (!weightLb && !weightOz && !lengthIn && !fatherName);
 
-    // Zodiac sign with emoji
-    parts.push(`${babyFirstOnly || namesForSentence}'s zodiac sign is ${zodiac} ${zodiacEmoji}`);
+    if (isMilestoneMode) {
+        // BIRTHDAY MILESTONE FORMAT:
+        // "[full name] was born on [date] in [city, st] and is now [age] years old. 
+        // [first name]'s zodiac sign is [sign] [emoji] their birthstone is [birthstone] 
+        // have a life path number of [number] [emoji] Here is some interesting information 
+        // surrounding your birthday."
+        parts.push(`${fullNamesForSentence} was born on ${formattedDate} in ${toTitleCase(hometown)} and is now ${age} years old`);
 
-    // Life path number with emoji (if provided)
-    if (lifePathNumber) {
-        parts.push(`${babyFirstOnly || 'They'} has a life path number of ${lifePathNumber} ${lifepathEmoji}`);
-    }
-
-    // Birthstone with emoji
-    parts.push(`Their birthstone is ${birthstone} ${birthstoneEmoji}`);
-
-    // Add: "Below are some interesting facts surrounding your birthday"
-    parts.push(`Below are some interesting facts surrounding your birthday`);
-
-    // Keep existing content (parents, birth weight, location)
-    parts.push(`${namesForSentence} was born in ${toTitleCase(hometown)}`);
-
-    const parentParts: string[] = [];
-    if (motherName && motherName.trim()) parentParts.push(motherName.trim());
-    if (fatherName && fatherName.trim()) parentParts.push(fatherName.trim());
-    if (parentParts.length > 0) {
-        let parentText = `${babyFirstOnly || namesForSentence}'s parents are `;
-        if (motherName && motherName.trim() && fatherName && fatherName.trim()) {
-            parentText += `mother, ${motherName.trim()} and father, ${fatherName.trim()}`;
-        } else if (motherName && motherName.trim()) {
-            parentText += `mother, ${motherName.trim()}`;
-        } else if (fatherName && fatherName.trim()) {
-            parentText += `father, ${fatherName.trim()}`;
+        let attributeText = `${babyFirstOnly}'s zodiac sign is ${zodiac} ${zodiacEmoji} their birthstone is ${birthstone} ${birthstoneEmoji}`;
+        if (lifePathNumber) {
+            attributeText += ` have a life path number of ${lifePathNumber} ${lifepathEmoji}`;
         }
-        parts.push(parentText);
-    }
-    // "At birth [baby first name] weighed [weight] lbs and [weight ounces] oz and measured [length] inches."
-    // Skip this line for twins/triplets if measurements aren't provided
-    if (weightLb && weightOz && lengthIn && weightLb.trim() && weightOz.trim() && lengthIn.trim()) {
-        parts.push(`At birth ${babyFirstOnly || namesForSentence} weighed ${weightLb} lbs and ${weightOz} oz and measured ${lengthIn} inches`);
+        parts.push(attributeText);
+
+        parts.push(`Here is some interesting information surrounding your birthday`);
+    } else {
+        // BABY ANNOUNCEMENT FORMAT (original):
+        // NEW FORMAT: Full name turned [age] years old on [DOB]
+        parts.push(`${namesForSentence} turned ${age} years old on ${formattedDate}`);
+
+        // Zodiac sign with emoji
+        parts.push(`${babyFirstOnly || namesForSentence}'s zodiac sign is ${zodiac} ${zodiacEmoji}`);
+
+        // Life path number with emoji (if provided)
+        if (lifePathNumber) {
+            parts.push(`${babyFirstOnly || 'They'} has a life path number of ${lifePathNumber} ${lifepathEmoji}`);
+        }
+
+        // Birthstone with emoji
+        parts.push(`Their birthstone is ${birthstone} ${birthstoneEmoji}`);
+
+        // Add: "Below are some interesting facts surrounding your birthday"
+        parts.push(`Below are some interesting facts surrounding your birthday`);
+
+        // Keep existing content (parents, birth weight, location)
+        parts.push(`${namesForSentence} was born in ${toTitleCase(hometown)}`);
+
+        const parentParts: string[] = [];
+        if (motherName && motherName.trim()) parentParts.push(motherName.trim());
+        if (fatherName && fatherName.trim()) parentParts.push(fatherName.trim());
+        if (parentParts.length > 0) {
+            let parentText = `${babyFirstOnly || namesForSentence}'s parents are `;
+            if (motherName && motherName.trim() && fatherName && fatherName.trim()) {
+                parentText += `mother, ${motherName.trim()} and father, ${fatherName.trim()}`;
+            } else if (motherName && motherName.trim()) {
+                parentText += `mother, ${motherName.trim()}`;
+            } else if (fatherName && fatherName.trim()) {
+                parentText += `father, ${fatherName.trim()}`;
+            }
+            parts.push(parentText);
+        }
+        // "At birth [baby first name] weighed [weight] lbs and [weight ounces] oz and measured [length] inches."
+        // Skip this line for twins/triplets if measurements aren't provided
+        if (weightLb && weightOz && lengthIn && weightLb.trim() && weightOz.trim() && lengthIn.trim()) {
+            parts.push(`At birth ${babyFirstOnly || namesForSentence} weighed ${weightLb} lbs and ${weightOz} oz and measured ${lengthIn} inches`);
+        }
     }
     const validParts = parts.filter(part => part && typeof part === 'string' && part.trim().length > 0);
     const intro = validParts.join('. ').replace(/\.\s*\./g, '.').replace(/\s+\./g, '.');
 
-    // Get coordinates for flag lookup
-    let coordinates = '';
-    if (hometown && hometown.trim()) {
-        // Try to get coordinates from the hometown
-        const coordLookup = CITY_COORDINATES[hometown.toUpperCase()];
-        if (coordLookup) {
-            coordinates = `${coordLookup.lat.toFixed(4)}, ${coordLookup.lng.toFixed(4)}`;
-        }
+    // Clean up the prewritten message for milestone mode - remove the "Here is some interesting information" part
+    // since it's already in the first paragraph
+    let milestoneMessage = '';
+    if (isMilestoneMode && message) {
+        milestoneMessage = message
+            .replace(/\s*Here is some interesting information surrounding your birthday\.?\s*/gi, '')
+            .trim();
     }
 
+    // State for coordinates (fetched from Google Sheets)
+    const [coordinates, setCoordinates] = useState<string>('');
+
+    // Fetch coordinates from Google Sheets
+    useEffect(() => {
+        if (hometown && hometown.trim()) {
+            getCityCoordinatesAsync(hometown).then(coords => {
+                if (coords) {
+                    setCoordinates(`${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`);
+                }
+            }).catch(err => {
+                console.error('Failed to fetch coordinates:', err);
+            });
+        }
+    }, [hometown]);
+
+    // Get birth year for historical minimum wage lookup
+    const birthYear = dobISO ? new Date(dobISO + 'T00:00:00').getFullYear() : new Date().getFullYear();
+
+    // For THEN: Use FEDERAL minimum wage for historical accuracy (we don't have historical state data)
+    // For NOW: Use geolocation-aware minimum wage (highest of federal, state, or local)
+    const historicalFederalMinWage = getFederalMinimumWage(birthYear);
+    const currentMinWage = getMinimumWage(hometown, new Date().getFullYear());
+
     // Build data rows with THEN and NOW columns (no zodiac/birthstone in table)
-    let rows: [string, string, string, string][] = SNAP_KEYS.map(({ label, key, emoji }) => [
-        `${label} ${emoji}`,
-        formatSnapshotValue(key, historicalSnapshot[key] ?? ''),
-        formatSnapshotValue(key, currentSnapshot[key] ?? ''),
-        emoji
-    ]);
+    let rows: [string, string, string, string][] = SNAP_KEYS.map(({ label, key, emoji }) => {
+        // Override minimum wage with accurate values
+        if (key === 'MINIMUM WAGE') {
+            return [
+                `${label} ${emoji}`,
+                `${historicalFederalMinWage.toFixed(2)}`,  // THEN: Federal rate for birth year
+                `${currentMinWage.wage.toFixed(2)}`,      // NOW: Geolocation-aware current rate
+                emoji
+            ];
+        }
+        return [
+            `${label} ${emoji}`,
+            formatSnapshotValue(key, historicalSnapshot[key] ?? ''),
+            formatSnapshotValue(key, currentSnapshot[key] ?? ''),
+            emoji
+        ];
+    });
 
     // Debug: log first few rows to check NOW values
     console.log('Row sample - Gas:', rows[0]);
@@ -444,31 +512,32 @@ export default function TimeCapsuleLandscape(props: Props) {
                 {/* Main content centered vertically and horizontally */}
                 <View style={{
                     flex: 1,
-                    justifyContent: 'center', // GREEN: center vertically
+                    justifyContent: 'flex-start', // Move content to top
                     alignItems: 'center',     // GREEN: center horizontally
                     width: '100%',
                     padding: padding * 0.8,
+                    paddingTop: padding * 0.3, // Reduce top padding (0.5 inches at 300 DPI = 150px)
                     borderRadius: Math.round(displayHeight * 0.03),
                 }}>
                     {/* Customer Name Header */}
                     {(motherName || fatherName) && (
                         <Text style={[styles.title, {
-                            fontSize: titleSize * 0.7,
+                            fontSize: titleSize * 0.7 * 1.4,
                             color: colors.text,
                             textAlign: 'center',
-                            marginBottom: padding * 0.3,
-                            fontWeight: '600'
+                            marginBottom: padding * 0.1,
+                            fontWeight: '900'
                         }]}>
                             {[motherName, fatherName].filter(Boolean).join(' & ')}
                         </Text>
                     )}
 
                     {/* "Time Capsule" title */}
-                    <Text style={[styles.title, { fontSize: timeCapsuleSize * 0.75, color: colors.text, marginTop: timeCapsuleSize * 0.05 }]}>
+                    <Text style={[styles.title, { fontSize: timeCapsuleSize * 0.75 * 1.4, color: colors.text, marginTop: 0 }]}>
                         Time Capsule
                     </Text>
 
-                    {/* Body text */}
+                    {/* Body text - First Paragraph */}
                     <Text style={[styles.body, {
                         fontSize: bodySize,
                         color: colors.text,
@@ -480,53 +549,69 @@ export default function TimeCapsuleLandscape(props: Props) {
                         {intro || 'Welcome to the world!'}
                     </Text>
 
-                    {/* Zodiac, Birthstone, and Life Path Info with Clickable Emojis */}
-                    <View style={{ width: '100%', alignItems: 'center', marginTop: padding * 0.1 }}>
-                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
-                            <Text style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 4 }}>
-                                {`${babyFirstOnly || namesForSentence}'s zodiac sign is `}
-                            </Text>
-                            <ClickableEmoji
-                                emoji="♈"
-                                url={getZodiacLink(zodiac, dobISO)}
-                                tooltip="ABOUT YOUR SIGN AND HOROSCOPES"
-                                style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 2 }}
-                            />
-                            <Text style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 4 }}>
-                                {zodiac}
-                            </Text>
-                            <Text style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 4 }}>
-                                {', their birthstone is '}
-                            </Text>
-                            <ClickableEmoji
-                                emoji="💎"
-                                url={getBirthstoneLink(birthstone)}
-                                style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 2 }}
-                            />
-                            <Text style={{ fontSize: bodySize * 0.8, color: colors.text }}>
-                                {birthstone}
-                            </Text>
-                            {lifePathNumber && (
-                                <>
-                                    <Text style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 4 }}>
-                                        {', and has a life path number of '}
-                                    </Text>
-                                    <ClickableEmoji
-                                        emoji="🎱"
-                                        url={getLifePathLink(lifePathNumber)}
-                                        style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 2 }}
-                                    />
-                                    <Text style={{ fontSize: bodySize * 0.8, color: colors.text }}>
-                                        {lifePathNumber}
-                                    </Text>
-                                </>
-                            )}
+                    {/* Second Paragraph - Prewritten Message (milestone mode only) */}
+                    {isMilestoneMode && milestoneMessage ? (
+                        <Text style={[styles.body, {
+                            fontSize: bodySize,
+                            color: colors.text,
+                            marginTop: padding * 0.15,
+                            fontWeight: 'bold',
+                            textAlign: 'center',
+                            lineHeight: bodySize * 1.1
+                        }]}>
+                            {milestoneMessage}
+                        </Text>
+                    ) : null}
+
+                    {/* Zodiac, Birthstone, and Life Path Info with Clickable Emojis - BABY MODE ONLY */}
+                    {!isMilestoneMode && (
+                        <View style={{ width: '100%', alignItems: 'center', marginTop: padding * 0.1 }}>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
+                                <Text style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 4 }}>
+                                    {`${babyFirstOnly || namesForSentence}'s zodiac sign is `}
+                                </Text>
+                                <ClickableEmoji
+                                    emoji="♈"
+                                    url={getZodiacLink(zodiac, dobISO)}
+                                    tooltip="ABOUT YOUR SIGN AND HOROSCOPES"
+                                    style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 2 }}
+                                />
+                                <Text style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 4 }}>
+                                    {zodiac}
+                                </Text>
+                                <Text style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 4 }}>
+                                    {', their birthstone is '}
+                                </Text>
+                                <ClickableEmoji
+                                    emoji="💎"
+                                    url={getBirthstoneLink(birthstone)}
+                                    style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 2 }}
+                                />
+                                <Text style={{ fontSize: bodySize * 0.8, color: colors.text }}>
+                                    {birthstone}
+                                </Text>
+                                {lifePathNumber && (
+                                    <>
+                                        <Text style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 4 }}>
+                                            {', and has a life path number of '}
+                                        </Text>
+                                        <ClickableEmoji
+                                            emoji="🎱"
+                                            url={getLifePathLink(lifePathNumber)}
+                                            style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 2 }}
+                                        />
+                                        <Text style={{ fontSize: bodySize * 0.8, color: colors.text }}>
+                                            {lifePathNumber}
+                                        </Text>
+                                    </>
+                                )}
+                            </View>
                         </View>
-                    </View>
+                    )}
 
                     {/* Data rows with THEN and NOW columns */}
-                    <View style={{ width: '90%', alignSelf: 'center' }}>
-                        {/* Location Row - City, ST with Governor */}
+                    <View style={{ width: '100%', alignSelf: 'center', marginTop: padding * 1.6, paddingHorizontal: padding * 0.3 }}>
+                        {/* Row with City, ST | Coordinates | Flag | Governor */}
                         <View style={{
                             width: '100%',
                             paddingVertical: Math.round(displayHeight * 0.003),
@@ -534,30 +619,26 @@ export default function TimeCapsuleLandscape(props: Props) {
                             flexDirection: 'row',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                            paddingHorizontal: padding * 0.5
+                            borderBottomWidth: 1.5,
+                            borderBottomColor: colors.border || '#FFFFFF'
                         }}>
-                            {/* City, ST */}
-                            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                                <Text style={{ fontSize: labelSize * 0.85, color: colors.text }}>
+                            {/* City, ST on far left */}
+                            <View style={{ alignItems: 'flex-start', width: '25%' }}>
+                                <Text style={{ fontSize: labelSize * 0.85, color: colors.text, fontWeight: '700' }}>
                                     {toTitleCase(hometown)}
                                 </Text>
                             </View>
-                            {/* Governor of State */}
-                            <Text style={{ fontSize: labelSize * 0.75, color: colors.text, flex: 1, textAlign: 'right', opacity: 0.85 }}>
-                                Gov {currentGovernor}
-                            </Text>
-                        </View>
-
-                        {/* State Flag above THEN */}
-                        <View style={{
-                            width: '100%',
-                            flexDirection: 'row',
-                            alignItems: 'flex-end',
-                            paddingVertical: Math.round(displayHeight * 0.001)
-                        }}>
-                            <View style={{ flex: 1 }} />
-                            {stateCode && (
-                                <View style={{ minWidth: '28%', alignItems: 'center' }}>
+                            {/* Coordinates between city and flag */}
+                            <View style={{ alignItems: 'center', width: '20%' }}>
+                                {coordinates ? (
+                                    <Text style={{ fontSize: labelSize * 0.65, color: colors.text, opacity: 0.8 }}>
+                                        {coordinates}
+                                    </Text>
+                                ) : null}
+                            </View>
+                            {/* Flag in center */}
+                            <View style={{ width: '15%', alignItems: 'center', justifyContent: 'center' }}>
+                                {stateCode && (
                                     <Pressable
                                         onPress={() => {
                                             const url = getStateFlagLink(stateCode);
@@ -573,9 +654,14 @@ export default function TimeCapsuleLandscape(props: Props) {
                                             }}
                                         />
                                     </Pressable>
-                                </View>
-                            )}
-                            <View style={{ minWidth: '28%' }} />
+                                )}
+                            </View>
+                            {/* Governor on far right */}
+                            <View style={{ width: '40%', alignItems: 'flex-end', justifyContent: 'center' }}>
+                                <Text style={{ fontSize: labelSize, color: colors.text, fontWeight: '500' }}>
+                                    Gov {currentGovernor}
+                                </Text>
+                            </View>
                         </View>
 
                         {/* Column Headers */}
@@ -585,13 +671,13 @@ export default function TimeCapsuleLandscape(props: Props) {
                             borderBottomColor: colors.border || '#FFFFFF',
                             backgroundColor: 'transparent'
                         }]}>
-                            <Text style={[styles.label, { fontSize: labelSize * 0.9, color: colors.text, flex: 1, fontWeight: '900' }]}>
+                            <Text style={[styles.label, { fontSize: labelSize * 0.9, color: colors.text, width: '40%', fontWeight: '900' }]}>
                                 {/* Empty space for label column */}
                             </Text>
-                            <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, minWidth: '28%', textAlign: 'center', fontWeight: '900' }]}>
+                            <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, width: '20%', textAlign: 'center', fontWeight: '900' }]}>
                                 THEN
                             </Text>
-                            <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, minWidth: '28%', textAlign: 'center', fontWeight: '900' }]}>
+                            <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, width: '40%', textAlign: 'right', fontWeight: '900' }]}>
                                 NOW
                             </Text>
                         </View>
@@ -612,13 +698,23 @@ export default function TimeCapsuleLandscape(props: Props) {
                                 if (nowMatch) nowRomanNumeral = nowMatch[1];
                             }
 
+                            // Shrink font for rows with long text (like #1 Song)
+                            const isSongRow = emoji === '🎵';
+                            const maxTextLength = Math.max(thenValue.length, nowValue.length);
+                            let rowValueSize = valueSize;
+                            if (isSongRow || maxTextLength > 30) {
+                                rowValueSize = valueSize * 0.7;
+                            } else if (maxTextLength > 25) {
+                                rowValueSize = valueSize * 0.85;
+                            }
+
                             return (
                                 <View key={label} style={[styles.row, {
                                     paddingVertical: Math.round(displayHeight * 0.004),
                                     borderBottomWidth: 0.8,
                                     borderBottomColor: colors.border || '#FFFFFF'
                                 }]}>
-                                    <View style={[styles.label, { fontSize: labelSize, color: colors.text, flex: 1, flexDirection: 'row', alignItems: 'center' }]}>
+                                    <View style={[styles.label, { fontSize: labelSize, color: colors.text, width: '40%', flexDirection: 'row', alignItems: 'center' }]}>
                                         <Text style={{ fontSize: labelSize, color: colors.text }}>
                                             {labelText}
                                         </Text>
@@ -628,10 +724,10 @@ export default function TimeCapsuleLandscape(props: Props) {
                                             style={{ fontSize: labelSize, color: colors.text, marginLeft: 4 }}
                                         />
                                     </View>
-                                    <Text style={[styles.value, { fontSize: valueSize, color: colors.text, minWidth: '28%', textAlign: 'center' }]}>
+                                    <Text style={[styles.value, { fontSize: rowValueSize, color: colors.text, width: '20%', textAlign: 'center' }]} numberOfLines={1} adjustsFontSizeToFit>
                                         {thenRomanNumeral ? `${thenRomanNumeral} ` : ''}{thenValue}
                                     </Text>
-                                    <Text style={[styles.value, { fontSize: valueSize, color: colors.text, minWidth: '28%', textAlign: 'center' }]}>
+                                    <Text style={[styles.value, { fontSize: rowValueSize, color: colors.text, width: '40%', textAlign: 'right' }]} numberOfLines={1} adjustsFontSizeToFit>
                                         {nowRomanNumeral ? `${nowRomanNumeral} ` : ''}{nowValue}
                                     </Text>
                                 </View>
@@ -676,7 +772,7 @@ const styles = StyleSheet.create({
     title: {
         fontWeight: '900',
         textAlign: 'center',
-        marginBottom: 8,
+        marginBottom: 2,
     },
     body: {
         lineHeight: 16,

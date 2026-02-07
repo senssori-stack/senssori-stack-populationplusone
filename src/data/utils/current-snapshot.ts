@@ -8,9 +8,9 @@ export const CURRENT_SNAPSHOT_DATA: Record<string, string> = {
     'LOAF OF BREAD': '$2.75',
     'DOZEN EGGS': '$4.90',
     'GALLON OF MILK': '$3.00',
-    'GOLD OZ': '$4,633.74',
-    'SILVER OZ': '$90.10',
-    'DOW JONES CLOSE': '43,500.25',
+    'GOLD OZ': '$4,905.00',
+    'SILVER OZ': '$87.92',
+    'DOW JONES CLOSE': '44,873.28',
 
     // Entertainment
     '#1 SONG': 'Thats So True by Gracie Abrams',

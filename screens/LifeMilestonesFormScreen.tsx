@@ -1,24 +1,75 @@
-import React, { useState } from 'react';
-import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    TextInput,
-    StyleSheet,
-    useWindowDimensions,
-    Alert,
-    Modal,
-} from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { COLOR_SCHEMES } from '../src/data/utils/colors';
-import type { ThemeName } from '../src/types';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../src/types';
+import * as ImagePicker from 'expo-image-picker';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+    Alert,
+    Animated,
+    Image,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    useWindowDimensions,
+    View,
+} from 'react-native';
+import { COLOR_SCHEMES } from '../src/data/utils/colors';
 import { getPopulationForCity } from '../src/data/utils/populations';
+import type { RootStackParamList, ThemeName } from '../src/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LifeMilestones'>;
+
+// Animated Color Box with cascading glow effect
+const AnimatedColorBox = ({
+    themeName,
+    isSelected,
+    onPress,
+    glowAnim
+}: {
+    themeName: ThemeName;
+    isSelected: boolean;
+    onPress: () => void;
+    glowAnim: Animated.Value;
+}) => {
+    const bgColor = COLOR_SCHEMES[themeName].bg;
+
+    const glowOpacity = glowAnim.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [0.3, 1, 0.3],
+    });
+
+    const glowScale = glowAnim.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [1, 1.15, 1],
+    });
+
+    return (
+        <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+            <Animated.View
+                style={[{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 6,
+                    backgroundColor: bgColor,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderWidth: isSelected ? 3 : 1,
+                    borderColor: isSelected ? '#fff' : 'rgba(255,255,255,0.3)',
+                    transform: [{ scale: glowScale }],
+                    shadowColor: bgColor,
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: glowOpacity as any,
+                    shadowRadius: 8,
+                    elevation: 8,
+                }]}
+            >
+                <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>+1</Text>
+            </Animated.View>
+        </TouchableOpacity>
+    );
+};
 
 const RECIPIENT_OPTIONS = {
     immediateFamily: [
@@ -111,41 +162,42 @@ const MESSAGES = {
 
 // Milestone-specific messages
 const getMilestoneMessages = (milestoneId: string) => {
+    const birthdayEnding = ' Here is some interesting information surrounding your birthday.';
     const messages: Record<string, { classic: string; celebration: string; heartfelt: string }> = {
         birthday: {
-            classic: 'Wishing {name} a wonderful birthday filled with love, laughter, and cherished memories.',
-            celebration: 'Another year of amazing memories for {name}! Here\'s to celebrating all the incredible moments that make {name} who they are.',
-            heartfelt: 'Happy Birthday, {name}! May this special day bring as much joy and happiness as you bring to everyone around you.',
+            classic: 'Wishing {fullName} a year filled with belly laughs, surprise adventures, and way too much cake! {firstName} deserves every bit of happiness coming their way.' + birthdayEnding,
+            celebration: 'Another trip around the sun and {fullName} is still the coolest person we know! Here\'s to more inside jokes, spontaneous dance parties, and making memories we\'ll laugh about forever.' + birthdayEnding,
+            heartfelt: 'On this special day, we celebrate the amazing person {fullName} is. Their kindness, humor, and love light up our lives. We\'re so grateful {firstName} was born!' + birthdayEnding,
         },
         sweet16: {
-            classic: 'Happy Sweet 16, {name}! Wishing you a day as amazing as this milestone moment.',
-            celebration: 'Sweet 16 and never been more fabulous! Here\'s to celebrating {name} and all the adventures ahead!',
-            heartfelt: 'Happy Sweet 16, {name}! May this special year be filled with dreams coming true and memories that last forever.',
+            classic: 'Sweet 16 and absolutely fabulous! This is {fullName}\'s year to shine, dream big, and make every moment count. The world is so lucky to have {firstName} in it!' + birthdayEnding,
+            celebration: 'Sixteen looks amazing on {fullName}! Get ready for new adventures, unforgettable moments, and all the fun that comes with this incredible milestone. Let\'s celebrate {firstName}!' + birthdayEnding,
+            heartfelt: 'Watching {fullName} grow into the incredible person they are today fills our hearts with so much love and pride. Happy Sweet 16 to someone truly special!' + birthdayEnding,
         },
         '21st': {
-            classic: 'Happy 21st Birthday, {name}! Cheers to this milestone and all the exciting moments ahead!',
-            celebration: 'Celebrating 21 years of {name}! Here\'s to new adventures, unforgettable memories, and endless possibilities!',
-            heartfelt: 'Happy 21st, {name}! May this year bring you joy, success, and all the happiness you deserve.',
+            classic: 'Welcome to 21, {fullName}! The world is yours for the taking, and we can\'t wait to see all the amazing things you\'ll do. Cheers to this exciting new chapter!' + birthdayEnding,
+            celebration: '{fullName} is 21 and ready to take on the world! This is the year for big dreams, wild adventures, and making memories that\'ll last a lifetime. Let\'s celebrate!' + birthdayEnding,
+            heartfelt: 'Twenty-one years of {fullName} bringing joy to everyone around them. We\'re so proud of who they\'ve become and so excited for everything ahead. We love you to the moon and back!' + birthdayEnding,
         },
         highschool: {
-            classic: 'Congratulations on your high school graduation, {name}! Your future is bright!',
-            celebration: 'You did it! Celebrating {name}\'s high school graduation and the amazing journey ahead!',
-            heartfelt: 'So proud of you, {name}! Your hard work and dedication have brought you to this incredible milestone. The world awaits!',
+            classic: 'Congratulations on your high school graduation! This is just the beginning of an incredible journey. The world is full of opportunities waiting for you. Here is some interesting information surrounding your graduation.',
+            celebration: 'You did it! High school is officially in the rearview mirror. Time to celebrate this amazing achievement and get ready for the exciting adventures ahead! Here is some interesting information surrounding your graduation.',
+            heartfelt: 'What an incredible milestone! All the hard work, dedication, and late nights have paid off. We are so proud of everything you have accomplished. The best is yet to come! Here is some interesting information surrounding your graduation.',
         },
         college: {
-            classic: 'Congratulations on your college graduation, {name}! This is just the beginning of your amazing story!',
-            celebration: 'College grad! Celebrating {name} and all the incredible achievements that got you here!',
-            heartfelt: 'Congratulations, {name}! Your dedication and perseverance have paid off. May your future be filled with success and happiness!',
+            classic: 'Congratulations on your college graduation! Years of hard work and determination have led to this proud moment. Your future is bright and full of endless possibilities. Here is some interesting information surrounding your graduation.',
+            celebration: 'You made it! College is complete and a whole new chapter is about to begin. Time to celebrate this huge accomplishment and all the success that lies ahead! Here is some interesting information surrounding your graduation.',
+            heartfelt: 'This diploma represents so much more than a degree. It represents perseverance, growth, and countless sacrifices. We could not be more proud of this achievement. Here is some interesting information surrounding your graduation.',
         },
         mothersday: {
-            classic: 'Happy Mother\'s Day to the most wonderful mom! Thank you for everything you do.',
-            celebration: 'Celebrating the amazing mother you are! Your love and care make every day brighter.',
-            heartfelt: 'To the best mom in the world: Your love, strength, and kindness inspire us every single day. Happy Mother\'s Day!',
+            classic: 'We love you more than words can say. Happy Mother\'s Day!' + birthdayEnding,
+            celebration: 'Thanks for everything you do! Today we celebrate YOU! Happy Mother\'s Day!' + birthdayEnding,
+            heartfelt: 'We\'re so blessed to call you Mom. Happy Mother\'s Day!' + birthdayEnding,
         },
         fathersday: {
-            classic: 'Happy Father\'s Day to an incredible dad! Thank you for all you do.',
-            celebration: 'Celebrating the amazing father you are! Your guidance and love mean the world to us.',
-            heartfelt: 'To the best dad: Your wisdom, humor, and unwavering support have shaped who we are. Happy Father\'s Day!',
+            classic: 'We\'re so lucky to have you. Happy Father\'s Day!' + birthdayEnding,
+            celebration: 'Thanks for the bad jokes, the good advice, and always being there. Today is all about you! Happy Father\'s Day!' + birthdayEnding,
+            heartfelt: 'We\'re grateful for every moment. Happy Father\'s Day to the best dad ever!' + birthdayEnding,
         },
     };
 
@@ -153,9 +205,9 @@ const getMilestoneMessages = (milestoneId: string) => {
     const anniversaryYears = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '15th', '20th', '25th', '30th', '40th', '50th', '60th'];
     if (anniversaryYears.includes(milestoneId)) {
         return {
-            classic: `Happy ${milestoneId} Anniversary! Wishing you continued love, joy, and many more years of happiness together.`,
-            celebration: `Celebrating ${milestoneId} years of love and partnership! Here's to the memories you've made and the adventures still to come!`,
-            heartfelt: `Happy ${milestoneId} Anniversary! Your love story continues to inspire us all. May your bond grow stronger with each passing year.`,
+            classic: `{name}'s ${milestoneId} anniversary and still going strong! Your love story is one for the ages. Here's to many more years of happiness together.` + birthdayEnding,
+            celebration: `${milestoneId} years of love, laughter, and putting up with each other! {name}, you two are relationship goals. Cheers to your amazing journey together!` + birthdayEnding,
+            heartfelt: `${milestoneId} years of {name} building a beautiful life together. Your love inspires everyone around you. May your bond continue to grow stronger each day.` + birthdayEnding,
         };
     }
 
@@ -214,15 +266,62 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
     const [selectedRecipient, setSelectedRecipient] = useState<string>('');
     const [showRecipientModal, setShowRecipientModal] = useState(false);
     const [personName, setPersonName] = useState('Patrick McCullen');
+    const [spouse1, setSpouse1] = useState('');
+    const [spouse2, setSpouse2] = useState('');
+    const [lastName, setLastName] = useState('');
     const [photos, setPhotos] = useState<string[]>([]);
     const [hometown, setHometown] = useState('Bellefontaine Neighbors, MO');
     const [dobDate, setDobDate] = useState<Date>(new Date(1970, 10, 15)); // November 15, 1970
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedMessage, setSelectedMessage] = useState<MessageKey>('classic');
     const [customMessage, setCustomMessage] = useState('');
+    const [editableMessage, setEditableMessage] = useState('');
+    const [messageWasEdited, setMessageWasEdited] = useState(false);
     const [selectedColor, setSelectedColor] = useState<ThemeName>('green');
     const [loading, setLoading] = useState(false);
     const [population, setPopulation] = useState<number | null>(null);
+
+    // Cascading glow animation for color palette
+    const glowAnims = useRef(
+        Array.from({ length: 25 }, () => new Animated.Value(0))
+    ).current;
+
+    // Start cascading animation on mount
+    useEffect(() => {
+        const runCascade = () => {
+            glowAnims.forEach(anim => anim.setValue(0));
+            const animations: Animated.CompositeAnimation[] = [];
+
+            for (let col = 0; col < 5; col++) {
+                for (let row = 0; row < 5; row++) {
+                    const index = row * 5 + col;
+                    const delay = (col * 5 + row) * 80;
+
+                    animations.push(
+                        Animated.sequence([
+                            Animated.delay(delay),
+                            Animated.timing(glowAnims[index], {
+                                toValue: 1,
+                                duration: 400,
+                                useNativeDriver: true,
+                            }),
+                            Animated.timing(glowAnims[index], {
+                                toValue: 0,
+                                duration: 400,
+                                useNativeDriver: true,
+                            }),
+                        ])
+                    );
+                }
+            }
+
+            Animated.parallel(animations).start(() => {
+                setTimeout(runCascade, 2000);
+            });
+        };
+
+        runCascade();
+    }, []);
 
     const getSelectedMilestoneLabel = () => {
         const allOptions = [...MILESTONE_OPTIONS.birthday, ...MILESTONE_OPTIONS.graduation, ...MILESTONE_OPTIONS.anniversary, ...MILESTONE_OPTIONS.special];
@@ -318,34 +417,67 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
         }
         const lifePathNumber = sum;
 
-        // Build intro text
+        // Build simple intro with age in greeting for birthdays
         const firstName = personName.split(' ')[0];
         const dobFormatted = `${month}/${day}/${birthDate.getFullYear()}`;
-        const intro = `${personName} turned ${age} years old on ${dobFormatted}. ${firstName}'s zodiac sign is ${zodiac} ${zodiacEmoji} and has a life path number of ${lifePathNumber} 🎱. Their birthstone is ${birthstone}. Below are some interesting facts surrounding your birthday. `;
 
-        // If custom message, prepend intro and return
-        if (selectedMessage === 'custom') {
-            return intro + customMessage;
+        // For birthdays, include age in the greeting
+        let intro = '';
+
+        function getOrdinalSuffix(n: number): string {
+            const s = ['th', 'st', 'nd', 'rd'];
+            const v = n % 100;
+            return (s[(v - 20) % 10] || s[v] || s[0]);
         }
 
-        // For prewritten messages, get the message and prepend intro
+        // Get the prewritten message
         const milestoneMessages = getMilestoneMessages(selectedMilestone);
-        let msg = milestoneMessages[selectedMessage as keyof typeof milestoneMessages] || '';
-        msg = msg.replace('{name}', personName || 'you');
+        let msg = '';
 
-        // Prepend intro to prewritten message
-        msg = intro + msg;
+        // For anniversaries, combine spouse names
+        const isAnniversary = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '15th', '20th', '25th', '30th', '40th', '50th', '60th'].includes(selectedMilestone);
+        const displayName = isAnniversary ? `${spouse1} & ${spouse2}${lastName ? ' ' + lastName : ''}` : personName;
 
-        // Append custom message if provided
-        if (customMessage.trim()) {
-            msg = `${msg} ${customMessage.trim()}`;
+        if (selectedMessage === 'custom') {
+            // Custom: complete control, no intro
+            msg = customMessage;
+        } else {
+            msg = milestoneMessages[selectedMessage as keyof typeof milestoneMessages] || '';
+            // Get first name only for {firstName} placeholder
+            const firstNameOnly = (displayName || 'you').split(' ')[0];
+            msg = msg.replace('{fullName}', displayName || 'you');
+            msg = msg.replace('{firstName}', firstNameOnly);
+            msg = msg.replace('{name}', displayName || 'you'); // For backwards compatibility
+
+            // Prepend intro to prewritten message
+            msg = intro + msg;
+
+            // Append custom message if provided
+            if (customMessage.trim()) {
+                msg = `${msg} ${customMessage.trim()}`;
+            }
         }
 
         return msg;
     };
 
+    // Get the final message to use (edited or generated)
+    const getMessageForPreview = () => {
+        if (messageWasEdited) {
+            return editableMessage;
+        }
+        return getFinalMessage();
+    };
+
     const handleBuild = async () => {
-        if (!personName.trim()) {
+        const isAnniversary = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '15th', '20th', '25th', '30th', '40th', '50th', '60th'].includes(selectedMilestone);
+
+        if (isAnniversary) {
+            if (!spouse1.trim() || !spouse2.trim()) {
+                Alert.alert('Required', 'Please enter both spouse names');
+                return;
+            }
+        } else if (!personName.trim()) {
             Alert.alert('Required', 'Please enter a person name');
             return;
         }
@@ -374,25 +506,51 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
         // Navigate to Preview with milestone data formatted like baby announcement
         const dobISO = `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`;
 
+        // Get the final message (use edited version if customer modified it)
+        let finalMessage = getMessageForPreview();
+        if (selectedMilestone === 'birthday' || selectedMilestone === 'sweet16' || selectedMilestone === '21st') {
+            finalMessage = `${finalMessage} Here is some interesting information surrounding your birthday.`;
+        }
+
+        // Split personName into first/middle/last for proper name handling
+        const nameParts = personName.trim().split(' ').filter(Boolean);
+        const firstNamePart = nameParts[0] || '';
+        const lastNamePart = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+        const middleNamePart = nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '';
+
+        // Build babies array - always include at least one entry with the name, even without photos
+        let babiesArray = [];
+        if (photos.length > 0) {
+            babiesArray = photos.slice(0, 3).map((photoUri, idx) => ({
+                first: idx === 0 ? (isAnniversary ? spouse1.trim() : firstNamePart) : '',
+                middle: idx === 0 ? (isAnniversary ? '' : middleNamePart) : '',
+                last: isAnniversary ? lastName.trim() : lastNamePart,
+                photoUri: photoUri
+            }));
+        } else {
+            // No photos - still need the name data
+            babiesArray = [{
+                first: isAnniversary ? spouse1.trim() : firstNamePart,
+                middle: isAnniversary ? '' : middleNamePart,
+                last: isAnniversary ? lastName.trim() : lastNamePart,
+                photoUri: null
+            }];
+        }
+
         const payload: any = {
             mode: 'milestone',
             theme: selectedColor,
             hometown: hometown.trim(),
             dobISO: dobISO,
             population: finalPopulation,
-            personName: personName.trim(),
+            personName: isAnniversary ? `${spouse1} & ${spouse2}${lastName ? ' ' + lastName : ''}` : personName.trim(),
             photoUri: photos[0] || null,
-            babies: photos.slice(0, 3).map((photoUri, idx) => ({
-                first: idx === 0 ? personName.trim() : '',
-                middle: '',
-                last: '',
-                photoUri: photoUri
-            })),
+            babies: babiesArray,
             milestone: selectedMilestone,
             recipient: selectedRecipient,
-            message: getFinalMessage(),
+            message: finalMessage,
             photos: photos,
-            motherName: personName.trim(), // Use personName as the header for milestones
+            motherName: isAnniversary ? `${spouse1} & ${spouse2}${lastName ? ' ' + lastName : ''}` : personName.trim(),
             fatherName: '',
             weightLb: '',
             weightOz: '',
@@ -683,16 +841,54 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
             )}
 
             {/* Person Name */}
-            <Text style={styles.label}>{getPersonNameLabel(selectedMilestone)}</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="e.g., Patrick"
-                value={personName}
-                onChangeText={setPersonName}
-            />
+            {['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '15th', '20th', '25th', '30th', '40th', '50th', '60th'].includes(selectedMilestone) ? (
+                <>
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.label}>Spouse 1</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="John"
+                                value={spouse1}
+                                onChangeText={setSpouse1}
+                            />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.label}>Spouse 2</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Jane"
+                                value={spouse2}
+                                onChangeText={setSpouse2}
+                            />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.label}>Last Name</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Smith"
+                                value={lastName}
+                                onChangeText={setLastName}
+                            />
+                        </View>
+                    </View>
+                </>
+            ) : (
+                <>
+                    <Text style={styles.label}>{getPersonNameLabel(selectedMilestone)}</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="e.g., Patrick"
+                        value={personName}
+                        onChangeText={setPersonName}
+                    />
+                </>
+            )}
 
-            {/* Date of Birth */}
-            <Text style={styles.label}>Date of Birth</Text>
+            {/* Date */}
+            <Text style={styles.label}>
+                {milestoneCategory === 'anniversary' ? 'Date of Wedding/Marriage' : 'Date of Birth'}
+            </Text>
             <TouchableOpacity
                 style={styles.input}
                 onPress={() => setShowDatePicker(true)}
@@ -717,11 +913,22 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
                 {[0, 1, 2].map((idx) => (
                     <TouchableOpacity
                         key={idx}
-                        style={[styles.photoSlot, { opacity: idx < photos.length ? 1 : 0.5 }]}
+                        style={styles.photoSlot}
                         onPress={() => (idx < photos.length ? removePhoto(idx) : addPhoto())}
                     >
-                        <Text style={styles.photoSlotText}>{idx < photos.length ? '✕' : '+'}</Text>
-                        <Text style={styles.photoSlotLabel}>{idx < photos.length ? 'Remove' : 'Add Photo'}</Text>
+                        {photos[idx] ? (
+                            <>
+                                <Image source={{ uri: photos[idx] }} style={styles.photoPreview} />
+                                <View style={styles.removeButton}>
+                                    <Text style={styles.removeButtonText}>✕</Text>
+                                </View>
+                            </>
+                        ) : (
+                            <>
+                                <Text style={styles.cameraIcon}>📷</Text>
+                                <Text style={styles.photoSlotLabel}>Add Photo</Text>
+                            </>
+                        )}
                     </TouchableOpacity>
                 ))}
             </View>
@@ -773,159 +980,85 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
                 </TouchableOpacity>
             </View>
 
-            {/* Message Preview */}
-            <View style={styles.messagePreview}>
-                <Text style={styles.messagePreviewText}>{getFinalMessage()}</Text>
-            </View>
-
-            {/* Custom Message Input */}
-            <Text style={styles.label}>Add Custom Message (Optional)</Text>
-            <Text style={styles.hint}>
-                {selectedMessage === 'custom'
-                    ? 'Write your own message from scratch'
-                    : 'Add additional text to the pre-written message above'}
-            </Text>
+            {/* Message Preview - EDITABLE */}
+            <Text style={styles.label}>Your Message (Tap to Edit)</Text>
             <TextInput
-                style={[styles.input, styles.messageInput]}
-                placeholder={selectedMessage === 'custom'
-                    ? "Enter your custom message..."
-                    : "Add your own personal touch..."}
-                value={customMessage}
-                onChangeText={setCustomMessage}
+                style={[styles.input, styles.messageInput, { minHeight: 120 }]}
+                value={messageWasEdited ? editableMessage : getFinalMessage()}
+                onChangeText={(text) => {
+                    setEditableMessage(text);
+                    setMessageWasEdited(true);
+                }}
                 multiline
+                placeholder="Your message will appear here..."
             />
 
             {/* Color Picker */}
             <Text style={styles.label}>Background Color</Text>
-            <View style={{ alignSelf: 'center', width: '37.5%' }}>
-                <View style={{ gap: 1.5, marginBottom: 4 }}>
+            <View style={{ alignSelf: 'center', width: '45%' }}>
+                <View style={{ gap: 4, marginBottom: 4 }}>
                     {/* Row 1 - Blues */}
-                    <View style={{ flexDirection: 'row', gap: 1.5 }}>
-                        {(['lightBlue', 'royalBlue', 'mediumBlue', 'navyBlue', 'teal'] as ThemeName[]).map(t => (
-                            <TouchableOpacity
+                    <View style={{ flexDirection: 'row', gap: 4, justifyContent: 'center' }}>
+                        {(['lightBlue', 'royalBlue', 'mediumBlue', 'navyBlue', 'teal'] as ThemeName[]).map((t, colIndex) => (
+                            <AnimatedColorBox
                                 key={t}
+                                themeName={t}
+                                isSelected={selectedColor === t}
                                 onPress={() => setSelectedColor(t)}
-                                style={[
-                                    styles.colorBox,
-                                    {
-                                        backgroundColor: COLOR_SCHEMES[t].bg,
-                                        opacity: selectedColor === t ? 1 : 0.85,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        shadowColor: COLOR_SCHEMES[t].bg,
-                                        shadowOffset: { width: 0, height: 0 },
-                                        shadowOpacity: 0.8,
-                                        shadowRadius: 4,
-                                        elevation: 6,
-                                    }
-                                ]}
-                            >
-                                <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>+1</Text>
-                            </TouchableOpacity>
+                                glowAnim={glowAnims[0 * 5 + colIndex]}
+                            />
                         ))}
                     </View>
 
                     {/* Row 2 - Greens */}
-                    <View style={{ flexDirection: 'row', gap: 1.5 }}>
-                        {(['darkGreen', 'forestGreen', 'green', 'limeGreen', 'mintGreen'] as ThemeName[]).map(t => (
-                            <TouchableOpacity
+                    <View style={{ flexDirection: 'row', gap: 4, justifyContent: 'center' }}>
+                        {(['darkGreen', 'forestGreen', 'green', 'limeGreen', 'mintGreen'] as ThemeName[]).map((t, colIndex) => (
+                            <AnimatedColorBox
                                 key={t}
+                                themeName={t}
+                                isSelected={selectedColor === t}
                                 onPress={() => setSelectedColor(t)}
-                                style={[
-                                    styles.colorBox,
-                                    {
-                                        backgroundColor: COLOR_SCHEMES[t].bg,
-                                        opacity: selectedColor === t ? 1 : 0.85,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        shadowColor: COLOR_SCHEMES[t].bg,
-                                        shadowOffset: { width: 0, height: 0 },
-                                        shadowOpacity: 0.8,
-                                        shadowRadius: 4,
-                                        elevation: 6,
-                                    }
-                                ]}
-                            >
-                                <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>+1</Text>
-                            </TouchableOpacity>
+                                glowAnim={glowAnims[1 * 5 + colIndex]}
+                            />
                         ))}
                     </View>
 
                     {/* Row 3 - Pinks/Purples */}
-                    <View style={{ flexDirection: 'row', gap: 1.5 }}>
-                        {(['lavender', 'hotPink', 'rose', 'purple', 'violet'] as ThemeName[]).map(t => (
-                            <TouchableOpacity
+                    <View style={{ flexDirection: 'row', gap: 4, justifyContent: 'center' }}>
+                        {(['lavender', 'hotPink', 'rose', 'purple', 'violet'] as ThemeName[]).map((t, colIndex) => (
+                            <AnimatedColorBox
                                 key={t}
+                                themeName={t}
+                                isSelected={selectedColor === t}
                                 onPress={() => setSelectedColor(t)}
-                                style={[
-                                    styles.colorBox,
-                                    {
-                                        backgroundColor: COLOR_SCHEMES[t].bg,
-                                        opacity: selectedColor === t ? 1 : 0.85,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        shadowColor: COLOR_SCHEMES[t].bg,
-                                        shadowOffset: { width: 0, height: 0 },
-                                        shadowOpacity: 0.8,
-                                        shadowRadius: 4,
-                                        elevation: 6,
-                                    }
-                                ]}
-                            >
-                                <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>+1</Text>
-                            </TouchableOpacity>
+                                glowAnim={glowAnims[2 * 5 + colIndex]}
+                            />
                         ))}
                     </View>
 
                     {/* Row 4 - Reds/Oranges */}
-                    <View style={{ flexDirection: 'row', gap: 1.5 }}>
-                        {(['coral', 'red', 'maroon', 'orange', 'gold'] as ThemeName[]).map(t => (
-                            <TouchableOpacity
+                    <View style={{ flexDirection: 'row', gap: 4, justifyContent: 'center' }}>
+                        {(['coral', 'red', 'maroon', 'orange', 'gold'] as ThemeName[]).map((t, colIndex) => (
+                            <AnimatedColorBox
                                 key={t}
+                                themeName={t}
+                                isSelected={selectedColor === t}
                                 onPress={() => setSelectedColor(t)}
-                                style={[
-                                    styles.colorBox,
-                                    {
-                                        backgroundColor: COLOR_SCHEMES[t].bg,
-                                        opacity: selectedColor === t ? 1 : 0.85,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        shadowColor: COLOR_SCHEMES[t].bg,
-                                        shadowOffset: { width: 0, height: 0 },
-                                        shadowOpacity: 0.8,
-                                        shadowRadius: 4,
-                                        elevation: 6,
-                                    }
-                                ]}
-                            >
-                                <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>+1</Text>
-                            </TouchableOpacity>
+                                glowAnim={glowAnims[3 * 5 + colIndex]}
+                            />
                         ))}
                     </View>
 
                     {/* Row 5 - Grays */}
-                    <View style={{ flexDirection: 'row', gap: 1.5 }}>
-                        {(['charcoal', 'slate', 'gray', 'silver', 'lightGray'] as ThemeName[]).map(t => (
-                            <TouchableOpacity
+                    <View style={{ flexDirection: 'row', gap: 4, justifyContent: 'center' }}>
+                        {(['charcoal', 'slate', 'gray', 'silver', 'lightGray'] as ThemeName[]).map((t, colIndex) => (
+                            <AnimatedColorBox
                                 key={t}
+                                themeName={t}
+                                isSelected={selectedColor === t}
                                 onPress={() => setSelectedColor(t)}
-                                style={[
-                                    styles.colorBox,
-                                    {
-                                        backgroundColor: COLOR_SCHEMES[t].bg,
-                                        opacity: selectedColor === t ? 1 : 0.85,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        shadowColor: COLOR_SCHEMES[t].bg,
-                                        shadowOffset: { width: 0, height: 0 },
-                                        shadowOpacity: 0.8,
-                                        shadowRadius: 4,
-                                        elevation: 6,
-                                    }
-                                ]}
-                            >
-                                <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>+1</Text>
-                            </TouchableOpacity>
+                                glowAnim={glowAnims[4 * 5 + colIndex]}
+                            />
                         ))}
                     </View>
                 </View>
@@ -948,66 +1081,85 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f5f5f5' },
-    content: { padding: 20, paddingBottom: 40 },
-    title: { fontSize: 24, fontWeight: '900', marginBottom: 20, color: '#333' },
-    label: { fontSize: 16, fontWeight: '700', color: '#333', marginTop: 16, marginBottom: 8 },
-    hint: { fontSize: 13, color: '#666', marginBottom: 12 },
+    content: { padding: 12, paddingBottom: 20 },
+    title: { fontSize: 20, fontWeight: '900', marginBottom: 8, color: '#333' },
+    label: { fontSize: 13, fontWeight: '700', color: '#333', marginTop: 6, marginBottom: 4 },
+    hint: { fontSize: 11, color: '#666', marginBottom: 6 },
     input: {
         backgroundColor: '#fff',
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        paddingVertical: 12,
-        fontSize: 14,
+        borderRadius: 6,
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        fontSize: 13,
         borderWidth: 1,
         borderColor: '#ddd',
     },
-    messageInput: { minHeight: 100, textAlignVertical: 'top' },
-    toggleGroup: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+    messageInput: { minHeight: 60, textAlignVertical: 'top' },
+    toggleGroup: { flexDirection: 'row', gap: 6, marginBottom: 8 },
     toggleBtn: {
         flex: 1,
-        paddingVertical: 12,
-        borderRadius: 8,
+        paddingVertical: 8,
+        borderRadius: 6,
         backgroundColor: '#ddd',
         alignItems: 'center',
     },
     toggleActive: { backgroundColor: '#007AFF' },
-    toggleText: { fontWeight: '700', color: '#333' },
+    toggleText: { fontWeight: '700', color: '#333', fontSize: 12 },
     toggleActiveText: { color: '#fff' },
-    photoGrid: { flexDirection: 'row', gap: 12, marginBottom: 20 },
+    photoGrid: { flexDirection: 'row', gap: 8, marginBottom: 10 },
     photoSlot: {
         flex: 1,
-        aspectRatio: 1,
+        height: 60,
         borderWidth: 2,
         borderStyle: 'dashed',
         borderColor: '#ddd',
         borderRadius: 8,
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: '#fafafa',
+        overflow: 'hidden',
     },
-    photoSlotText: { fontSize: 28, color: '#999' },
-    photoSlotLabel: { fontSize: 12, color: '#999', marginTop: 4 },
-    messageGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 16 },
+    photoPreview: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
+    cameraIcon: { fontSize: 24, marginBottom: 4 },
+    photoSlotLabel: { fontSize: 11, color: '#999' },
+    removeButton: {
+        position: 'absolute',
+        top: 4,
+        right: 4,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        borderRadius: 12,
+        width: 24,
+        height: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    removeButtonText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
+    messageGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
     messageBtn: {
         width: '48%',
-        paddingVertical: 16,
+        paddingVertical: 10,
         backgroundColor: '#f0f0f0',
-        borderRadius: 8,
+        borderRadius: 6,
         alignItems: 'center',
         borderWidth: 2,
         borderColor: 'transparent',
     },
     messageBtnActive: { borderColor: '#007AFF', backgroundColor: '#E3F2FD' },
-    messageBtnIcon: { fontSize: 28 },
-    messageBtnLabel: { fontSize: 12, fontWeight: '700', marginTop: 4, color: '#333' },
+    messageBtnIcon: { fontSize: 20 },
+    messageBtnLabel: { fontSize: 10, fontWeight: '700', marginTop: 2, color: '#333' },
     messagePreview: {
         backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 16,
+        borderRadius: 6,
+        padding: 10,
         borderWidth: 1,
         borderColor: '#ddd',
-        marginBottom: 20,
+        marginBottom: 10,
     },
-    messagePreviewText: { fontSize: 14, color: '#333', lineHeight: 20 },
+    messagePreviewText: { fontSize: 12, color: '#333', lineHeight: 16 },
     colorBox: {
         flex: 1,
         aspectRatio: 1,
@@ -1023,26 +1175,26 @@ const styles = StyleSheet.create({
         elevation: 4,
     },
     buildBtn: {
-        borderRadius: 8,
-        paddingVertical: 16,
+        borderRadius: 6,
+        paddingVertical: 12,
         alignItems: 'center',
-        marginTop: 24,
+        marginTop: 12,
     },
-    buildBtnText: { color: '#fff', fontWeight: '900', fontSize: 16 },
+    buildBtnText: { color: '#fff', fontWeight: '900', fontSize: 14 },
     dropdownButton: {
         backgroundColor: '#fff',
-        borderRadius: 8,
-        paddingHorizontal: 16,
-        paddingVertical: 16,
+        borderRadius: 6,
+        paddingHorizontal: 10,
+        paddingVertical: 10,
         borderWidth: 1,
         borderColor: '#ddd',
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 8,
     },
     dropdownButtonText: {
-        fontSize: 16,
+        fontSize: 13,
         color: '#333',
         fontWeight: '500',
     },

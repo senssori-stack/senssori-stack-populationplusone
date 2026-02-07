@@ -1,15 +1,15 @@
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    StyleSheet,
     Dimensions,
-    StatusBar
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Landing'>;
@@ -40,11 +40,9 @@ export default function LandingScreen({ navigation }: Props) {
 
                 {/* What Would You Like Section */}
                 <View style={styles.contentSection}>
-                    <Text style={styles.sectionTitle}>What would you like to create?</Text>
-
-                    {/* Card 0: Sample Signs Gallery */}
+                    {/* Card 0: Sample Signs Gallery - Above section title */}
                     <TouchableOpacity
-                        style={styles.cardButton}
+                        style={[styles.cardButton, { marginBottom: 24 }]}
                         onPress={() => navigation.navigate('SampleGallery')}
                         activeOpacity={0.85}
                     >
@@ -59,6 +57,8 @@ export default function LandingScreen({ navigation }: Props) {
                             <Text style={styles.cardArrow}>→</Text>
                         </View>
                     </TouchableOpacity>
+
+                    <Text style={styles.sectionTitle}>What would you like to create?</Text>
 
                     {/* Card 1: New Baby Announcement */}
                     <TouchableOpacity
@@ -91,6 +91,58 @@ export default function LandingScreen({ navigation }: Props) {
                             <View style={styles.cardTextContainer}>
                                 <Text style={styles.cardTitle}>Life Milestones</Text>
                                 <Text style={styles.cardDescription}>Birthday, Sweet 16, Graduation, Anniversary & more!</Text>
+                            </View>
+                            <Text style={styles.cardArrow}>→</Text>
+                        </View>
+                    </TouchableOpacity>
+
+                    {/* Card 3: Population -1 (Obituary) - Coming March 1, 2026 */}
+                    {/* TODO: Enable navigation when ready: onPress={() => navigation.navigate('ObituaryForm')} */}
+                    <View style={styles.cardButton}>
+                        <View style={styles.cardContent}>
+                            <View style={styles.cardIconBox}>
+                                <Text style={styles.cardEmoji}>🕊️</Text>
+                            </View>
+                            <View style={styles.cardTextContainer}>
+                                <Text style={styles.cardTitle}>-1 Memorial Announcements Coming March 1, 2026</Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Divider Gap */}
+                    <View style={styles.sectionGap} />
+
+                    {/* Card 4: Just For Fun */}
+                    <TouchableOpacity
+                        style={styles.cardButton}
+                        onPress={() => navigation.navigate('JustForFun')}
+                        activeOpacity={0.85}
+                    >
+                        <View style={styles.cardContent}>
+                            <View style={styles.cardIconBox}>
+                                <Text style={styles.cardEmoji}>🎲</Text>
+                            </View>
+                            <View style={styles.cardTextContainer}>
+                                <Text style={styles.cardTitle}>Just For Fun!</Text>
+                                <Text style={styles.cardDescription}>Life Path Numbers, Lucky Numbers, Roman Numerals & more!</Text>
+                            </View>
+                            <Text style={styles.cardArrow}>→</Text>
+                        </View>
+                    </TouchableOpacity>
+
+                    {/* Card 5: About Us */}
+                    <TouchableOpacity
+                        style={styles.cardButton}
+                        onPress={() => navigation.navigate('AboutUs')}
+                        activeOpacity={0.85}
+                    >
+                        <View style={styles.cardContent}>
+                            <View style={styles.cardIconBox}>
+                                <Text style={styles.cardEmoji}>ℹ️</Text>
+                            </View>
+                            <View style={styles.cardTextContainer}>
+                                <Text style={styles.cardTitle}>About Us</Text>
+                                <Text style={styles.cardDescription}>Learn more about Population +1</Text>
                             </View>
                             <Text style={styles.cardArrow}>→</Text>
                         </View>
@@ -225,5 +277,23 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#ffffff80',
         fontWeight: '500',
+    },
+    cardButtonDimmed: {
+        opacity: 0.5,
+    },
+    cardIconBoxDimmed: {
+        backgroundColor: '#e0e0e0',
+    },
+    cardTitleDimmed: {
+        color: '#888',
+    },
+    cardDescriptionDimmed: {
+        color: '#666',
+        fontStyle: 'italic',
+        fontSize: 11,
+        fontWeight: '600',
+    },
+    sectionGap: {
+        height: 20,
     },
 });

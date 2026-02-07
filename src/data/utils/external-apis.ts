@@ -18,9 +18,9 @@ export async function getMetalsPrices(): Promise<{ gold: string; silver: string 
 
         const data = await response.json();
 
-        // Extract prices and format
-        const goldPrice = data.rates?.XAU ? `$${data.rates.XAU.toFixed(2)}` : null;
-        const silverPrice = data.rates?.XAG ? `$${data.rates.XAG.toFixed(2)}` : null;
+        // Extract prices - API returns USDXAU (gold) and USDXAG (silver) as price per oz
+        const goldPrice = data.rates?.USDXAU ? `$${data.rates.USDXAU.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : null;
+        const silverPrice = data.rates?.USDXAG ? `$${data.rates.USDXAG.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : null;
 
         if (goldPrice && silverPrice) {
             console.log('✅ Metal prices fetched:', { goldPrice, silverPrice });
