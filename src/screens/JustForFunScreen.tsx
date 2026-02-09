@@ -8,6 +8,7 @@ import {
     StatusBar,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View
 } from 'react-native';
@@ -54,8 +55,8 @@ function calculateLifePathNumber(date: Date): { number: number; meaning: string 
     return { number: lifePathNum, meaning: meanings[lifePathNum] || "A unique and special soul!" };
 }
 
-// Lucky Numbers generation
-function getLuckyNumbers(date: Date): number[] {
+// Lucky Numbers generation (Lottery style: 6 numbers from 1-49)
+function getLotteryNumbers(date: Date): number[] {
     const month = date.getMonth() + 1;
     const day = date.getDate();
     const year = date.getFullYear();
@@ -77,6 +78,40 @@ function getLuckyNumbers(date: Date): number[] {
     }
 
     return unique.slice(0, 6).sort((a, b) => a - b);
+}
+
+// Keno Numbers generation (10 numbers from 1-80)
+function getKenoNumbers(date: Date): number[] {
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const year = date.getFullYear();
+    const today = new Date();
+    const todayNum = today.getDate() + today.getMonth() + 1;
+
+    // Different seed multiplier for keno to get different numbers
+    const seed = (month * day * year * 3 + todayNum * 7) % 100000;
+    const numbers: number[] = [];
+    let current = seed;
+
+    for (let i = 0; i < 10; i++) {
+        current = (current * 7621 + 38729) % 293280;
+        numbers.push((current % 80) + 1);
+    }
+
+    const unique = [...new Set(numbers)];
+    while (unique.length < 10) {
+        unique.push((unique[unique.length - 1] * 11 % 80) + 1);
+    }
+
+    return unique.slice(0, 10).sort((a, b) => a - b);
+}
+
+// Combined Lucky Numbers (returns both lottery and keno)
+function getLuckyNumbers(date: Date): { lottery: number[]; keno: number[] } {
+    return {
+        lottery: getLotteryNumbers(date),
+        keno: getKenoNumbers(date)
+    };
 }
 
 // Roman Numerals
@@ -220,25 +255,40 @@ function getOnThisDay(date: Date): { year: number; event: string }[] {
     return events[key] || defaults;
 }
 
-// Then and Now comparison - matches Time Capsule categories
-function getThenAndNow(birthYear: number): { category: string; then: string; now: string }[] {
-    // Historical data by decade
-    const getData = (category: string): { then: string; now: string } => {
-        const data: Record<string, Record<number, string>> = {
-            'gas': { 1950: '$0.27', 1960: '$0.31', 1970: '$0.36', 1980: '$1.19', 1990: '$1.15', 2000: '$1.51', 2010: '$2.79', 2020: '$2.17', 2026: '$3.45' },
-            'minwage': { 1950: '$0.75', 1960: '$1.00', 1970: '$1.60', 1980: '$3.10', 1990: '$3.80', 2000: '$5.15', 2010: '$7.25', 2020: '$7.25', 2026: '$7.25' },
-            'bread': { 1950: '$0.14', 1960: '$0.20', 1970: '$0.24', 1980: '$0.50', 1990: '$0.70', 2000: '$0.99', 2010: '$1.98', 2020: '$2.50', 2026: '$3.29' },
-            'eggs': { 1950: '$0.60', 1960: '$0.57', 1970: '$0.61', 1980: '$0.84', 1990: '$1.00', 2000: '$0.96', 2010: '$1.79', 2020: '$1.48', 2026: '$4.25' },
-            'milk': { 1950: '$0.83', 1960: '$0.95', 1970: '$1.15', 1980: '$1.60', 1990: '$2.15', 2000: '$2.78', 2010: '$3.32', 2020: '$3.54', 2026: '$4.15' },
-            'gold': { 1950: '$35', 1960: '$35', 1970: '$38', 1980: '$615', 1990: '$386', 2000: '$279', 2010: '$1,225', 2020: '$1,770', 2026: '$4,905' },
-            'silver': { 1950: '$0.74', 1960: '$0.91', 1970: '$1.63', 1980: '$16.39', 1990: '$4.83', 2000: '$4.95', 2010: '$20.19', 2020: '$20.55', 2026: '$87.92' },
-            'dow': { 1950: '235', 1960: '616', 1970: '839', 1980: '964', 1990: '2,753', 2000: '10,787', 2010: '11,578', 2020: '30,606', 2026: '44,873' },
-            'uspop': { 1950: '151M', 1960: '180M', 1970: '205M', 1980: '227M', 1990: '250M', 2000: '282M', 2010: '309M', 2020: '331M', 2026: '342M' },
-            'worldpop': { 1950: '2.5B', 1960: '3.0B', 1970: '3.7B', 1980: '4.4B', 1990: '5.3B', 2000: '6.1B', 2010: '6.9B', 2020: '7.8B', 2026: '8.1B' },
-            'president': { 1950: 'Harry Truman', 1960: 'Dwight Eisenhower', 1970: 'Richard Nixon', 1980: 'Jimmy Carter', 1990: 'George H.W. Bush', 2000: 'Bill Clinton', 2010: 'Barack Obama', 2020: 'Donald Trump', 2026: 'Donald Trump' },
-        };
+// Then and Now comparison - uses LIVE snapshot data from Google Sheets for "now" values
+function getThenAndNow(birthYear: number, snapshot: Record<string, string>): { category: string; then: string; now: string }[] {
+    // Historical data by decade (for "then" values only)
+    const historicalData: Record<string, Record<number, string>> = {
+        'gas': { 1950: '$0.27', 1960: '$0.31', 1970: '$0.36', 1980: '$1.19', 1990: '$1.15', 2000: '$1.51', 2010: '$2.79', 2020: '$2.17' },
+        'minwage': { 1950: '$0.75', 1960: '$1.00', 1970: '$1.60', 1980: '$3.10', 1990: '$3.80', 2000: '$5.15', 2010: '$7.25', 2020: '$7.25' },
+        'bread': { 1950: '$0.14', 1960: '$0.20', 1970: '$0.24', 1980: '$0.50', 1990: '$0.70', 2000: '$0.99', 2010: '$1.98', 2020: '$2.50' },
+        'eggs': { 1950: '$0.60', 1960: '$0.57', 1970: '$0.61', 1980: '$0.84', 1990: '$1.00', 2000: '$0.96', 2010: '$1.79', 2020: '$1.48' },
+        'milk': { 1950: '$0.83', 1960: '$0.95', 1970: '$1.15', 1980: '$1.60', 1990: '$2.15', 2000: '$2.78', 2010: '$3.32', 2020: '$3.54' },
+        'gold': { 1950: '$35', 1960: '$35', 1970: '$38', 1980: '$615', 1990: '$386', 2000: '$279', 2010: '$1,225', 2020: '$1,770' },
+        'silver': { 1950: '$0.74', 1960: '$0.91', 1970: '$1.63', 1980: '$16.39', 1990: '$4.83', 2000: '$4.95', 2010: '$20.19', 2020: '$20.55' },
+        'dow': { 1950: '235', 1960: '616', 1970: '839', 1980: '964', 1990: '2,753', 2000: '10,787', 2010: '11,578', 2020: '30,606' },
+        'uspop': { 1950: '151M', 1960: '180M', 1970: '205M', 1980: '227M', 1990: '250M', 2000: '282M', 2010: '309M', 2020: '331M' },
+        'worldpop': { 1950: '2.5B', 1960: '3.0B', 1970: '3.7B', 1980: '4.4B', 1990: '5.3B', 2000: '6.1B', 2010: '6.9B', 2020: '7.8B' },
+        'president': { 1950: 'Harry Truman', 1960: 'Dwight Eisenhower', 1970: 'Richard Nixon', 1980: 'Jimmy Carter', 1990: 'George H.W. Bush', 2000: 'Bill Clinton', 2010: 'Barack Obama', 2020: 'Donald Trump' },
+    };
 
-        const categoryData = data[category] || {};
+    // "Now" values come LIVE from Google Sheets (which fetches from metals-api.com)
+    const nowFromSnapshot: Record<string, string> = {
+        'gas': snapshot['GALLON OF GASOLINE'] || '$3.15',
+        'minwage': snapshot['MINIMUM WAGE'] || '$7.25',
+        'bread': snapshot['LOAF OF BREAD'] || '$2.50',
+        'eggs': snapshot['DOZEN EGGS'] || '$3.75',
+        'milk': snapshot['GALLON OF MILK'] || '$3.89',
+        'gold': snapshot['GOLD OZ'] || 'Loading...',
+        'silver': snapshot['SILVER OZ'] || 'Loading...',
+        'dow': snapshot['DOW JONES CLOSE'] || '43,250',
+        'uspop': snapshot['US POPULATION'] || '340M',
+        'worldpop': snapshot['WORLD POPULATION'] || '8.2B',
+        'president': snapshot['PRESIDENT'] || 'Donald Trump',
+    };
+
+    const getData = (category: string): { then: string; now: string } => {
+        const categoryData = historicalData[category] || {};
         const decades = [1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020];
         let thenValue = categoryData[2020] || 'N/A';
 
@@ -249,7 +299,7 @@ function getThenAndNow(birthYear: number): { category: string; then: string; now
             }
         }
 
-        return { then: thenValue, now: categoryData[2026] || 'N/A' };
+        return { then: thenValue, now: nowFromSnapshot[category] || 'N/A' };
     };
 
     const comparisons = [
@@ -273,8 +323,24 @@ export default function JustForFunScreen({ navigation }: Props) {
     const [selectedFeature, setSelectedFeature] = useState<FeatureType>(null);
     const [birthDate, setBirthDate] = useState<Date>(new Date(1990, 0, 1));
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
+    const [birthLocation, setBirthLocation] = useState('');
     const [result, setResult] = useState<any>(null);
+    const [snapshot, setSnapshot] = useState<Record<string, string>>({});
     const currentFeatureRef = useRef<FeatureType>(null);
+
+    // Fetch live snapshot from Google Sheets on mount
+    useEffect(() => {
+        (async () => {
+            try {
+                const data = await getAllSnapshotValues();
+                console.log('📊 JustForFun: Gold from Google Sheets =', data['GOLD OZ'], 'Silver =', data['SILVER OZ']);
+                setSnapshot(data);
+            } catch (error) {
+                console.warn('⚠️ JustForFun: Failed to fetch snapshot:', error);
+            }
+        })();
+    }, []);
 
     const selectFeature = (feature: FeatureType) => {
         setSelectedFeature(feature);
@@ -302,7 +368,8 @@ export default function JustForFunScreen({ navigation }: Props) {
         } else if (featureToUse === 'onthisday') {
             setResult(getOnThisDay(dateToUse));
         } else if (featureToUse === 'thenandnow') {
-            setResult(getThenAndNow(dateToUse.getFullYear()));
+            // Pass snapshot for LIVE gold/silver prices from Google Sheets
+            setResult(getThenAndNow(dateToUse.getFullYear(), snapshot));
         }
     };
 
@@ -345,14 +412,28 @@ export default function JustForFunScreen({ navigation }: Props) {
             return (
                 <View style={styles.resultBox}>
                     <Text style={styles.resultTitle}>Your Lucky Numbers Today</Text>
+
+                    {/* Lottery Numbers (1-49) */}
+                    <Text style={[styles.resultNote, { marginTop: 12, fontWeight: '700', fontSize: 14 }]}>Lottery (1-49)</Text>
                     <View style={styles.numbersRow}>
-                        {result.map((num: number, idx: number) => (
+                        {result.lottery.map((num: number, idx: number) => (
                             <View key={idx} style={styles.luckyBall}>
                                 <Text style={styles.luckyNumber}>{num}</Text>
                             </View>
                         ))}
                     </View>
-                    <Text style={styles.resultNote}>Based on your birthday energy + today's date</Text>
+
+                    {/* Keno Numbers (1-80) */}
+                    <Text style={[styles.resultNote, { marginTop: 20, fontWeight: '700', fontSize: 14 }]}>Keno (1-80)</Text>
+                    <View style={[styles.numbersRow, { flexWrap: 'wrap', justifyContent: 'center' }]}>
+                        {result.keno.map((num: number, idx: number) => (
+                            <View key={idx} style={[styles.luckyBall, { backgroundColor: '#10b981', margin: 4 }]}>
+                                <Text style={styles.luckyNumber}>{num}</Text>
+                            </View>
+                        ))}
+                    </View>
+
+                    <Text style={[styles.resultNote, { marginTop: 16 }]}>Based on your birthday energy + today's date</Text>
                 </View>
             );
         }
@@ -471,14 +552,25 @@ export default function JustForFunScreen({ navigation }: Props) {
                 {/* Date Picker Section - Always visible at top */}
                 <View style={styles.dateSection}>
                     <Text style={styles.dateLabel}>🎂 Enter Your Birthday:</Text>
-                    <TouchableOpacity
-                        style={styles.dateButton}
-                        onPress={() => setShowDatePicker(true)}
-                    >
-                        <Text style={styles.dateText}>
-                            {birthDate.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
-                        </Text>
-                    </TouchableOpacity>
+                    <View style={styles.dateTimeRow}>
+                        <TouchableOpacity
+                            style={styles.dateButton}
+                            onPress={() => setShowDatePicker(true)}
+                        >
+                            <Text style={styles.dateText}>
+                                {birthDate.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                            </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.timeButton}
+                            onPress={() => setShowTimePicker(true)}
+                        >
+                            <Text style={styles.timeText}>
+                                🕒 {birthDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true })}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
 
                     {showDatePicker && (
                         <DateTimePicker
@@ -497,6 +589,37 @@ export default function JustForFunScreen({ navigation }: Props) {
                             }}
                         />
                     )}
+
+                    {showTimePicker && (
+                        <DateTimePicker
+                            value={birthDate}
+                            mode="time"
+                            display="default"
+                            is24Hour={false}
+                            onChange={(_, date) => {
+                                setShowTimePicker(false);
+                                if (date) {
+                                    // Preserve existing date, update time
+                                    const newDate = new Date(birthDate);
+                                    newDate.setHours(date.getHours(), date.getMinutes());
+                                    setBirthDate(newDate);
+                                    if (currentFeatureRef.current) {
+                                        handleCalculate(newDate, currentFeatureRef.current);
+                                    }
+                                }
+                            }}
+                        />
+                    )}
+
+                    {/* Location Input */}
+                    <Text style={styles.locationLabel}>📍 Birth Location (City, State):</Text>
+                    <TextInput
+                        style={styles.locationInput}
+                        value={birthLocation}
+                        onChangeText={setBirthLocation}
+                        placeholder="e.g., Los Angeles, CA"
+                        placeholderTextColor="rgba(74, 20, 140, 0.5)"
+                    />
                 </View>
 
                 {/* Feature Buttons */}
@@ -514,18 +637,25 @@ export default function JustForFunScreen({ navigation }: Props) {
                         style={[styles.featureButton, selectedFeature === 'lucky' && styles.featureButtonActive]}
                         onPress={() => navigation.navigate('LuckyNumbers', { birthDate: birthDate.toISOString() })}
                     >
-                        <Text style={styles.featureEmoji}>🍀</Text>
-                        <Text style={styles.featureTitle}>Get Lucky Numbers for Today</Text>
-                        <Text style={styles.featureDesc}>Your personalized lucky numbers</Text>
+                        <Text style={styles.featureEmoji}>🔢</Text>
+                        <Text style={styles.featureTitle}>Your Numerology Numbers</Text>
+                        <Text style={styles.featureDesc}>Life Path, Birthday, &amp; Personal Year</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
                         style={styles.featureButton}
-                        onPress={() => navigation.navigate('Horoscope', { birthDate: birthDate.toISOString() })}
+                        onPress={() => navigation.navigate('Horoscope', {
+                            birthDate: birthDate.toISOString(),
+                            birthTime: birthDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true }),
+                            birthLocation: birthLocation || undefined,
+                        })}
                     >
                         <Text style={styles.featureEmoji}>🔮</Text>
                         <Text style={styles.featureTitle}>View Your Daily Horoscope</Text>
                         <Text style={styles.featureDesc}>Real-time planetary transits to your chart</Text>
+                        {!birthLocation && (
+                            <Text style={styles.recommendNotice}>💡 Enter birth time & location above for accurate results</Text>
+                        )}
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -553,6 +683,9 @@ export default function JustForFunScreen({ navigation }: Props) {
                         <Text style={styles.featureEmoji}>⭐</Text>
                         <Text style={styles.featureTitle}>What is Your Zodiac Sign?</Text>
                         <Text style={styles.featureDesc}>Learn your astrological profile</Text>
+                        {!birthLocation && (
+                            <Text style={styles.recommendNotice}>💡 Enter birth time & location above for Rising sign accuracy</Text>
+                        )}
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -575,7 +708,7 @@ export default function JustForFunScreen({ navigation }: Props) {
 
                     <TouchableOpacity
                         style={[styles.featureButton, selectedFeature === 'thenandnow' && styles.featureButtonActive]}
-                        onPress={() => selectFeature('thenandnow')}
+                        onPress={() => navigation.navigate('ThenAndNow', { birthDate: birthDate.toISOString() })}
                     >
                         <Text style={styles.featureEmoji}>⏰</Text>
                         <Text style={styles.featureTitle}>Then & Now Time Capsule</Text>
@@ -584,11 +717,27 @@ export default function JustForFunScreen({ navigation }: Props) {
 
                     <TouchableOpacity
                         style={styles.featureButton}
-                        onPress={() => navigation.navigate('FullAstrology', { birthDate: birthDate.toISOString() })}
+                        onPress={() => navigation.navigate('SurnameSearch', {})}
+                    >
+                        <Text style={styles.featureEmoji}>🔍</Text>
+                        <Text style={styles.featureTitle}>Surname Origin Search</Text>
+                        <Text style={styles.featureDesc}>Discover the history of your last name</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.featureButton}
+                        onPress={() => navigation.navigate('FullAstrology', {
+                            birthDate: birthDate.toISOString(),
+                            birthTime: birthDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true }),
+                            birthLocation: birthLocation || undefined,
+                        })}
                     >
                         <Text style={styles.featureEmoji}>🔮</Text>
                         <Text style={styles.featureTitle}>Full Natal Chart</Text>
                         <Text style={styles.featureDesc}>Your complete astrological birth chart</Text>
+                        {!birthLocation && (
+                            <Text style={styles.recommendNotice}>💡 Enter birth time & location above for best results</Text>
+                        )}
                     </TouchableOpacity>
                 </View>
 
@@ -659,6 +808,13 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: 'rgba(255,255,255,0.7)',
     },
+    recommendNotice: {
+        fontSize: 12,
+        color: '#ffd700',
+        fontStyle: 'italic',
+        marginTop: 8,
+        textAlign: 'center',
+    },
     dateSection: {
         marginTop: 24,
         alignItems: 'center',
@@ -668,17 +824,51 @@ const styles = StyleSheet.create({
         color: '#fff',
         marginBottom: 12,
     },
+    dateTimeRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 16,
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+    },
     dateButton: {
         backgroundColor: 'rgba(255,255,255,0.9)',
-        paddingHorizontal: 24,
+        paddingHorizontal: 20,
         paddingVertical: 14,
         borderRadius: 12,
-        marginBottom: 16,
     },
     dateText: {
-        fontSize: 18,
+        fontSize: 16,
         color: '#4a148c',
         fontWeight: '600',
+    },
+    timeButton: {
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        borderRadius: 12,
+    },
+    timeText: {
+        fontSize: 16,
+        color: '#4a148c',
+        fontWeight: '600',
+    },
+    locationLabel: {
+        fontSize: 14,
+        color: '#fff',
+        marginBottom: 8,
+        marginTop: 8,
+    },
+    locationInput: {
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 12,
+        fontSize: 16,
+        color: '#4a148c',
+        fontWeight: '500',
+        width: '90%',
+        textAlign: 'center',
     },
     calculateButton: {
         backgroundColor: '#ffeb3b',

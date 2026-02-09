@@ -1,17 +1,23 @@
-import React, { useState, useEffect, useRef } from "react";
-import {
-    View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity,
-    useWindowDimensions, Image, Alert, Platform, Modal, Animated,
-} from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
+import React, { useEffect, useRef, useState } from "react";
+import {
+    Alert,
+    Animated,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text, TextInput,
+    TouchableOpacity,
+    useWindowDimensions,
+    View
+} from "react-native";
 
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { RootStackParamList, ThemeName } from '../types';
 import { COLOR_SCHEMES } from "../data/utils/colors";
-import { getAllSnapshotValues } from '../data/utils/snapshot';
 import { getPopulationForCity } from '../data/utils/populations';
-import { getSnapshotWithHistorical } from '../data/utils/historical-snapshot';
+import { getAllSnapshotValues } from '../data/utils/snapshot';
+import type { RootStackParamList, ThemeName } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, "Form">;
 
@@ -151,6 +157,8 @@ export default function FormScreen({ navigation, route }: Props) {
     const [hometown, setHometown] = useState("Bellefontaine Neighbors, MO");
     const [dobDate, setDobDate] = useState<Date>(new Date()); // Today's date
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [birthTime, setBirthTime] = useState<Date>(new Date()); // Time of birth
+    const [showTimePicker, setShowTimePicker] = useState(false);
     const [weightLb, setWeightLb] = useState("7");
     const [weightOz, setWeightOz] = useState("8");
     const [lengthIn, setLengthIn] = useState("20");
@@ -186,8 +194,10 @@ export default function FormScreen({ navigation, route }: Props) {
                 setSnapshot(snapshotData);
 
                 // Fetch population for the entered hometown
+                // ⚠️ CRITICAL: Must pass DOB - if after 2020-01-01, uses Google Sheets CSV (mandatory)
                 console.log('👥 Starting population fetch for:', hometown);
-                const cityPopulation = await getPopulationForCity(hometown);
+                const dobISO = `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`;
+                const cityPopulation = await getPopulationForCity(hometown, dobISO);
                 console.log('✅ Population result:', cityPopulation);
                 setPopulation(cityPopulation);
             } catch (error) {
@@ -285,11 +295,32 @@ export default function FormScreen({ navigation, route }: Props) {
         if (!finalPopulation) {
             try {
                 setLoading(true);
-                finalPopulation = await getPopulationForCity(hometown.trim());
+                // ⚠️ CRITICAL: Must pass DOB - routes to HISTORICAL CSV (before 2020) or CURRENT CSV (after 2020)
+                const dobISO = `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`;
+                finalPopulation = await getPopulationForCity(hometown.trim(), dobISO);
                 setPopulation(finalPopulation);
-                if (!finalPopulation) finalPopulation = 100000;
+
+                /**
+                 * ⚠️ CRITICAL: CITY NOT FOUND - SHOW ERROR POPUP
+                 * Do NOT use default fallback population - user must correct the city
+                 */
+                if (finalPopulation === null) {
+                    Alert.alert(
+                        'City Not Found',
+                        'OUR RECORDS INDICATE THAT THIS CITY, ST DOES NOT EXIST, WAS NOT INCORPORATED AT THE DATE OF BIRTH OR THE SPELLING OF CITY, ST IS INCORRECT.',
+                        [{ text: 'OK' }]
+                    );
+                    setLoading(false);
+                    return;
+                }
             } catch (error) {
-                finalPopulation = 100000;
+                Alert.alert(
+                    'City Not Found',
+                    'OUR RECORDS INDICATE THAT THIS CITY, ST DOES NOT EXIST, WAS NOT INCORPORATED AT THE DATE OF BIRTH OR THE SPELLING OF CITY, ST IS INCORRECT.',
+                    [{ text: 'OK' }]
+                );
+                setLoading(false);
+                return;
             } finally {
                 setLoading(false);
             }
@@ -314,12 +345,24 @@ export default function FormScreen({ navigation, route }: Props) {
                 last: (b.last || '').trim(),
                 photoUri: b.photoUri ?? null
             }));
+            // Construct personName from first baby's name (matching milestone form structure)
+            const firstBaby = meaningfulBabies[0];
+            const nameParts = [
+                (firstBaby.first || '').trim(),
+                (firstBaby.middle || '').trim(),
+                (firstBaby.last || '').trim()
+            ].filter(Boolean);
+            payload.personName = nameParts.join(' ');
         } else {
             payload.babyFirst = babyFirst.trim();
             payload.babyMiddle = babyMiddle.trim();
             payload.babyLast = babyLast.trim();
             payload.photoUri = photoUri;
+            // Construct personName from individual fields
+            const nameParts = [babyFirst.trim(), babyMiddle.trim(), babyLast.trim()].filter(Boolean);
+            payload.personName = nameParts.join(' ');
         }
+        payload.mode = 'baby';
         payload.frontOrientation = 'landscape';
         payload.timeCapsuleOrientation = 'landscape';
         payload.snapshot = snapshot;
@@ -374,13 +417,13 @@ export default function FormScreen({ navigation, route }: Props) {
             {babies.map((b, idx) => (
                 <View key={idx} style={{ marginBottom: 10 }}>
                     {babyCount > 1 && (
-                        <Text style={[styles.h1, { fontSize: 14, marginBottom: 4 }]}>
+                        <Text style={[styles.h1, { marginBottom: 4 }]}>
                             {mode === 'baby' ? `Baby ${idx + 1}` : `Person ${idx + 1}`}
                         </Text>
                     )}
                     <View style={{ flexDirection: 'row', gap: 8 }}>
                         <View style={{ flex: 1 }}>
-                            <Text style={[styles.h1, { fontSize: 12 }]}>First</Text>
+                            <Text style={styles.h1}>First</Text>
                             <TextInput
                                 style={[styles.input, {
                                     backgroundColor: '#FFFFFF',
@@ -394,7 +437,7 @@ export default function FormScreen({ navigation, route }: Props) {
                             />
                         </View>
                         <View style={{ flex: 1 }}>
-                            <Text style={[styles.h1, { fontSize: 12 }]}>Middle</Text>
+                            <Text style={styles.h1}>Middle</Text>
                             <TextInput
                                 style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
                                 placeholder="Middle"
@@ -404,7 +447,7 @@ export default function FormScreen({ navigation, route }: Props) {
                             />
                         </View>
                         <View style={{ flex: 1 }}>
-                            <Text style={[styles.h1, { fontSize: 12 }]}>Last</Text>
+                            <Text style={styles.h1}>Last</Text>
                             <TextInput
                                 style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
                                 placeholder="Last"
@@ -416,8 +459,8 @@ export default function FormScreen({ navigation, route }: Props) {
                     </View>
 
                     {/* Individual Photo Upload */}
-                    <Text style={[styles.h1, { fontSize: 16 }]}>
-                        {mode === 'baby' ? 'Baby Photo (optional)' : 'Person Photo (optional)'}
+                    <Text style={styles.h1}>
+                        {mode === 'baby' ? 'Upload Baby Photo Here' : 'Upload Photo Here'}
                     </Text>
                     <TouchableOpacity
                         style={[
@@ -464,7 +507,7 @@ export default function FormScreen({ navigation, route }: Props) {
 
             <View style={{ flexDirection: 'row', gap: 8 }}>
                 <View style={{ flex: 1 }}>
-                    <Text style={[styles.h1, { fontSize: 12 }]}>Mother&apos;s Name</Text>
+                    <Text style={styles.h1}>Mother&apos;s Name</Text>
                     <TextInput
                         style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
                         placeholder="Mother's name"
@@ -474,7 +517,7 @@ export default function FormScreen({ navigation, route }: Props) {
                     />
                 </View>
                 <View style={{ flex: 1 }}>
-                    <Text style={[styles.h1, { fontSize: 12 }]}>Father&apos;s Name</Text>
+                    <Text style={styles.h1}>Father&apos;s Name</Text>
                     <TextInput
                         style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
                         placeholder="Father's name"
@@ -527,28 +570,56 @@ export default function FormScreen({ navigation, route }: Props) {
                 <Text style={[styles.errorText, { color: '#ffdddd' }]}>Population not found. Try "Chicago, Illinois" or "Miami, Florida"</Text>
             ) : null}
 
-            <Text style={styles.h1}>
-                {mode === 'baby' ? 'Date of Birth' : 'Birthday Date'}
-            </Text>
-            <TouchableOpacity
-                style={[styles.input, { backgroundColor: '#FFFFFF', paddingVertical: 12 }]}
-                onPress={() => setShowDatePicker(true)}
-            >
-                <Text style={{ color: '#0a0a0a', fontSize: 14 }}>
-                    {dobDate.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "2-digit", year: "numeric" })}
-                </Text>
-            </TouchableOpacity>
-            {showDatePicker && (
-                <DateTimePicker
-                    value={dobDate}
-                    onChange={(_e, d) => {
-                        setShowDatePicker(false);
-                        if (d) setDobDate(d);
-                    }}
-                    mode="date"
-                    display="default"
-                />
-            )}
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+                <View style={{ flex: 2 }}>
+                    <Text style={styles.h1}>
+                        {mode === 'baby' ? 'Date of Birth' : 'Birthday Date'}
+                    </Text>
+                    <TouchableOpacity
+                        style={[styles.input, { backgroundColor: '#FFFFFF', paddingVertical: 12 }]}
+                        onPress={() => setShowDatePicker(true)}
+                    >
+                        <Text style={{ color: '#0a0a0a', fontSize: 14 }}>
+                            {dobDate.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "2-digit", year: "numeric" })}
+                        </Text>
+                    </TouchableOpacity>
+                    {showDatePicker && (
+                        <DateTimePicker
+                            value={dobDate}
+                            onChange={(_e, d) => {
+                                setShowDatePicker(false);
+                                if (d) setDobDate(d);
+                            }}
+                            mode="date"
+                            display="default"
+                        />
+                    )}
+                </View>
+                {mode === 'baby' && (
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.h1}>Time of Birth</Text>
+                        <TouchableOpacity
+                            style={[styles.input, { backgroundColor: '#FFFFFF', paddingVertical: 12 }]}
+                            onPress={() => setShowTimePicker(true)}
+                        >
+                            <Text style={{ color: '#0a0a0a', fontSize: 14 }}>
+                                {birthTime.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true })}
+                            </Text>
+                        </TouchableOpacity>
+                        {showTimePicker && (
+                            <DateTimePicker
+                                value={birthTime}
+                                onChange={(_e, t) => {
+                                    setShowTimePicker(false);
+                                    if (t) setBirthTime(t);
+                                }}
+                                mode="time"
+                                display="default"
+                            />
+                        )}
+                    </View>
+                )}
+            </View>
 
             {/* Weight and Length only shown for baby announcements */}
             {mode === 'baby' && (
@@ -574,7 +645,7 @@ export default function FormScreen({ navigation, route }: Props) {
                     ) : (
                         <View style={{ flexDirection: 'row', gap: 8 }}>
                             <View style={{ flex: 1 }}>
-                                <Text style={[styles.h1, { fontSize: 12 }]}>Weight (lbs)</Text>
+                                <Text style={styles.h1}>Weight (lbs)</Text>
                                 <TextInput
                                     style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
                                     placeholder="7"
@@ -585,7 +656,7 @@ export default function FormScreen({ navigation, route }: Props) {
                                 />
                             </View>
                             <View style={{ flex: 1 }}>
-                                <Text style={[styles.h1, { fontSize: 12 }]}>Weight (oz)</Text>
+                                <Text style={styles.h1}>Weight (oz)</Text>
                                 <TextInput
                                     style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
                                     placeholder="8"
@@ -596,7 +667,7 @@ export default function FormScreen({ navigation, route }: Props) {
                                 />
                             </View>
                             <View style={{ flex: 1 }}>
-                                <Text style={[styles.h1, { fontSize: 12 }]}>Length (in)</Text>
+                                <Text style={styles.h1}>Length (in)</Text>
                                 <TextInput
                                     style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
                                     placeholder="20"
@@ -611,8 +682,8 @@ export default function FormScreen({ navigation, route }: Props) {
                 </>
             )}
 
-            <Text style={styles.h1}>Background Color</Text>
-            <Text style={{ color: '#000', marginBottom: 12, fontSize: 14 }}>
+            <Text style={[styles.h1, { textAlign: 'center' }]}>Background Color</Text>
+            <Text style={{ color: '#000', marginBottom: 12, fontSize: 14, textAlign: 'center' }}>
                 Choose your announcement background color (all text will be white)
             </Text>
 

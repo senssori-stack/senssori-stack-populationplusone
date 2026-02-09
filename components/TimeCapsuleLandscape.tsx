@@ -1,15 +1,33 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, Linking, Image, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { COLOR_SCHEMES } from '../src/data/utils/colors';
+import { getCurrentGovernor } from '../src/data/utils/current-governors';
+import { BIRTHSTONE_EMOJIS, getBirthstoneLink, getLifePathLink, getSnapshotEmojiLink, getStateFlagLink, getZodiacLink, ZODIAC_EMOJIS } from '../src/data/utils/emoji-links';
 import { formatSnapshotValue } from '../src/data/utils/formatSnapshot';
 import { getSnapshotWithHistorical } from '../src/data/utils/historical-snapshot';
-import { calculateLifePath } from '../src/data/utils/life-path-calculator';
+import { getFederalMinimumWage, getMinimumWage } from '../src/data/utils/minimum-wage';
 import { extractStateFromHometown, getStateFlagImage } from '../src/data/utils/state-flags';
-import { getBirthstoneLink, getZodiacLink, getLifePathLink, getSnapshotEmojiLink, getStateFlagLink, ZODIAC_EMOJIS, BIRTHSTONE_EMOJIS } from '../src/data/utils/emoji-links';
-import { getMinimumWage, getFederalMinimumWage } from '../src/data/utils/minimum-wage';
-import { getCurrentGovernor } from '../src/data/utils/current-governors';
-import { CITY_COORDINATES, getCityCoordinatesAsync } from '../src/data/utils/town-coordinates';
+import { getCityCoordinatesAsync } from '../src/data/utils/town-coordinates';
 import type { ThemeName } from '../src/types';
+
+// US Flag image
+const US_FLAG_IMAGE = require('../assets/images/us-flag.png');
+
+// America 250 Anniversary logos - pick based on theme
+const AMERICA250_WHITE = require('../assets/images/america250-white.png');
+const AMERICA250_BLACK = require('../assets/images/america250-black.png');
+const AMERICA250_COLOR = require('../assets/images/america250-color.png');
+
+// Get the right America 250 logo based on theme background (white for dark themes, black for light)
+function getAmerica250Logo(themeName: string): any {
+    // Light backgrounds that need black logo
+    const lightThemes = ['lightGray', 'silver', 'lavender', 'coral', 'gold', 'orange', 'limeGreen', 'mintGreen'];
+    if (lightThemes.includes(themeName)) {
+        return AMERICA250_BLACK;
+    }
+    // All other themes (dark backgrounds) use white logo
+    return AMERICA250_WHITE;
+}
 
 // Landscape 11x8.5 at 300 DPI = 3300x2550 pixels
 export const LANDSCAPE_WIDTH = 3300;
@@ -216,19 +234,25 @@ export default function TimeCapsuleLandscape(props: Props) {
                 // Fetch city population data separately
                 if (hometown && hometown.trim()) {
                     const { getHistoricalPopulationForCity } = await import('../src/data/utils/historical-populations');
+                    const { getCurrentPopulationForCity } = await import('../src/data/utils/populations');
 
                     // Get birth year from dobISO
                     const birthYear = new Date(dobISO).getFullYear();
-                    const currentYear = new Date().getFullYear();
 
                     console.log(`📍 Fetching city population for ${hometown}`);
-                    console.log(`   Birth year: ${birthYear}, Current year: ${currentYear}`);
+                    console.log(`   Birth year: ${birthYear}`);
 
-                    // Fetch historical (THEN) city population
+                    /**
+                     * ⚠️ CRITICAL POPULATION FETCH RULES:
+                     * THEN section → HISTORICAL CSV (getHistoricalPopulationForCity)
+                     * NOW section → CURRENT CSV (getCurrentPopulationForCity)
+                     */
+
+                    // Fetch historical (THEN) city population - HISTORICAL CSV
                     const popThen = await getHistoricalPopulationForCity(hometown, birthYear);
 
-                    // Fetch current (NOW) city population  
-                    const popNow = await getHistoricalPopulationForCity(hometown, currentYear);
+                    // Fetch current (NOW) city population - CURRENT CSV  
+                    const popNow = await getCurrentPopulationForCity(hometown);
 
                     console.log(`📊 Population results - THEN: ${popThen}, NOW: ${popNow}`);
 
@@ -372,46 +396,36 @@ export default function TimeCapsuleLandscape(props: Props) {
 
         parts.push(`Here is some interesting information surrounding your birthday`);
     } else {
-        // BABY ANNOUNCEMENT FORMAT (original):
-        // NEW FORMAT: Full name turned [age] years old on [DOB]
-        parts.push(`${namesForSentence} turned ${age} years old on ${formattedDate}`);
+        // BABY ANNOUNCEMENT FORMAT:
+        // "[Baby full name] was born on [date of birth] in [city, st] and weighed [weight lbs] [ounces] and was [length] in length.
+        // and the parents are mother, [mother's name] and father [father's name]"
+        // The zodiac, birthstone, and life path info will be shown separately with clickable emojis
 
-        // Zodiac sign with emoji
-        parts.push(`${babyFirstOnly || namesForSentence}'s zodiac sign is ${zodiac} ${zodiacEmoji}`);
+        // Build the birth details sentence
+        let birthSentence = `${fullNamesForSentence} was born on ${formattedDate} in ${toTitleCase(hometown)}`;
 
-        // Life path number with emoji (if provided)
-        if (lifePathNumber) {
-            parts.push(`${babyFirstOnly || 'They'} has a life path number of ${lifePathNumber} ${lifepathEmoji}`);
-        }
-
-        // Birthstone with emoji
-        parts.push(`Their birthstone is ${birthstone} ${birthstoneEmoji}`);
-
-        // Add: "Below are some interesting facts surrounding your birthday"
-        parts.push(`Below are some interesting facts surrounding your birthday`);
-
-        // Keep existing content (parents, birth weight, location)
-        parts.push(`${namesForSentence} was born in ${toTitleCase(hometown)}`);
-
-        const parentParts: string[] = [];
-        if (motherName && motherName.trim()) parentParts.push(motherName.trim());
-        if (fatherName && fatherName.trim()) parentParts.push(fatherName.trim());
-        if (parentParts.length > 0) {
-            let parentText = `${babyFirstOnly || namesForSentence}'s parents are `;
-            if (motherName && motherName.trim() && fatherName && fatherName.trim()) {
-                parentText += `mother, ${motherName.trim()} and father, ${fatherName.trim()}`;
-            } else if (motherName && motherName.trim()) {
-                parentText += `mother, ${motherName.trim()}`;
-            } else if (fatherName && fatherName.trim()) {
-                parentText += `father, ${fatherName.trim()}`;
-            }
-            parts.push(parentText);
-        }
-        // "At birth [baby first name] weighed [weight] lbs and [weight ounces] oz and measured [length] inches."
-        // Skip this line for twins/triplets if measurements aren't provided
+        // Add weight and length if available
         if (weightLb && weightOz && lengthIn && weightLb.trim() && weightOz.trim() && lengthIn.trim()) {
-            parts.push(`At birth ${babyFirstOnly || namesForSentence} weighed ${weightLb} lbs and ${weightOz} oz and measured ${lengthIn} inches`);
+            birthSentence += ` and weighed ${weightLb} lbs ${weightOz} oz and was ${lengthIn} inches in length`;
+        } else if (weightLb && weightOz && weightLb.trim() && weightOz.trim()) {
+            birthSentence += ` and weighed ${weightLb} lbs ${weightOz} oz`;
+        } else if (lengthIn && lengthIn.trim()) {
+            birthSentence += ` and was ${lengthIn} inches in length`;
         }
+
+        // Add parents' names
+        const hasMotherName = motherName && motherName.trim();
+        const hasFatherName = fatherName && fatherName.trim();
+        if (hasMotherName && hasFatherName) {
+            birthSentence += ` and the parents are mother, ${motherName.trim()} and father, ${fatherName.trim()}`;
+        } else if (hasMotherName) {
+            birthSentence += ` and the parent is mother, ${motherName.trim()}`;
+        } else if (hasFatherName) {
+            birthSentence += ` and the parent is father, ${fatherName.trim()}`;
+        }
+
+        parts.push(birthSentence);
+        // Note: Zodiac, birthstone, and life path will be rendered separately with clickable emojis below
     }
     const validParts = parts.filter(part => part && typeof part === 'string' && part.trim().length > 0);
     const intro = validParts.join('. ').replace(/\.\s*\./g, '.').replace(/\s+\./g, '.');
@@ -460,6 +474,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                 emoji
             ];
         }
+        // Gold and silver prices come from Google Sheets CSV (via currentSnapshot)
         return [
             `${label} ${emoji}`,
             formatSnapshotValue(key, historicalSnapshot[key] ?? ''),
@@ -519,23 +534,90 @@ export default function TimeCapsuleLandscape(props: Props) {
                     paddingTop: padding * 0.3, // Reduce top padding (0.5 inches at 300 DPI = 150px)
                     borderRadius: Math.round(displayHeight * 0.03),
                 }}>
-                    {/* Customer Name Header */}
-                    {(motherName || fatherName) && (
-                        <Text style={[styles.title, {
-                            fontSize: titleSize * 0.7 * 1.4,
-                            color: colors.text,
-                            textAlign: 'center',
-                            marginBottom: padding * 0.1,
-                            fontWeight: '900'
-                        }]}>
-                            {[motherName, fatherName].filter(Boolean).join(' & ')}
-                        </Text>
-                    )}
+                    {/* Header Row - Flag on left, name/title always centered on page */}
+                    <View style={{
+                        width: '100%',
+                        marginBottom: padding * 0.1,
+                        position: 'relative',
+                    }}>
+                        {/* American Flag - Close to left border */}
+                        <View style={{
+                            position: 'absolute',
+                            left: '-22%',
+                            top: 0,
+                            bottom: 0,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 1,
+                        }}>
+                            <Image
+                                source={US_FLAG_IMAGE}
+                                style={{
+                                    width: titleSize * 3.12,
+                                    height: titleSize * 1.66,
+                                    resizeMode: 'contain'
+                                }}
+                            />
+                        </View>
 
-                    {/* "Time Capsule" title */}
-                    <Text style={[styles.title, { fontSize: timeCapsuleSize * 0.75 * 1.4, color: colors.text, marginTop: 0 }]}>
-                        Time Capsule
-                    </Text>
+                        {/* Center: Name and Time Capsule - always centered on page */}
+                        <View style={{
+                            alignItems: 'center',
+                            width: '100%',
+                        }}>
+                            {/* Customer Name Header - Baby mode shows baby name, Milestone shows parent names */}
+                            {mode === 'baby' ? (
+                                babyNames.length > 0 && (
+                                    <Text style={[styles.title, {
+                                        fontSize: titleSize * 0.7 * 1.4,
+                                        color: colors.text,
+                                        textAlign: 'center',
+                                        marginBottom: 0,
+                                        fontWeight: '900'
+                                    }]}>
+                                        {babyNames.join(' & ')}
+                                    </Text>
+                                )
+                            ) : (
+                                (motherName || fatherName) && (
+                                    <Text style={[styles.title, {
+                                        fontSize: titleSize * 0.7 * 1.4,
+                                        color: colors.text,
+                                        textAlign: 'center',
+                                        marginBottom: 0,
+                                        fontWeight: '900'
+                                    }]}>
+                                        {[motherName, fatherName].filter(Boolean).join(' & ')}
+                                    </Text>
+                                )
+                            )}
+
+                            {/* "Time Capsule" title */}
+                            <Text style={[styles.title, { fontSize: timeCapsuleSize * 0.75 * 1.4, color: colors.text, marginTop: 0 }]}>
+                                Time Capsule
+                            </Text>
+                        </View>
+
+                        {/* America 250 Logo - Right Side */}
+                        <View style={{
+                            position: 'absolute',
+                            right: '-22%',
+                            top: 0,
+                            bottom: 0,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 1,
+                        }}>
+                            <Image
+                                source={getAmerica250Logo(theme)}
+                                style={{
+                                    width: titleSize * 3.12,
+                                    height: titleSize * 1.66,
+                                    resizeMode: 'contain'
+                                }}
+                            />
+                        </View>
+                    </View>
 
                     {/* Body text - First Paragraph */}
                     <Text style={[styles.body, {
@@ -567,77 +649,73 @@ export default function TimeCapsuleLandscape(props: Props) {
                     {!isMilestoneMode && (
                         <View style={{ width: '100%', alignItems: 'center', marginTop: padding * 0.1 }}>
                             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
-                                <Text style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 4 }}>
-                                    {`${babyFirstOnly || namesForSentence}'s zodiac sign is `}
+                                <Text style={{ fontSize: bodySize, color: colors.text, marginRight: 4, fontWeight: 'bold' }}>
+                                    {`${babyFirstOnly || namesForSentence}'s zodiac sign is ${zodiac}`}
                                 </Text>
                                 <ClickableEmoji
-                                    emoji="♈"
+                                    emoji={zodiacEmoji}
                                     url={getZodiacLink(zodiac, dobISO)}
                                     tooltip="ABOUT YOUR SIGN AND HOROSCOPES"
-                                    style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 2 }}
+                                    style={{ fontSize: bodySize, color: colors.text, marginRight: 4 }}
                                 />
-                                <Text style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 4 }}>
-                                    {zodiac}
-                                </Text>
-                                <Text style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 4 }}>
-                                    {', their birthstone is '}
+                                <Text style={{ fontSize: bodySize, color: colors.text, marginRight: 4, fontWeight: 'bold' }}>
+                                    {'birthstone is ' + birthstone}
                                 </Text>
                                 <ClickableEmoji
-                                    emoji="💎"
+                                    emoji={birthstoneEmoji}
                                     url={getBirthstoneLink(birthstone)}
-                                    style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 2 }}
+                                    style={{ fontSize: bodySize, color: colors.text, marginRight: 4 }}
                                 />
-                                <Text style={{ fontSize: bodySize * 0.8, color: colors.text }}>
-                                    {birthstone}
-                                </Text>
                                 {lifePathNumber && (
                                     <>
-                                        <Text style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 4 }}>
-                                            {', and has a life path number of '}
+                                        <Text style={{ fontSize: bodySize, color: colors.text, marginRight: 4, fontWeight: 'bold' }}>
+                                            {'and has a life path number of ' + lifePathNumber}
                                         </Text>
                                         <ClickableEmoji
                                             emoji="🎱"
                                             url={getLifePathLink(lifePathNumber)}
-                                            style={{ fontSize: bodySize * 0.8, color: colors.text, marginRight: 2 }}
+                                            style={{ fontSize: bodySize, color: colors.text }}
                                         />
-                                        <Text style={{ fontSize: bodySize * 0.8, color: colors.text }}>
-                                            {lifePathNumber}
-                                        </Text>
                                     </>
                                 )}
                             </View>
+                            <Text style={{ fontSize: bodySize, color: colors.text, marginTop: padding * 0.15, fontWeight: 'bold', textAlign: 'center' }}>
+                                {`Here are some interesting facts surrounding ${babyFirstOnly || namesForSentence}'s birthday.`}
+                            </Text>
                         </View>
                     )}
 
                     {/* Data rows with THEN and NOW columns */}
                     <View style={{ width: '100%', alignSelf: 'center', marginTop: padding * 1.6, paddingHorizontal: padding * 0.3 }}>
-                        {/* Row with City, ST | Coordinates | Flag | Governor */}
+                        {/* Row with City, ST | Coordinates | Flag (centered) | Governor */}
                         <View style={{
                             width: '100%',
                             paddingVertical: Math.round(displayHeight * 0.003),
+                            paddingHorizontal: 8,
                             backgroundColor: 'transparent',
                             flexDirection: 'row',
                             justifyContent: 'space-between',
                             alignItems: 'center',
                             borderBottomWidth: 1.5,
-                            borderBottomColor: colors.border || '#FFFFFF'
+                            borderBottomColor: colors.border || '#FFFFFF',
+                            position: 'relative'
                         }}>
-                            {/* City, ST on far left */}
-                            <View style={{ alignItems: 'flex-start', width: '25%' }}>
+                            {/* City, ST on far left - aligned with data labels below */}
+                            <View style={[styles.label, { alignItems: 'flex-start', width: mode === 'baby' ? '50%' : '40%' }]}>
                                 <Text style={{ fontSize: labelSize * 0.85, color: colors.text, fontWeight: '700' }}>
                                     {toTitleCase(hometown)}
                                 </Text>
                             </View>
-                            {/* Coordinates between city and flag */}
-                            <View style={{ alignItems: 'center', width: '20%' }}>
+                            {/* Coordinates positioned between city and flag */}
+                            <View style={{ position: 'absolute', left: '20%', width: '25%', alignItems: 'center', justifyContent: 'center' }}>
                                 {coordinates ? (
-                                    <Text style={{ fontSize: labelSize * 0.65, color: colors.text, opacity: 0.8 }}>
+                                    <Text style={{ fontSize: labelSize, color: colors.text, fontWeight: '700' }}>
                                         {coordinates}
                                     </Text>
                                 ) : null}
                             </View>
-                            {/* Flag in center */}
-                            <View style={{ width: '15%', alignItems: 'center', justifyContent: 'center' }}>
+                            {/* Flag centered on page */}
+                            <View style={{ position: 'absolute', left: '50%', transform: [{ translateX: '-50%' }], alignItems: 'center', justifyContent: 'center' }}>
                                 {stateCode && (
                                     <Pressable
                                         onPress={() => {
@@ -656,8 +734,8 @@ export default function TimeCapsuleLandscape(props: Props) {
                                     </Pressable>
                                 )}
                             </View>
-                            {/* Governor on far right */}
-                            <View style={{ width: '40%', alignItems: 'flex-end', justifyContent: 'center' }}>
+                            {/* Governor on far right - aligned with NOW column */}
+                            <View style={{ width: mode === 'baby' ? '50%' : '40%', alignItems: 'flex-end', justifyContent: 'center' }}>
                                 <Text style={{ fontSize: labelSize, color: colors.text, fontWeight: '500' }}>
                                     Gov {currentGovernor}
                                 </Text>
@@ -671,13 +749,15 @@ export default function TimeCapsuleLandscape(props: Props) {
                             borderBottomColor: colors.border || '#FFFFFF',
                             backgroundColor: 'transparent'
                         }]}>
-                            <Text style={[styles.label, { fontSize: labelSize * 0.9, color: colors.text, width: '40%', fontWeight: '900' }]}>
+                            <Text style={[styles.label, { fontSize: labelSize * 0.9, color: colors.text, width: mode === 'baby' ? '50%' : '40%', fontWeight: '900' }]}>
                                 {/* Empty space for label column */}
                             </Text>
-                            <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, width: '20%', textAlign: 'center', fontWeight: '900' }]}>
-                                THEN
-                            </Text>
-                            <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, width: '40%', textAlign: 'right', fontWeight: '900' }]}>
+                            {mode !== 'baby' && (
+                                <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, width: '20%', textAlign: 'center', fontWeight: '900' }]}>
+                                    THEN
+                                </Text>
+                            )}
+                            <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, width: mode === 'baby' ? '50%' : '40%', textAlign: 'right', fontWeight: '900' }]}>
                                 NOW
                             </Text>
                         </View>
@@ -714,7 +794,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                                     borderBottomWidth: 0.8,
                                     borderBottomColor: colors.border || '#FFFFFF'
                                 }]}>
-                                    <View style={[styles.label, { fontSize: labelSize, color: colors.text, width: '40%', flexDirection: 'row', alignItems: 'center' }]}>
+                                    <View style={[styles.label, { fontSize: labelSize, color: colors.text, width: mode === 'baby' ? '50%' : '40%', flexDirection: 'row', alignItems: 'center' }]}>
                                         <Text style={{ fontSize: labelSize, color: colors.text }}>
                                             {labelText}
                                         </Text>
@@ -724,10 +804,12 @@ export default function TimeCapsuleLandscape(props: Props) {
                                             style={{ fontSize: labelSize, color: colors.text, marginLeft: 4 }}
                                         />
                                     </View>
-                                    <Text style={[styles.value, { fontSize: rowValueSize, color: colors.text, width: '20%', textAlign: 'center' }]} numberOfLines={1} adjustsFontSizeToFit>
-                                        {thenRomanNumeral ? `${thenRomanNumeral} ` : ''}{thenValue}
-                                    </Text>
-                                    <Text style={[styles.value, { fontSize: rowValueSize, color: colors.text, width: '40%', textAlign: 'right' }]} numberOfLines={1} adjustsFontSizeToFit>
+                                    {mode !== 'baby' && (
+                                        <Text style={[styles.value, { fontSize: rowValueSize, color: colors.text, width: '20%', textAlign: 'center' }]} numberOfLines={1} adjustsFontSizeToFit>
+                                            {thenRomanNumeral ? `${thenRomanNumeral} ` : ''}{thenValue}
+                                        </Text>
+                                    )}
+                                    <Text style={[styles.value, { fontSize: rowValueSize, color: colors.text, width: mode === 'baby' ? '50%' : '40%', textAlign: 'right' }]} numberOfLines={1} adjustsFontSizeToFit>
                                         {nowRomanNumeral ? `${nowRomanNumeral} ` : ''}{nowValue}
                                     </Text>
                                 </View>

@@ -341,6 +341,30 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
         return found ? found.label : 'Select Recipient (Optional)';
     };
 
+    const getPreviewButtonText = () => {
+        // Birthday milestones
+        if (selectedMilestone === 'birthday' || selectedMilestone === 'sweet16' || selectedMilestone === '21st') {
+            return 'Preview Birthday Time Capsule';
+        }
+        // Graduation milestones
+        if (selectedMilestone === 'highschool' || selectedMilestone === 'college') {
+            return 'Preview Graduation Time Capsule';
+        }
+        // Anniversary milestones
+        if (['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '15th', '20th', '25th', '30th', '40th', '50th', '60th'].includes(selectedMilestone)) {
+            return 'Preview Anniversary Time Capsule';
+        }
+        // Special milestones
+        if (selectedMilestone === 'mothersday') {
+            return 'Preview Mother\'s Day Time Capsule';
+        }
+        if (selectedMilestone === 'fathersday') {
+            return 'Preview Father\'s Day Time Capsule';
+        }
+        // Default
+        return 'Preview Time Capsule';
+    };
+
     const pickPhoto = async (index: number) => {
         try {
             const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -493,13 +517,35 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
         setLoading(true);
 
         // Fetch population if not already loaded
+        // ⚠️ CRITICAL: Must pass DOB - routes to HISTORICAL CSV (before 2020) or CURRENT CSV (after 2020)
         let finalPopulation = population;
         if (!finalPopulation) {
             try {
-                finalPopulation = await getPopulationForCity(hometown.trim());
+                const dobISO = `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`;
+                finalPopulation = await getPopulationForCity(hometown.trim(), dobISO);
                 setPopulation(finalPopulation);
+
+                /**
+                 * ⚠️ CRITICAL: CITY NOT FOUND - SHOW ERROR POPUP
+                 * Do NOT use default fallback population - user must correct the city
+                 */
+                if (finalPopulation === null) {
+                    Alert.alert(
+                        'City Not Found',
+                        'OUR RECORDS INDICATE THAT THIS CITY, ST DOES NOT EXIST, WAS NOT INCORPORATED AT THE DATE OF BIRTH OR THE SPELLING OF CITY, ST IS INCORRECT.',
+                        [{ text: 'OK' }]
+                    );
+                    setLoading(false);
+                    return;
+                }
             } catch (error) {
-                finalPopulation = 100000;
+                Alert.alert(
+                    'City Not Found',
+                    'OUR RECORDS INDICATE THAT THIS CITY, ST DOES NOT EXIST, WAS NOT INCORPORATED AT THE DATE OF BIRTH OR THE SPELLING OF CITY, ST IS INCORRECT.',
+                    [{ text: 'OK' }]
+                );
+                setLoading(false);
+                return;
             }
         }
 
@@ -994,7 +1040,7 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
             />
 
             {/* Color Picker */}
-            <Text style={styles.label}>Background Color</Text>
+            <Text style={[styles.label, { textAlign: 'center' }]}>Background Color</Text>
             <View style={{ alignSelf: 'center', width: '45%' }}>
                 <View style={{ gap: 4, marginBottom: 4 }}>
                     {/* Row 1 - Blues */}
@@ -1073,7 +1119,7 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
                 onPress={handleBuild}
                 disabled={loading}
             >
-                <Text style={styles.buildBtnText}>{loading ? 'Building...' : 'Preview Birthday Time Capsule'}</Text>
+                <Text style={styles.buildBtnText}>{loading ? 'Building...' : getPreviewButtonText()}</Text>
             </TouchableOpacity>
         </ScrollView>
     );
@@ -1179,6 +1225,7 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         alignItems: 'center',
         marginTop: 12,
+        marginBottom: 40,
     },
     buildBtnText: { color: '#fff', fontWeight: '900', fontSize: 14 },
     dropdownButton: {

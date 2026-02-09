@@ -1,33 +1,30 @@
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo, useState } from 'react';
 import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    StyleSheet,
-    StatusBar,
-    TextInput,
     Modal,
-    ActivityIndicator
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../types';
-import { calculateNatalChart, NatalChartData } from '../data/utils/natal-chart-calculator';
+import { calculateNatalChart } from '../data/utils/natal-chart-calculator';
 import { getCityCoordinates } from '../data/utils/town-coordinates';
 import {
     calculateTransitAspects,
-    getSignificantTransits,
     getMoonPhase,
     getRetrogradePlanets,
-    Transit,
-    getTransitDuration
+    getSignificantTransits,
+    getTransitDuration,
+    Transit
 } from '../data/utils/transit-calculator';
 import {
-    getTransitInterpretation,
-    TRANSIT_PLANET_THEMES,
-    ASPECT_INTERPRETATIONS
+    getTransitInterpretation
 } from '../data/utils/transit-interpretations';
+import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Horoscope'>;
 
@@ -149,6 +146,9 @@ export default function HoroscopeScreen({ navigation, route }: Props) {
                     <Text style={styles.emoji}>🌟</Text>
                     <Text style={styles.title}>Your Daily Horoscope</Text>
                     <Text style={styles.subtitle}>{today}</Text>
+                    <Text style={styles.explainerText}>
+                        Your horoscope is a personalized cosmic forecast based on where the planets are TODAY compared to where they were at YOUR exact moment of birth. It's like a weather report for your life — showing which areas may feel energized, challenged, or calm.
+                    </Text>
                 </View>
 
                 {/* Birth Data Summary */}
@@ -309,6 +309,15 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: 'rgba(255,255,255,0.8)',
         marginTop: 4,
+    },
+    explainerText: {
+        fontSize: 13,
+        color: 'rgba(255,255,255,0.75)',
+        textAlign: 'center',
+        marginTop: 12,
+        lineHeight: 20,
+        paddingHorizontal: 8,
+        fontStyle: 'italic',
     },
     birthDataCard: {
         backgroundColor: 'rgba(255,255,255,0.1)',

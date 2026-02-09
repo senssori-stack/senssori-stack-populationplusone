@@ -19,6 +19,12 @@ export function formatSnapshotValue(key: string, raw: string): string {
     if (!s) return '';
     const upperKey = (key ?? '').trim().toUpperCase();
 
+    // Text-only fields: return as-is without numeric parsing
+    const textOnlyKeywords = ['SONG', 'MOVIE', 'PRESIDENT', 'VICE PRESIDENT', 'SUPERBOWL', 'WORLD SERIES'];
+    if (textOnlyKeywords.some(k => upperKey.includes(k))) {
+        return s;
+    }
+
     const n = parseNumber(s);
 
     // Currency-like items

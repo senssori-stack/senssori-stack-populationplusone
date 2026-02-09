@@ -1,10 +1,39 @@
 import { fetchCSV } from './csv';
 import { POPULATIONS_CSV_URL } from './sheets';
 
+/**
+ * ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
+ * ║  ⚠️  CRITICAL POPULATION FETCH RULES - DO NOT MODIFY ⚠️                                   ║
+ * ╠═══════════════════════════════════════════════════════════════════════════════════════════╣
+ * ║                                                                                           ║
+ * ║  RULE 1: DOB BEFORE 01-01-2020                                                           ║
+ * ║  → City, ST population from HISTORICAL CSV (HISTORICAL_POPULATIONS_CSV_URL)              ║
+ * ║  → Used for: Front Sign + Time Capsule "THEN" section                                    ║
+ * ║                                                                                           ║
+ * ║  RULE 2: DOB ON OR AFTER 01-01-2020                                                      ║
+ * ║  → City, ST population from CURRENT CSV (POPULATIONS_CSV_URL)                            ║
+ * ║  → Used for: Front Sign                                                                  ║
+ * ║                                                                                           ║
+ * ║  RULE 3: TIME CAPSULE "NOW" SECTION                                                      ║
+ * ║  → ALWAYS use CURRENT CSV regardless of DOB                                              ║
+ * ║  → Use getCurrentPopulationForCity() function                                            ║
+ * ║                                                                                           ║
+ * ║  RULE 4: CITY NOT FOUND                                                                  ║
+ * ║  → Return null - caller must show popup:                                                 ║
+ * ║  → "OUR RECORDS INDICATE THAT THIS CITY, ST DOES NOT EXIST, WAS NOT                     ║
+ * ║     INCORPORATED AT THE DATE OF BIRTH OR THE SPELLING OF CITY, ST IS INCORRECT."        ║
+ * ║                                                                                           ║
+ * ║  DO NOT USE FALLBACK_POPULATIONS ARRAY - CAUSES FALSE RESULTS                           ║
+ * ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
+ */
+
 // cache to avoid re-downloading
 let POP_ROWS: { area: string; pop: number }[] | null = null;
 
-// Enhanced fallback population data for common US cities (saves Google Sheets calls)
+/**
+ * @deprecated DO NOT USE - CAUSES FALSE RESULTS
+ * This array is kept only for reference. All population lookups MUST use Google Sheets CSV.
+ */
 const FALLBACK_POPULATIONS: { area: string; pop: number }[] = [
     // Top 100 US Cities to minimize Google Sheets usage
     { area: "New York, New York", pop: 8336817 },
@@ -108,7 +137,11 @@ const FALLBACK_POPULATIONS: { area: string; pop: number }[] = [
     { area: "Birmingham, Alabama", pop: 200733 }
 ];
 
-// Check local fallback data first (free, fast)
+/**
+ * @deprecated DO NOT USE - CAUSES FALSE RESULTS
+ * This function is kept only for reference. All population lookups MUST use Google Sheets CSV.
+ * DO NOT CALL THIS FUNCTION UNDER ANY CIRCUMSTANCES.
+ */
 function checkLocalFallback(hometown: string): number | null {
     try {
         const parts = hometown.split(',');
@@ -191,17 +224,20 @@ function normArea(city: string, stateFull: string): string[] {
 async function ensureLoaded(): Promise<void> {
     if (POP_ROWS) return;
 
+    /**
+     * ⚠️ CRITICAL: DO NOT USE FALLBACK_POPULATIONS - CAUSES FALSE RESULTS ⚠️
+     * Always fetch from Google Sheets CSV. If fetch fails, throw error.
+     */
+
     let csv: string[][];
     try {
         console.log('🌐 Fetching populations CSV from:', POPULATIONS_CSV_URL);
         csv = await fetchCSV(POPULATIONS_CSV_URL);
         console.log('📥 CSV fetched from Google Sheets, rows:', csv.length);
     } catch (error) {
-        console.log('❌ Failed to fetch from Google Sheets, using fallback data');
-        // Use fallback data
-        POP_ROWS = FALLBACK_POPULATIONS;
-        console.log('📥 Using fallback population data, cities available:', POP_ROWS.length);
-        return;
+        console.error('❌ CRITICAL: Failed to fetch from Google Sheets - DO NOT USE LOCAL FALLBACK');
+        // DO NOT USE FALLBACK_POPULATIONS - causes false results
+        throw new Error('Google Sheets population fetch failed - local fallback disabled');
     }
 
     // Check if first row looks like a header or actual data
@@ -220,9 +256,9 @@ async function ensureLoaded(): Promise<void> {
         const popIdx = header.findIndex(h => /population/i.test(h));
 
         if (areaIdx === -1 || popIdx === -1) {
-            console.log('❌ Header format invalid, using fallback data');
-            POP_ROWS = FALLBACK_POPULATIONS;
-            return;
+            console.error('❌ CRITICAL: Header format invalid - DO NOT USE LOCAL FALLBACK');
+            // DO NOT USE FALLBACK_POPULATIONS - causes false results
+            throw new Error('Google Sheets CSV header format invalid - local fallback disabled');
         }
 
         dataRows = body;
@@ -254,20 +290,45 @@ async function ensureLoaded(): Promise<void> {
 }
 
 /**
+ * ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
+ * ║  ⚠️  CRITICAL POPULATION ROUTING - DO NOT MODIFY ⚠️                                       ║
+ * ╠═══════════════════════════════════════════════════════════════════════════════════════════╣
+ * ║  DOB BEFORE 01-01-2020 → HISTORICAL CSV (HISTORICAL_POPULATIONS_CSV_URL)                 ║
+ * ║  DOB ON/AFTER 01-01-2020 → CURRENT CSV (POPULATIONS_CSV_URL)                             ║
+ * ║                                                                                           ║
+ * ║  IF CITY NOT FOUND → Return null (caller shows error popup)                              ║
+ * ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
+ * 
  * Returns population for "City, ST" or "City, State" (case/space tolerant).
- * If not found, returns null.
+ * If not found, returns null - caller must show popup message.
+ * 
+ * @param hometown - The city, state string (e.g., "Las Vegas, NV" or "Las Vegas, Nevada")
+ * @param dobISO - Date of birth in ISO format (YYYY-MM-DD). Routes to appropriate CSV.
  */
-export async function getPopulationForCity(hometown: string): Promise<number | null> {
-    console.log('📍 getPopulationForCity called with:', hometown);
+export async function getPopulationForCity(hometown: string, dobISO?: string): Promise<number | null> {
+    console.log('📍 getPopulationForCity called with:', hometown, 'DOB:', dobISO || 'not provided');
 
-    // STEP 1: Check local cache first (FREE - no Google Sheets cost)
-    const localResult = checkLocalFallback(hometown);
-    if (localResult) {
-        return localResult;
+    const CUTOFF_DATE = new Date('2020-01-01');
+    const dobDate = dobISO ? new Date(dobISO) : null;
+    const isBefore2020 = dobDate ? dobDate < CUTOFF_DATE : false;
+
+    /**
+     * ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
+     * ║  RULE: DOB BEFORE 01-01-2020 → Use HISTORICAL CSV                                        ║
+     * ║  RULE: DOB ON/AFTER 01-01-2020 → Use CURRENT CSV                                         ║
+     * ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
+     */
+    if (isBefore2020 && dobDate) {
+        const birthYear = dobDate.getFullYear();
+        console.log('🟡 DOB is BEFORE 2020-01-01 - Using HISTORICAL CSV for year', birthYear);
+
+        // Dynamic import to avoid circular dependency
+        const { getHistoricalPopulationForCity } = await import('./historical-populations');
+        return getHistoricalPopulationForCity(hometown, birthYear);
     }
 
-    // STEP 2: Use Google Sheets for comprehensive coverage (costs money, but covers all towns)
-    console.log('💰 Using Google Sheets for comprehensive lookup...');
+    // DOB is on/after 2020-01-01 OR no DOB provided → Use CURRENT CSV
+    console.log('🔵 DOB is ON/AFTER 2020-01-01 - Using CURRENT CSV (POPULATIONS_CSV_URL)');
 
     try {
         await ensureLoaded();
@@ -338,40 +399,92 @@ export async function getPopulationForCity(hometown: string): Promise<number | n
         console.log('💡 Available New York options:', newYorkOptions.map(r => r.area));
         console.log('💡 Similar cities found:', suggestions.map(r => r.area));
 
-        // STEP 3: Smart fallback for any location not found anywhere
-        return generateSmartFallback(hometown);
+        /**
+         * ⚠️ CRITICAL: DO NOT USE SMART FALLBACK - RETURN NULL
+         * Caller must show popup: "OUR RECORDS INDICATE THAT THIS CITY, ST DOES NOT EXIST, 
+         * WAS NOT INCORPORATED AT THE DATE OF BIRTH OR THE SPELLING OF CITY, ST IS INCORRECT."
+         */
+        console.log('🔴 CITY NOT FOUND - Returning null (caller must show error popup)');
+        return null;
 
     } catch (error) {
-        console.error('💥 Error with Google Sheets, using smart fallback:', error);
-        return generateSmartFallback(hometown);
+        console.error('💥 Error with Google Sheets:', error);
+        console.log('🔴 FETCH ERROR - Returning null (caller must show error popup)');
+        return null;
     }
 }
 
-// Generate smart population estimates based on location type
-function generateSmartFallback(hometown: string): number {
-    const city = hometown.split(',')[0]?.trim().toLowerCase() || '';
+/**
+ * ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
+ * ║  getCurrentPopulationForCity - FOR TIME CAPSULE "NOW" SECTION ONLY                       ║
+ * ╠═══════════════════════════════════════════════════════════════════════════════════════════╣
+ * ║  ALWAYS uses CURRENT CSV (POPULATIONS_CSV_URL) regardless of DOB.                        ║
+ * ║  This is for the "NOW" side of Time Capsule comparisons.                                 ║
+ * ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
+ */
+export async function getCurrentPopulationForCity(hometown: string): Promise<number | null> {
+    console.log('📍 getCurrentPopulationForCity called for TIME CAPSULE NOW section:', hometown);
+    console.log('🔵 Using CURRENT CSV (POPULATIONS_CSV_URL) for NOW population');
 
-    // Population ranges based on common US patterns
-    let min = 5000, max = 50000; // Default: small city/town
+    try {
+        await ensureLoaded();
+        console.log('📋 Current population data loaded, rows count:', POP_ROWS?.length || 0);
 
-    // Major city keywords get higher populations
-    if (city.includes('new') || city.includes('san') || city.includes('los') ||
-        city.includes('chicago') || city.includes('houston') || city.includes('dallas') ||
-        city.includes('miami') || city.includes('atlanta') || city.includes('seattle')) {
-        min = 100000; max = 1000000; // Major city range
-    }
-    // Mid-size city indicators
-    else if (city.includes('springs') || city.includes('falls') || city.includes('grove') ||
-        city.includes('heights') || city.includes('park') || city.includes('valley')) {
-        min = 25000; max = 150000; // Mid-size city
-    }
-    // Small town indicators  
-    else if (city.includes('ville') || city.includes('burg') || city.includes('ton') ||
-        city.includes('field') || city.includes('wood')) {
-        min = 2000; max = 25000; // Small town
-    }
+        // Extract city + state parts
+        const match = hometown.split(',');
+        if (match.length < 2) {
+            console.log('❌ Invalid hometown format (no comma):', hometown);
+            return null;
+        }
 
-    const smartPop = Math.floor(Math.random() * (max - min)) + min;
-    console.log(`🎯 SMART FALLBACK for "${hometown}": ${smartPop.toLocaleString()} (estimated ${min.toLocaleString()}-${max.toLocaleString()} range)`);
-    return smartPop;
+        const city = match[0].trim();
+        const stateRaw = match.slice(1).join(',').trim();
+        const stateFull = toFullState(stateRaw);
+        console.log('🔍 Searching for city:', city, 'state:', stateFull);
+
+        const candidates = normArea(city, stateFull).map(x => x.toLowerCase());
+
+        const found = POP_ROWS!.find(r => candidates.includes(r.area.toLowerCase()));
+        if (found && Number.isFinite(found.pop)) {
+            console.log('✅ NOW population found:', found);
+            return found.pop;
+        }
+
+        // Flexible matching
+        const normalizeCity = (str: string) => str.toLowerCase().replace(/\s+/g, ' ').replace(/[^\w\s,]/g, '').trim();
+        const normalizedInput = normalizeCity(`${city}, ${stateFull}`);
+
+        const flexibleMatch = POP_ROWS!.find(r => {
+            const normalizedRecord = normalizeCity(r.area);
+            return normalizedRecord === normalizedInput ||
+                normalizedRecord.includes(normalizeCity(city)) && normalizedRecord.includes(normalizeCity(stateFull));
+        });
+
+        if (flexibleMatch && Number.isFinite(flexibleMatch.pop)) {
+            console.log('✅ NOW flexible match found:', flexibleMatch);
+            return flexibleMatch.pop;
+        }
+
+        // Fuzzy search
+        const byCity = POP_ROWS!.filter(r => r.area.toLowerCase().startsWith(city.toLowerCase() + ','));
+        const fuzzy = byCity.find(r => r.area.toLowerCase().includes(stateFull.toLowerCase()));
+        if (fuzzy && Number.isFinite(fuzzy.pop)) {
+            console.log('✅ NOW fuzzy match found:', fuzzy);
+            return fuzzy.pop;
+        }
+
+        console.log('❌ City not found in CURRENT CSV for NOW section:', hometown);
+        return null;
+
+    } catch (error) {
+        console.error('💥 Error fetching NOW population:', error);
+        return null;
+    }
 }
+
+/**
+ * @deprecated DO NOT USE - generateSmartFallback is disabled
+ * If city is not found, return null and caller must show error popup.
+ * Smart fallback causes incorrect results.
+ */
+// function generateSmartFallback - REMOVED - causes false results

@@ -13,7 +13,7 @@ try {
 
 export const SNAPSHOT_CSV_URL =
     OVERRIDES.SNAPSHOT_CSV_URL ||
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vSGh6_l3Y2mPFyqsKWkmD06H49s3HVqF9a8mOuebCfoohRo9wz8TWBAjTNH8BmIarU6DCHZpXPUwU8t/pub?output=csv';
+    'https://docs.google.com/spreadsheets/d/1v8H62aoj1OYzPE802JYsudmqI7JCa8zwFD2LMPRcs04/export?format=csv';
 
 export const POPULATIONS_CSV_URL =
     OVERRIDES.POPULATIONS_CSV_URL ||

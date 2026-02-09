@@ -127,8 +127,8 @@ function formatPrice(price: number): string {
  */
 function getFallbackPrices(): MetalsPrices {
     return {
-        goldUSD: '$4,905.00',
-        silverUSD: '$87.92',
+        goldUSD: '$2,650.00',
+        silverUSD: '$30.25',
         timestamp: Date.now(),
     };
 }

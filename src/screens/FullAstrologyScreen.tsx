@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Circle, G, Line, Svg, Text as SvgText } from 'react-native-svg';
 import { calculateNatalChart } from '../data/utils/natal-chart-calculator';
+import { getAllPDFResources, openPDF } from '../data/utils/pdf-helper';
 import { getCityCoordinates } from '../data/utils/town-coordinates';
 import type { RootStackParamList } from '../types';
 
@@ -116,8 +117,24 @@ const getZodiacFromDegree = (degree: number): string => {
 
 export default function FullAstrologyScreen({ navigation, route }: Props) {
     const birthDate = new Date(route.params.birthDate);
-    const [birthTime, setBirthTime] = useState('12:00');
-    const [birthLocation, setBirthLocation] = useState('');
+    // Use route params if provided, otherwise defaults
+    const initialTime = route.params.birthTime || '12:00 PM';
+    // Convert 12-hour format to 24-hour for internal use
+    const [birthTime, setBirthTime] = useState(() => {
+        if (initialTime.includes('AM') || initialTime.includes('PM')) {
+            const match = initialTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (match) {
+                let h = parseInt(match[1], 10);
+                const m = match[2];
+                const ampm = match[3].toUpperCase();
+                if (ampm === 'PM' && h !== 12) h += 12;
+                if (ampm === 'AM' && h === 12) h = 0;
+                return `${h.toString().padStart(2, '0')}:${m}`;
+            }
+        }
+        return '12:00';
+    });
+    const [birthLocation, setBirthLocation] = useState(route.params.birthLocation || '');
     const [showTimeModal, setShowTimeModal] = useState(false);
     const [showLocationModal, setShowLocationModal] = useState(false);
 
@@ -425,6 +442,26 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                     *For most accurate Rising sign, enter your exact birth time.
                     Chart calculated using astronomical positions.
                 </Text>
+
+                {/* FREE Educational Downloadable PDFs */}
+                <View style={styles.pdfSection}>
+                    <Text style={styles.pdfSectionTitle}>📚 FREE EDUCATIONAL DOWNLOADABLE</Text>
+                    <Text style={styles.pdfSectionSubtitle}>NATAL CHART DOCUMENTS WITH ILLUSTRATIONS</Text>
+                    {getAllPDFResources().map((pdf) => (
+                        <TouchableOpacity
+                            key={pdf.key}
+                            style={styles.pdfDownloadButton}
+                            onPress={() => openPDF(pdf.key)}
+                        >
+                            <Text style={styles.pdfIcon}>📄</Text>
+                            <View style={styles.pdfTextContainer}>
+                                <Text style={styles.pdfName}>{pdf.name}</Text>
+                                <Text style={styles.pdfDescription}>{pdf.description}</Text>
+                            </View>
+                            <Text style={styles.pdfDownloadIcon}>⬇️</Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
 
                 {/* Back Button */}
                 <TouchableOpacity
@@ -829,6 +866,60 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',
+    },
+    // PDF Download Section Styles
+    pdfSection: {
+        marginTop: 20,
+        marginBottom: 20,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderRadius: 16,
+        padding: 20,
+        borderWidth: 2,
+        borderColor: '#ffd700',
+    },
+    pdfSectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#ffd700',
+        textAlign: 'center',
+    },
+    pdfSectionSubtitle: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#fff',
+        textAlign: 'center',
+        marginBottom: 16,
+    },
+    pdfDownloadButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderRadius: 12,
+        padding: 14,
+        marginTop: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.3)',
+    },
+    pdfIcon: {
+        fontSize: 28,
+        marginRight: 12,
+    },
+    pdfTextContainer: {
+        flex: 1,
+    },
+    pdfName: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#fff',
+    },
+    pdfDescription: {
+        fontSize: 12,
+        color: 'rgba(255,255,255,0.7)',
+        marginTop: 2,
+    },
+    pdfDownloadIcon: {
+        fontSize: 20,
+        marginLeft: 8,
     },
     modalOverlay: {
         flex: 1,

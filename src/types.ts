@@ -69,6 +69,7 @@ export type MemorialParams = {
 export type RootStackParamList = {
     Landing: undefined;
     Form: undefined;
+    HospitalLogin: undefined;
     ObituaryForm: undefined;
     MemorialPreview: MemorialParams;
     MemorialBack: MemorialParams;
@@ -81,7 +82,9 @@ export type RootStackParamList = {
     ZodiacSign: { birthDate: string };
     OnThisDay: { birthDate: string };
     FamousBirthdays: { birthDate: string };
-    FullAstrology: { birthDate: string };
+    ThenAndNow: { birthDate: string };
+    SurnameSearch: { surname?: string };
+    FullAstrology: { birthDate: string; birthTime?: string; birthLocation?: string };
     Horoscope: { birthDate: string; birthTime?: string; birthLocation?: string };
     Preview: PreviewParams;
     ChartReading: PreviewParams; // Natal chart with reading and descriptions
@@ -93,4 +96,5 @@ export type RootStackParamList = {
     Back: PreviewParams;
     Test: undefined;
     AboutUs: undefined;
+    Sources: undefined;
 };

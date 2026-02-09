@@ -8,8 +8,7 @@ export const CURRENT_SNAPSHOT_DATA: Record<string, string> = {
     'LOAF OF BREAD': '$2.75',
     'DOZEN EGGS': '$4.90',
     'GALLON OF MILK': '$3.00',
-    'GOLD OZ': '$4,905.00',
-    'SILVER OZ': '$87.92',
+    // GOLD OZ and SILVER OZ - NO FALLBACK, must come from Google Sheets fetch
     'DOW JONES CLOSE': '44,873.28',
 
     // Entertainment

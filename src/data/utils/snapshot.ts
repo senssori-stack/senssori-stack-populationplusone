@@ -1,11 +1,11 @@
 // src/data/utils/snapshot.ts
+import { getFromCache, saveToCache } from './cache-manager';
 import { fetchCSV } from './csv';
+import { CURRENT_SNAPSHOT_DATA } from './current-snapshot';
+import { getHistoricalSnapshotForDate } from './historical-snapshot';
+import { getMetalsBackup, saveMetalsBackup } from './metals-backup';
 import { SNAPSHOT_CSV_URL } from './sheets';
 import SNAPSHOT_CANONICAL_MAP from './snapshot-mapping';
-import { getHistoricalSnapshotForDate } from './historical-snapshot';
-import { CURRENT_SNAPSHOT_DATA } from './current-snapshot';
-import { getFromCache, saveToCache } from './cache-manager';
-import { getMetalsPrices } from './external-apis';
 
 // last applied mappings for debug visibility
 export let LAST_SNAPSHOT_MAPPINGS: Array<{ from: string; to: string }> = [];
@@ -110,13 +110,12 @@ export async function getAllSnapshotValues(): Promise<Record<string, string>> {
         }
 
         console.log('✅ Using Google Sheets snapshot data');
+        console.log('🪙 Gold from sheet:', out['GOLD OZ']);
+        console.log('🪙 Silver from sheet:', out['SILVER OZ']);
 
-        // Fetch live metals prices and override Google Sheets values
-        const liveMetals = await getMetalsPrices();
-        if (liveMetals) {
-            console.log('💰 Overriding with live metals prices:', liveMetals);
-            out['GOLD OZ'] = liveMetals.gold;
-            out['SILVER OZ'] = liveMetals.silver;
+        // Save gold/silver to permanent backup after successful fetch
+        if (out['GOLD OZ'] && out['SILVER OZ']) {
+            await saveMetalsBackup(out['GOLD OZ'], out['SILVER OZ'], 'Google Sheets');
         }
 
         // ALWAYS use hardcoded President/VP - never trust Google Sheets for this
@@ -129,24 +128,40 @@ export async function getAllSnapshotValues(): Promise<Record<string, string>> {
 
         return (SNAP_CACHE = out);
     } catch (error) {
-        console.warn('⚠️ Google Sheets fetch failed, using local fallback data');
-    }
+        console.warn('⚠️ Google Sheets fetch failed, trying backups...');
 
-    // Final fallback to local data - also try to get live metals
-    console.log('📱 Using local fallback snapshot data');
-    const fallbackData = { ...CURRENT_SNAPSHOT_DATA };
-
-    // Try to get live metals even when using fallback
-    try {
-        const liveMetals = await getMetalsPrices();
-        if (liveMetals) {
-            console.log('💰 Overriding fallback with live metals prices:', liveMetals);
-            fallbackData['GOLD OZ'] = liveMetals.gold;
-            fallbackData['SILVER OZ'] = liveMetals.silver;
+        // Try to get last known good values from cache first
+        const cachedData = await getFromCache();
+        if (cachedData && cachedData['GOLD OZ'] && cachedData['SILVER OZ']) {
+            console.log('✅ Using cached data (fetch failed)');
+            console.log('🪙 Cached Gold:', cachedData['GOLD OZ']);
+            console.log('🪙 Cached Silver:', cachedData['SILVER OZ']);
+            return (SNAP_CACHE = cachedData);
         }
-    } catch (e) {
-        console.warn('⚠️ Metals API also failed, using static prices');
+
+        // Try metals backup database (permanent storage)
+        const metalsBackup = await getMetalsBackup();
+        if (metalsBackup) {
+            console.log('✅ Using metals backup database (fetch failed)');
+            console.log('🪙 Backup Gold:', metalsBackup.gold);
+            console.log('🪙 Backup Silver:', metalsBackup.silver);
+            console.log('📅 Last fetched:', metalsBackup.fetchedAt);
+
+            // Merge backup metals with other fallback data
+            const fallbackWithMetals = { ...CURRENT_SNAPSHOT_DATA };
+            fallbackWithMetals['GOLD OZ'] = metalsBackup.gold;
+            fallbackWithMetals['SILVER OZ'] = metalsBackup.silver;
+            return (SNAP_CACHE = fallbackWithMetals);
+        }
+
+        console.error('❌ No cache or backup available - gold/silver will be empty');
     }
+
+    // Final fallback - NO gold/silver values (force fetch to work)
+    console.log('⚠️ Using minimal fallback data (no gold/silver - fetch required)');
+    const fallbackData = { ...CURRENT_SNAPSHOT_DATA };
+    delete fallbackData['GOLD OZ'];
+    delete fallbackData['SILVER OZ'];
 
     return (SNAP_CACHE = fallbackData);
 }

@@ -1,6 +1,7 @@
 // src/data/utils/historical-snapshot.ts
 // Historical data system with monthly averages from Jan 2020 and yearly before that
 
+import { getBillboardNumber1ForDate, getBillboardNumber1ForMonth, getBillboardNumber1ForYear } from './billboard-api';
 import { getExtendedHistoricalData } from './extended-historical-data';
 
 export interface HistoricalDataPoint {
@@ -1348,6 +1349,43 @@ export async function getSnapshotWithHistorical(targetDate?: string): Promise<Re
 
     // Get historical data for the target date
     const historicalData = getHistoricalSnapshotForDate(targetDate);
+
+    // Parse target date for Billboard API
+    const dateMatch = targetDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateMatch) {
+        const year = parseInt(dateMatch[1]);
+        const month = parseInt(dateMatch[2]);
+        const day = parseInt(dateMatch[3]);
+
+        // Fetch #1 song from Billboard API (1959 onwards)
+        if (year >= 1959) {
+            try {
+                console.log(`🎵 Fetching Billboard #1 for ${targetDate}...`);
+
+                // Try specific date first
+                let billboardSong = await getBillboardNumber1ForDate(year, month, day);
+
+                // Fall back to month if date not found
+                if (!billboardSong) {
+                    billboardSong = await getBillboardNumber1ForMonth(year, month);
+                }
+
+                // Fall back to year if month not found
+                if (!billboardSong) {
+                    billboardSong = await getBillboardNumber1ForYear(year);
+                }
+
+                if (billboardSong) {
+                    console.log(`✅ Billboard #1 song: ${billboardSong}`);
+                    historicalData['#1 SONG'] = billboardSong;
+                } else {
+                    console.log(`⚠️ No Billboard data, using fallback`);
+                }
+            } catch (error) {
+                console.warn('⚠️ Billboard API error, using fallback:', error);
+            }
+        }
+    }
 
     // For dates 1914-2019, get extended historical data to fill any gaps
     // (yearlyData in HISTORICAL_SNAPSHOT_DATA may have gaps for some categories before 2020)

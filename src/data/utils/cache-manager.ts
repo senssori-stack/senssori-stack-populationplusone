@@ -4,8 +4,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CACHE_KEY = 'snapshot_cache';
-const CACHE_VERSION = 'v3'; // Increment to invalidate old cache
-const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
+const CACHE_VERSION = 'v7'; // Feb 8: Gold $4,900, Silver $78 - Google Sheets Apps Script needs fixing
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes - shorter cache to get fresher metals prices
 
 interface CachedData {
     data: Record<string, string>;

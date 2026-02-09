@@ -2,9 +2,10 @@
 // Historical population data for cities (110 years of data)
 // Used to show population at birth date vs current population
 
-import { HISTORICAL_POPULATIONS_CSV_URL } from './sheets';
 import { fetchCSV } from './csv';
-import { getPopulationForCity } from './populations';
+import { HISTORICAL_POPULATIONS_CSV_URL } from './sheets';
+// NOTE: Do not import from populations.ts to avoid circular dependency
+// Use dynamic import if needed for getCurrentPopulationForCity
 
 let HISTORICAL_POP_CACHE: Record<string, Record<number, number>> | null = null;
 
@@ -85,12 +86,17 @@ export async function getHistoricalPopulationForCity(
         if (!cityData) {
             console.warn(`⚠️ City "${hometown}" not found in historical database (tried: ${possibleKeys.join(', ')})`);
 
-            // Fallback: For current year only, use current population database
+            // Fallback: For current year only, use current population database via dynamic import
             if (year >= 2024) {
-                const currentPop = await getPopulationForCity(hometown);
-                if (currentPop !== null) {
-                    console.log(`✅ Found ${hometown} in current database: ${currentPop.toLocaleString()}`);
-                    return currentPop;
+                try {
+                    const { getCurrentPopulationForCity } = await import('./populations');
+                    const currentPop = await getCurrentPopulationForCity(hometown);
+                    if (currentPop !== null) {
+                        console.log(`✅ Found ${hometown} in current database: ${currentPop.toLocaleString()}`);
+                        return currentPop;
+                    }
+                } catch (e) {
+                    console.warn('Failed to load current population:', e);
                 }
             }
 

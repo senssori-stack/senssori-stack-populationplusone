@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    TextInput,
-    StyleSheet,
-    useWindowDimensions,
-    Alert,
-} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
+import React, { useEffect, useState } from 'react';
+import {
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    useWindowDimensions,
+    View,
+} from 'react-native';
 
 const COLORS = [
     '#0066CC', '#0080FF', '#0099FF', '#00CCFF', '#00FFFF',
@@ -251,7 +251,7 @@ export default function BabyAnnouncementFormScreen() {
             )}
 
             {/* Color Picker */}
-            <Text style={styles.label}>Background Color</Text>
+            <Text style={[styles.label, { textAlign: 'center' }]}>Background Color</Text>
             <View style={styles.colorGrid}>
                 {COLORS.map((color) => (
                     <TouchableOpacity

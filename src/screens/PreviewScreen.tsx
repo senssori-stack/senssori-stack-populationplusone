@@ -438,4 +438,14 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
     },
+    pdfButton: {
+        backgroundColor: '#ffd700',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 8,
+        marginLeft: 4,
+    },
+    pdfButtonText: {
+        fontSize: 18,
+    },
 });

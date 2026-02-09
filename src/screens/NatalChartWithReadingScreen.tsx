@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, useWindowDimensions } from 'react-native';
-import { Svg, Circle, Line, Text as SvgText, G, Path } from 'react-native-svg';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../types';
-import { calculateNatalChart } from '../data/utils/natal-chart-calculator';
+import React, { useMemo } from 'react';
+import { ActionSheetIOS, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Circle, G, Line, Path, Svg, Text as SvgText } from 'react-native-svg';
 import { COLOR_SCHEMES } from '../data/utils/colors';
+import { calculateNatalChart } from '../data/utils/natal-chart-calculator';
+import { getAllPDFResources, PDFResourceKey, savePDF, viewPDF } from '../data/utils/pdf-helper';
+import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ChartReading'>;
 
@@ -354,172 +355,245 @@ export default function NatalChartWithReadingScreen({ navigation, route }: Props
     const moonSign = natalChart.planets[1]?.zodiac || 'Unknown';
     const ascendantSign = natalChart.ascendantZodiac || 'Unknown';
 
-    return (
-        <ScrollView style={[styles.container, { backgroundColor: colors.bg }]}>
-            {/* Single Unified Box - Everything compact */}
-            <View style={[styles.unifiedChartBox, { backgroundColor: 'rgba(255, 255, 255, 0.95)' }]}>
-                {/* Header with name and date */}
-                <View style={styles.compactHeader}>
-                    <Text style={[styles.compactHeaderName, { color: '#1a1a1a' }]}>
-                        {babyName}
-                    </Text>
-                    <Text style={[styles.compactHeaderDate, { color: '#666666' }]}>
-                        {birthDate.toLocaleDateString()} • {hometown}
-                    </Text>
-                </View>
+    const showPDFActions = (pdfKey: PDFResourceKey, pdfName: string) => {
+        if (Platform.OS === 'ios') {
+            ActionSheetIOS.showActionSheetWithOptions(
+                {
+                    options: ['Cancel', 'View Document', 'Save to Device'],
+                    cancelButtonIndex: 0,
+                    title: pdfName,
+                    message: 'What would you like to do?',
+                },
+                (buttonIndex) => {
+                    if (buttonIndex === 1) {
+                        viewPDF(pdfKey);
+                    } else if (buttonIndex === 2) {
+                        savePDF(pdfKey);
+                    }
+                }
+            );
+        } else {
+            Alert.alert(
+                pdfName,
+                'What would you like to do?',
+                [
+                    { text: 'View Document', onPress: () => viewPDF(pdfKey) },
+                    { text: 'Save to Device', onPress: () => savePDF(pdfKey) },
+                    { text: 'Cancel', style: 'cancel' },
+                ]
+            );
+        }
+    };
 
-                {/* Unified Chart Box - All content in one container */}
+    const handleInfoPress = () => {
+        const pdfResources = getAllPDFResources();
+        if (Platform.OS === 'ios') {
+            ActionSheetIOS.showActionSheetWithOptions(
+                {
+                    options: ['Cancel', ...pdfResources.map(p => p.name)],
+                    cancelButtonIndex: 0,
+                    title: 'Educational Documents',
+                    message: 'Learn about natal charts and astrology',
+                },
+                (buttonIndex) => {
+                    if (buttonIndex > 0) {
+                        const selected = pdfResources[buttonIndex - 1];
+                        showPDFActions(selected.key, selected.name);
+                    }
+                }
+            );
+        } else {
+            Alert.alert(
+                'Educational Documents',
+                'Select a document:',
+                [
+                    ...pdfResources.map(p => ({
+                        text: p.name,
+                        onPress: () => showPDFActions(p.key, p.name),
+                    })),
+                    { text: 'Cancel', style: 'cancel' },
+                ]
+            );
+        }
+    };
+
+    return (
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
+            {/* Subtle info button - top right corner */}
+            <TouchableOpacity
+                style={styles.infoButton}
+                onPress={handleInfoPress}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+                <Text style={styles.infoButtonText}>ⓘ</Text>
+            </TouchableOpacity>
+
+            <ScrollView style={[styles.container, { backgroundColor: colors.bg }]}>
+                {/* Single Unified Box - Everything compact */}
                 <View style={[styles.unifiedChartBox, { backgroundColor: 'rgba(255, 255, 255, 0.95)' }]}>
-                    {/* Compact Header - Baby Name and Date */}
+                    {/* Header with name and date */}
                     <View style={styles.compactHeader}>
-                        <Text style={styles.compactHeaderName}>{babyName}</Text>
-                        <Text style={styles.compactHeaderDate}>{birthDate.toLocaleDateString()} • {hometown}</Text>
+                        <Text style={[styles.compactHeaderName, { color: '#1a1a1a' }]}>
+                            {babyName}
+                        </Text>
+                        <Text style={[styles.compactHeaderDate, { color: '#666666' }]}>
+                            {birthDate.toLocaleDateString()} • {hometown}
+                        </Text>
                     </View>
 
-                    {/* Chart and Info Row - Horizontal Layout */}
-                    <View style={styles.chartDataRow}>
-                        {/* LEFT: Compact Chart */}
-                        <View style={styles.compactChartContainer}>
-                            <View style={styles.chartContainer}>
-                                <Svg width={String(svgSize)} height={String(svgSize)} viewBox={`0 0 ${svgSize} ${svgSize}`}>
-                                    {/* Outer circle */}
-                                    <Circle cx={cx} cy={cy} r={r_outer} fill="none" stroke="#000000" strokeWidth={String(svgSize * 0.004)} opacity="0.8" />
-
-                                    {/* Zodiac band */}
-                                    <Circle cx={cx} cy={cy} r={r_sign_outer} fill="none" stroke="#000000" strokeWidth={String(svgSize * 0.003)} opacity="0.6" />
-                                    <Circle cx={cx} cy={cy} r={r_sign_inner} fill="none" stroke="#000000" strokeWidth={String(svgSize * 0.003)} opacity="0.6" />
-
-                                    {/* House circles */}
-                                    <Circle cx={cx} cy={cy} r={r_house_out} fill="none" stroke="#4ECDC4" strokeWidth={String(svgSize * 0.002)} opacity="0.4" />
-                                    <Circle cx={cx} cy={cy} r={r_house_in} fill="none" stroke="#4ECDC4" strokeWidth={String(svgSize * 0.002)} opacity="0.4" />
-
-                                    {/* Inner circle */}
-                                    <Circle cx={cx} cy={cy} r={r_inner} fill="none" stroke="#000000" strokeWidth={String(svgSize * 0.003)} opacity="0.5" />
-
-                                    {/* Zodiac boundaries */}
-                                    {renderZodiacBoundaries()}
-
-                                    {/* House divisions */}
-                                    {renderHouses()}
-
-                                    {/* Zodiac signs with labels */}
-                                    {renderZodiacSigns()}
-
-                                    {/* Planets */}
-                                    {renderPlanets()}
-
-                                    {/* House numbers */}
-                                    {renderHouseNumbers()}
-
-                                    {/* Angle labels */}
-                                    {renderAngleLabels()}
-
-                                    {/* Ascendant marker */}
-                                    {renderAscendant()}
-
-                                    {/* Center point */}
-                                    <Circle cx={cx} cy={cy} r={svgSize * 0.01} fill="#000000" />
-                                </Svg>
-                            </View>
+                    {/* Unified Chart Box - All content in one container */}
+                    <View style={[styles.unifiedChartBox, { backgroundColor: 'rgba(255, 255, 255, 0.95)' }]}>
+                        {/* Compact Header - Baby Name and Date */}
+                        <View style={styles.compactHeader}>
+                            <Text style={styles.compactHeaderName}>{babyName}</Text>
+                            <Text style={styles.compactHeaderDate}>{birthDate.toLocaleDateString()} • {hometown}</Text>
                         </View>
 
-                        {/* RIGHT: Compact Info (Planet & House Data) */}
-                        <View style={styles.infoColumn}>
-                            {/* Birth Info - Ultra Compact */}
-                            <View style={[styles.birthInfoBoxCompact, { backgroundColor: colors.accent }]}>
-                                <Text style={styles.birthInfoCompactText}>{birthDate.toLocaleDateString()}</Text>
-                                <Text style={styles.birthInfoCompactText}>{birthDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
-                                <Text style={styles.birthInfoCompactText}>{hometown}</Text>
-                            </View>
+                        {/* Chart and Info Row - Horizontal Layout */}
+                        <View style={styles.chartDataRow}>
+                            {/* LEFT: Compact Chart */}
+                            <View style={styles.compactChartContainer}>
+                                <View style={styles.chartContainer}>
+                                    <Svg width={String(svgSize)} height={String(svgSize)} viewBox={`0 0 ${svgSize} ${svgSize}`}>
+                                        {/* Outer circle */}
+                                        <Circle cx={cx} cy={cy} r={r_outer} fill="none" stroke="#000000" strokeWidth={String(svgSize * 0.004)} opacity="0.8" />
 
-                            {/* Cardinal Signs - Inline */}
-                            <View style={styles.cardinalSignsInline}>
-                                <Text style={[styles.cardinalSign, { color: colors.accent }]}>☉ {sunSign}</Text>
-                                <Text style={[styles.cardinalSign, { color: colors.accent }]}>☽ {moonSign}</Text>
-                                <Text style={[styles.cardinalSign, { color: colors.accent }]}>↑ {ascendantSign}</Text>
-                            </View>
+                                        {/* Zodiac band */}
+                                        <Circle cx={cx} cy={cy} r={r_sign_outer} fill="none" stroke="#000000" strokeWidth={String(svgSize * 0.003)} opacity="0.6" />
+                                        <Circle cx={cx} cy={cy} r={r_sign_inner} fill="none" stroke="#000000" strokeWidth={String(svgSize * 0.003)} opacity="0.6" />
 
-                            {/* Ultra-Compact Planet Grid */}
-                            <View style={styles.miniGridContainer}>
-                                <Text style={[styles.miniGridTitle, { color: colors.accent }]}>Planets</Text>
-                                <View style={styles.miniGrid}>
-                                    {natalChart.planets.slice(0, 10).map((planet) => {
-                                        const degree = Math.floor(planet.longitude);
-                                        const minutes = Math.round((planet.longitude - degree) * 60);
-                                        return (
-                                            <View key={`planet-${planet.name}`} style={styles.miniGridItem}>
-                                                <Text style={[styles.miniGridSymbol, { color: colors.accent }]}>{planet.symbol}</Text>
-                                                <Text style={[styles.miniGridValue, { color: colors.text }]}>{planet.zodiac.substring(0, 3)}</Text>
-                                                <Text style={[styles.miniGridDegree, { color: colors.text }]}>{degree}°</Text>
-                                            </View>
-                                        );
-                                    })}
+                                        {/* House circles */}
+                                        <Circle cx={cx} cy={cy} r={r_house_out} fill="none" stroke="#4ECDC4" strokeWidth={String(svgSize * 0.002)} opacity="0.4" />
+                                        <Circle cx={cx} cy={cy} r={r_house_in} fill="none" stroke="#4ECDC4" strokeWidth={String(svgSize * 0.002)} opacity="0.4" />
+
+                                        {/* Inner circle */}
+                                        <Circle cx={cx} cy={cy} r={r_inner} fill="none" stroke="#000000" strokeWidth={String(svgSize * 0.003)} opacity="0.5" />
+
+                                        {/* Zodiac boundaries */}
+                                        {renderZodiacBoundaries()}
+
+                                        {/* House divisions */}
+                                        {renderHouses()}
+
+                                        {/* Zodiac signs with labels */}
+                                        {renderZodiacSigns()}
+
+                                        {/* Planets */}
+                                        {renderPlanets()}
+
+                                        {/* House numbers */}
+                                        {renderHouseNumbers()}
+
+                                        {/* Angle labels */}
+                                        {renderAngleLabels()}
+
+                                        {/* Ascendant marker */}
+                                        {renderAscendant()}
+
+                                        {/* Center point */}
+                                        <Circle cx={cx} cy={cy} r={svgSize * 0.01} fill="#000000" />
+                                    </Svg>
                                 </View>
-                            </View>
-
-                            {/* Ultra-Compact Houses Grid */}
-                            <View style={styles.miniGridContainer}>
-                                <Text style={[styles.miniGridTitle, { color: colors.accent }]}>Houses</Text>
-                                <View style={styles.miniGrid}>
-                                    {natalChart.houses.map((house, idx) => {
-                                        const houseNum = idx + 1;
-                                        const degree = Math.floor(house);
-                                        const zodiac = zodiacSigns[Math.floor(house / 30)];
-                                        return (
-                                            <View key={`house-${idx}`} style={styles.miniGridItem}>
-                                                <Text style={[styles.miniGridSymbol, { color: colors.accent }]}>H{houseNum}</Text>
-                                                <Text style={[styles.miniGridValue, { color: colors.text }]}>{zodiac.substring(0, 3)}</Text>
-                                                <Text style={[styles.miniGridDegree, { color: colors.text }]}>{degree}°</Text>
-                                            </View>
-                                        );
-                                    })}
-                                </View>
-                            </View>
-
-                            {/* Aspect Summary */}
-                            <View style={[styles.aspectSummary, { backgroundColor: colors.accent, borderColor: colors.accent }]}>
-                                <Text style={styles.aspectTitle}>Key Aspects</Text>
-                                <Text style={styles.aspectText}>Analyze major transits and progressions for {babyName}</Text>
                             </View>
 
                             {/* RIGHT: Compact Info (Planet & House Data) */}
+                            <View style={styles.infoColumn}>
+                                {/* Birth Info - Ultra Compact */}
+                                <View style={[styles.birthInfoBoxCompact, { backgroundColor: colors.accent }]}>
+                                    <Text style={styles.birthInfoCompactText}>{birthDate.toLocaleDateString()}</Text>
+                                    <Text style={styles.birthInfoCompactText}>{birthDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                                    <Text style={styles.birthInfoCompactText}>{hometown}</Text>
+                                </View>
+
+                                {/* Cardinal Signs - Inline */}
+                                <View style={styles.cardinalSignsInline}>
+                                    <Text style={[styles.cardinalSign, { color: colors.accent }]}>☉ {sunSign}</Text>
+                                    <Text style={[styles.cardinalSign, { color: colors.accent }]}>☽ {moonSign}</Text>
+                                    <Text style={[styles.cardinalSign, { color: colors.accent }]}>↑ {ascendantSign}</Text>
+                                </View>
+
+                                {/* Ultra-Compact Planet Grid */}
+                                <View style={styles.miniGridContainer}>
+                                    <Text style={[styles.miniGridTitle, { color: colors.accent }]}>Planets</Text>
+                                    <View style={styles.miniGrid}>
+                                        {natalChart.planets.slice(0, 10).map((planet) => {
+                                            const degree = Math.floor(planet.longitude);
+                                            const minutes = Math.round((planet.longitude - degree) * 60);
+                                            return (
+                                                <View key={`planet-${planet.name}`} style={styles.miniGridItem}>
+                                                    <Text style={[styles.miniGridSymbol, { color: colors.accent }]}>{planet.symbol}</Text>
+                                                    <Text style={[styles.miniGridValue, { color: colors.text }]}>{planet.zodiac.substring(0, 3)}</Text>
+                                                    <Text style={[styles.miniGridDegree, { color: colors.text }]}>{degree}°</Text>
+                                                </View>
+                                            );
+                                        })}
+                                    </View>
+                                </View>
+
+                                {/* Ultra-Compact Houses Grid */}
+                                <View style={styles.miniGridContainer}>
+                                    <Text style={[styles.miniGridTitle, { color: colors.accent }]}>Houses</Text>
+                                    <View style={styles.miniGrid}>
+                                        {natalChart.houses.map((house, idx) => {
+                                            const houseNum = idx + 1;
+                                            const degree = Math.floor(house);
+                                            const zodiac = zodiacSigns[Math.floor(house / 30)];
+                                            return (
+                                                <View key={`house-${idx}`} style={styles.miniGridItem}>
+                                                    <Text style={[styles.miniGridSymbol, { color: colors.accent }]}>H{houseNum}</Text>
+                                                    <Text style={[styles.miniGridValue, { color: colors.text }]}>{zodiac.substring(0, 3)}</Text>
+                                                    <Text style={[styles.miniGridDegree, { color: colors.text }]}>{degree}°</Text>
+                                                </View>
+                                            );
+                                        })}
+                                    </View>
+                                </View>
+
+                                {/* Aspect Summary */}
+                                <View style={[styles.aspectSummary, { backgroundColor: colors.accent, borderColor: colors.accent }]}>
+                                    <Text style={styles.aspectTitle}>Key Aspects</Text>
+                                    <Text style={styles.aspectText}>Analyze major transits and progressions for {babyName}</Text>
+                                </View>
+
+                                {/* RIGHT: Compact Info (Planet & House Data) */}
+                            </View>
                         </View>
                     </View>
                 </View>
-            </View>
 
-            {/* Full-width descriptions below */}
-            <View style={styles.descriptionsSection}>
-                <View style={[styles.readingCard, { borderColor: colors.accent }]}>
-                    <Text style={[styles.readingTitle, { color: colors.accent }]}>
-                        ☉ {sunSign}
-                    </Text>
-                    <Text style={[styles.readingText, { color: colors.text }]}>
-                        {ZODIAC_SUN_DESCRIPTIONS[sunSign] || 'A unique individual with special gifts.'}
-                    </Text>
+                {/* Full-width descriptions below */}
+                <View style={styles.descriptionsSection}>
+                    <View style={[styles.readingCard, { borderColor: colors.accent }]}>
+                        <Text style={[styles.readingTitle, { color: colors.accent }]}>
+                            ☉ {sunSign}
+                        </Text>
+                        <Text style={[styles.readingText, { color: colors.text }]}>
+                            {ZODIAC_SUN_DESCRIPTIONS[sunSign] || 'A unique individual with special gifts.'}
+                        </Text>
+                    </View>
+
+                    <View style={[styles.readingCard, { borderColor: colors.accent }]}>
+                        <Text style={[styles.readingTitle, { color: colors.accent }]}>
+                            ☽ {moonSign}
+                        </Text>
+                        <Text style={[styles.readingText, { color: colors.text }]}>
+                            {ZODIAC_MOON_DESCRIPTIONS[moonSign] || 'Rich emotional depths and sensitivity.'}
+                        </Text>
+                    </View>
+
+                    <View style={[styles.readingCard, { borderColor: colors.accent }]}>
+                        <Text style={[styles.readingTitle, { color: colors.accent }]}>
+                            ↑ {ascendantSign}
+                        </Text>
+                        <Text style={[styles.readingText, { color: colors.text }]}>
+                            {ASCENDANT_DESCRIPTIONS[ascendantSign] || 'A natural presence that draws others in.'}
+                        </Text>
+                    </View>
                 </View>
 
-                <View style={[styles.readingCard, { borderColor: colors.accent }]}>
-                    <Text style={[styles.readingTitle, { color: colors.accent }]}>
-                        ☽ {moonSign}
-                    </Text>
-                    <Text style={[styles.readingText, { color: colors.text }]}>
-                        {ZODIAC_MOON_DESCRIPTIONS[moonSign] || 'Rich emotional depths and sensitivity.'}
-                    </Text>
-                </View>
-
-                <View style={[styles.readingCard, { borderColor: colors.accent }]}>
-                    <Text style={[styles.readingTitle, { color: colors.accent }]}>
-                        ↑ {ascendantSign}
-                    </Text>
-                    <Text style={[styles.readingText, { color: colors.text }]}>
-                        {ASCENDANT_DESCRIPTIONS[ascendantSign] || 'A natural presence that draws others in.'}
-                    </Text>
-                </View>
-            </View>
-
-            <View style={{ height: 40 }} />
-        </ScrollView>
+                <View style={{ height: 40 }} />
+            </ScrollView>
+        </View>
     );
 }
 
@@ -547,6 +621,22 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 12,
+    },
+    infoButton: {
+        position: 'absolute',
+        top: 8,
+        right: 12,
+        zIndex: 10,
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: 'rgba(0,0,0,0.08)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    infoButtonText: {
+        fontSize: 18,
+        color: '#666',
     },
     unifiedChartBox: {
         borderRadius: 12,
