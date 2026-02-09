@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import {
     ScrollView,
     StatusBar,
@@ -14,16 +14,42 @@ import type { RootStackParamList } from '../types';
 type Props = NativeStackScreenProps<RootStackParamList, 'AboutUs'>;
 
 export default function AboutUsScreen({ navigation }: Props) {
+    const [showSecretPortals, setShowSecretPortals] = useState(false);
+    const tapCountRef = useRef(0);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleIconTap = () => {
+        // Clear any existing timeout
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+
+        tapCountRef.current += 1;
+
+        if (tapCountRef.current >= 5) {
+            setShowSecretPortals(true);
+            tapCountRef.current = 0;
+            return;
+        }
+
+        // Reset tap count after 2 seconds of inactivity
+        timeoutRef.current = setTimeout(() => {
+            tapCountRef.current = 0;
+        }, 2000);
+    };
+
     return (
         <LinearGradient colors={['#2d5016', '#3d6b1f']} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#2d5016" />
 
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                {/* Header */}
+                {/* Header - Tap +1 icon 5 times to reveal secret portals */}
                 <View style={styles.headerSection}>
-                    <View style={styles.iconBox}>
-                        <Text style={styles.iconText}>+1</Text>
-                    </View>
+                    <TouchableOpacity onPress={handleIconTap} activeOpacity={0.8}>
+                        <View style={styles.iconBox}>
+                            <Text style={styles.iconText}>+1</Text>
+                        </View>
+                    </TouchableOpacity>
                     <Text style={styles.title}>About Us</Text>
                 </View>
 
@@ -57,6 +83,57 @@ export default function AboutUsScreen({ navigation }: Props) {
                         <Text style={styles.email}>info@populationplusone.com</Text>
                     </View>
                 </View>
+
+                {/* Secret Partner Portals - Hidden until +1 icon tapped 5 times */}
+                {showSecretPortals && (
+                    <View style={styles.secretSection}>
+                        <Text style={styles.secretTitle}>🔐 Partner Portals</Text>
+                        <Text style={styles.secretSubtitle}>Access restricted to authorized partners</Text>
+
+                        <TouchableOpacity
+                            style={styles.portalButton}
+                            onPress={() => navigation.navigate('HospitalLogin')}
+                            activeOpacity={0.85}
+                        >
+                            <Text style={styles.portalEmoji}>🏥</Text>
+                            <View style={styles.portalTextContainer}>
+                                <Text style={styles.portalTitle}>Hospital Partner Portal</Text>
+                                <Text style={styles.portalDesc}>For maternity staff & hospitals</Text>
+                            </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.portalButton}
+                            onPress={() => navigation.navigate('FuneralHomePortal')}
+                            activeOpacity={0.85}
+                        >
+                            <Text style={styles.portalEmoji}>🕊️</Text>
+                            <View style={styles.portalTextContainer}>
+                                <Text style={styles.portalTitle}>Funeral Directors Portal</Text>
+                                <Text style={styles.portalDesc}>Memorial announcement partners</Text>
+                            </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.portalButton}
+                            onPress={() => navigation.navigate('BabyRegistryPortal')}
+                            activeOpacity={0.85}
+                        >
+                            <Text style={styles.portalEmoji}>🎁</Text>
+                            <View style={styles.portalTextContainer}>
+                                <Text style={styles.portalTitle}>Baby Registry Portal</Text>
+                                <Text style={styles.portalDesc}>Registry partner integration</Text>
+                            </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.hideButton}
+                            onPress={() => setShowSecretPortals(false)}
+                        >
+                            <Text style={styles.hideButtonText}>Hide Portals</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
 
                 {/* Back Button */}
                 <View style={styles.buttonSection}>
@@ -154,5 +231,65 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#2d5016',
+    },
+    // Secret portal styles
+    secretSection: {
+        paddingHorizontal: 20,
+        paddingVertical: 24,
+        marginHorizontal: 20,
+        marginBottom: 20,
+        backgroundColor: 'rgba(0,0,0,0.2)',
+        borderRadius: 16,
+        borderWidth: 2,
+        borderColor: 'rgba(255,255,255,0.3)',
+        borderStyle: 'dashed',
+    },
+    secretTitle: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: '#fff',
+        textAlign: 'center',
+        marginBottom: 4,
+    },
+    secretSubtitle: {
+        fontSize: 12,
+        color: 'rgba(255,255,255,0.7)',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    portalButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 12,
+    },
+    portalEmoji: {
+        fontSize: 32,
+        marginRight: 14,
+    },
+    portalTextContainer: {
+        flex: 1,
+    },
+    portalTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#2d5016',
+        marginBottom: 2,
+    },
+    portalDesc: {
+        fontSize: 12,
+        color: '#666',
+    },
+    hideButton: {
+        alignItems: 'center',
+        paddingVertical: 10,
+        marginTop: 8,
+    },
+    hideButtonText: {
+        fontSize: 14,
+        color: 'rgba(255,255,255,0.7)',
+        fontWeight: '600',
     },
 });

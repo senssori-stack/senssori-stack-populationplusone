@@ -74,7 +74,11 @@ export type RootStackParamList = {
     MemorialPreview: MemorialParams;
     MemorialBack: MemorialParams;
     LifeMilestones: undefined;
+    BirthdayForm: undefined;
+    GraduationForm: undefined;
+    AnniversaryForm: undefined;
     JustForFun: undefined;
+    Generations: { birthDate: string };
     LifePathNumber: { birthDate: string };
     LuckyNumbers: { birthDate: string };
     RomanNumerals: { birthDate: string };
@@ -97,4 +101,7 @@ export type RootStackParamList = {
     Test: undefined;
     AboutUs: undefined;
     Sources: undefined;
+    FuneralHomePortal: undefined;
+    BabyRegistryPortal: undefined;
+    RabbitHole: undefined;
 };

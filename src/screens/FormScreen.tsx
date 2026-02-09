@@ -806,79 +806,72 @@ export default function FormScreen({ navigation, route }: Props) {
 }
 
 const styles = StyleSheet.create({
-    page: { flex: 1 },
-    container: { padding: 12, paddingBottom: 24 },
+    page: { flex: 1, backgroundColor: '#f5f5f5' },
+    container: { padding: 20, paddingBottom: 40 },
     h1: {
-        color: "#000000",
-        fontSize: 13,
+        color: "#2d5016",
+        fontSize: 16,
         fontWeight: "700",
-        marginTop: 8,
-        marginBottom: 4,
-        letterSpacing: 0.3
+        marginTop: 16,
+        marginBottom: 8,
     },
     input: {
         backgroundColor: "#FFFFFF",
-        color: "#0a0a0a",
+        color: "#333",
         borderRadius: 8,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        fontSize: 14,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.8)',
+        padding: 12,
+        fontSize: 16,
+        borderWidth: 0,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
-        shadowRadius: 2,
+        shadowRadius: 3,
         elevation: 2
     },
-    row: { flexDirection: "row", gap: 8 },
+    row: { flexDirection: "row", gap: 12 },
     half: { flex: 1 },
     btn: {
-        backgroundColor: "rgba(255,255,255,0.1)",
+        backgroundColor: "#2d5016",
         borderRadius: 8,
-        paddingVertical: 10,
+        paddingVertical: 12,
         alignItems: "center",
-        marginTop: 4,
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.3)"
+        marginTop: 8,
     },
     btnText: {
         color: "white",
-        fontSize: 14,
+        fontSize: 16,
         fontWeight: "600",
-        letterSpacing: 0.2
     },
     buildBtn: {
-        marginTop: 16,
-        backgroundColor: "rgba(255,255,255,0.95)",
+        marginTop: 24,
+        backgroundColor: "#2d5016",
+        paddingVertical: 16,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 4
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+        elevation: 5
     },
     buildText: {
-        color: "#0a0a0a",
+        color: "#fff",
         fontWeight: "800",
-        fontSize: 15,
+        fontSize: 18,
         textAlign: "center",
-        letterSpacing: 0.3
     },
     themeBtn: {
         flex: 1,
-        paddingVertical: 10,
+        paddingVertical: 12,
         borderRadius: 8,
         alignItems: "center",
-        backgroundColor: "rgba(255,255,255,0.1)"
+        backgroundColor: "#e0e0e0"
     },
     themeText: {
-        color: "white",
+        color: "#333",
         fontWeight: "700",
-        fontSize: 13,
-        letterSpacing: 0.2
+        fontSize: 14,
     },
     errorText: {
-        color: '#ffcccc',
+        color: '#d32f2f',
         marginTop: 4,
         fontSize: 12,
         fontStyle: 'italic'
@@ -886,13 +879,15 @@ const styles = StyleSheet.create({
     btnDisabled: { opacity: 0.6 },
     whiteBtn: {
         backgroundColor: '#FFFFFF',
+        borderWidth: 2,
+        borderColor: '#2d5016',
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
+        shadowOpacity: 0.1,
         shadowRadius: 4,
-        elevation: 4
+        elevation: 3
     },
-    darkText: { color: '#0a0a0a' },
+    darkText: { color: '#2d5016' },
     colorBox: {
         flex: 1,
         aspectRatio: 1,

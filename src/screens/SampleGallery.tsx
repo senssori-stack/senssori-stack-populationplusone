@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Image } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList, ThemeName } from '../types';
-import { COLOR_SCHEMES } from '../data/utils/colors';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import SignFrontLandscape from '../../components/SignFrontLandscape';
 import TimeCapsuleLandscape from '../../components/TimeCapsuleLandscape';
+import { COLOR_SCHEMES } from '../data/utils/colors';
 import { calculateLifePath } from '../data/utils/life-path-calculator';
+import type { RootStackParamList, ThemeName } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SampleGallery'>;
 
@@ -63,8 +63,8 @@ export default function SampleGallery({ navigation }: Props) {
         <ScrollView style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <Text style={[styles.title, { color: '#333' }]}>Sample Gallery</Text>
-                <Text style={[styles.subtitle, { color: '#666' }]}>See what your announcement can look like</Text>
+                <Text style={styles.title}>Sample Gallery</Text>
+                <Text style={styles.subtitle}>See what your announcement can look like</Text>
             </View>
 
             {/* Controls */}
@@ -302,50 +302,53 @@ export default function SampleGallery({ navigation }: Props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#1a3a5c',
     },
     header: {
         paddingHorizontal: 20,
-        paddingVertical: 30,
+        paddingVertical: 40,
         alignItems: 'center',
     },
     title: {
-        fontSize: 28,
-        fontWeight: '800',
+        fontSize: 32,
+        fontWeight: '900',
         marginBottom: 8,
+        color: '#fff',
     },
     subtitle: {
         fontSize: 16,
         fontWeight: '500',
+        color: 'rgba(255,255,255,0.8)',
     },
     controls: {
         paddingHorizontal: 20,
-        paddingVertical: 16,
-        gap: 12,
+        paddingVertical: 20,
+        gap: 16,
     },
     buttonGroup: {
         flexDirection: 'row',
-        gap: 8,
+        gap: 12,
         justifyContent: 'center',
     },
     button: {
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        backgroundColor: '#e0e0e0',
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: '#ccc',
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderRadius: 25,
+        borderWidth: 2,
+        borderColor: 'transparent',
     },
     activeButton: {
-        backgroundColor: '#333',
+        backgroundColor: '#fff',
+        borderColor: '#fff',
     },
     buttonText: {
-        color: '#666',
-        fontWeight: '600',
-        fontSize: 14,
+        color: 'rgba(255,255,255,0.8)',
+        fontWeight: '700',
+        fontSize: 16,
     },
     activeButtonText: {
-        color: '#fff',
+        color: '#1a3a5c',
     },
     themeButton: {
         flex: 1,
@@ -356,7 +359,7 @@ const styles = StyleSheet.create({
         borderColor: 'transparent',
     },
     activeThemeButton: {
-        borderColor: '#333',
+        borderColor: '#fff',
     },
     themeButtonText: {
         color: '#fff',
@@ -364,19 +367,19 @@ const styles = StyleSheet.create({
         fontSize: 12,
     },
     colorLabel: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 8,
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#fff',
+        marginBottom: 12,
         textAlign: 'center',
     },
     colorBox: {
         flex: 1,
         aspectRatio: 1,
         height: 12.5,
-        borderRadius: 3,
-        borderWidth: 1,
-        borderColor: '#ffffff',
+        borderRadius: 4,
+        borderWidth: 2,
+        borderColor: 'rgba(255,255,255,0.3)',
         padding: 1.5,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
@@ -388,11 +391,11 @@ const styles = StyleSheet.create({
         paddingVertical: 24,
     },
     previewContainer: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        paddingVertical: 20,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderRadius: 16,
+        borderWidth: 2,
+        borderColor: 'rgba(255,255,255,0.2)',
+        paddingVertical: 24,
         alignItems: 'center',
         minHeight: 400,
         justifyContent: 'center',
@@ -400,56 +403,59 @@ const styles = StyleSheet.create({
     infoSection: {
         paddingHorizontal: 20,
         paddingVertical: 24,
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        marginHorizontal: 20,
+        borderRadius: 16,
+        marginBottom: 20,
     },
     infoTitle: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#333',
-        marginBottom: 16,
+        fontSize: 22,
+        fontWeight: '900',
+        color: '#fff',
+        marginBottom: 20,
     },
     infoItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 12,
-        gap: 12,
+        marginBottom: 14,
+        gap: 14,
     },
     infoBullet: {
-        fontSize: 20,
+        fontSize: 24,
     },
     infoText: {
         flex: 1,
-        color: '#333',
-        fontSize: 14,
+        color: 'rgba(255,255,255,0.9)',
+        fontSize: 15,
         fontWeight: '500',
-        lineHeight: 20,
+        lineHeight: 22,
     },
     ctaButton: {
         marginHorizontal: 20,
         marginVertical: 12,
-        backgroundColor: '#333',
-        paddingVertical: 16,
-        borderRadius: 12,
+        backgroundColor: '#fff',
+        paddingVertical: 18,
+        borderRadius: 14,
         alignItems: 'center',
     },
     ctaButtonText: {
-        color: '#fff',
-        fontWeight: '800',
-        fontSize: 16,
+        color: '#1a3a5c',
+        fontWeight: '900',
+        fontSize: 18,
         letterSpacing: 0.5,
     },
     backButton: {
         marginHorizontal: 20,
         marginVertical: 12,
-        marginBottom: 30,
-        paddingVertical: 12,
+        marginBottom: 40,
+        paddingVertical: 14,
         borderRadius: 12,
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#ccc',
+        backgroundColor: 'rgba(255,255,255,0.15)',
     },
     backButtonText: {
-        color: '#333',
+        color: '#fff',
         fontWeight: '600',
-        fontSize: 14,
+        fontSize: 16,
     },
 });

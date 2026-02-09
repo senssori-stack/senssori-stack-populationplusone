@@ -2,14 +2,20 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import SplashScreen from './components/SplashScreen';
+import AnniversaryFormScreen from './screens/AnniversaryFormScreen';
+import BirthdayFormScreen from './screens/BirthdayFormScreen';
+import GraduationFormScreen from './screens/GraduationFormScreen';
 import HospitalLoginScreen from './screens/HospitalLoginScreen';
 import LifeMilestonesFormScreen from './screens/LifeMilestonesFormScreen';
 import { HospitalProvider } from './src/context/HospitalContext';
 import AboutUsScreen from './src/screens/AboutUsScreen';
+import BabyRegistryPortalScreen from './src/screens/BabyRegistryPortalScreen';
 import BirthstoneScreen from './src/screens/BirthstoneScreen';
 import FamousBirthdaysScreen from './src/screens/FamousBirthdaysScreen';
 import FormScreen from './src/screens/FormScreen';
 import FullAstrologyScreen from './src/screens/FullAstrologyScreen';
+import FuneralHomePortalScreen from './src/screens/FuneralHomePortalScreen';
+import GenerationsScreen from './src/screens/GenerationsScreen';
 import HoroscopeScreen from './src/screens/HoroscopeScreen';
 import JustForFunScreen from './src/screens/JustForFunScreen';
 import LandingScreen from './src/screens/LandingScreen';
@@ -22,6 +28,7 @@ import ObituaryFormScreen from './src/screens/ObituaryFormScreen';
 import OnThisDayScreen from './src/screens/OnThisDayScreen';
 import PreviewScreen from './src/screens/PreviewScreen';
 import PrintServiceScreen from './src/screens/PrintServiceScreen';
+import RabbitHoleScreen from './src/screens/RabbitHoleScreen';
 import RomanNumeralsScreen from './src/screens/RomanNumeralsScreen';
 import SampleGallery from './src/screens/SampleGallery';
 import SourcesScreen from './src/screens/SourcesScreen';
@@ -116,6 +123,36 @@ export default function App() {
                             headerTitleStyle: { fontWeight: 'bold' }
                         }}
                     />
+                    <Stack.Screen
+                        name="BirthdayForm"
+                        component={BirthdayFormScreen}
+                        options={{
+                            headerTitle: 'Birthday Announcement',
+                            headerStyle: { backgroundColor: '#1a472a' },
+                            headerTintColor: '#fff',
+                            headerTitleStyle: { fontWeight: 'bold' }
+                        }}
+                    />
+                    <Stack.Screen
+                        name="GraduationForm"
+                        component={GraduationFormScreen}
+                        options={{
+                            headerTitle: 'Graduation Announcement',
+                            headerStyle: { backgroundColor: '#1a3a5c' },
+                            headerTintColor: '#fff',
+                            headerTitleStyle: { fontWeight: 'bold' }
+                        }}
+                    />
+                    <Stack.Screen
+                        name="AnniversaryForm"
+                        component={AnniversaryFormScreen}
+                        options={{
+                            headerTitle: 'Anniversary Announcement',
+                            headerStyle: { backgroundColor: '#5c3a1a' },
+                            headerTintColor: '#fff',
+                            headerTitleStyle: { fontWeight: 'bold' }
+                        }}
+                    />
                     <Stack.Screen name="Preview" component={PreviewScreen} options={{ headerShown: false }} />
                     <Stack.Screen
                         name="ChartReading"
@@ -135,6 +172,16 @@ export default function App() {
                         options={{
                             headerTitle: 'Just For Fun',
                             headerStyle: { backgroundColor: '#4a148c' },
+                            headerTintColor: '#fff',
+                            headerTitleStyle: { fontWeight: 'bold' }
+                        }}
+                    />
+                    <Stack.Screen
+                        name="Generations"
+                        component={GenerationsScreen}
+                        options={{
+                            headerTitle: 'The Living Generations',
+                            headerStyle: { backgroundColor: '#4a5568' },
                             headerTintColor: '#fff',
                             headerTitleStyle: { fontWeight: 'bold' }
                         }}
@@ -265,6 +312,36 @@ export default function App() {
                         options={{
                             headerTitle: 'Data Sources',
                             headerStyle: { backgroundColor: '#2d5016' },
+                            headerTintColor: '#fff',
+                            headerTitleStyle: { fontWeight: 'bold' }
+                        }}
+                    />
+                    <Stack.Screen
+                        name="FuneralHomePortal"
+                        component={FuneralHomePortalScreen}
+                        options={{
+                            headerTitle: 'Funeral Directors Portal',
+                            headerStyle: { backgroundColor: '#1a1a2e' },
+                            headerTintColor: '#fff',
+                            headerTitleStyle: { fontWeight: 'bold' }
+                        }}
+                    />
+                    <Stack.Screen
+                        name="BabyRegistryPortal"
+                        component={BabyRegistryPortalScreen}
+                        options={{
+                            headerTitle: 'Baby Registry Portal',
+                            headerStyle: { backgroundColor: '#ff9a9e' },
+                            headerTintColor: '#333',
+                            headerTitleStyle: { fontWeight: 'bold' }
+                        }}
+                    />
+                    <Stack.Screen
+                        name="RabbitHole"
+                        component={RabbitHoleScreen}
+                        options={{
+                            headerTitle: '🐰 Rabbit Hole',
+                            headerStyle: { backgroundColor: '#302b63' },
                             headerTintColor: '#fff',
                             headerTitleStyle: { fontWeight: 'bold' }
                         }}

@@ -687,35 +687,26 @@ export default function TimeCapsuleLandscape(props: Props) {
 
                     {/* Data rows with THEN and NOW columns */}
                     <View style={{ width: '100%', alignSelf: 'center', marginTop: padding * 1.6, paddingHorizontal: padding * 0.3 }}>
-                        {/* Row with City, ST | Coordinates | Flag (centered) | Governor */}
-                        <View style={{
-                            width: '100%',
+                        {/* Row with City, ST | Coordinates | Flag (over THEN) | Governor */}
+                        <View style={[styles.row, {
                             paddingVertical: Math.round(displayHeight * 0.003),
-                            paddingHorizontal: 8,
-                            backgroundColor: 'transparent',
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
                             borderBottomWidth: 1.5,
                             borderBottomColor: colors.border || '#FFFFFF',
-                            position: 'relative'
-                        }}>
-                            {/* City, ST on far left - aligned with data labels below */}
-                            <View style={[styles.label, { alignItems: 'flex-start', width: mode === 'baby' ? '50%' : '40%' }]}>
+                            backgroundColor: 'transparent'
+                        }]}>
+                            {/* City, ST + Coordinates on left - aligned with label column */}
+                            <View style={{ width: '40%', flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={{ fontSize: labelSize * 0.85, color: colors.text, fontWeight: '700' }}>
                                     {toTitleCase(hometown)}
                                 </Text>
-                            </View>
-                            {/* Coordinates positioned between city and flag */}
-                            <View style={{ position: 'absolute', left: '20%', width: '25%', alignItems: 'center', justifyContent: 'center' }}>
                                 {coordinates ? (
-                                    <Text style={{ fontSize: labelSize, color: colors.text, fontWeight: '700' }}>
+                                    <Text style={{ fontSize: labelSize * 0.7, color: colors.text, fontWeight: '700', marginLeft: 12 }}>
                                         {coordinates}
                                     </Text>
                                 ) : null}
                             </View>
-                            {/* Flag centered on page */}
-                            <View style={{ position: 'absolute', left: '50%', transform: [{ translateX: '-50%' }], alignItems: 'center', justifyContent: 'center' }}>
+                            {/* Flag centered over THEN column (or where THEN would be for baby mode) */}
+                            <View style={{ width: '20%', alignItems: 'center', justifyContent: 'center' }}>
                                 {stateCode && (
                                     <Pressable
                                         onPress={() => {
@@ -735,7 +726,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                                 )}
                             </View>
                             {/* Governor on far right - aligned with NOW column */}
-                            <View style={{ width: mode === 'baby' ? '50%' : '40%', alignItems: 'flex-end', justifyContent: 'center' }}>
+                            <View style={{ width: '40%', alignItems: 'flex-end', justifyContent: 'center' }}>
                                 <Text style={{ fontSize: labelSize, color: colors.text, fontWeight: '500' }}>
                                     Gov {currentGovernor}
                                 </Text>
@@ -749,7 +740,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                             borderBottomColor: colors.border || '#FFFFFF',
                             backgroundColor: 'transparent'
                         }]}>
-                            <Text style={[styles.label, { fontSize: labelSize * 0.9, color: colors.text, width: mode === 'baby' ? '50%' : '40%', fontWeight: '900' }]}>
+                            <Text style={[styles.label, { fontSize: labelSize * 0.9, color: colors.text, width: '40%', fontWeight: '900' }]}>
                                 {/* Empty space for label column */}
                             </Text>
                             {mode !== 'baby' && (
@@ -757,7 +748,10 @@ export default function TimeCapsuleLandscape(props: Props) {
                                     THEN
                                 </Text>
                             )}
-                            <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, width: mode === 'baby' ? '50%' : '40%', textAlign: 'right', fontWeight: '900' }]}>
+                            {mode === 'baby' && (
+                                <View style={{ width: '20%' }} />
+                            )}
+                            <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, width: '40%', textAlign: 'right', fontWeight: '900' }]}>
                                 NOW
                             </Text>
                         </View>
@@ -778,23 +772,13 @@ export default function TimeCapsuleLandscape(props: Props) {
                                 if (nowMatch) nowRomanNumeral = nowMatch[1];
                             }
 
-                            // Shrink font for rows with long text (like #1 Song)
-                            const isSongRow = emoji === '🎵';
-                            const maxTextLength = Math.max(thenValue.length, nowValue.length);
-                            let rowValueSize = valueSize;
-                            if (isSongRow || maxTextLength > 30) {
-                                rowValueSize = valueSize * 0.7;
-                            } else if (maxTextLength > 25) {
-                                rowValueSize = valueSize * 0.85;
-                            }
-
                             return (
                                 <View key={label} style={[styles.row, {
                                     paddingVertical: Math.round(displayHeight * 0.004),
                                     borderBottomWidth: 0.8,
                                     borderBottomColor: colors.border || '#FFFFFF'
                                 }]}>
-                                    <View style={[styles.label, { fontSize: labelSize, color: colors.text, width: mode === 'baby' ? '50%' : '40%', flexDirection: 'row', alignItems: 'center' }]}>
+                                    <View style={[styles.label, { fontSize: labelSize, color: colors.text, width: '40%', flexDirection: 'row', alignItems: 'center' }]}>
                                         <Text style={{ fontSize: labelSize, color: colors.text }}>
                                             {labelText}
                                         </Text>
@@ -805,11 +789,22 @@ export default function TimeCapsuleLandscape(props: Props) {
                                         />
                                     </View>
                                     {mode !== 'baby' && (
-                                        <Text style={[styles.value, { fontSize: rowValueSize, color: colors.text, width: '20%', textAlign: 'center' }]} numberOfLines={1} adjustsFontSizeToFit>
+                                        <Text
+                                            style={[styles.value, {
+                                                fontSize: valueSize,
+                                                color: colors.text,
+                                                width: '20%',
+                                                textAlign: 'center'
+                                            }]}
+                                            numberOfLines={1}
+                                        >
                                             {thenRomanNumeral ? `${thenRomanNumeral} ` : ''}{thenValue}
                                         </Text>
                                     )}
-                                    <Text style={[styles.value, { fontSize: rowValueSize, color: colors.text, width: mode === 'baby' ? '50%' : '40%', textAlign: 'right' }]} numberOfLines={1} adjustsFontSizeToFit>
+                                    {mode === 'baby' && (
+                                        <View style={{ width: '20%' }} />
+                                    )}
+                                    <Text style={[styles.value, { fontSize: valueSize, color: colors.text, width: '40%', textAlign: 'right' }]} numberOfLines={1}>
                                         {nowRomanNumeral ? `${nowRomanNumeral} ` : ''}{nowValue}
                                     </Text>
                                 </View>

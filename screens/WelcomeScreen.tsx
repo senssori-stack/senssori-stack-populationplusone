@@ -72,6 +72,57 @@ export default function WelcomeScreen({ navigation }: any) {
                     </View>
                 </TouchableOpacity>
 
+                {/* Birthday Announcement Button */}
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => navigation.navigate('BirthdayForm')}
+                >
+                    <View style={styles.buttonContent}>
+                        <Text style={styles.buttonEmoji}>🎂</Text>
+                        <View style={styles.buttonText}>
+                            <Text style={styles.buttonTitle}>Create A Birthday Announcement</Text>
+                            <Text style={styles.buttonDescription}>
+                                Sweet 16, 21st Birthday, Over the Hill & more!
+                            </Text>
+                        </View>
+                        <Text style={styles.arrow}>→</Text>
+                    </View>
+                </TouchableOpacity>
+
+                {/* Graduation Announcement Button */}
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => navigation.navigate('GraduationForm')}
+                >
+                    <View style={styles.buttonContent}>
+                        <Text style={styles.buttonEmoji}>🎓</Text>
+                        <View style={styles.buttonText}>
+                            <Text style={styles.buttonTitle}>Create A Graduation Announcement</Text>
+                            <Text style={styles.buttonDescription}>
+                                High School, College, Technical/Trade School!
+                            </Text>
+                        </View>
+                        <Text style={styles.arrow}>→</Text>
+                    </View>
+                </TouchableOpacity>
+
+                {/* Anniversary Announcement Button */}
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => navigation.navigate('AnniversaryForm')}
+                >
+                    <View style={styles.buttonContent}>
+                        <Text style={styles.buttonEmoji}>💍</Text>
+                        <View style={styles.buttonText}>
+                            <Text style={styles.buttonTitle}>Create An Anniversary Announcement</Text>
+                            <Text style={styles.buttonDescription}>
+                                Celebrate your special milestones together!
+                            </Text>
+                        </View>
+                        <Text style={styles.arrow}>→</Text>
+                    </View>
+                </TouchableOpacity>
+
                 {/* Life Milestones Button */}
                 <TouchableOpacity
                     style={styles.button}
@@ -82,7 +133,7 @@ export default function WelcomeScreen({ navigation }: any) {
                         <View style={styles.buttonText}>
                             <Text style={styles.buttonTitle}>Life Milestones</Text>
                             <Text style={styles.buttonDescription}>
-                                Birthday, Sweet 16, Graduation, Anniversary & more!
+                                Other milestone announcements & more!
                             </Text>
                         </View>
                         <Text style={styles.arrow}>→</Text>

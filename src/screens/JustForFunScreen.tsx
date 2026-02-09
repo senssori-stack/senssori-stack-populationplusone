@@ -1,7 +1,7 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Dimensions,
     ScrollView,
@@ -738,6 +738,15 @@ export default function JustForFunScreen({ navigation }: Props) {
                         {!birthLocation && (
                             <Text style={styles.recommendNotice}>💡 Enter birth time & location above for best results</Text>
                         )}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.featureButton}
+                        onPress={() => navigation.navigate('Generations', { birthDate: birthDate.toISOString() })}
+                    >
+                        <Text style={styles.featureEmoji}>👨‍👩‍👧‍👦</Text>
+                        <Text style={styles.featureTitle}>What Generation Am I?</Text>
+                        <Text style={styles.featureDesc}>Greatest to Alpha - explore all 7 generations!</Text>
                     </TouchableOpacity>
                 </View>
 
