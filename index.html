@@ -11,7 +11,8 @@
         content="population plus one, population +1, +1, birth announcement app, digital birth announcement, baby time capsule, newborn keepsake, personalized baby announcement, baby milestone app, new baby gift, family history app, baby memory book, birth stats sign, custom baby sign, baby announcement ideas, unique birth announcement, baby arrival announcement, baby photo announcement">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -19,118 +20,249 @@
             box-sizing: border-box;
         }
 
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-20px) rotate(5deg);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #2d5016 0%, #3d6b1f 100%);
+            background: linear-gradient(-45deg, #1a3d0c, #2d5016, #3d6b1f, #4a7c2c, #2d5016);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
             min-height: 100vh;
             color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Floating background elements */
+        .bg-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .bg-shape {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .bg-shape:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .bg-shape:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            top: 50%;
+            right: -50px;
+            animation-delay: -2s;
+        }
+
+        .bg-shape:nth-child(3) {
+            width: 150px;
+            height: 150px;
+            bottom: 20%;
+            left: 10%;
+            animation-delay: -4s;
+        }
+
+        .bg-shape:nth-child(4) {
+            width: 250px;
+            height: 250px;
+            bottom: -100px;
+            right: 20%;
+            animation-delay: -6s;
         }
 
         .container {
-            max-width: 500px;
+            max-width: 560px;
             margin: 0 auto;
-            padding: 40px 16px;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
         }
 
         .hero-section {
-            min-height: 50vh;
+            min-height: 60vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 40px 20px;
+            padding: 60px 20px;
             text-align: center;
+            animation: slideUp 1s ease-out;
         }
 
         .icon-box {
-            width: 120px;
-            height: 120px;
-            background: #4a7c2c;
-            border-radius: 24px;
+            width: 140px;
+            height: 140px;
+            background: linear-gradient(145deg, #4a7c2c, #3d6b1f);
+            border-radius: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 3px solid #fff;
-            margin-bottom: 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 4px solid rgba(255, 255, 255, 0.9);
+            margin-bottom: 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 40px rgba(74, 124, 44, 0.4);
+            animation: pulse 3s ease-in-out infinite;
         }
 
         .icon-text {
-            font-size: 56px;
-            font-weight: 700;
+            font-size: 64px;
+            font-weight: 900;
             color: #fff;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
         .main-title {
-            font-size: 38px;
-            font-weight: 700;
+            font-size: 48px;
+            font-weight: 900;
             color: #fff;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            letter-spacing: -1px;
         }
 
         .tagline {
-            font-size: 16px;
-            color: #fff;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.95);
             margin-bottom: 8px;
-            font-weight: 500;
-            margin-top: 12px;
+            font-weight: 600;
+            margin-top: 16px;
         }
 
         .tagline-second {
             font-size: 14px;
-            color: #fff;
+            color: rgba(255, 255, 255, 0.8);
             font-weight: 500;
             margin-top: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
         .content-section {
-            padding: 32px 0;
+            padding: 40px 0;
+            animation: slideUp 1s ease-out 0.2s both;
         }
 
         .section-title {
-            font-size: 22px;
-            font-weight: 700;
+            font-size: 26px;
+            font-weight: 800;
             color: #fff;
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
+        /* Glassmorphism cards */
         .card-button {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             border-radius: 20px;
             overflow: hidden;
-            background: #fff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.5);
             text-decoration: none;
             display: block;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .card-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
         }
 
         .card-content {
             display: flex;
             align-items: center;
-            padding: 10px 13px;
+            padding: 16px 18px;
         }
 
         .card-icon-box {
-            width: 46px;
-            height: 46px;
-            background: #f0f0f0;
-            border-radius: 10px;
+            width: 54px;
+            height: 54px;
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 10px;
+            margin-right: 14px;
             flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
         .card-emoji {
-            font-size: 23px;
+            font-size: 26px;
         }
 
         .card-text-container {
@@ -138,71 +270,89 @@
         }
 
         .card-title {
-            font-size: 12px;
+            font-size: 15px;
             font-weight: 700;
             color: #2d5016;
             margin-bottom: 4px;
         }
 
         .card-description {
-            font-size: 9px;
+            font-size: 12px;
             color: #666;
-            line-height: 13px;
+            line-height: 1.4;
         }
 
         .card-arrow {
-            font-size: 13px;
+            font-size: 16px;
             color: #2d5016;
             font-weight: 700;
-            margin-left: 5px;
+            margin-left: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .card-button:hover .card-arrow {
+            transform: translateX(4px);
         }
 
         .features-section {
-            padding: 32px 0;
+            padding: 40px 0;
+            animation: slideUp 1s ease-out 0.4s both;
         }
 
         .features-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-top: 24px;
+            gap: 14px;
+            margin-top: 28px;
         }
 
         .feature-item {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 16px 8px;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px 12px;
             text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-4px);
         }
 
         .feature-icon {
-            font-size: 24px;
-            margin-bottom: 8px;
+            font-size: 28px;
+            margin-bottom: 10px;
         }
 
         .feature-title {
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 600;
             color: #fff;
         }
 
         .cta-section {
             background: rgba(255, 255, 255, 0.15);
-            border-radius: 24px;
-            padding: 32px 24px;
-            margin: 32px 0;
+            backdrop-filter: blur(20px);
+            border-radius: 28px;
+            padding: 40px 28px;
+            margin: 40px 0;
             text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
         }
 
         .cta-section h2 {
-            font-size: 20px;
-            margin-bottom: 20px;
+            font-size: 24px;
+            margin-bottom: 24px;
             color: #fff;
+            font-weight: 800;
         }
 
         .store-buttons {
             display: flex;
-            gap: 12px;
+            gap: 14px;
             justify-content: center;
             flex-wrap: wrap;
         }
@@ -211,24 +361,25 @@
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            background: white;
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
             color: #2d5016;
-            padding: 12px 24px;
-            border-radius: 12px;
+            padding: 14px 28px;
+            border-radius: 14px;
             text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 700;
+            font-size: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .store-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
         .store-btn svg {
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
         }
 
         .store-btn.disabled {
@@ -237,14 +388,15 @@
         }
 
         .how-section {
-            padding: 32px 0;
+            padding: 40px 0;
+            animation: slideUp 1s ease-out 0.6s both;
         }
 
         .steps {
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            margin-top: 24px;
+            gap: 18px;
+            margin-top: 28px;
         }
 
         .step {
@@ -309,32 +461,306 @@
             text-decoration: underline;
         }
 
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .step:hover {
+            background: rgba(255, 255, 255, 0.18);
+            transform: translateX(8px);
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            color: #2d5016;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 16px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .step-content h3 {
+            font-size: 16px;
+            margin-bottom: 6px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .step-content p {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .footer-section {
+            text-align: center;
+            padding: 32px 0;
+            animation: slideUp 1s ease-out 0.8s both;
+        }
+
+        .footer-text {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .footer-links {
+            margin-top: 16px;
+            font-size: 13px;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            margin: 0 12px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #fff;
+        }
+
+        /* Just For Fun Interactive Section */
+        .fun-section {
+            background: linear-gradient(145deg, rgba(74, 20, 140, 0.3), rgba(123, 31, 162, 0.3));
+            backdrop-filter: blur(20px);
+            border-radius: 28px;
+            padding: 40px 24px;
+            margin: 40px 0;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            animation: slideUp 1s ease-out 0.5s both;
+        }
+
+        .fun-section h2 {
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 8px;
+            font-weight: 800;
+        }
+
+        .fun-subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 28px;
+            font-size: 14px;
+        }
+
+        .date-input-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .date-input {
+            padding: 14px 24px;
+            font-size: 16px;
+            border-radius: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .date-input::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
+        .fun-results {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .fun-results.active {
+            display: flex;
+        }
+
+        .fun-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            animation: slideUp 0.5s ease-out both;
+        }
+
+        .fun-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .fun-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .fun-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .fun-card:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .fun-card:nth-child(5) {
+            animation-delay: 0.5s;
+        }
+
+        .fun-card:nth-child(6) {
+            animation-delay: 0.6s;
+        }
+
+        .fun-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .fun-card-icon {
+            font-size: 28px;
+        }
+
+        .fun-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #4a148c;
+        }
+
+        .fun-card-content {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .fun-card-big {
+            font-size: 32px;
+            font-weight: 800;
+            color: #4a148c;
+            margin-bottom: 8px;
+        }
+
+        .lucky-numbers {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .lucky-ball {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(145deg, #4a148c, #7b1fa2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 4px 12px rgba(74, 20, 140, 0.4);
+        }
+
+        .roman-display {
+            font-family: 'Times New Roman', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #4a148c;
+            letter-spacing: 3px;
+            text-align: center;
+            padding: 16px;
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            margin-top: 8px;
+        }
+
+        .zodiac-symbol {
+            font-size: 48px;
+            margin-right: 16px;
+        }
+
+        .birthstone-gem {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
         @media (max-width: 500px) {
             .main-title {
-                font-size: 32px;
+                font-size: 36px;
             }
 
             .features-grid {
                 grid-template-columns: repeat(2, 1fr);
+            }
+
+            .fun-section {
+                padding: 28px 16px;
+            }
+
+            .lucky-ball {
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
             }
         }
     </style>
 </head>
 
 <body>
+    <!-- Floating background shapes -->
+    <div class="bg-shapes">
+        <div class="bg-shape"></div>
+        <div class="bg-shape"></div>
+        <div class="bg-shape"></div>
+        <div class="bg-shape"></div>
+    </div>
+
     <div class="container">
         <div class="hero-section">
             <div class="icon-box"><span class="icon-text">+1</span></div>
             <h1 class="main-title">Population +1</h1>
             <p class="tagline">Welcome to The +1 Announcement App Creator Studio!</p>
-            <p class="tagline-second">CREATE - EDUCATE - GIFT - REMINISCE</p>
+            <p class="tagline-second">CREATE • EDUCATE • GIFT • REMINISCE</p>
             <p class="tagline-second">ENCAPSULATE MAJOR LIFE MILESTONES THAT WILL ENDURE THE TEST OF TIME!</p>
         </div>
+
         <div class="content-section">
             <h2 class="section-title">What would you like to create?</h2>
             <a href="#download" class="card-button">
                 <div class="card-content">
-                    <div class="card-icon-box"><span class="card-emoji">�</span></div>
+                    <div class="card-icon-box"><span class="card-emoji">👀</span></div>
                     <div class="card-text-container">
                         <div class="card-title">Sample Signs</div>
                         <div class="card-description">Browse our gallery of sample announcements and time capsules!
@@ -364,26 +790,15 @@
                     <span class="card-arrow">→</span>
                 </div>
             </a>
-            <a href="#download" class="card-button" style="opacity: 0.6; pointer-events: none;">
+            <a href="#fun-section" class="card-button" style="background: linear-gradient(145deg, #f3e5f5, #e1bee7);">
                 <div class="card-content">
-                    <div class="card-icon-box"><span class="card-emoji">🕊️</span></div>
+                    <div class="card-icon-box" style="background: linear-gradient(145deg, #ce93d8, #ab47bc);"><span
+                            class="card-emoji">🎲</span></div>
                     <div class="card-text-container">
-                        <div class="card-title">-1 Memorial Announcement</div>
-                        <div class="card-description">Coming March 1, 2026</div>
+                        <div class="card-title" style="color: #4a148c;">Just For Fun!</div>
+                        <div class="card-description">Life Path Numbers, Lucky Numbers, Zodiac, Birthstone & more!</div>
                     </div>
-                    <span class="card-arrow">→</span>
-                </div>
-            </a>
-            <div style="height: 16px;"></div>
-            <a href="#download" class="card-button">
-                <div class="card-content">
-                    <div class="card-icon-box"><span class="card-emoji">🎲</span></div>
-                    <div class="card-text-container">
-                        <div class="card-title">Just For Fun!</div>
-                        <div class="card-description">Life Path Numbers, Lucky Numbers, Horoscope, Natal Charts & more!
-                        </div>
-                    </div>
-                    <span class="card-arrow">→</span>
+                    <span class="card-arrow" style="color: #4a148c;">→</span>
                 </div>
             </a>
             <a href="#about" class="card-button">
@@ -450,6 +865,94 @@
                 </div>
             </div>
         </div>
+
+        <!-- Interactive Just For Fun Section -->
+        <div id="fun-section" class="fun-section">
+            <h2>🎲 Just For Fun!</h2>
+            <p class="fun-subtitle">Enter your birthday to discover fun facts about YOU</p>
+
+            <div class="date-input-container">
+                <input type="date" id="funDate" class="date-input" value="2000-01-01">
+            </div>
+
+            <div id="funResults" class="fun-results">
+                <!-- Life Path Number -->
+                <div class="fun-card">
+                    <div class="fun-card-header">
+                        <span class="fun-card-icon">🔢</span>
+                        <span class="fun-card-title">Life Path Number</span>
+                    </div>
+                    <div class="fun-card-big" id="lifePathNumber">1</div>
+                    <div class="fun-card-content" id="lifePathMeaning">Loading...</div>
+                </div>
+
+                <!-- Zodiac Sign -->
+                <div class="fun-card">
+                    <div class="fun-card-header">
+                        <span class="zodiac-symbol" id="zodiacSymbol">♈</span>
+                        <div>
+                            <div class="fun-card-title" id="zodiacSign">Aries</div>
+                            <div style="color: #666; font-size: 12px;" id="zodiacElement">Fire Sign</div>
+                        </div>
+                    </div>
+                    <div class="fun-card-content" id="zodiacTraits">Loading...</div>
+                </div>
+
+                <!-- Birthstone -->
+                <div class="fun-card">
+                    <div class="fun-card-header">
+                        <div class="birthstone-gem" id="birthstoneGem" style="background: #8B0000;">💎</div>
+                        <div>
+                            <div class="fun-card-title" id="birthstoneName">Garnet</div>
+                            <div style="color: #666; font-size: 12px;">Your birthstone</div>
+                        </div>
+                    </div>
+                    <div class="fun-card-content" id="birthstoneMeaning">Loading...</div>
+                </div>
+
+                <!-- Lucky Numbers -->
+                <div class="fun-card">
+                    <div class="fun-card-header">
+                        <span class="fun-card-icon">🍀</span>
+                        <span class="fun-card-title">Your Lucky Numbers</span>
+                    </div>
+                    <div class="lucky-numbers" id="luckyNumbers">
+                        <div class="lucky-ball">7</div>
+                        <div class="lucky-ball">14</div>
+                        <div class="lucky-ball">21</div>
+                        <div class="lucky-ball">28</div>
+                        <div class="lucky-ball">35</div>
+                        <div class="lucky-ball">42</div>
+                    </div>
+                    <p style="color: #888; font-size: 11px; margin-top: 12px; font-style: italic;">*For entertainment
+                        purposes only</p>
+                </div>
+
+                <!-- Roman Numerals -->
+                <div class="fun-card">
+                    <div class="fun-card-header">
+                        <span class="fun-card-icon">📜</span>
+                        <span class="fun-card-title">Your Birthday in Roman Numerals</span>
+                    </div>
+                    <div class="roman-display" id="romanNumerals">I•I•MM</div>
+                </div>
+
+                <!-- Day of Week -->
+                <div class="fun-card">
+                    <div class="fun-card-header">
+                        <span class="fun-card-icon">📅</span>
+                        <span class="fun-card-title">Day You Were Born</span>
+                    </div>
+                    <div class="fun-card-big" id="dayOfWeek">Saturday</div>
+                    <div class="fun-card-content" id="dayMeaning">Loading...</div>
+                </div>
+            </div>
+
+            <p style="text-align: center; margin-top: 24px; color: rgba(255,255,255,0.7); font-size: 13px;">
+                ✨ Download the app for Natal Charts, Famous Birthdays, Then & Now comparisons, and more!
+            </p>
+        </div>
+
         <div id="download" class="cta-section">
             <h2>Download the App</h2>
             <div class="store-buttons">
@@ -513,6 +1016,214 @@
             <p class="footer-text" style="margin-top: 16px;">© 2026 Population +1</p>
         </div>
     </div>
+
+    <script>
+        // Life Path Number calculation
+        function calculateLifePathNumber(date) {
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const year = date.getFullYear();
+
+            const reduceToSingle = (num) => {
+                while (num > 9 && num !== 11 && num !== 22 && num !== 33) {
+                    num = num.toString().split('').reduce((a, b) => a + parseInt(b), 0);
+                }
+                return num;
+            };
+
+            const monthNum = reduceToSingle(month);
+            const dayNum = reduceToSingle(day);
+            const yearNum = reduceToSingle(year);
+            let lifePathNum = reduceToSingle(monthNum + dayNum + yearNum);
+
+            const meanings = {
+                1: "The Leader - Independent, ambitious, and driven. You're a natural pioneer who forges new paths.",
+                2: "The Peacemaker - Diplomatic, intuitive, and cooperative. You bring harmony to relationships.",
+                3: "The Communicator - Creative, expressive, and joyful. You inspire others with your artistic gifts.",
+                4: "The Builder - Practical, organized, and hardworking. You create lasting foundations.",
+                5: "The Freedom Seeker - Adventurous, dynamic, and versatile. You embrace change and new experiences.",
+                6: "The Nurturer - Loving, responsible, and protective. You care deeply for family and community.",
+                7: "The Seeker - Analytical, spiritual, and introspective. You search for deeper truths.",
+                8: "The Powerhouse - Ambitious, authoritative, and successful. You manifest abundance.",
+                9: "The Humanitarian - Compassionate, generous, and wise. You serve the greater good.",
+                11: "The Master Intuitive - Highly intuitive and spiritually aware. You're a visionary and inspirer.",
+                22: "The Master Builder - Capable of turning dreams into reality on a grand scale.",
+                33: "The Master Teacher - A rare soul devoted to uplifting humanity through love and service."
+            };
+
+            return { number: lifePathNum, meaning: meanings[lifePathNum] || "A unique and special soul!" };
+        }
+
+        // Zodiac Sign
+        function getZodiacSign(date) {
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+
+            const zodiacSigns = [
+                { sign: 'Capricorn', symbol: '♑', element: 'Earth', traits: 'Ambitious, disciplined, patient, and practical' },
+                { sign: 'Aquarius', symbol: '♒', element: 'Air', traits: 'Independent, original, humanitarian, and inventive' },
+                { sign: 'Pisces', symbol: '♓', element: 'Water', traits: 'Compassionate, artistic, intuitive, and gentle' },
+                { sign: 'Aries', symbol: '♈', element: 'Fire', traits: 'Courageous, energetic, confident, and enthusiastic' },
+                { sign: 'Taurus', symbol: '♉', element: 'Earth', traits: 'Reliable, patient, devoted, and responsible' },
+                { sign: 'Gemini', symbol: '♊', element: 'Air', traits: 'Gentle, curious, adaptable, and quick learner' },
+                { sign: 'Cancer', symbol: '♋', element: 'Water', traits: 'Tenacious, loyal, emotional, and sympathetic' },
+                { sign: 'Leo', symbol: '♌', element: 'Fire', traits: 'Creative, passionate, generous, and warm-hearted' },
+                { sign: 'Virgo', symbol: '♍', element: 'Earth', traits: 'Loyal, analytical, kind, and hardworking' },
+                { sign: 'Libra', symbol: '♎', element: 'Air', traits: 'Cooperative, diplomatic, fair, and social' },
+                { sign: 'Scorpio', symbol: '♏', element: 'Water', traits: 'Resourceful, brave, passionate, and stubborn' },
+                { sign: 'Sagittarius', symbol: '♐', element: 'Fire', traits: 'Generous, idealistic, great humor, and adventurous' }
+            ];
+
+            if ((month === 1 && day <= 19) || (month === 12 && day >= 22)) return zodiacSigns[0];
+            if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return zodiacSigns[1];
+            if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) return zodiacSigns[2];
+            if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return zodiacSigns[3];
+            if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return zodiacSigns[4];
+            if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return zodiacSigns[5];
+            if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return zodiacSigns[6];
+            if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return zodiacSigns[7];
+            if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return zodiacSigns[8];
+            if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return zodiacSigns[9];
+            if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return zodiacSigns[10];
+            return zodiacSigns[11];
+        }
+
+        // Birthstone
+        function getBirthstone(date) {
+            const month = date.getMonth();
+            const birthstones = [
+                { name: 'Garnet', color: '#8B0000', meaning: 'Protection, friendship, and trust. Garnets inspire love and devotion.', emoji: '❤️' },
+                { name: 'Amethyst', color: '#9966CC', meaning: 'Peace, courage, and stability. Amethyst calms the mind and spirit.', emoji: '💜' },
+                { name: 'Aquamarine', color: '#7FFFD4', meaning: 'Serenity, clarity, and harmony. Aquamarine soothes and cleanses.', emoji: '💎' },
+                { name: 'Diamond', color: '#B9F2FF', meaning: 'Eternal love, strength, and invincibility. The king of gems.', emoji: '💍' },
+                { name: 'Emerald', color: '#50C878', meaning: 'Rebirth, love, and wisdom. Emeralds bring good fortune.', emoji: '💚' },
+                { name: 'Pearl', color: '#FDEEF4', meaning: 'Purity, innocence, and integrity. Pearls symbolize new beginnings.', emoji: '🦪' },
+                { name: 'Ruby', color: '#E0115F', meaning: 'Passion, protection, and prosperity. Rubies ignite the fire within.', emoji: '❣️' },
+                { name: 'Peridot', color: '#AAFF00', meaning: 'Strength, healing, and harmony. Peridot brings good health.', emoji: '💚' },
+                { name: 'Sapphire', color: '#0F52BA', meaning: 'Wisdom, virtue, and good fortune. Sapphires protect loved ones.', emoji: '💙' },
+                { name: 'Opal', color: '#A8C3BC', meaning: 'Hope, creativity, and innocence. Opals amplify emotions.', emoji: '🌈' },
+                { name: 'Topaz', color: '#FFC87C', meaning: 'Love, affection, and strength. Topaz brings joy and abundance.', emoji: '🧡' },
+                { name: 'Turquoise', color: '#40E0D0', meaning: 'Luck, success, and protection. Turquoise is a master healer.', emoji: '💠' }
+            ];
+            return birthstones[month];
+        }
+
+        // Lucky Numbers
+        function getLuckyNumbers(date) {
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const year = date.getFullYear();
+            const today = new Date();
+            const todayNum = today.getDate() + today.getMonth() + 1;
+
+            const seed = (month * day * year + todayNum) % 100000;
+            const numbers = [];
+            let current = seed;
+
+            for (let i = 0; i < 6; i++) {
+                current = (current * 9301 + 49297) % 233280;
+                numbers.push((current % 49) + 1);
+            }
+
+            const unique = [...new Set(numbers)];
+            while (unique.length < 6) {
+                unique.push((unique[unique.length - 1] * 7 % 49) + 1);
+            }
+
+            return unique.slice(0, 6).sort((a, b) => a - b);
+        }
+
+        // Roman Numerals
+        function toRomanNumerals(date) {
+            const romanize = (num) => {
+                const romanNumerals = [
+                    [1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
+                    [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
+                    [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
+                ];
+
+                let result = '';
+                for (const [value, symbol] of romanNumerals) {
+                    while (num >= value) {
+                        result += symbol;
+                        num -= value;
+                    }
+                }
+                return result;
+            };
+
+            const month = romanize(date.getMonth() + 1);
+            const day = romanize(date.getDate());
+            const year = romanize(date.getFullYear());
+
+            return `${month}•${day}•${year}`;
+        }
+
+        // Day of Week
+        function getDayOfWeek(date) {
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const meanings = {
+                'Sunday': "Sunday's child is bonny and blithe, and good and gay.",
+                'Monday': "Monday's child is fair of face.",
+                'Tuesday': "Tuesday's child is full of grace.",
+                'Wednesday': "Wednesday's child is full of woe.",
+                'Thursday': "Thursday's child has far to go.",
+                'Friday': "Friday's child is loving and giving.",
+                'Saturday': "Saturday's child works hard for a living."
+            };
+            const dayName = days[date.getDay()];
+            return { day: dayName, meaning: meanings[dayName] };
+        }
+
+        // Update all values
+        function updateFunFacts() {
+            const dateInput = document.getElementById('funDate');
+            const date = new Date(dateInput.value + 'T12:00:00');
+
+            // Show results
+            document.getElementById('funResults').classList.add('active');
+
+            // Life Path
+            const lifePath = calculateLifePathNumber(date);
+            document.getElementById('lifePathNumber').textContent = lifePath.number;
+            document.getElementById('lifePathMeaning').textContent = lifePath.meaning;
+
+            // Zodiac
+            const zodiac = getZodiacSign(date);
+            document.getElementById('zodiacSymbol').textContent = zodiac.symbol;
+            document.getElementById('zodiacSign').textContent = zodiac.sign;
+            document.getElementById('zodiacElement').textContent = zodiac.element + ' Sign';
+            document.getElementById('zodiacTraits').textContent = zodiac.traits;
+
+            // Birthstone
+            const birthstone = getBirthstone(date);
+            document.getElementById('birthstoneGem').style.background = birthstone.color;
+            document.getElementById('birthstoneGem').textContent = birthstone.emoji;
+            document.getElementById('birthstoneName').textContent = birthstone.name;
+            document.getElementById('birthstoneMeaning').textContent = birthstone.meaning;
+
+            // Lucky Numbers
+            const luckyNumbers = getLuckyNumbers(date);
+            document.getElementById('luckyNumbers').innerHTML = luckyNumbers.map(n =>
+                `<div class="lucky-ball">${n}</div>`
+            ).join('');
+
+            // Roman Numerals
+            document.getElementById('romanNumerals').textContent = toRomanNumerals(date);
+
+            // Day of Week
+            const dayInfo = getDayOfWeek(date);
+            document.getElementById('dayOfWeek').textContent = dayInfo.day;
+            document.getElementById('dayMeaning').textContent = dayInfo.meaning;
+        }
+
+        // Initialize on page load and on date change
+        document.addEventListener('DOMContentLoaded', function () {
+            const dateInput = document.getElementById('funDate');
+            dateInput.addEventListener('change', updateFunFacts);
+            updateFunFacts();
+        });
+    </script>
 </body>
 
 </html>
