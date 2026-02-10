@@ -2,9 +2,13 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Platform, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { GestureHandlerRootView, PanGestureHandler, PinchGestureHandler, State, TapGestureHandler } from 'react-native-gesture-handler';
+import ViewShot from 'react-native-view-shot';
+import CartModal from '../../components/CartModal';
+import DownloadModal, { DownloadItem } from '../../components/DownloadModal';
 import NatalChartPrintable from '../../components/NatalChartPrintable';
 import SignFrontLandscape from '../../components/SignFrontLandscape';
 import TimeCapsuleLandscape from '../../components/TimeCapsuleLandscape';
+import { PRODUCT_PRICES, useCart } from '../context/CartContext';
 import { birthstoneFromISO } from '../data/utils/birthstone';
 import { calculateLifePath } from '../data/utils/life-path-calculator';
 import { getZodiacFromISO } from '../data/utils/zodiac';
@@ -15,6 +19,59 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Preview'>;
 export default function PreviewScreen({ navigation, route }: Props) {
     const params = route.params || {};
     const [viewMode, setViewMode] = useState<'front' | 'back' | 'natal'>('front');
+
+    // ViewShot refs for capturing
+    const frontRef = useRef<ViewShot | null>(null);
+    const backRef = useRef<ViewShot | null>(null);
+    const natalRef = useRef<ViewShot | null>(null);
+
+    // Download modal state
+    const [showDownloadModal, setShowDownloadModal] = useState(false);
+
+    // Cart functionality
+    const { addToCart, getItemCount } = useCart();
+    const [showCartModal, setShowCartModal] = useState(false);
+
+    // Add current view to cart
+    const handleAddToCart = () => {
+        const productKey = viewMode as 'front' | 'back' | 'natal';
+        const product = PRODUCT_PRICES[productKey];
+        const babyName = params.babies?.[0]?.first || params.babyFirst || params.personName || 'Baby';
+
+        addToCart({
+            id: `${productKey}-${Date.now()}`,
+            name: product.name,
+            description: `For ${babyName}`,
+            price: product.price,
+            productType: productKey,
+        });
+    };
+
+    // Download items
+    const downloadItems: DownloadItem[] = [
+        { id: 'front', label: 'Birth Announcement (Front)', category: 'yardsign' },
+        { id: 'back', label: 'Time Capsule (Back)', category: 'yardsign' },
+        { id: 'natal', label: 'Natal Chart', category: 'yardsign' },
+    ];
+
+    // Capture function
+    const handleCapture = async (itemId: string): Promise<string | null> => {
+        try {
+            let ref: React.RefObject<ViewShot | null> | null = null;
+            if (itemId === 'front') ref = frontRef;
+            if (itemId === 'back') ref = backRef;
+            if (itemId === 'natal') ref = natalRef;
+
+            if (ref?.current?.capture) {
+                const uri = await ref.current.capture();
+                return uri;
+            }
+            return null;
+        } catch (error) {
+            console.error('Capture error:', error);
+            return null;
+        }
+    };
 
     // Always landscape for this app
     const currentOrientation = 'landscape';
@@ -206,61 +263,75 @@ export default function PreviewScreen({ navigation, route }: Props) {
         const lifePathNumber = lifePathResult.number;
 
         if (viewMode === 'front') {
-            // Collect all photoUris from babies array
-            const allPhotoUris = babies
-                .filter(baby => baby.photoUri)
-                .map(baby => baby.photoUri)
-                .slice(0, 3); // Limit to 3 photos
+            // Collect all photoUris - prioritize params.photoUris for milestone mode
+            let allPhotoUris: (string | null | undefined)[] = [];
+
+            if (params.photoUris && params.photoUris.length > 0) {
+                // Use photoUris array directly (milestone mode)
+                allPhotoUris = params.photoUris.filter(uri => uri);
+            } else {
+                // Collect from babies array (baby mode)
+                allPhotoUris = babies
+                    .filter(baby => baby.photoUri)
+                    .map(baby => baby.photoUri);
+            }
+            allPhotoUris = allPhotoUris.slice(0, 3); // Limit to 3 photos
 
             return (
-                <View style={styles.announcementContainer}>
-                    <SignFrontLandscape
-                        theme={formData.theme}
-                        photoUris={allPhotoUris}
-                        previewScale={finalScale}
-                        hometown={formData.hometown}
-                        population={formData.population}
-                        personName={params.personName || ''}
-                    />
-                </View>
+                <ViewShot ref={frontRef} options={{ format: 'png', quality: 1 }}>
+                    <View style={styles.announcementContainer}>
+                        <SignFrontLandscape
+                            theme={formData.theme}
+                            photoUris={allPhotoUris}
+                            previewScale={finalScale}
+                            hometown={formData.hometown}
+                            population={formData.population}
+                            personName={params.personName || ''}
+                        />
+                    </View>
+                </ViewShot>
             );
         } else if (viewMode === 'back') {
             // Back view (Time Capsule)
             return (
-                <View style={styles.announcementContainer}>
-                    <TimeCapsuleLandscape
-                        theme={formData.theme}
-                        babies={babies}
-                        dobISO={dobISO}
-                        motherName={formData.motherName}
-                        fatherName={formData.fatherName}
-                        weightLb={formData.weightLb}
-                        weightOz={formData.weightOz}
-                        lengthIn={formData.lengthIn}
-                        hometown={formData.hometown}
-                        snapshot={formData.snapshot}
-                        zodiac={zodiac}
-                        birthstone={birthstone}
-                        lifePathNumber={lifePathNumber}
-                        previewScale={finalScale}
-                        mode={formData.mode}
-                        message={formData.message}
-                    />
-                </View>
+                <ViewShot ref={backRef} options={{ format: 'png', quality: 1 }}>
+                    <View style={styles.announcementContainer}>
+                        <TimeCapsuleLandscape
+                            theme={formData.theme}
+                            babies={babies}
+                            dobISO={dobISO}
+                            motherName={formData.motherName}
+                            fatherName={formData.fatherName}
+                            weightLb={formData.weightLb}
+                            weightOz={formData.weightOz}
+                            lengthIn={formData.lengthIn}
+                            hometown={formData.hometown}
+                            snapshot={formData.snapshot}
+                            zodiac={zodiac}
+                            birthstone={birthstone}
+                            lifePathNumber={lifePathNumber}
+                            previewScale={finalScale}
+                            mode={formData.mode}
+                            message={formData.message}
+                        />
+                    </View>
+                </ViewShot>
             );
         } else if (viewMode === 'natal') {
             // Natal Chart view
             const babyName = `${formData.babyFirst} ${formData.babyMiddle ? formData.babyMiddle + ' ' : ''}${formData.babyLast}`.trim() || params.personName || 'Baby';
             return (
-                <View style={styles.announcementContainer}>
-                    <NatalChartPrintable
-                        theme={formData.theme}
-                        babyName={babyName}
-                        dobISO={dobISO}
-                        hometown={formData.hometown}
-                        previewScale={finalScale}
-                    />
-                </View>
+                <ViewShot ref={natalRef} options={{ format: 'png', quality: 1 }}>
+                    <View style={styles.announcementContainer}>
+                        <NatalChartPrintable
+                            theme={formData.theme}
+                            babyName={babyName}
+                            dobISO={dobISO}
+                            hometown={formData.hometown}
+                            previewScale={finalScale}
+                        />
+                    </View>
+                </ViewShot>
             );
         }
     };
@@ -305,6 +376,28 @@ export default function PreviewScreen({ navigation, route }: Props) {
                 </TouchableOpacity>
             </View>
 
+            {/* Add-on Product Buttons */}
+            <View style={styles.productButtons}>
+                <TouchableOpacity
+                    style={styles.productButton}
+                    onPress={() => navigation.navigate('YardSignPreview', params)}
+                >
+                    <Text style={styles.productButtonText}>🏡 Yard Signs</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.productButton}
+                    onPress={() => navigation.navigate('PostcardPreview', params)}
+                >
+                    <Text style={styles.productButtonText}>💌 Postcards</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.productButton}
+                    onPress={() => navigation.navigate('BaseballCardPreview', params)}
+                >
+                    <Text style={styles.productButtonText}>⚾ Baby Cards</Text>
+                </TouchableOpacity>
+            </View>
+
             {/* Birth announcement preview with gesture handling */}
             <View style={styles.previewContainer}>
                 <TapGestureHandler
@@ -343,10 +436,49 @@ export default function PreviewScreen({ navigation, route }: Props) {
                 </TapGestureHandler>
             </View>
 
+            {/* Download Button */}
+            <TouchableOpacity
+                style={styles.downloadButton}
+                onPress={() => setShowDownloadModal(true)}
+            >
+                <Text style={styles.downloadButtonText}>📥 Download / Print Options</Text>
+            </TouchableOpacity>
+
+            {/* Cart Actions */}
+            <View style={styles.cartActions}>
+                <TouchableOpacity
+                    style={styles.addToCartButton}
+                    onPress={handleAddToCart}
+                >
+                    <Text style={styles.addToCartButtonText}>🛒 Add {viewMode === 'front' ? 'Front' : viewMode === 'back' ? 'Back' : 'Natal'} to Cart - $0.00</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.viewCartButton}
+                    onPress={() => setShowCartModal(true)}
+                >
+                    <Text style={styles.viewCartButtonText}>
+                        🛒 {getItemCount() > 0 ? `(${getItemCount()})` : ''}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
             {/* Back button */}
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
                 <Text style={styles.backButtonText}>← Back to Form</Text>
             </TouchableOpacity>
+
+            <DownloadModal
+                visible={showDownloadModal}
+                onClose={() => setShowDownloadModal(false)}
+                items={downloadItems}
+                onCapture={handleCapture}
+                babyName={params.babies?.[0]?.first || params.babyFirst || params.personName || 'Baby'}
+            />
+
+            <CartModal
+                visible={showCartModal}
+                onClose={() => setShowCartModal(false)}
+            />
         </GestureHandlerRootView>
     );
 }
@@ -425,12 +557,27 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 20,
     },
+    downloadButton: {
+        backgroundColor: '#1a472a',
+        paddingHorizontal: 24,
+        paddingVertical: 14,
+        marginHorizontal: 20,
+        marginTop: 10,
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    downloadButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
     backButton: {
-        backgroundColor: '#007AFF',
-        paddingHorizontal: 20,
-        paddingVertical: 12,
+        backgroundColor: '#1a472a',
+        paddingHorizontal: 24,
+        paddingVertical: 14,
         margin: 20,
-        borderRadius: 8,
+        marginTop: 10,
+        borderRadius: 12,
         alignItems: 'center',
     },
     backButtonText: {
@@ -447,5 +594,55 @@ const styles = StyleSheet.create({
     },
     pdfButtonText: {
         fontSize: 18,
+    },
+    productButtons: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 8,
+        paddingHorizontal: 16,
+        paddingBottom: 8,
+    },
+    productButton: {
+        backgroundColor: '#1a472a',
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderRadius: 20,
+    },
+    productButtonText: {
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    cartActions: {
+        flexDirection: 'row',
+        marginHorizontal: 20,
+        marginTop: 8,
+        gap: 10,
+    },
+    addToCartButton: {
+        flex: 1,
+        backgroundColor: '#1a472a',
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    addToCartButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    viewCartButton: {
+        backgroundColor: '#f59e0b',
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    viewCartButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

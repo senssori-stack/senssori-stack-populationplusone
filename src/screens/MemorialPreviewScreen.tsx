@@ -1,16 +1,16 @@
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
 import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    StyleSheet,
-    StatusBar,
     Image,
+    ScrollView,
     Share,
-    useWindowDimensions
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    useWindowDimensions,
+    View
 } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MemorialPreview'>;
@@ -288,38 +288,42 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     shareButton: {
-        backgroundColor: '#64b5f6',
+        backgroundColor: '#1a472a',
         borderRadius: 12,
-        padding: 18,
+        paddingVertical: 14,
+        paddingHorizontal: 24,
         alignItems: 'center',
         marginBottom: 12,
     },
     shareButtonText: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#1a1a2e',
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#ffffff',
     },
     backSideButton: {
-        backgroundColor: '#c9b037',
+        backgroundColor: '#f59e0b',
         borderRadius: 12,
-        padding: 16,
+        paddingVertical: 14,
+        paddingHorizontal: 24,
         alignItems: 'center',
         marginBottom: 12,
     },
     backSideButtonText: {
         fontSize: 16,
-        fontWeight: 'bold',
-        color: '#1a1a2e',
+        fontWeight: '600',
+        color: '#ffffff',
     },
     editButton: {
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        borderRadius: 10,
-        padding: 14,
+        backgroundColor: '#1a472a',
+        borderRadius: 12,
+        paddingVertical: 14,
+        paddingHorizontal: 24,
         alignItems: 'center',
     },
     editButtonText: {
         fontSize: 16,
-        color: '#fff',
+        fontWeight: '600',
+        color: '#ffffff',
     },
     bottomSpacer: {
         height: 40,

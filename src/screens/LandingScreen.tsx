@@ -176,19 +176,6 @@ export default function LandingScreen({ navigation }: Props) {
                         </View>
                     </TouchableOpacity>
 
-                    {/* Card 6: Population -1 (Obituary) - Coming March 1, 2026 */}
-                    {/* TODO: Enable navigation when ready: onPress={() => navigation.navigate('ObituaryForm')} */}
-                    <View style={styles.cardButton}>
-                        <View style={styles.cardContent}>
-                            <View style={styles.cardIconBox}>
-                                <Text style={styles.cardEmoji}>🕊️</Text>
-                            </View>
-                            <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>-1 Memorial Announcements Coming March 1, 2026</Text>
-                            </View>
-                        </View>
-                    </View>
-
                     {/* Divider Gap */}
                     <View style={styles.sectionGap} />
 

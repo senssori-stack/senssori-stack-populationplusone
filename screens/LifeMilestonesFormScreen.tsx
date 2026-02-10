@@ -1,11 +1,9 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Alert,
     Animated,
-    Image,
     Modal,
     ScrollView,
     StyleSheet,
@@ -15,6 +13,7 @@ import {
     useWindowDimensions,
     View,
 } from 'react-native';
+import PhotoUploadGrid from '../components/PhotoUploadGrid';
 import { COLOR_SCHEMES } from '../src/data/utils/colors';
 import { getPopulationForCity } from '../src/data/utils/populations';
 import type { RootStackParamList, ThemeName } from '../src/types';
@@ -269,7 +268,7 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
     const [spouse1, setSpouse1] = useState('');
     const [spouse2, setSpouse2] = useState('');
     const [lastName, setLastName] = useState('');
-    const [photos, setPhotos] = useState<string[]>([]);
+    const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]);
     const [hometown, setHometown] = useState('Bellefontaine Neighbors, MO');
     const [dobDate, setDobDate] = useState<Date>(new Date(1970, 10, 15)); // November 15, 1970
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -363,42 +362,6 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
         }
         // Default
         return 'Preview Time Capsule';
-    };
-
-    const pickPhoto = async (index: number) => {
-        try {
-            const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (permission.status !== 'granted') {
-                Alert.alert('Permission required', 'Please allow access to your photo library');
-                return;
-            }
-
-            const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [1, 1],
-                quality: 1,
-            });
-
-            if (!result.canceled) {
-                const updated = [...photos];
-                updated[index] = result.assets[0].uri;
-                setPhotos(updated.filter(p => p)); // Remove empty slots
-            }
-        } catch (error) {
-            Alert.alert('Error', 'Failed to pick photo');
-        }
-    };
-
-    const removePhoto = (index: number) => {
-        const updated = photos.filter((_, i) => i !== index);
-        setPhotos(updated);
-    };
-
-    const addPhoto = () => {
-        if (photos.length < 3) {
-            pickPhoto(photos.length);
-        }
     };
 
     const getFinalMessage = () => {
@@ -564,10 +527,13 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
         const lastNamePart = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
         const middleNamePart = nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '';
 
+        // Filter out null photos
+        const validPhotos = photos.filter(p => p !== null) as string[];
+
         // Build babies array - always include at least one entry with the name, even without photos
         let babiesArray = [];
-        if (photos.length > 0) {
-            babiesArray = photos.slice(0, 3).map((photoUri, idx) => ({
+        if (validPhotos.length > 0) {
+            babiesArray = validPhotos.slice(0, 3).map((photoUri, idx) => ({
                 first: idx === 0 ? (isAnniversary ? spouse1.trim() : firstNamePart) : '',
                 middle: idx === 0 ? (isAnniversary ? '' : middleNamePart) : '',
                 last: isAnniversary ? lastName.trim() : lastNamePart,
@@ -590,12 +556,12 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
             dobISO: dobISO,
             population: finalPopulation,
             personName: isAnniversary ? `${spouse1} & ${spouse2}${lastName ? ' ' + lastName : ''}` : personName.trim(),
-            photoUri: photos[0] || null,
+            photoUris: validPhotos,
             babies: babiesArray,
             milestone: selectedMilestone,
             recipient: selectedRecipient,
             message: finalMessage,
-            photos: photos,
+            photos: validPhotos,
             motherName: isAnniversary ? `${spouse1} & ${spouse2}${lastName ? ' ' + lastName : ''}` : personName.trim(),
             fatherName: '',
             weightLb: '',
@@ -954,30 +920,12 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
             )}
 
             {/* Photos */}
-            <Text style={styles.label}>Photos (up to 3)</Text>
-            <View style={styles.photoGrid}>
-                {[0, 1, 2].map((idx) => (
-                    <TouchableOpacity
-                        key={idx}
-                        style={styles.photoSlot}
-                        onPress={() => (idx < photos.length ? removePhoto(idx) : addPhoto())}
-                    >
-                        {photos[idx] ? (
-                            <>
-                                <Image source={{ uri: photos[idx] }} style={styles.photoPreview} />
-                                <View style={styles.removeButton}>
-                                    <Text style={styles.removeButtonText}>✕</Text>
-                                </View>
-                            </>
-                        ) : (
-                            <>
-                                <Text style={styles.cameraIcon}>📷</Text>
-                                <Text style={styles.photoSlotLabel}>Add Photo</Text>
-                            </>
-                        )}
-                    </TouchableOpacity>
-                ))}
-            </View>
+            <PhotoUploadGrid
+                photos={photos}
+                onPhotosChange={setPhotos}
+                maxPhotos={3}
+                label="Photos (Optional - up to 3)"
+            />
 
             {/* Hometown */}
             <Text style={styles.label}>Hometown (City, State)</Text>

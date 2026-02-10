@@ -11,6 +11,7 @@ export type PreviewParams = {
     babyMiddle?: string;
     babyLast?: string;
     photoUri?: string | null;
+    photoUris?: (string | null)[]; // Support multiple photos (up to 3)
     motherName?: string;
     fatherName?: string;
     email?: string; // For marketing
@@ -98,6 +99,11 @@ export type RootStackParamList = {
     DisplayIdeas: undefined;
     Front: PreviewParams;
     Back: PreviewParams;
+    YardSignPreview: PreviewParams; // Yard sign add-on
+    PostcardPreview: PreviewParams; // Postcard add-on
+    BaseballCardPreview: PreviewParams; // Baseball card add-on
+    Checkout: undefined; // Checkout flow
+    OrderConfirmation: { orderId: string; email: string; itemCount: number; total: number }; // Order confirmation
     Test: undefined;
     AboutUs: undefined;
     Sources: undefined;

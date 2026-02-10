@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, useWindowDimensions } from 'react-native';
+import { Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 interface SignFrontProps {
     babyName: string;
@@ -100,6 +100,11 @@ export default function SignFront({
                             </View>
                         )}
                     </View>
+
+                    {/* Watermark - discreet branding */}
+                    <Text style={[styles.watermark, { fontSize: baseFontSize * 0.18 }]}>
+                        www.populationplusone.com
+                    </Text>
                 </View>
             </View>
         </View>
@@ -183,5 +188,12 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',
+    },
+    watermark: {
+        color: 'rgba(255,255,255,0.35)',
+        textAlign: 'center',
+        letterSpacing: 0.5,
+        paddingBottom: 6,
+        fontWeight: '400',
     },
 });

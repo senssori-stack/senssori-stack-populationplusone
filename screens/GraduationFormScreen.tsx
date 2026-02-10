@@ -1,11 +1,9 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Alert,
     Animated,
-    Image,
     Modal,
     ScrollView,
     StyleSheet,
@@ -15,6 +13,7 @@ import {
     useWindowDimensions,
     View,
 } from 'react-native';
+import PhotoUploadGrid from '../components/PhotoUploadGrid';
 import { COLOR_SCHEMES } from '../src/data/utils/colors';
 import { getPopulationForCity } from '../src/data/utils/populations';
 import type { RootStackParamList, ThemeName } from '../src/types';
@@ -129,7 +128,7 @@ export default function GraduationFormScreen({ navigation }: Props) {
     const [showGraduationModal, setShowGraduationModal] = useState(false);
     const [personName, setPersonName] = useState('');
     const [schoolName, setSchoolName] = useState('');
-    const [photos, setPhotos] = useState<string[]>([]);
+    const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]);
     const [hometown, setHometown] = useState('');
     const [dobDate, setDobDate] = useState<Date>(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -207,19 +206,6 @@ export default function GraduationFormScreen({ navigation }: Props) {
         }
     }, [personName, selectedGraduation, selectedMessage]);
 
-    const pickPhoto = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            quality: 0.8,
-            allowsMultipleSelection: true,
-            selectionLimit: 4,
-        });
-
-        if (!result.canceled && result.assets) {
-            setPhotos(result.assets.map(a => a.uri));
-        }
-    };
-
     const handlePreview = async () => {
         if (!personName.trim()) {
             Alert.alert('Missing Information', 'Please enter the graduate\'s name.');
@@ -238,7 +224,7 @@ export default function GraduationFormScreen({ navigation }: Props) {
             navigation.navigate('Preview', {
                 theme: selectedColor,
                 personName: personName.trim(),
-                photoUri: photos[0] || null,
+                photoUris: photos.filter(p => p !== null) as string[],
                 hometown: hometown.trim(),
                 dobISO: dobDate.toISOString(),
                 mode: 'milestone',
@@ -250,7 +236,7 @@ export default function GraduationFormScreen({ navigation }: Props) {
             navigation.navigate('Preview', {
                 theme: selectedColor,
                 personName: personName.trim(),
-                photoUri: photos[0] || null,
+                photoUris: photos.filter(p => p !== null) as string[],
                 hometown: hometown.trim(),
                 dobISO: dobDate.toISOString(),
                 mode: 'milestone',
@@ -365,15 +351,13 @@ export default function GraduationFormScreen({ navigation }: Props) {
                 />
             )}
 
-            {/* Photo */}
-            <Text style={styles.label}>Graduation Photo (Optional)</Text>
-            <TouchableOpacity style={styles.photoButton} onPress={pickPhoto}>
-                {photos.length > 0 ? (
-                    <Image source={{ uri: photos[0] }} style={styles.photoPreview} />
-                ) : (
-                    <Text style={styles.photoButtonText}>+ Add Photo</Text>
-                )}
-            </TouchableOpacity>
+            {/* Photos - Up to 3 */}
+            <PhotoUploadGrid
+                photos={photos}
+                onPhotosChange={setPhotos}
+                maxPhotos={3}
+                label="Graduation Photos (Optional - up to 3)"
+            />
 
             {/* Message Style */}
             <Text style={styles.label}>Message Style</Text>

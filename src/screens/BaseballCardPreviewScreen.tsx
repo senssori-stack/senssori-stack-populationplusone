@@ -1,0 +1,553 @@
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import React, { useRef, useState } from 'react';
+import {
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+    useWindowDimensions,
+} from 'react-native';
+import ViewShot from 'react-native-view-shot';
+import CartModal from '../../components/CartModal';
+import DownloadModal, { DownloadItem } from '../../components/DownloadModal';
+import { PRODUCT_PRICES, useCart } from '../context/CartContext';
+import { birthstoneFromISO } from '../data/utils/birthstone';
+import { COLOR_SCHEMES } from '../data/utils/colors';
+import { getZodiacFromISO } from '../data/utils/zodiac';
+import type { RootStackParamList } from '../types';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'BaseballCardPreview'>;
+
+/**
+ * BaseballCardPreviewScreen - Collectible-style baby stats card
+ * 
+ * Design Philosophy:
+ * - Classic baseball card format (2.5" x 3.5")
+ * - Front: Photo with name banner
+ * - Back: Stats like a sports card
+ * - Fun collectible keepsake
+ */
+export default function BaseballCardPreviewScreen({ route, navigation }: Props) {
+    const { width } = useWindowDimensions();
+    const params = route.params || {};
+
+    // Get baby info
+    const babyFirst = params.babies?.[0]?.first || params.babyFirst || 'Baby';
+    const babyMiddle = params.babies?.[0]?.middle || params.babyMiddle || '';
+    const babyLast = params.babies?.[0]?.last || params.babyLast || '';
+    const fullName = [babyFirst, babyMiddle, babyLast].filter(Boolean).join(' ');
+    const photoUri = params.babies?.[0]?.photoUri || params.photoUri || params.photoUris?.[0];
+    const hometown = params.hometown || 'Hometown, USA';
+    const dobDate = params.dobISO ? new Date(params.dobISO) : new Date();
+    const birthDateStr = dobDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const dobISO = dobDate.toISOString().split('T')[0];
+    const weightLb = params.weightLb || '7';
+    const weightOz = params.weightOz || '8';
+    const lengthIn = params.lengthIn || '20';
+
+    // Fun stats
+    const zodiac = getZodiacFromISO(dobISO);
+    const birthstone = birthstoneFromISO(dobISO);
+
+    const theme = params.theme || 'green';
+    const colors = COLOR_SCHEMES[theme] || COLOR_SCHEMES.green;
+
+    // Baseball card dimensions (2.5x3.5" at preview scale)
+    const cardWidth = Math.min(width * 0.65, 280);
+    const cardHeight = cardWidth * (3.5 / 2.5);
+
+    // Refs for capturing
+    const frontRef = useRef<ViewShot | null>(null);
+    const backRef = useRef<ViewShot | null>(null);
+
+    // Modal state
+    const [showDownloadModal, setShowDownloadModal] = useState(false);
+    const [showCartModal, setShowCartModal] = useState(false);
+
+    // Cart
+    const { addToCart } = useCart();
+
+    const handleAddToCart = (productId: string) => {
+        const productInfo = PRODUCT_PRICES[productId as keyof typeof PRODUCT_PRICES];
+        const price = productInfo?.price || 0;
+        const productName = productInfo?.name || 'Baby Card';
+        addToCart({
+            id: `${productId}-${fullName}-${Date.now()}`,
+            name: productName,
+            description: `For ${fullName}`,
+            productType: 'babycard',
+            price,
+        });
+    };
+
+    // Download items
+    const downloadItems: DownloadItem[] = [
+        { id: 'babycard-front', label: 'Card Front', category: 'babycard' },
+        { id: 'babycard-back', label: 'Card Back (Stats)', category: 'babycard' },
+    ];
+
+    // Capture function
+    const handleCapture = async (itemId: string): Promise<string | null> => {
+        try {
+            let ref: React.RefObject<ViewShot | null> | null = null;
+            if (itemId === 'babycard-front') ref = frontRef;
+            if (itemId === 'babycard-back') ref = backRef;
+
+            if (ref?.current?.capture) {
+                const uri = await ref.current.capture();
+                return uri;
+            }
+            return null;
+        } catch (error) {
+            console.error('Capture error:', error);
+            return null;
+        }
+    };
+
+    return (
+        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+            <Text style={styles.title}>⚾ Baby Rookie Card</Text>
+            <Text style={styles.subtitle}>A collectible keepsake!</Text>
+
+            {/* Card Front */}
+            <View style={styles.cardSection}>
+                <Text style={styles.sideLabel}>Front</Text>
+                <ViewShot ref={frontRef} options={{ format: 'png', quality: 1 }}>
+                    <View style={[styles.card, { width: cardWidth, height: cardHeight }]}>
+                        {/* Card border effect */}
+                        <View style={[styles.cardInner, { borderColor: colors.bg }]}>
+                            {/* Photo area */}
+                            <View style={styles.photoContainer}>
+                                {photoUri ? (
+                                    <Image source={{ uri: photoUri }} style={styles.photo} />
+                                ) : (
+                                    <View style={[styles.photoPlaceholder, { backgroundColor: colors.bg }]}>
+                                        <Text style={styles.placeholderEmoji}>👶</Text>
+                                    </View>
+                                )}
+                            </View>
+
+                            {/* Name banner */}
+                            <View style={[styles.nameBanner, { backgroundColor: colors.bg }]}>
+                                <Text style={[styles.firstName, { fontSize: cardWidth * 0.1 }]}>
+                                    {babyFirst.toUpperCase()}
+                                </Text>
+                                {babyLast && (
+                                    <Text style={[styles.lastName, { fontSize: cardWidth * 0.06 }]}>
+                                        {babyLast}
+                                    </Text>
+                                )}
+                            </View>
+
+                            {/* Team/Location */}
+                            <View style={styles.teamBar}>
+                                <Text style={[styles.teamText, { fontSize: cardWidth * 0.04 }]}>
+                                    📍 {hometown}
+                                </Text>
+                            </View>
+
+                            {/* Rookie badge */}
+                            <View style={[styles.rookieBadge, { backgroundColor: colors.bg }]}>
+                                <Text style={styles.rookieText}>ROOKIE</Text>
+                            </View>
+                        </View>
+                    </View>
+                </ViewShot>
+            </View>
+
+            {/* Card Back */}
+            <View style={styles.cardSection}>
+                <Text style={styles.sideLabel}>Back</Text>
+                <ViewShot ref={backRef} options={{ format: 'png', quality: 1 }}>
+                    <View style={[styles.card, styles.cardBack, { width: cardWidth, height: cardHeight }]}>
+                        {/* Header */}
+                        <View style={[styles.backHeader, { backgroundColor: colors.bg }]}>
+                            <Text style={[styles.backName, { fontSize: cardWidth * 0.08 }]}>
+                                {fullName}
+                            </Text>
+                            <Text style={[styles.backPosition, { fontSize: cardWidth * 0.04 }]}>
+                                Position: NEWEST FAMILY MEMBER
+                            </Text>
+                        </View>
+
+                        {/* Stats table */}
+                        <View style={styles.statsTable}>
+                            <Text style={[styles.statsHeader, { fontSize: cardWidth * 0.05 }]}>
+                                VITAL STATS
+                            </Text>
+
+                            <View style={styles.statRow}>
+                                <Text style={styles.statLabel}>Debut Date</Text>
+                                <Text style={styles.statValue}>{birthDateStr}</Text>
+                            </View>
+
+                            <View style={styles.statRow}>
+                                <Text style={styles.statLabel}>Weight</Text>
+                                <Text style={styles.statValue}>{weightLb} lbs {weightOz} oz</Text>
+                            </View>
+
+                            <View style={styles.statRow}>
+                                <Text style={styles.statLabel}>Height</Text>
+                                <Text style={styles.statValue}>{lengthIn}"</Text>
+                            </View>
+
+                            <View style={styles.statRow}>
+                                <Text style={styles.statLabel}>Birthstone</Text>
+                                <Text style={styles.statValue}>{birthstone || 'Unknown'}</Text>
+                            </View>
+
+                            <View style={styles.statRow}>
+                                <Text style={styles.statLabel}>Zodiac</Text>
+                                <Text style={styles.statValue}>{zodiac || 'Unknown'}</Text>
+                            </View>
+
+                            <View style={styles.statRow}>
+                                <Text style={styles.statLabel}>Team</Text>
+                                <Text style={styles.statValue}>{babyLast || 'TBD'} Family</Text>
+                            </View>
+                        </View>
+
+                        {/* Footer */}
+                        <View style={styles.backFooter}>
+                            <Text style={styles.cardNumber}>#001</Text>
+                            <Text style={styles.brand}>PopulationPlusOne</Text>
+                        </View>
+                    </View>
+                </ViewShot>
+            </View>
+
+            {/* Download Button */}
+            <TouchableOpacity
+                style={styles.downloadButton}
+                onPress={() => setShowDownloadModal(true)}
+            >
+                <Text style={styles.downloadButtonText}>📥 Download / Print Options</Text>
+            </TouchableOpacity>
+
+            {/* Cart Actions */}
+            <View style={styles.cartActions}>
+                <Text style={styles.cartTitle}>Add to Cart:</Text>
+                <TouchableOpacity
+                    style={styles.addToCartButton}
+                    onPress={() => handleAddToCart('babycard-front')}
+                >
+                    <Text style={styles.addToCartButtonText}>+ Card Front</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.addToCartButton}
+                    onPress={() => handleAddToCart('babycard-back')}
+                >
+                    <Text style={styles.addToCartButtonText}>+ Card Back (Stats)</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.addToCartButton}
+                    onPress={() => handleAddToCart('babycard-bundle-10')}
+                >
+                    <Text style={styles.addToCartButtonText}>+ 10 Cards Bundle</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.addToCartButton}
+                    onPress={() => handleAddToCart('babycard-bundle-25')}
+                >
+                    <Text style={styles.addToCartButtonText}>+ 25 Cards Bundle</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.viewCartButton}
+                    onPress={() => setShowCartModal(true)}
+                >
+                    <Text style={styles.viewCartButtonText}>🛒 View Cart</Text>
+                </TouchableOpacity>
+            </View>
+
+            <Text style={styles.description}>
+                2.5" × 3.5" premium cardstock{'\n'}
+                UV coating • Collectible quality
+            </Text>
+
+            <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => navigation.goBack()}
+            >
+                <Text style={styles.backButtonText}>← Back to Preview</Text>
+            </TouchableOpacity>
+
+            <DownloadModal
+                visible={showDownloadModal}
+                onClose={() => setShowDownloadModal(false)}
+                items={downloadItems}
+                onCapture={handleCapture}
+                babyName={babyFirst}
+            />
+
+            <CartModal
+                visible={showCartModal}
+                onClose={() => setShowCartModal(false)}
+            />
+        </ScrollView>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#f0f0f0',
+    },
+    content: {
+        padding: 20,
+        alignItems: 'center',
+    },
+    title: {
+        fontSize: 26,
+        fontWeight: 'bold',
+        color: '#1a472a',
+        marginBottom: 8,
+    },
+    subtitle: {
+        fontSize: 16,
+        color: '#666',
+        marginBottom: 24,
+    },
+    cardSection: {
+        marginBottom: 28,
+        alignItems: 'center',
+    },
+    sideLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#888',
+        marginBottom: 8,
+        textTransform: 'uppercase',
+        letterSpacing: 2,
+    },
+    card: {
+        backgroundColor: '#ffffff',
+        borderRadius: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 8,
+        overflow: 'hidden',
+    },
+    cardInner: {
+        flex: 1,
+        borderWidth: 6,
+        borderRadius: 10,
+        overflow: 'hidden',
+    },
+    photoContainer: {
+        flex: 1,
+        backgroundColor: '#eee',
+    },
+    photo: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
+    photoPlaceholder: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    placeholderEmoji: {
+        fontSize: 60,
+    },
+    nameBanner: {
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        alignItems: 'center',
+    },
+    firstName: {
+        color: '#ffffff',
+        fontWeight: '900',
+        letterSpacing: 2,
+    },
+    lastName: {
+        color: 'rgba(255,255,255,0.8)',
+        fontWeight: '600',
+        marginTop: 2,
+    },
+    teamBar: {
+        backgroundColor: '#f5f5f5',
+        paddingVertical: 6,
+        alignItems: 'center',
+    },
+    teamText: {
+        color: '#666',
+    },
+    rookieBadge: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 4,
+        transform: [{ rotate: '15deg' }],
+    },
+    rookieText: {
+        color: '#ffffff',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    cardBack: {
+        padding: 0,
+    },
+    backHeader: {
+        padding: 12,
+        alignItems: 'center',
+    },
+    backName: {
+        color: '#ffffff',
+        fontWeight: 'bold',
+    },
+    backPosition: {
+        color: 'rgba(255,255,255,0.8)',
+        marginTop: 4,
+    },
+    statsTable: {
+        flex: 1,
+        padding: 12,
+    },
+    statsHeader: {
+        fontWeight: 'bold',
+        color: '#333',
+        textAlign: 'center',
+        marginBottom: 12,
+        borderBottomWidth: 2,
+        borderBottomColor: '#ddd',
+        paddingBottom: 8,
+    },
+    statRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 6,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    statLabel: {
+        color: '#666',
+        fontSize: 12,
+    },
+    statValue: {
+        color: '#333',
+        fontWeight: '600',
+        fontSize: 12,
+    },
+    backFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 8,
+        backgroundColor: '#f5f5f5',
+    },
+    cardNumber: {
+        fontSize: 10,
+        color: '#999',
+        fontWeight: 'bold',
+    },
+    brand: {
+        fontSize: 10,
+        color: '#999',
+    },
+    downloadButton: {
+        backgroundColor: '#1a472a',
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+        marginTop: 8,
+        marginBottom: 8,
+    },
+    downloadButtonText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '600' as const,
+    },
+    cartActions: {
+        width: '100%',
+        alignItems: 'center',
+        marginTop: 16,
+        marginBottom: 16,
+    },
+    cartTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 12,
+    },
+    addToCartButton: {
+        backgroundColor: '#1a472a',
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+        marginBottom: 10,
+        minWidth: 200,
+        alignItems: 'center',
+    },
+    addToCartButtonText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    viewCartButton: {
+        backgroundColor: '#f59e0b',
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+        marginTop: 8,
+    },
+    viewCartButtonText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    orderOptions: {
+        gap: 12,
+        marginTop: 8,
+    },
+    orderButton: {
+        backgroundColor: '#1a472a',
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+    },
+    orderButtonSecondary: {
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        borderColor: '#1a472a',
+    },
+    orderButtonText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    orderButtonTextSecondary: {
+        color: '#1a472a',
+        fontSize: 16,
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    description: {
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+        lineHeight: 22,
+        marginTop: 16,
+        marginBottom: 24,
+    },
+    backButton: {
+        backgroundColor: '#1a472a',
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+        margin: 20,
+        alignItems: 'center',
+    },
+    backButtonText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+});

@@ -1,19 +1,18 @@
-import DateTimePicker from "@react-native-community/datetimepicker";
+﻿import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useRef, useState } from "react";
 import {
     Alert,
     Animated,
-    Modal,
     ScrollView,
     StyleSheet,
     Text, TextInput,
     TouchableOpacity,
-    useWindowDimensions,
     View
 } from "react-native";
 
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useFormContext } from '../context/FormContext';
 import { COLOR_SCHEMES } from "../data/utils/colors";
 import { getPopulationForCity } from '../data/utils/populations';
 import { getAllSnapshotValues } from '../data/utils/snapshot';
@@ -77,8 +76,12 @@ const AnimatedColorBox = ({
 };
 
 export default function FormScreen({ navigation, route }: Props) {
-    const [theme, setTheme] = useState<ThemeName>("green");
-    const [mode, setMode] = useState<'baby' | 'birthday'>('baby'); // NEW: Mode toggle
+    // Get form context for persistence
+    const { formData: savedFormData, updateFormData, hasFormData } = useFormContext();
+
+    // Initialize state from context (or defaults for testing)
+    const [theme, setTheme] = useState<ThemeName>(savedFormData.theme as ThemeName || "green");
+    const [mode, setMode] = useState<'baby' | 'birthday'>(savedFormData.mode === 'birthday' ? 'birthday' : 'baby');
 
     // Cascading glow animation for color palette
     const glowAnims = useRef(
@@ -126,8 +129,35 @@ export default function FormScreen({ navigation, route }: Props) {
         runCascade();
     }, []);
 
+    // Load saved form data from context on mount (if user previously filled the form)
+    const hasLoadedFromContext = useRef(false);
+    useEffect(() => {
+        if (!hasLoadedFromContext.current && hasFormData) {
+            hasLoadedFromContext.current = true;
+            // Load saved data from context
+            if (savedFormData.babyFirst) setBabyFirst(savedFormData.babyFirst);
+            if (savedFormData.babyMiddle) setBabyMiddle(savedFormData.babyMiddle);
+            if (savedFormData.babyLast) setBabyLast(savedFormData.babyLast);
+            if (savedFormData.babies && savedFormData.babies.length > 0) setBabies(savedFormData.babies);
+            if (savedFormData.babyCount) setBabyCount(savedFormData.babyCount);
+            if (savedFormData.motherName) setMotherName(savedFormData.motherName);
+            if (savedFormData.fatherName) setFatherName(savedFormData.fatherName);
+            if (savedFormData.email) setEmail(savedFormData.email);
+            if (savedFormData.hometown) setHometown(savedFormData.hometown);
+            if (savedFormData.dobDate) setDobDate(savedFormData.dobDate);
+            if (savedFormData.birthTime) setBirthTime(savedFormData.birthTime);
+            if (savedFormData.weightLb) setWeightLb(savedFormData.weightLb);
+            if (savedFormData.weightOz) setWeightOz(savedFormData.weightOz);
+            if (savedFormData.lengthIn) setLengthIn(savedFormData.lengthIn);
+            if (savedFormData.photoUris !== undefined) setPhotoUris(savedFormData.photoUris);
+            else if (savedFormData.photoUri !== undefined) setPhotoUris([savedFormData.photoUri, null, null]);
+            if (savedFormData.snapshot && Object.keys(savedFormData.snapshot).length > 0) setSnapshot(savedFormData.snapshot);
+            if (savedFormData.population !== null) setPopulation(savedFormData.population);
+        }
+    }, [hasFormData, savedFormData]);
+
     // TEST DATA - Prefilled for easy testing
-    // 🧪 For testing long names, uncomment these lines:
+    // ðŸ§ª For testing long names, uncomment these lines:
     // const [babyFirst, setBabyFirst] = useState("Bartholomew Christopher");
     // const [babyLast, setBabyLast] = useState("Montgomery-Williams-Henderson");
     // const [hometown, setHometown] = useState("San Francisco International Airport, California");
@@ -140,17 +170,10 @@ export default function FormScreen({ navigation, route }: Props) {
             first: 'Emma',
             middle: 'Grace',
             last: 'Johnson',
-            photoUri: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face' // Test photo for Twin 1
-        },
-        {
-            first: 'Ethan',
-            middle: 'James',
-            last: 'Johnson',
-            photoUri: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400&h=400&fit=crop&crop=face' // Test photo for Twin 2
+            photoUri: null
         },
     ]);
     const [babyCount, setBabyCount] = useState<number>(1); // Default to single baby
-    const [showBabyCountModal, setShowBabyCountModal] = useState(false);
     const [motherName, setMotherName] = useState("Sarah Johnson");
     const [fatherName, setFatherName] = useState("Michael Johnson");
     const [email, setEmail] = useState("sarah.johnson@email.com"); // For marketing
@@ -162,53 +185,77 @@ export default function FormScreen({ navigation, route }: Props) {
     const [weightLb, setWeightLb] = useState("7");
     const [weightOz, setWeightOz] = useState("8");
     const [lengthIn, setLengthIn] = useState("20");
-    const [photoUri, setPhotoUri] = useState<string | null>('https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face');
+    const [photoUris, setPhotoUris] = useState<(string | null)[]>([null, null, null]);
 
     const [touched, setTouched] = useState({ babyFirst: false, hometown: false });
     const [snapshot, setSnapshot] = useState<Record<string, string>>({});
     const [population, setPopulation] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
-    const { width: screenWidth } = useWindowDimensions();
 
     const canBuild = (babies.some(b => (b.first || '').trim().length > 0) || babyFirst.trim().length > 0) && hometown.trim().length > 0;
+
+    // Sync form data to context when fields change
+    useEffect(() => {
+        updateFormData({
+            theme,
+            mode,
+            babyFirst,
+            babyMiddle,
+            babyLast,
+            babies,
+            babyCount,
+            motherName,
+            fatherName,
+            email,
+            hometown,
+            dobDate,
+            birthTime,
+            weightLb,
+            weightOz,
+            lengthIn,
+            photoUris,
+            snapshot,
+            population,
+        });
+    }, [theme, mode, babyFirst, babyMiddle, babyLast, babies, babyCount, motherName, fatherName, email, hometown, dobDate, birthTime, weightLb, weightOz, lengthIn, photoUris, snapshot, population]);
 
     useEffect(() => {
         const timeoutId = setTimeout(async () => {
             if (!hometown.trim() || hometown.length < 3) return;
             try {
                 setLoading(true);
-                console.log('🏙️  Fetching data for hometown:', hometown, 'birth year:', dobDate.getFullYear());
-                console.log('📱 Device info - User Agent:', navigator.userAgent);
-                console.log('🌐 Network state:', navigator.onLine ? 'ONLINE' : 'OFFLINE');
+                console.log('ðŸ™ï¸  Fetching data for hometown:', hometown, 'birth year:', dobDate.getFullYear());
+                console.log('ðŸ“± Device info - User Agent:', navigator.userAgent);
+                console.log('ðŸŒ Network state:', navigator.onLine ? 'ONLINE' : 'OFFLINE');
 
                 // Fetch snapshot data from Google Sheets with timeout
-                console.log('📊 Starting snapshot fetch...');
+                console.log('ðŸ“Š Starting snapshot fetch...');
                 const snapshotPromise = getAllSnapshotValues();
                 const timeoutPromise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('Network timeout after 15 seconds')), 15000)
                 );
 
                 const snapshotData = await Promise.race([snapshotPromise, timeoutPromise]) as Record<string, string>;
-                console.log('✅ Snapshot data fetched:', Object.keys(snapshotData).length, 'entries');
-                console.log('📊 Sample data:', Object.keys(snapshotData).slice(0, 3));
+                console.log('âœ… Snapshot data fetched:', Object.keys(snapshotData).length, 'entries');
+                console.log('ðŸ“Š Sample data:', Object.keys(snapshotData).slice(0, 3));
                 setSnapshot(snapshotData);
 
                 // Fetch population for the entered hometown
-                // ⚠️ CRITICAL: Must pass DOB - if after 2020-01-01, uses Google Sheets CSV (mandatory)
-                console.log('👥 Starting population fetch for:', hometown);
+                // âš ï¸ CRITICAL: Must pass DOB - if after 2020-01-01, uses Google Sheets CSV (mandatory)
+                console.log('ðŸ‘¥ Starting population fetch for:', hometown);
                 const dobISO = `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`;
                 const cityPopulation = await getPopulationForCity(hometown, dobISO);
-                console.log('✅ Population result:', cityPopulation);
+                console.log('âœ… Population result:', cityPopulation);
                 setPopulation(cityPopulation);
             } catch (error) {
-                console.error('❌ MOBILE NETWORK ERROR:', error);
+                console.error('âŒ MOBILE NETWORK ERROR:', error);
                 const err = error as Error;
                 console.error('Error type:', err.name || 'Unknown');
                 console.error('Error message:', err.message || 'Unknown error');
                 console.error('Network online status:', navigator.onLine);
 
                 // Provide fallback data for offline/error scenarios
-                console.log('🔄 Using fallback data...');
+                console.log('ðŸ”„ Using fallback data...');
                 setSnapshot({
                     'GALLON OF GASOLINE': '$3.07',
                     'US POPULATION': '342,651,000',
@@ -255,16 +302,59 @@ export default function FormScreen({ navigation, route }: Props) {
                     return copy;
                 });
             } else {
-                setPhotoUri(uri);
-                setBabies(bs => {
-                    const copy = [...bs];
-                    if (copy.length > 0) copy[copy.length - 1].photoUri = uri;
+                // Add to first empty photoUris slot
+                setPhotoUris(prev => {
+                    const copy = [...prev];
+                    const emptyIndex = copy.findIndex(p => !p);
+                    if (emptyIndex !== -1) {
+                        copy[emptyIndex] = uri;
+                    } else {
+                        copy[0] = uri;
+                    }
                     return copy;
                 });
             }
         } catch (e) {
             alert('Unable to pick a photo — an unexpected error occurred.');
         }
+    }
+
+    // Pick photo into a specific slot (0, 1, or 2)
+    async function pickPhotoSlot(slotIndex: number) {
+        try {
+            const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            const granted = (perm as any).status === 'granted' || (perm as any).granted === true;
+            if (!granted) {
+                alert('Permission required to pick a photo. Please enable Photos/Media access in Settings.');
+                return;
+            }
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true, quality: 1,
+            });
+            const cancelled = (result as any).canceled === true || (result as any).cancelled === true;
+            const uri = (result as any).assets?.[0]?.uri ?? (result as any).uri ?? null;
+            if (cancelled) return;
+            if (!uri) {
+                alert('Failed to pick a photo. Please try again.');
+                return;
+            }
+            setPhotoUris(prev => {
+                const copy = [...prev];
+                copy[slotIndex] = uri;
+                return copy;
+            });
+        } catch (e) {
+            alert('Unable to pick a photo — an unexpected error occurred.');
+        }
+    }
+
+    function removePhotoSlot(slotIndex: number) {
+        setPhotoUris(prev => {
+            const copy = [...prev];
+            copy[slotIndex] = null;
+            return copy;
+        });
     }
 
     function removePhotoForBaby(index: number) {
@@ -295,13 +385,13 @@ export default function FormScreen({ navigation, route }: Props) {
         if (!finalPopulation) {
             try {
                 setLoading(true);
-                // ⚠️ CRITICAL: Must pass DOB - routes to HISTORICAL CSV (before 2020) or CURRENT CSV (after 2020)
+                // âš ï¸ CRITICAL: Must pass DOB - routes to HISTORICAL CSV (before 2020) or CURRENT CSV (after 2020)
                 const dobISO = `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`;
                 finalPopulation = await getPopulationForCity(hometown.trim(), dobISO);
                 setPopulation(finalPopulation);
 
                 /**
-                 * ⚠️ CRITICAL: CITY NOT FOUND - SHOW ERROR POPUP
+                 * âš ï¸ CRITICAL: CITY NOT FOUND - SHOW ERROR POPUP
                  * Do NOT use default fallback population - user must correct the city
                  */
                 if (finalPopulation === null) {
@@ -353,11 +443,17 @@ export default function FormScreen({ navigation, route }: Props) {
                 (firstBaby.last || '').trim()
             ].filter(Boolean);
             payload.personName = nameParts.join(' ');
+            // For single baby, use the photoUris state (3-slot picker); for twins/triplets, use individual baby photos
+            if (babyCount === 1) {
+                payload.photoUris = photoUris.filter(p => p !== null);
+            } else {
+                payload.photoUris = meaningfulBabies.map(b => b.photoUri ?? null);
+            }
         } else {
             payload.babyFirst = babyFirst.trim();
             payload.babyMiddle = babyMiddle.trim();
             payload.babyLast = babyLast.trim();
-            payload.photoUri = photoUri;
+            payload.photoUris = photoUris.filter(p => p !== null);
             // Construct personName from individual fields
             const nameParts = [babyFirst.trim(), babyMiddle.trim(), babyLast.trim()].filter(Boolean);
             payload.personName = nameParts.join(' ');
@@ -373,173 +469,129 @@ export default function FormScreen({ navigation, route }: Props) {
     const C = COLOR_SCHEMES[theme as keyof typeof COLOR_SCHEMES];
 
     return (
-        <ScrollView style={[styles.page, { backgroundColor: '#f5f5f5' }]} contentContainerStyle={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: C.bg }]} contentContainerStyle={styles.content}>
+            <Text style={styles.title}>+1 {mode === 'baby' ? 'Birth Announcement' : 'Time Capsule Gift'}</Text>
 
-            <Text style={styles.h1}>{mode === 'baby' ? 'Please choose Single, Twins or Triplets' : 'How many people?'}</Text>
-            <TouchableOpacity
-                onPress={() => setShowBabyCountModal(true)}
-                style={[styles.input, { backgroundColor: '#FFFFFF', justifyContent: 'center', marginBottom: 8 }]}
-            >
-                <Text style={{ color: '#0a0a0a', fontSize: 14 }}>
-                    {mode === 'baby'
-                        ? (babyCount === 1 ? 'Single' : babyCount === 2 ? 'Twins' : 'Triplets')
-                        : (babyCount === 1 ? 'One' : babyCount === 2 ? 'Two' : 'Three')
-                    }
-                </Text>
-            </TouchableOpacity>
-
-            <Modal visible={showBabyCountModal} transparent animationType="slide">
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                    <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 20, width: '80%' }}>
-                        <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' }}>
-                            {mode === 'baby' ? 'Select Number of Babies' : 'Select Number of People'}
-                        </Text>
-                        {[1, 2, 3].map(n => (
-                            <TouchableOpacity
-                                key={n}
-                                onPress={() => { setBabyCount(n); setShowBabyCountModal(false); }}
-                                style={{ paddingVertical: 12, borderBottomWidth: n < 3 ? 1 : 0, borderBottomColor: '#eee' }}
-                            >
-                                <Text style={{ fontSize: 16, textAlign: 'center', color: babyCount === n ? '#007AFF' : '#333' }}>
-                                    {mode === 'baby'
-                                        ? (n === 1 ? 'Single' : n === 2 ? 'Twins' : 'Triplets')
-                                        : (n === 1 ? 'One' : n === 2 ? 'Two' : 'Three')
-                                    }
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                        <TouchableOpacity onPress={() => setShowBabyCountModal(false)} style={{ marginTop: 16, paddingVertical: 10 }}>
-                            <Text style={{ textAlign: 'center', color: '#999' }}>Cancel</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
-            {babies.map((b, idx) => (
-                <View key={idx} style={{ marginBottom: 10 }}>
-                    {babyCount > 1 && (
-                        <Text style={[styles.h1, { marginBottom: 4 }]}>
-                            {mode === 'baby' ? `Baby ${idx + 1}` : `Person ${idx + 1}`}
-                        </Text>
-                    )}
-                    <View style={{ flexDirection: 'row', gap: 8 }}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={styles.h1}>First</Text>
-                            <TextInput
-                                style={[styles.input, {
-                                    backgroundColor: '#FFFFFF',
-                                    color: '#0a0a0a',
-                                    borderColor: touched.babyFirst && !(b.first || '').trim() ? '#ff6b6b' : 'rgba(255,255,255,0.8)'
-                                }]}
-                                placeholder="First"
-                                placeholderTextColor="#999"
-                                value={b.first}
-                                onChangeText={t => setBabies(bs => { const copy = [...bs]; copy[idx] = { ...copy[idx], first: t }; return copy; })}
-                            />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                            <Text style={styles.h1}>Middle</Text>
-                            <TextInput
-                                style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
-                                placeholder="Middle"
-                                placeholderTextColor="#999"
-                                value={b.middle || ''}
-                                onChangeText={t => setBabies(bs => { const copy = [...bs]; copy[idx] = { ...copy[idx], middle: t }; return copy; })}
-                            />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                            <Text style={styles.h1}>Last</Text>
-                            <TextInput
-                                style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
-                                placeholder="Last"
-                                placeholderTextColor="#999"
-                                value={b.last || ''}
-                                onChangeText={t => setBabies(bs => { const copy = [...bs]; copy[idx] = { ...copy[idx], last: t }; return copy; })}
-                            />
-                        </View>
-                    </View>
-
-                    {/* Individual Photo Upload */}
-                    <Text style={styles.h1}>
-                        {mode === 'baby' ? 'Upload Baby Photo Here' : 'Upload Photo Here'}
-                    </Text>
+            {/* Baby Count Toggle */}
+            <Text style={styles.label}>{mode === 'baby' ? 'How many babies?' : 'How many people?'}</Text>
+            <View style={styles.toggleGroup}>
+                {(['Single', 'Twins', 'Triplets'] as const).map((lbl, idx) => (
                     <TouchableOpacity
-                        style={[
-                            styles.btn,
-                            styles.whiteBtn,
-                            {
-                                backgroundColor: b.photoUri ? '#e8f5e8' : '#FFFFFF',
-                                borderWidth: 2,
-                                borderColor: b.photoUri ? '#4CAF50' : 'rgba(255,255,255,0.8)'
-                            }
-                        ]}
-                        onPress={() => pickPhotoForBaby(idx)}
+                        key={idx}
+                        style={[styles.toggleBtn, babyCount === idx + 1 && styles.toggleActive]}
+                        onPress={() => setBabyCount(idx + 1)}
                     >
-                        <Text style={[
-                            styles.btnText,
-                            styles.darkText,
-                            { color: b.photoUri ? '#2E7D32' : '#0a0a0a' }
-                        ]}>
-                            {b.photoUri ? `✓ Photo ${idx + 1} Selected` : `📷 Upload Photo ${idx + 1}`}
+                        <Text style={[styles.toggleText, babyCount === idx + 1 && styles.toggleActiveText]}>
+                            {mode === 'baby' ? lbl : (idx === 0 ? 'One' : idx === 1 ? 'Two' : 'Three')}
                         </Text>
                     </TouchableOpacity>
+                ))}
+            </View>
 
-                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 12 }}>
-                        {babies.length > 1 && (
+            {/* Baby Input Fields */}
+            {babies.map((b, idx) => (
+                <View key={idx} style={styles.babySection}>
+                    {babyCount > 1 && (
+                        <Text style={styles.sectionTitle}>{mode === 'baby' ? `Baby ${idx + 1}` : `Person ${idx + 1}`}</Text>
+                    )}
+
+                    <Text style={styles.label}>First Name</Text>
+                    <TextInput
+                        style={[styles.input, touched.babyFirst && !(b.first || '').trim() && styles.inputError]}
+                        placeholder="First name"
+                        placeholderTextColor="#999"
+                        value={b.first}
+                        onChangeText={t => setBabies(bs => { const copy = [...bs]; copy[idx] = { ...copy[idx], first: t }; return copy; })}
+                    />
+
+                    <Text style={styles.label}>Middle Name (optional)</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Middle name"
+                        placeholderTextColor="#999"
+                        value={b.middle || ''}
+                        onChangeText={t => setBabies(bs => { const copy = [...bs]; copy[idx] = { ...copy[idx], middle: t }; return copy; })}
+                    />
+
+                    <Text style={styles.label}>Last Name (optional)</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Last name"
+                        placeholderTextColor="#999"
+                        value={b.last || ''}
+                        onChangeText={t => setBabies(bs => { const copy = [...bs]; copy[idx] = { ...copy[idx], last: t }; return copy; })}
+                    />
+
+                    {/* Photo Upload - 3 slots for single baby, 1 per baby for twins/triplets */}
+                    {babyCount === 1 ? (
+                        <>
+                            <Text style={styles.label}>Photos (up to 3, optional)</Text>
+                            <View style={styles.photoSlotsRow}>
+                                {[0, 1, 2].map(slotIdx => (
+                                    <View key={slotIdx} style={styles.photoSlotContainer}>
+                                        <TouchableOpacity
+                                            style={[styles.photoSlot, photoUris[slotIdx] && styles.photoSlotFilled]}
+                                            onPress={() => pickPhotoSlot(slotIdx)}
+                                        >
+                                            <Text style={styles.photoSlotText}>
+                                                {photoUris[slotIdx] ? '✓' : `${slotIdx + 1}`}
+                                            </Text>
+                                        </TouchableOpacity>
+                                        {photoUris[slotIdx] && (
+                                            <TouchableOpacity
+                                                style={styles.photoRemoveBtn}
+                                                onPress={() => removePhotoSlot(slotIdx)}
+                                            >
+                                                <Text style={styles.photoRemoveText}>✕</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
+                                ))}
+                            </View>
+                            <Text style={styles.photoHint}>
+                                {photoUris.filter(p => p).length}/3 photos selected
+                            </Text>
+                        </>
+                    ) : (
+                        <>
+                            <Text style={styles.label}>Photo (optional)</Text>
                             <TouchableOpacity
-                                style={[
-                                    styles.btn,
-                                    {
-                                        backgroundColor: 'rgba(255,255,255,0.15)',
-                                        paddingVertical: 10,
-                                        paddingHorizontal: 20,
-                                        borderWidth: 1,
-                                        borderColor: 'rgba(255,255,255,0.3)'
-                                    }
-                                ]}
-                                onPress={() => setBabies(bs => bs.filter((_, i) => i !== idx))}
+                                style={[styles.uploadBtn, b.photoUri && styles.uploadBtnSelected]}
+                                onPress={() => pickPhotoForBaby(idx)}
                             >
-                                <Text style={{ color: '#fff', fontWeight: '600' }}>Remove {mode === 'baby' ? 'Baby' : 'Person'}</Text>
+                                <Text style={styles.uploadBtnText}>
+                                    {b.photoUri ? '✓ Photo Selected' : '📷 Upload Photo'}
+                                </Text>
                             </TouchableOpacity>
-                        )}
-                    </View>
+                        </>
+                    )}
                 </View>
             ))}
 
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-                <View style={{ flex: 1 }}>
-                    <Text style={styles.h1}>Mother&apos;s Name</Text>
-                    <TextInput
-                        style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
-                        placeholder="Mother's name"
-                        placeholderTextColor="#999"
-                        value={motherName}
-                        onChangeText={setMotherName}
-                    />
-                </View>
-                <View style={{ flex: 1 }}>
-                    <Text style={styles.h1}>Father&apos;s Name</Text>
-                    <TextInput
-                        style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
-                        placeholder="Father's name"
-                        placeholderTextColor="#999"
-                        value={fatherName}
-                        onChangeText={setFatherName}
-                    />
-                </View>
-            </View>
-
-            <Text style={styles.h1}>Hometown (City, State) — required</Text>
+            {/* Parents */}
+            <Text style={styles.label}>Mother's Name (optional)</Text>
             <TextInput
-                style={[
-                    styles.input,
-                    {
-                        backgroundColor: '#FFFFFF',
-                        color: '#0a0a0a',
-                        borderColor: touched.hometown && !hometown.trim() ? '#ff6b6b' : 'rgba(255,255,255,0.8)',
-                        borderWidth: touched.hometown && !hometown.trim() ? 2 : 1
-                    }
-                ]}
-                placeholder="City, State (e.g., Springfield, MO)"
+                style={styles.input}
+                placeholder="Mother's name"
+                placeholderTextColor="#999"
+                value={motherName}
+                onChangeText={setMotherName}
+            />
+
+            <Text style={styles.label}>Father's Name (optional)</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Father's name"
+                placeholderTextColor="#999"
+                value={fatherName}
+                onChangeText={setFatherName}
+            />
+
+            {/* Hometown */}
+            <Text style={styles.label}>Hometown (City, State) â€” required</Text>
+            <TextInput
+                style={[styles.input, touched.hometown && !hometown.trim() && styles.inputError]}
+                placeholder="e.g., Springfield, MO"
                 placeholderTextColor="#999"
                 value={hometown}
                 onChangeText={setHometown}
@@ -547,49 +599,28 @@ export default function FormScreen({ navigation, route }: Props) {
                 onBlur={() => setTouched(t => ({ ...t, hometown: true }))}
             />
             {loading && (
-                <Text style={{
-                    color: '#90EE90',
-                    fontSize: 14,
-                    marginTop: 8,
-                    textAlign: 'center',
-                    fontWeight: '500'
-                }}>🔍 Finding population data...</Text>
+                <Text style={styles.statusText}>ðŸ” Finding population data...</Text>
             )}
             {population && (
-                <Text style={{
-                    color: '#90EE90',
-                    fontSize: 14,
-                    marginTop: 8,
-                    textAlign: 'center',
-                    fontWeight: '600'
-                }}>✅ Population found: {population.toLocaleString()}</Text>
+                <Text style={styles.statusText}>âœ… Population: {population.toLocaleString()}</Text>
             )}
-            {touched.hometown && !hometown.trim() ? (
-                <Text style={[styles.errorText, { color: '#ffcccc' }]}>Hometown is required (e.g. "Austin, Texas").</Text>
-            ) : touched.hometown && hometown.trim() && hometown.includes(',') && !population && !loading ? (
-                <Text style={[styles.errorText, { color: '#ffdddd' }]}>Population not found. Try "Chicago, Illinois" or "Miami, Florida"</Text>
-            ) : null}
+            {touched.hometown && !hometown.trim() && (
+                <Text style={styles.errorText}>Hometown is required</Text>
+            )}
 
-            <View style={{ flexDirection: 'row', gap: 8 }}>
+            {/* Date of Birth */}
+            <View style={styles.row}>
                 <View style={{ flex: 2 }}>
-                    <Text style={styles.h1}>
-                        {mode === 'baby' ? 'Date of Birth' : 'Birthday Date'}
-                    </Text>
-                    <TouchableOpacity
-                        style={[styles.input, { backgroundColor: '#FFFFFF', paddingVertical: 12 }]}
-                        onPress={() => setShowDatePicker(true)}
-                    >
-                        <Text style={{ color: '#0a0a0a', fontSize: 14 }}>
+                    <Text style={styles.label}>{mode === 'baby' ? 'Date of Birth' : 'Birthday'}</Text>
+                    <TouchableOpacity style={styles.dateBtn} onPress={() => setShowDatePicker(true)}>
+                        <Text style={styles.dateBtnText}>
                             {dobDate.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "2-digit", year: "numeric" })}
                         </Text>
                     </TouchableOpacity>
                     {showDatePicker && (
                         <DateTimePicker
                             value={dobDate}
-                            onChange={(_e, d) => {
-                                setShowDatePicker(false);
-                                if (d) setDobDate(d);
-                            }}
+                            onChange={(_e, d) => { setShowDatePicker(false); if (d) setDobDate(d); }}
                             mode="date"
                             display="default"
                         />
@@ -597,22 +628,16 @@ export default function FormScreen({ navigation, route }: Props) {
                 </View>
                 {mode === 'baby' && (
                     <View style={{ flex: 1 }}>
-                        <Text style={styles.h1}>Time of Birth</Text>
-                        <TouchableOpacity
-                            style={[styles.input, { backgroundColor: '#FFFFFF', paddingVertical: 12 }]}
-                            onPress={() => setShowTimePicker(true)}
-                        >
-                            <Text style={{ color: '#0a0a0a', fontSize: 14 }}>
+                        <Text style={styles.label}>Time of Birth</Text>
+                        <TouchableOpacity style={styles.dateBtn} onPress={() => setShowTimePicker(true)}>
+                            <Text style={styles.dateBtnText}>
                                 {birthTime.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true })}
                             </Text>
                         </TouchableOpacity>
                         {showTimePicker && (
                             <DateTimePicker
                                 value={birthTime}
-                                onChange={(_e, t) => {
-                                    setShowTimePicker(false);
-                                    if (t) setBirthTime(t);
-                                }}
+                                onChange={(_e, t) => { setShowTimePicker(false); if (t) setBirthTime(t); }}
                                 mode="time"
                                 display="default"
                             />
@@ -621,77 +646,62 @@ export default function FormScreen({ navigation, route }: Props) {
                 )}
             </View>
 
-            {/* Weight and Length only shown for baby announcements */}
-            {mode === 'baby' && (
-                <>
-                    {babyCount > 1 ? (
-                        <View style={{
-                            backgroundColor: 'rgba(255,255,255,0.1)',
-                            padding: 16,
-                            borderRadius: 12,
-                            marginBottom: 16,
-                            borderWidth: 1,
-                            borderColor: 'rgba(255,255,255,0.2)'
-                        }}>
-                            <Text style={{
-                                color: '#fff',
-                                textAlign: 'center',
-                                fontSize: 14,
-                                fontWeight: '600'
-                            }}>
-                                ⚖️📏 Weight & Length not available for {babyCount === 2 ? 'twins' : 'multiple babies'}
-                            </Text>
-                        </View>
-                    ) : (
-                        <View style={{ flexDirection: 'row', gap: 8 }}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.h1}>Weight (lbs)</Text>
-                                <TextInput
-                                    style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
-                                    placeholder="7"
-                                    placeholderTextColor="#999"
-                                    keyboardType="numeric"
-                                    value={weightLb}
-                                    onChangeText={setWeightLb}
-                                />
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.h1}>Weight (oz)</Text>
-                                <TextInput
-                                    style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
-                                    placeholder="8"
-                                    placeholderTextColor="#999"
-                                    keyboardType="numeric"
-                                    value={weightOz}
-                                    onChangeText={setWeightOz}
-                                />
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.h1}>Length (in)</Text>
-                                <TextInput
-                                    style={[styles.input, { backgroundColor: '#FFFFFF', color: '#0a0a0a' }]}
-                                    placeholder="20"
-                                    placeholderTextColor="#999"
-                                    keyboardType="numeric"
-                                    value={lengthIn}
-                                    onChangeText={setLengthIn}
-                                />
-                            </View>
-                        </View>
-                    )}
-                </>
+            {/* Measurements (only for single baby) */}
+            {mode === 'baby' && babyCount === 1 && (
+                <View style={styles.row}>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.label}>Weight (lbs)</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="7"
+                            placeholderTextColor="#999"
+                            keyboardType="numeric"
+                            value={weightLb}
+                            onChangeText={setWeightLb}
+                        />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.label}>Weight (oz)</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="8"
+                            placeholderTextColor="#999"
+                            keyboardType="numeric"
+                            value={weightOz}
+                            onChangeText={setWeightOz}
+                        />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.label}>Length (in)</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="20"
+                            placeholderTextColor="#999"
+                            keyboardType="numeric"
+                            value={lengthIn}
+                            onChangeText={setLengthIn}
+                        />
+                    </View>
+                </View>
             )}
 
-            <Text style={[styles.h1, { textAlign: 'center' }]}>Background Color</Text>
-            <Text style={{ color: '#000', marginBottom: 12, fontSize: 14, textAlign: 'center' }}>
-                Choose your announcement background color (all text will be white)
-            </Text>
+            {mode === 'baby' && babyCount > 1 && (
+                <View style={styles.infoBox}>
+                    <Text style={styles.infoText}>
+                        âš–ï¸ðŸ“ Weight & Length not available for {babyCount === 2 ? 'twins' : 'triplets'}
+                    </Text>
+                </View>
+            )}
+
+            {/* Color Picker */}
+            <Text style={[styles.label, { textAlign: 'center', marginTop: 20 }]}>Background Color</Text>
+            <Text style={styles.colorHint}>Choose your announcement color (text will be white)</Text>
 
             {/* Color Grid - 5 rows x 5 columns with cascading animation */}
-            <View style={{ alignSelf: 'center', width: '45%' }}>
-                <View style={{ gap: 4, marginBottom: 4 }}>
+            <View style={{ alignSelf: 'center', marginTop: 12 }}>
+                <View style={{ gap: 6 }}>
                     {/* Row 1 - Blues */}
-                    <View style={{ flexDirection: 'row', gap: 4, justifyContent: 'center' }}>
+                    <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'center' }}>
                         {(['lightBlue', 'royalBlue', 'mediumBlue', 'navyBlue', 'teal'] as ThemeName[]).map((t, colIndex) => (
                             <AnimatedColorBox
                                 key={t}
@@ -705,7 +715,7 @@ export default function FormScreen({ navigation, route }: Props) {
                     </View>
 
                     {/* Row 2 - Greens */}
-                    <View style={{ flexDirection: 'row', gap: 4, justifyContent: 'center' }}>
+                    <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'center' }}>
                         {(['darkGreen', 'forestGreen', 'green', 'limeGreen', 'mintGreen'] as ThemeName[]).map((t, colIndex) => (
                             <AnimatedColorBox
                                 key={t}
@@ -719,7 +729,7 @@ export default function FormScreen({ navigation, route }: Props) {
                     </View>
 
                     {/* Row 3 - Pinks/Purples */}
-                    <View style={{ flexDirection: 'row', gap: 4, justifyContent: 'center' }}>
+                    <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'center' }}>
                         {(['lavender', 'hotPink', 'rose', 'purple', 'violet'] as ThemeName[]).map((t, colIndex) => (
                             <AnimatedColorBox
                                 key={t}
@@ -733,7 +743,7 @@ export default function FormScreen({ navigation, route }: Props) {
                     </View>
 
                     {/* Row 4 - Reds/Oranges */}
-                    <View style={{ flexDirection: 'row', gap: 4, justifyContent: 'center' }}>
+                    <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'center' }}>
                         {(['coral', 'red', 'maroon', 'orange', 'gold'] as ThemeName[]).map((t, colIndex) => (
                             <AnimatedColorBox
                                 key={t}
@@ -747,7 +757,7 @@ export default function FormScreen({ navigation, route }: Props) {
                     </View>
 
                     {/* Row 5 - Grays */}
-                    <View style={{ flexDirection: 'row', gap: 4, justifyContent: 'center' }}>
+                    <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'center' }}>
                         {(['charcoal', 'slate', 'gray', 'silver', 'lightGray'] as ThemeName[]).map((t, colIndex) => (
                             <AnimatedColorBox
                                 key={t}
@@ -762,144 +772,226 @@ export default function FormScreen({ navigation, route }: Props) {
                 </View>
             </View>
 
-            {loading && hometown.trim() && (
-                <View style={{
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                    padding: 16,
-                    borderRadius: 12,
-                    marginTop: 16,
-                    borderWidth: 1,
-                    borderColor: 'rgba(255,255,255,0.2)'
-                }}>
-                    <Text style={{
-                        color: '#fff',
-                        textAlign: 'center',
-                        fontSize: 16,
-                        fontWeight: '500'
-                    }}>
-                        🔍 Loading data from Google Sheets...
-                    </Text>
-                </View>
-            )}
-
+            {/* Build Button */}
             <TouchableOpacity
                 style={[
-                    styles.btn,
                     styles.buildBtn,
-                    { backgroundColor: COLOR_SCHEMES[theme].bg },
+                    { backgroundColor: C.bg },
                     (!canBuild || loading) && styles.btnDisabled
                 ]}
                 onPress={onBuild}
                 disabled={!canBuild || loading}
             >
-                <Text style={[styles.buildText, { color: '#FFFFFF' }]}>
+                <Text style={styles.buildText}>
                     {loading
-                        ? 'LOADING...'
+                        ? '⏳ LOADING...'
                         : mode === 'baby'
-                            ? 'BUILD MY BIRTH ANNOUNCEMENT'
-                            : 'BUILD MY TIME CAPSULE GIFT'
+                            ? '✨ BUILD MY BIRTH ANNOUNCEMENT'
+                            : '✨ BUILD MY TIME CAPSULE GIFT'
                     }
                 </Text>
             </TouchableOpacity>
+
+            <View style={{ height: 40 }} />
         </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    page: { flex: 1, backgroundColor: '#f5f5f5' },
-    container: { padding: 20, paddingBottom: 40 },
-    h1: {
-        color: "#2d5016",
-        fontSize: 16,
-        fontWeight: "700",
-        marginTop: 16,
-        marginBottom: 8,
+    // Main container - colored background  
+    container: { flex: 1 },
+    content: { padding: 20, paddingBottom: 40 },
+
+    // Title
+    title: {
+        fontSize: 24,
+        fontWeight: '900',
+        marginBottom: 12,
+        color: '#fff',
+        textAlign: 'center'
     },
+
+    // Labels
+    label: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#fff',
+        marginTop: 16,
+        marginBottom: 8
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        marginTop: 20,
+        marginBottom: 12,
+        color: '#fff'
+    },
+
+    // Inputs - white background
     input: {
-        backgroundColor: "#FFFFFF",
-        color: "#333",
+        backgroundColor: '#fff',
         borderRadius: 8,
         padding: 12,
         fontSize: 16,
-        borderWidth: 0,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-        elevation: 2
+        color: '#333',
     },
-    row: { flexDirection: "row", gap: 12 },
-    half: { flex: 1 },
-    btn: {
-        backgroundColor: "#2d5016",
+    inputError: {
+        borderColor: '#e74c3c',
+        borderWidth: 2,
+    },
+
+    // Baby sections
+    babySection: { marginBottom: 16 },
+
+    // Upload button
+    uploadBtn: {
+        backgroundColor: 'rgba(255,255,255,0.2)',
         borderRadius: 8,
         paddingVertical: 12,
-        alignItems: "center",
-        marginTop: 8,
+        alignItems: 'center',
+        borderWidth: 2,
+        borderStyle: 'dashed',
+        borderColor: 'rgba(255,255,255,0.5)',
     },
-    btnText: {
-        color: "white",
-        fontSize: 16,
-        fontWeight: "600",
+    uploadBtnSelected: {
+        backgroundColor: 'rgba(255,255,255,0.35)',
+        borderColor: '#fff',
+        borderStyle: 'solid',
     },
+    uploadBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+
+    // Toggle group for baby count
+    toggleGroup: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+    toggleBtn: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 8,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        alignItems: 'center',
+    },
+    toggleActive: { backgroundColor: '#fff' },
+    toggleText: { fontWeight: '700', color: '#fff', fontSize: 14 },
+    toggleActiveText: { color: '#333' },
+
+    // Date button
+    dateBtn: {
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        paddingVertical: 12,
+        paddingHorizontal: 12,
+    },
+    dateBtnText: { fontSize: 16, color: '#333' },
+
+    // Row layout
+    row: { flexDirection: 'row', gap: 12 },
+
+    // Build button
     buildBtn: {
-        marginTop: 24,
-        backgroundColor: "#2d5016",
+        borderRadius: 12,
         paddingVertical: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.2,
-        shadowRadius: 6,
-        elevation: 5
+        alignItems: 'center',
+        marginTop: 24,
+        marginBottom: 40,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 6,
     },
     buildText: {
-        color: "#fff",
-        fontWeight: "800",
-        fontSize: 18,
-        textAlign: "center",
+        color: '#fff',
+        fontWeight: '900',
+        fontSize: 17,
+        textAlign: 'center',
+        letterSpacing: 0.5,
     },
-    themeBtn: {
-        flex: 1,
-        paddingVertical: 12,
-        borderRadius: 8,
-        alignItems: "center",
-        backgroundColor: "#e0e0e0"
+    btnDisabled: { opacity: 0.5 },
+
+    // Info box
+    infoBox: {
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: 10,
+        padding: 16,
+        marginTop: 16,
     },
-    themeText: {
-        color: "#333",
-        fontWeight: "700",
+    infoText: {
+        color: '#fff',
+        textAlign: 'center',
         fontSize: 14,
+        fontWeight: '500',
+    },
+
+    // Status and error text
+    statusText: {
+        color: '#fff',
+        fontSize: 14,
+        marginTop: 8,
+        textAlign: 'center',
     },
     errorText: {
-        color: '#d32f2f',
-        marginTop: 4,
+        color: '#ffcccc',
+        marginTop: 6,
+        fontSize: 13,
+        fontWeight: '500',
+    },
+    colorHint: {
+        color: 'rgba(255,255,255,0.8)',
         fontSize: 12,
-        fontStyle: 'italic'
+        textAlign: 'center',
+        marginBottom: 8,
     },
-    btnDisabled: { opacity: 0.6 },
-    whiteBtn: {
-        backgroundColor: '#FFFFFF',
+
+    // Photo slots for multi-photo upload
+    photoSlotsRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 16,
+        marginTop: 8,
+    },
+    photoSlotContainer: {
+        position: 'relative',
+    },
+    photoSlot: {
+        width: 70,
+        height: 70,
+        borderRadius: 12,
+        backgroundColor: 'rgba(255,255,255,0.2)',
         borderWidth: 2,
-        borderColor: '#2d5016',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3
+        borderColor: 'rgba(255,255,255,0.5)',
+        borderStyle: 'dashed',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    darkText: { color: '#2d5016' },
-    colorBox: {
-        flex: 1,
-        aspectRatio: 1,
-        height: 12.5,
-        borderRadius: 3,
-        borderWidth: 1,
-        borderColor: '#ffffff',
-        padding: 1.5,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 3,
-        elevation: 4,
+    photoSlotFilled: {
+        backgroundColor: 'rgba(255,255,255,0.35)',
+        borderColor: '#fff',
+        borderStyle: 'solid',
+    },
+    photoSlotText: {
+        color: '#fff',
+        fontSize: 24,
+        fontWeight: '700',
+    },
+    photoRemoveBtn: {
+        position: 'absolute',
+        top: -8,
+        right: -8,
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#e74c3c',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    photoRemoveText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    photoHint: {
+        color: 'rgba(255,255,255,0.8)',
+        fontSize: 12,
+        textAlign: 'center',
+        marginTop: 8,
     },
 });

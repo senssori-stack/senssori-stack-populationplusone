@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
-import type { ThemeName } from '../src/types';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { COLOR_SCHEMES } from '../src/data/utils/colors';
+import type { ThemeName } from '../src/types';
 
 // Landscape 11x8.5 at 300 DPI = 3300x2550 pixels
 export const LANDSCAPE_WIDTH = 3300;
@@ -242,6 +242,19 @@ export default function SignFrontLandscape(props: Props) {
 
                 </View>
             </View>
+
+            {/* Watermark - discreet branding - outside white border */}
+            <Text style={[styles.text, {
+                position: 'absolute',
+                bottom: Math.round(displayHeight * 0.004),
+                right: Math.round(displayWidth * 0.015),
+                fontSize: Math.round(baseFontSize * 0.22),
+                color: '#FFFFFF',
+                fontWeight: '400',
+                transform: [{ scaleX: 1.25 }],
+            }]}>
+                www.populationplusone.com
+            </Text>
         </View >
     );
 }
