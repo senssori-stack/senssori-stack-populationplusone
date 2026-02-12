@@ -1,4 +1,3 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -14,6 +13,7 @@ import {
     View,
 } from 'react-native';
 import PhotoUploadGrid from '../components/PhotoUploadGrid';
+import ScrollableDatePicker from '../components/ScrollableDatePicker';
 import { COLOR_SCHEMES } from '../src/data/utils/colors';
 import { getPopulationForCity } from '../src/data/utils/populations';
 import type { RootStackParamList, ThemeName } from '../src/types';
@@ -55,9 +55,9 @@ const getAnniversaryMessage = (anniversaryId: string, style: 'classic' | 'celebr
     const traditional = option?.traditional || '';
 
     const messages = {
-        classic: `{coupleNames}'s ${anniversaryId} anniversary and still going strong! Your love story is one for the ages. The traditional gift is ${traditional}. Here's to many more years of happiness together. Here is some interesting information surrounding your anniversary.`,
-        celebration: `${anniversaryId} years of love, laughter, and putting up with each other! {coupleNames}, you two are relationship goals. Time to celebrate with something ${traditional}! Here is some interesting information surrounding your anniversary.`,
-        heartfelt: `${anniversaryId} years of building a beautiful life together. {coupleNames}, your love inspires everyone around you. May your bond continue to grow stronger each day. Here is some interesting information surrounding your anniversary.`,
+        classic: `{coupleNames}'s ${anniversaryId} anniversary and still going strong! Your love story is one for the ages. The traditional gift is ${traditional}. Here's to many more years of happiness together.`,
+        celebration: `${anniversaryId} years of love, laughter, and putting up with each other! {coupleNames}, you two are relationship goals. Time to celebrate with something ${traditional}!`,
+        heartfelt: `${anniversaryId} years of building a beautiful life together. {coupleNames}, your love inspires everyone around you. May your bond continue to grow stronger each day.`,
     };
 
     return messages[style] || messages.classic;
@@ -118,14 +118,14 @@ type MessageKey = 'classic' | 'celebration' | 'heartfelt';
 export default function AnniversaryFormScreen({ navigation }: Props) {
     const { width } = useWindowDimensions();
 
-    // Form state
+    // Form state - Prefilled with sample data
     const [selectedAnniversary, setSelectedAnniversary] = useState<string>('25th');
     const [showAnniversaryModal, setShowAnniversaryModal] = useState(false);
-    const [spouse1Name, setSpouse1Name] = useState('');
-    const [spouse2Name, setSpouse2Name] = useState('');
+    const [spouse1Name, setSpouse1Name] = useState('Jane Doe');
+    const [spouse2Name, setSpouse2Name] = useState('John Doe');
     const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]);
-    const [hometown, setHometown] = useState('');
-    const [anniversaryDate, setAnniversaryDate] = useState<Date>(new Date());
+    const [hometown, setHometown] = useState('Bellefontaine Neighbors, MO');
+    const [anniversaryDate, setAnniversaryDate] = useState<Date>(new Date(2026, 1, 4)); // Feb 4, 2026
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedMessage, setSelectedMessage] = useState<MessageKey>('classic');
     const [customMessage, setCustomMessage] = useState('');
@@ -212,6 +212,7 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
         }
 
         setLoading(true);
+        const finalMessage = editableMessage + ' Here is some interesting information surrounding your anniversary.';
         try {
             const pop = await getPopulationForCity(hometown.trim());
             setPopulation(pop);
@@ -219,11 +220,12 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
             navigation.navigate('Preview', {
                 theme: selectedColor,
                 personName: getCoupleNames(),
+                motherName: getCoupleNames(),
                 photoUris: photos.filter(p => p !== null) as string[],
                 hometown: hometown.trim(),
                 dobISO: anniversaryDate.toISOString(),
                 mode: 'milestone',
-                message: editableMessage,
+                message: finalMessage,
                 population: pop || undefined,
             });
         } catch (error) {
@@ -231,11 +233,12 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
             navigation.navigate('Preview', {
                 theme: selectedColor,
                 personName: getCoupleNames(),
+                motherName: getCoupleNames(),
                 photoUris: photos.filter(p => p !== null) as string[],
                 hometown: hometown.trim(),
                 dobISO: anniversaryDate.toISOString(),
                 mode: 'milestone',
-                message: editableMessage,
+                message: finalMessage,
             });
         } finally {
             setLoading(false);
@@ -337,17 +340,13 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
                     {anniversaryDate.toLocaleDateString()}
                 </Text>
             </TouchableOpacity>
-            {showDatePicker && (
-                <DateTimePicker
-                    value={anniversaryDate}
-                    mode="date"
-                    display="default"
-                    onChange={(event, date) => {
-                        setShowDatePicker(false);
-                        if (date) setAnniversaryDate(date);
-                    }}
-                />
-            )}
+            <ScrollableDatePicker
+                visible={showDatePicker}
+                date={anniversaryDate}
+                onDateChange={(date) => setAnniversaryDate(date)}
+                onClose={() => setShowDatePicker(false)}
+                title="Wedding Date"
+            />
 
             {/* Photos - Up to 3 */}
             <PhotoUploadGrid

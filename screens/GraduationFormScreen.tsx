@@ -1,4 +1,3 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -14,6 +13,7 @@ import {
     View,
 } from 'react-native';
 import PhotoUploadGrid from '../components/PhotoUploadGrid';
+import ScrollableDatePicker from '../components/ScrollableDatePicker';
 import { COLOR_SCHEMES } from '../src/data/utils/colors';
 import { getPopulationForCity } from '../src/data/utils/populations';
 import type { RootStackParamList, ThemeName } from '../src/types';
@@ -32,39 +32,39 @@ const GRADUATION_OPTIONS = [
 
 const MESSAGES: Record<string, { classic: string; celebration: string; heartfelt: string }> = {
     highschool: {
-        classic: 'Congratulations on your high school graduation, {fullName}! This is just the beginning of an incredible journey. The world is full of opportunities waiting for you. Here is some interesting information surrounding your graduation.',
-        celebration: '{fullName} did it! High school is officially in the rearview mirror. Time to celebrate this amazing achievement and get ready for the exciting adventures ahead! Here is some interesting information surrounding your graduation.',
-        heartfelt: 'What an incredible milestone for {fullName}! All the hard work, dedication, and late nights have paid off. We are so proud of everything you have accomplished. The best is yet to come! Here is some interesting information surrounding your graduation.',
+        classic: 'Congratulations on your high school graduation, {fullName}! This is just the beginning of an incredible journey. The world is full of opportunities waiting for you.',
+        celebration: '{fullName} did it! High school is officially in the rearview mirror. Time to celebrate this amazing achievement and get ready for the exciting adventures ahead!',
+        heartfelt: 'What an incredible milestone for {fullName}! All the hard work, dedication, and late nights have paid off. We are so proud of everything you have accomplished. The best is yet to come!',
     },
     college: {
-        classic: 'Congratulations on your college graduation, {fullName}! Years of hard work and determination have led to this proud moment. Your future is bright and full of endless possibilities. Here is some interesting information surrounding your graduation.',
-        celebration: '{fullName} made it! College is complete and a whole new chapter is about to begin. Time to celebrate this huge accomplishment and all the success that lies ahead! Here is some interesting information surrounding your graduation.',
-        heartfelt: 'This diploma represents so much more than a degree for {fullName}. It represents perseverance, growth, and countless sacrifices. We could not be more proud of this achievement. Here is some interesting information surrounding your graduation.',
+        classic: 'Congratulations on your college graduation, {fullName}! Years of hard work and determination have led to this proud moment. Your future is bright and full of endless possibilities.',
+        celebration: '{fullName} made it! College is complete and a whole new chapter is about to begin. Time to celebrate this huge accomplishment and all the success that lies ahead!',
+        heartfelt: 'This diploma represents so much more than a degree for {fullName}. It represents perseverance, growth, and countless sacrifices. We could not be more proud of this achievement.',
     },
     tradeschool: {
-        classic: 'Congratulations on completing your trade/technical program, {fullName}! Your dedication to your craft is inspiring. The skills you\'ve gained will serve you well throughout your career. Here is some interesting information surrounding your graduation.',
-        celebration: '{fullName} is a certified pro! All that hands-on training and hard work has paid off. Time to celebrate this achievement and show the world what you can do! Here is some interesting information surrounding your graduation.',
-        heartfelt: 'We are so proud of {fullName} for completing this program. The commitment to learning a valuable trade takes real dedication. Your future in this field is bright! Here is some interesting information surrounding your graduation.',
+        classic: 'Congratulations on completing your trade/technical program, {fullName}! Your dedication to your craft is inspiring. The skills you\'ve gained will serve you well throughout your career.',
+        celebration: '{fullName} is a certified pro! All that hands-on training and hard work has paid off. Time to celebrate this achievement and show the world what you can do!',
+        heartfelt: 'We are so proud of {fullName} for completing this program. The commitment to learning a valuable trade takes real dedication. Your future in this field is bright!',
     },
     masters: {
-        classic: 'Congratulations on earning your Master\'s degree, {fullName}! This advanced achievement reflects your dedication to excellence and continued learning. Here is some interesting information surrounding your graduation.',
-        celebration: '{fullName} is now a Master! All those research papers, late nights, and hard work have culminated in this incredible achievement. Time to celebrate! Here is some interesting information surrounding your graduation.',
-        heartfelt: 'Earning a Master\'s degree is no small feat. {fullName}, your commitment to advancing your education and expertise is truly inspiring. We couldn\'t be prouder! Here is some interesting information surrounding your graduation.',
+        classic: 'Congratulations on earning your Master\'s degree, {fullName}! This advanced achievement reflects your dedication to excellence and continued learning.',
+        celebration: '{fullName} is now a Master! All those research papers, late nights, and hard work have culminated in this incredible achievement. Time to celebrate!',
+        heartfelt: 'Earning a Master\'s degree is no small feat. {fullName}, your commitment to advancing your education and expertise is truly inspiring. We couldn\'t be prouder!',
     },
     doctorate: {
-        classic: 'Congratulations, Dr. {fullName}! Earning a doctorate is one of the highest academic achievements possible. Your dedication to research and knowledge is remarkable. Here is some interesting information surrounding your graduation.',
-        celebration: 'Call them Doctor! {fullName} has reached the pinnacle of academic achievement. All those years of research, writing, and dedication have paid off spectacularly! Here is some interesting information surrounding your graduation.',
-        heartfelt: 'The journey to a doctorate is long and challenging, but {fullName} persevered. This achievement represents countless hours of work and unwavering dedication. We are beyond proud! Here is some interesting information surrounding your graduation.',
+        classic: 'Congratulations, Dr. {fullName}! Earning a doctorate is one of the highest academic achievements possible. Your dedication to research and knowledge is remarkable.',
+        celebration: 'Call them Doctor! {fullName} has reached the pinnacle of academic achievement. All those years of research, writing, and dedication have paid off spectacularly!',
+        heartfelt: 'The journey to a doctorate is long and challenging, but {fullName} persevered. This achievement represents countless hours of work and unwavering dedication. We are beyond proud!',
     },
     medical: {
-        classic: 'Congratulations, Dr. {fullName}! Your journey through medical school has prepared you to help heal and save lives. The world is lucky to have you as a physician. Here is some interesting information surrounding your graduation.',
-        celebration: 'The doctor is IN! {fullName} has completed medical school and is ready to change lives. What an incredible accomplishment worthy of celebration! Here is some interesting information surrounding your graduation.',
-        heartfelt: 'Medical school is one of the most challenging paths, and {fullName} conquered it. Your commitment to healing others is a gift to the world. We are so incredibly proud! Here is some interesting information surrounding your graduation.',
+        classic: 'Congratulations, Dr. {fullName}! Your journey through medical school has prepared you to help heal and save lives. The world is lucky to have you as a physician.',
+        celebration: 'The doctor is IN! {fullName} has completed medical school and is ready to change lives. What an incredible accomplishment worthy of celebration!',
+        heartfelt: 'Medical school is one of the most challenging paths, and {fullName} conquered it. Your commitment to healing others is a gift to the world. We are so incredibly proud!',
     },
     law: {
-        classic: 'Congratulations on graduating from law school, {fullName}! Your dedication to justice and the law will serve you well as you embark on your legal career. Here is some interesting information surrounding your graduation.',
-        celebration: '{fullName} passed the bar... well, law school at least! Time to celebrate this major milestone on the path to becoming a legal professional! Here is some interesting information surrounding your graduation.',
-        heartfelt: 'Law school demands excellence and {fullName} delivered. Your commitment to understanding and upholding the law is admirable. We couldn\'t be more proud! Here is some interesting information surrounding your graduation.',
+        classic: 'Congratulations on graduating from law school, {fullName}! Your dedication to justice and the law will serve you well as you embark on your legal career.',
+        celebration: '{fullName} passed the bar... well, law school at least! Time to celebrate this major milestone on the path to becoming a legal professional!',
+        heartfelt: 'Law school demands excellence and {fullName} delivered. Your commitment to understanding and upholding the law is admirable. We couldn\'t be more proud!',
     },
 };
 
@@ -123,14 +123,14 @@ type MessageKey = 'classic' | 'celebration' | 'heartfelt';
 export default function GraduationFormScreen({ navigation }: Props) {
     const { width } = useWindowDimensions();
 
-    // Form state
+    // Form state - Prefilled with sample data
     const [selectedGraduation, setSelectedGraduation] = useState<string>('highschool');
     const [showGraduationModal, setShowGraduationModal] = useState(false);
-    const [personName, setPersonName] = useState('');
-    const [schoolName, setSchoolName] = useState('');
+    const [personName, setPersonName] = useState('Jessica Sample Doe');
+    const [schoolName, setSchoolName] = useState('Sample High School');
     const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]);
-    const [hometown, setHometown] = useState('');
-    const [dobDate, setDobDate] = useState<Date>(new Date());
+    const [hometown, setHometown] = useState('Bellefontaine Neighbors, MO');
+    const [dobDate, setDobDate] = useState<Date>(new Date(2026, 1, 4)); // Feb 4, 2026
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedMessage, setSelectedMessage] = useState<MessageKey>('classic');
     const [customMessage, setCustomMessage] = useState('');
@@ -217,6 +217,7 @@ export default function GraduationFormScreen({ navigation }: Props) {
         }
 
         setLoading(true);
+        const finalMessage = editableMessage + ' Here is some interesting information surrounding your graduation.';
         try {
             const pop = await getPopulationForCity(hometown.trim());
             setPopulation(pop);
@@ -224,11 +225,12 @@ export default function GraduationFormScreen({ navigation }: Props) {
             navigation.navigate('Preview', {
                 theme: selectedColor,
                 personName: personName.trim(),
+                motherName: personName.trim(),
                 photoUris: photos.filter(p => p !== null) as string[],
                 hometown: hometown.trim(),
                 dobISO: dobDate.toISOString(),
                 mode: 'milestone',
-                message: editableMessage,
+                message: finalMessage,
                 population: pop || undefined,
             });
         } catch (error) {
@@ -236,11 +238,12 @@ export default function GraduationFormScreen({ navigation }: Props) {
             navigation.navigate('Preview', {
                 theme: selectedColor,
                 personName: personName.trim(),
+                motherName: personName.trim(),
                 photoUris: photos.filter(p => p !== null) as string[],
                 hometown: hometown.trim(),
                 dobISO: dobDate.toISOString(),
                 mode: 'milestone',
-                message: editableMessage,
+                message: finalMessage,
             });
         } finally {
             setLoading(false);
@@ -339,17 +342,13 @@ export default function GraduationFormScreen({ navigation }: Props) {
                     {dobDate.toLocaleDateString()}
                 </Text>
             </TouchableOpacity>
-            {showDatePicker && (
-                <DateTimePicker
-                    value={dobDate}
-                    mode="date"
-                    display="default"
-                    onChange={(event, date) => {
-                        setShowDatePicker(false);
-                        if (date) setDobDate(date);
-                    }}
-                />
-            )}
+            <ScrollableDatePicker
+                visible={showDatePicker}
+                date={dobDate}
+                onDateChange={(date) => setDobDate(date)}
+                onClose={() => setShowDatePicker(false)}
+                title="Graduation Date"
+            />
 
             {/* Photos - Up to 3 */}
             <PhotoUploadGrid

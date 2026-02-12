@@ -10,6 +10,7 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
+import ScrollableDatePicker from '../../components/ScrollableDatePicker';
 
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFormContext } from '../context/FormContext';
@@ -617,14 +618,13 @@ export default function FormScreen({ navigation, route }: Props) {
                             {dobDate.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "2-digit", year: "numeric" })}
                         </Text>
                     </TouchableOpacity>
-                    {showDatePicker && (
-                        <DateTimePicker
-                            value={dobDate}
-                            onChange={(_e, d) => { setShowDatePicker(false); if (d) setDobDate(d); }}
-                            mode="date"
-                            display="default"
-                        />
-                    )}
+                    <ScrollableDatePicker
+                        visible={showDatePicker}
+                        date={dobDate}
+                        onDateChange={(date) => setDobDate(date)}
+                        onClose={() => setShowDatePicker(false)}
+                        title={mode === 'baby' ? 'Date of Birth' : 'Birthday'}
+                    />
                 </View>
                 {mode === 'baby' && (
                     <View style={{ flex: 1 }}>

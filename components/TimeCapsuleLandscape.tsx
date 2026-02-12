@@ -384,8 +384,7 @@ export default function TimeCapsuleLandscape(props: Props) {
         // BIRTHDAY MILESTONE FORMAT:
         // "[full name] was born on [date] in [city, st] and is now [age] years old. 
         // [first name]'s zodiac sign is [sign] [emoji] their birthstone is [birthstone] 
-        // have a life path number of [number] [emoji] Here is some interesting information 
-        // surrounding your birthday."
+        // have a life path number of [number] [emoji]"
         parts.push(`${fullNamesForSentence} was born on ${formattedDate} in ${toTitleCase(hometown)} and is now ${age} years old`);
 
         let attributeText = `${babyFirstOnly}'s zodiac sign is ${zodiac} ${zodiacEmoji} their birthstone is ${birthstone} ${birthstoneEmoji}`;
@@ -393,8 +392,6 @@ export default function TimeCapsuleLandscape(props: Props) {
             attributeText += ` have a life path number of ${lifePathNumber} ${lifepathEmoji}`;
         }
         parts.push(attributeText);
-
-        parts.push(`Here is some interesting information surrounding your birthday`);
     } else {
         // BABY ANNOUNCEMENT FORMAT:
         // "[Baby full name] was born on [date of birth] in [city, st] and weighed [weight lbs] [ounces] and was [length] in length.
@@ -430,13 +427,12 @@ export default function TimeCapsuleLandscape(props: Props) {
     const validParts = parts.filter(part => part && typeof part === 'string' && part.trim().length > 0);
     const intro = validParts.join('. ').replace(/\.\s*\./g, '.').replace(/\s+\./g, '.');
 
-    // Clean up the prewritten message for milestone mode - remove the "Here is some interesting information" part
-    // since it's already in the first paragraph
+    // Use the prewritten message as-is for milestone mode
+    // The "Here is some interesting information" sentence is appended at form completion
+    // and stays as the last sentence of the customer's message paragraph
     let milestoneMessage = '';
     if (isMilestoneMode && message) {
-        milestoneMessage = message
-            .replace(/\s*Here is some interesting information surrounding your birthday\.?\s*/gi, '')
-            .trim();
+        milestoneMessage = message.trim();
     }
 
     // State for coordinates (fetched from Google Sheets)

@@ -1,4 +1,3 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -14,6 +13,7 @@ import {
     View,
 } from 'react-native';
 import PhotoUploadGrid from '../components/PhotoUploadGrid';
+import ScrollableDatePicker from '../components/ScrollableDatePicker';
 import { COLOR_SCHEMES } from '../src/data/utils/colors';
 import { getPopulationForCity } from '../src/data/utils/populations';
 import type { RootStackParamList, ThemeName } from '../src/types';
@@ -37,24 +37,24 @@ const BIRTHDAY_OPTIONS = [
 
 const MESSAGES: Record<string, { classic: string; celebration: string; heartfelt: string }> = {
     birthday: {
-        classic: 'Wishing {fullName} a year filled with belly laughs, surprise adventures, and way too much cake! {firstName} deserves every bit of happiness coming their way. Here is some interesting information surrounding your birthday.',
-        celebration: 'Another trip around the sun and {fullName} is still the coolest person we know! Here\'s to more inside jokes, spontaneous dance parties, and making memories we\'ll laugh about forever. Here is some interesting information surrounding your birthday.',
-        heartfelt: 'On this special day, we celebrate the amazing person {fullName} is. Their kindness, humor, and love light up our lives. We\'re so grateful {firstName} was born! Here is some interesting information surrounding your birthday.',
+        classic: 'Wishing {fullName} a year filled with belly laughs, surprise adventures, and way too much cake! {firstName} deserves every bit of happiness coming their way.',
+        celebration: 'Another trip around the sun and {fullName} is still the coolest person we know! Here\'s to more inside jokes, spontaneous dance parties, and making memories we\'ll laugh about forever.',
+        heartfelt: 'On this special day, we celebrate the amazing person {fullName} is. Their kindness, humor, and love light up our lives. We\'re so grateful {firstName} was born!',
     },
     sweet16: {
-        classic: 'Sweet 16 and absolutely fabulous! This is {fullName}\'s year to shine, dream big, and make every moment count. The world is so lucky to have {firstName} in it! Here is some interesting information surrounding your birthday.',
-        celebration: 'Sixteen looks amazing on {fullName}! Get ready for new adventures, unforgettable moments, and all the fun that comes with this incredible milestone. Let\'s celebrate {firstName}! Here is some interesting information surrounding your birthday.',
-        heartfelt: 'Watching {fullName} grow into the incredible person they are today fills our hearts with so much love and pride. Happy Sweet 16 to someone truly special! Here is some interesting information surrounding your birthday.',
+        classic: 'Sweet 16 and absolutely fabulous! This is {fullName}\'s year to shine, dream big, and make every moment count. The world is so lucky to have {firstName} in it!',
+        celebration: 'Sixteen looks amazing on {fullName}! Get ready for new adventures, unforgettable moments, and all the fun that comes with this incredible milestone. Let\'s celebrate {firstName}!',
+        heartfelt: 'Watching {fullName} grow into the incredible person they are today fills our hearts with so much love and pride. Happy Sweet 16 to someone truly special!',
     },
     '21st': {
-        classic: 'Welcome to 21, {fullName}! The world is yours for the taking, and we can\'t wait to see all the amazing things you\'ll do. Cheers to this exciting new chapter! Here is some interesting information surrounding your birthday.',
-        celebration: '{fullName} is 21 and ready to take on the world! This is the year for big dreams, wild adventures, and making memories that\'ll last a lifetime. Let\'s celebrate! Here is some interesting information surrounding your birthday.',
-        heartfelt: 'Twenty-one years of {fullName} bringing joy to everyone around them. We\'re so proud of who they\'ve become and so excited for everything ahead. We love you to the moon and back! Here is some interesting information surrounding your birthday.',
+        classic: 'Welcome to 21, {fullName}! The world is yours for the taking, and we can\'t wait to see all the amazing things you\'ll do. Cheers to this exciting new chapter!',
+        celebration: '{fullName} is 21 and ready to take on the world! This is the year for big dreams, wild adventures, and making memories that\'ll last a lifetime. Let\'s celebrate!',
+        heartfelt: 'Twenty-one years of {fullName} bringing joy to everyone around them. We\'re so proud of who they\'ve become and so excited for everything ahead. We love you to the moon and back!',
     },
     overthehill: {
-        classic: '{fullName} has officially made it over the hill! It\'s all downhill from here... but at least the view is amazing! Here is some interesting information surrounding your birthday.',
-        celebration: 'Over the hill but still killing it! {fullName} is proof that age is just a number (and this number is getting pretty big!). Let\'s celebrate! Here is some interesting information surrounding your birthday.',
-        heartfelt: '{fullName} has reached a beautiful milestone. With age comes wisdom, and {firstName} has plenty of both! Here\'s to many more years of love and laughter. Here is some interesting information surrounding your birthday.',
+        classic: '{fullName} has officially made it over the hill! It\'s all downhill from here... but at least the view is amazing!',
+        celebration: 'Over the hill but still killing it! {fullName} is proof that age is just a number (and this number is getting pretty big!). Let\'s celebrate!',
+        heartfelt: '{fullName} has reached a beautiful milestone. With age comes wisdom, and {firstName} has plenty of both! Here\'s to many more years of love and laughter.',
     },
 };
 
@@ -113,13 +113,13 @@ type MessageKey = 'classic' | 'celebration' | 'heartfelt';
 export default function BirthdayFormScreen({ navigation }: Props) {
     const { width } = useWindowDimensions();
 
-    // Form state
+    // Form state - Prefilled with sample data
     const [selectedBirthday, setSelectedBirthday] = useState<string>('birthday');
     const [showBirthdayModal, setShowBirthdayModal] = useState(false);
-    const [personName, setPersonName] = useState('');
+    const [personName, setPersonName] = useState('Jessica Sample Doe');
     const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]);
-    const [hometown, setHometown] = useState('');
-    const [dobDate, setDobDate] = useState<Date>(new Date());
+    const [hometown, setHometown] = useState('Bellefontaine Neighbors, MO');
+    const [dobDate, setDobDate] = useState<Date>(new Date(2026, 1, 4)); // Feb 4, 2026
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedMessage, setSelectedMessage] = useState<MessageKey>('classic');
     const [customMessage, setCustomMessage] = useState('');
@@ -206,6 +206,7 @@ export default function BirthdayFormScreen({ navigation }: Props) {
         }
 
         setLoading(true);
+        const finalMessage = editableMessage + ' Here is some interesting information surrounding your birthday.';
         try {
             const pop = await getPopulationForCity(hometown.trim());
             setPopulation(pop);
@@ -213,11 +214,12 @@ export default function BirthdayFormScreen({ navigation }: Props) {
             navigation.navigate('Preview', {
                 theme: selectedColor,
                 personName: personName.trim(),
+                motherName: personName.trim(),
                 photoUris: photos.filter(p => p !== null) as string[],
                 hometown: hometown.trim(),
                 dobISO: dobDate.toISOString(),
                 mode: 'milestone',
-                message: editableMessage,
+                message: finalMessage,
                 population: pop || undefined,
             });
         } catch (error) {
@@ -225,11 +227,12 @@ export default function BirthdayFormScreen({ navigation }: Props) {
             navigation.navigate('Preview', {
                 theme: selectedColor,
                 personName: personName.trim(),
+                motherName: personName.trim(),
                 photoUris: photos.filter(p => p !== null) as string[],
                 hometown: hometown.trim(),
                 dobISO: dobDate.toISOString(),
                 mode: 'milestone',
-                message: editableMessage,
+                message: finalMessage,
             });
         } finally {
             setLoading(false);
@@ -318,17 +321,13 @@ export default function BirthdayFormScreen({ navigation }: Props) {
                     {dobDate.toLocaleDateString()}
                 </Text>
             </TouchableOpacity>
-            {showDatePicker && (
-                <DateTimePicker
-                    value={dobDate}
-                    mode="date"
-                    display="default"
-                    onChange={(event, date) => {
-                        setShowDatePicker(false);
-                        if (date) setDobDate(date);
-                    }}
-                />
-            )}
+            <ScrollableDatePicker
+                visible={showDatePicker}
+                date={dobDate}
+                onDateChange={(date) => setDobDate(date)}
+                onClose={() => setShowDatePicker(false)}
+                title="Birth Date"
+            />
 
             {/* Photos - Up to 3 */}
             <PhotoUploadGrid

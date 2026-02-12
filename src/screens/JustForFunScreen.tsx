@@ -12,6 +12,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import ScrollableDatePicker from '../../components/ScrollableDatePicker';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JustForFun'>;
@@ -572,23 +573,18 @@ export default function JustForFunScreen({ navigation }: Props) {
                         </TouchableOpacity>
                     </View>
 
-                    {showDatePicker && (
-                        <DateTimePicker
-                            value={birthDate}
-                            mode="date"
-                            display="default"
-                            onChange={(_, date) => {
-                                setShowDatePicker(false);
-                                if (date) {
-                                    setBirthDate(date);
-                                    // Recalculate if a feature is selected
-                                    if (currentFeatureRef.current) {
-                                        handleCalculate(date, currentFeatureRef.current);
-                                    }
-                                }
-                            }}
-                        />
-                    )}
+                    <ScrollableDatePicker
+                        visible={showDatePicker}
+                        date={birthDate}
+                        onDateChange={(date) => {
+                            setBirthDate(date);
+                            if (currentFeatureRef.current) {
+                                handleCalculate(date, currentFeatureRef.current);
+                            }
+                        }}
+                        onClose={() => setShowDatePicker(false)}
+                        title="Enter Your Birthday"
+                    />
 
                     {showTimePicker && (
                         <DateTimePicker

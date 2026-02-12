@@ -1,4 +1,3 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -14,6 +13,7 @@ import {
     View,
 } from 'react-native';
 import PhotoUploadGrid from '../components/PhotoUploadGrid';
+import ScrollableDatePicker from '../components/ScrollableDatePicker';
 import { COLOR_SCHEMES } from '../src/data/utils/colors';
 import { getPopulationForCity } from '../src/data/utils/populations';
 import type { RootStackParamList, ThemeName } from '../src/types';
@@ -161,42 +161,41 @@ const MESSAGES = {
 
 // Milestone-specific messages
 const getMilestoneMessages = (milestoneId: string) => {
-    const birthdayEnding = ' Here is some interesting information surrounding your birthday.';
     const messages: Record<string, { classic: string; celebration: string; heartfelt: string }> = {
         birthday: {
-            classic: 'Wishing {fullName} a year filled with belly laughs, surprise adventures, and way too much cake! {firstName} deserves every bit of happiness coming their way.' + birthdayEnding,
-            celebration: 'Another trip around the sun and {fullName} is still the coolest person we know! Here\'s to more inside jokes, spontaneous dance parties, and making memories we\'ll laugh about forever.' + birthdayEnding,
-            heartfelt: 'On this special day, we celebrate the amazing person {fullName} is. Their kindness, humor, and love light up our lives. We\'re so grateful {firstName} was born!' + birthdayEnding,
+            classic: 'Wishing {fullName} a year filled with belly laughs, surprise adventures, and way too much cake! {firstName} deserves every bit of happiness coming their way.',
+            celebration: 'Another trip around the sun and {fullName} is still the coolest person we know! Here\'s to more inside jokes, spontaneous dance parties, and making memories we\'ll laugh about forever.',
+            heartfelt: 'On this special day, we celebrate the amazing person {fullName} is. Their kindness, humor, and love light up our lives. We\'re so grateful {firstName} was born!',
         },
         sweet16: {
-            classic: 'Sweet 16 and absolutely fabulous! This is {fullName}\'s year to shine, dream big, and make every moment count. The world is so lucky to have {firstName} in it!' + birthdayEnding,
-            celebration: 'Sixteen looks amazing on {fullName}! Get ready for new adventures, unforgettable moments, and all the fun that comes with this incredible milestone. Let\'s celebrate {firstName}!' + birthdayEnding,
-            heartfelt: 'Watching {fullName} grow into the incredible person they are today fills our hearts with so much love and pride. Happy Sweet 16 to someone truly special!' + birthdayEnding,
+            classic: 'Sweet 16 and absolutely fabulous! This is {fullName}\'s year to shine, dream big, and make every moment count. The world is so lucky to have {firstName} in it!',
+            celebration: 'Sixteen looks amazing on {fullName}! Get ready for new adventures, unforgettable moments, and all the fun that comes with this incredible milestone. Let\'s celebrate {firstName}!',
+            heartfelt: 'Watching {fullName} grow into the incredible person they are today fills our hearts with so much love and pride. Happy Sweet 16 to someone truly special!',
         },
         '21st': {
-            classic: 'Welcome to 21, {fullName}! The world is yours for the taking, and we can\'t wait to see all the amazing things you\'ll do. Cheers to this exciting new chapter!' + birthdayEnding,
-            celebration: '{fullName} is 21 and ready to take on the world! This is the year for big dreams, wild adventures, and making memories that\'ll last a lifetime. Let\'s celebrate!' + birthdayEnding,
-            heartfelt: 'Twenty-one years of {fullName} bringing joy to everyone around them. We\'re so proud of who they\'ve become and so excited for everything ahead. We love you to the moon and back!' + birthdayEnding,
+            classic: 'Welcome to 21, {fullName}! The world is yours for the taking, and we can\'t wait to see all the amazing things you\'ll do. Cheers to this exciting new chapter!',
+            celebration: '{fullName} is 21 and ready to take on the world! This is the year for big dreams, wild adventures, and making memories that\'ll last a lifetime. Let\'s celebrate!',
+            heartfelt: 'Twenty-one years of {fullName} bringing joy to everyone around them. We\'re so proud of who they\'ve become and so excited for everything ahead. We love you to the moon and back!',
         },
         highschool: {
-            classic: 'Congratulations on your high school graduation! This is just the beginning of an incredible journey. The world is full of opportunities waiting for you. Here is some interesting information surrounding your graduation.',
-            celebration: 'You did it! High school is officially in the rearview mirror. Time to celebrate this amazing achievement and get ready for the exciting adventures ahead! Here is some interesting information surrounding your graduation.',
-            heartfelt: 'What an incredible milestone! All the hard work, dedication, and late nights have paid off. We are so proud of everything you have accomplished. The best is yet to come! Here is some interesting information surrounding your graduation.',
+            classic: 'Congratulations on your high school graduation! This is just the beginning of an incredible journey. The world is full of opportunities waiting for you.',
+            celebration: 'You did it! High school is officially in the rearview mirror. Time to celebrate this amazing achievement and get ready for the exciting adventures ahead!',
+            heartfelt: 'What an incredible milestone! All the hard work, dedication, and late nights have paid off. We are so proud of everything you have accomplished. The best is yet to come!',
         },
         college: {
-            classic: 'Congratulations on your college graduation! Years of hard work and determination have led to this proud moment. Your future is bright and full of endless possibilities. Here is some interesting information surrounding your graduation.',
-            celebration: 'You made it! College is complete and a whole new chapter is about to begin. Time to celebrate this huge accomplishment and all the success that lies ahead! Here is some interesting information surrounding your graduation.',
-            heartfelt: 'This diploma represents so much more than a degree. It represents perseverance, growth, and countless sacrifices. We could not be more proud of this achievement. Here is some interesting information surrounding your graduation.',
+            classic: 'Congratulations on your college graduation! Years of hard work and determination have led to this proud moment. Your future is bright and full of endless possibilities.',
+            celebration: 'You made it! College is complete and a whole new chapter is about to begin. Time to celebrate this huge accomplishment and all the success that lies ahead!',
+            heartfelt: 'This diploma represents so much more than a degree. It represents perseverance, growth, and countless sacrifices. We could not be more proud of this achievement.',
         },
         mothersday: {
-            classic: 'We love you more than words can say. Happy Mother\'s Day!' + birthdayEnding,
-            celebration: 'Thanks for everything you do! Today we celebrate YOU! Happy Mother\'s Day!' + birthdayEnding,
-            heartfelt: 'We\'re so blessed to call you Mom. Happy Mother\'s Day!' + birthdayEnding,
+            classic: 'We love you more than words can say. Happy Mother\'s Day!',
+            celebration: 'Thanks for everything you do! Today we celebrate YOU! Happy Mother\'s Day!',
+            heartfelt: 'We\'re so blessed to call you Mom. Happy Mother\'s Day!',
         },
         fathersday: {
-            classic: 'We\'re so lucky to have you. Happy Father\'s Day!' + birthdayEnding,
-            celebration: 'Thanks for the bad jokes, the good advice, and always being there. Today is all about you! Happy Father\'s Day!' + birthdayEnding,
-            heartfelt: 'We\'re grateful for every moment. Happy Father\'s Day to the best dad ever!' + birthdayEnding,
+            classic: 'We\'re so lucky to have you. Happy Father\'s Day!',
+            celebration: 'Thanks for the bad jokes, the good advice, and always being there. Today is all about you! Happy Father\'s Day!',
+            heartfelt: 'We\'re grateful for every moment. Happy Father\'s Day to the best dad ever!',
         },
     };
 
@@ -204,9 +203,9 @@ const getMilestoneMessages = (milestoneId: string) => {
     const anniversaryYears = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '15th', '20th', '25th', '30th', '40th', '50th', '60th'];
     if (anniversaryYears.includes(milestoneId)) {
         return {
-            classic: `{name}'s ${milestoneId} anniversary and still going strong! Your love story is one for the ages. Here's to many more years of happiness together.` + birthdayEnding,
-            celebration: `${milestoneId} years of love, laughter, and putting up with each other! {name}, you two are relationship goals. Cheers to your amazing journey together!` + birthdayEnding,
-            heartfelt: `${milestoneId} years of {name} building a beautiful life together. Your love inspires everyone around you. May your bond continue to grow stronger each day.` + birthdayEnding,
+            classic: `{name}'s ${milestoneId} anniversary and still going strong! Your love story is one for the ages. Here's to many more years of happiness together.`,
+            celebration: `${milestoneId} years of love, laughter, and putting up with each other! {name}, you two are relationship goals. Cheers to your amazing journey together!`,
+            heartfelt: `${milestoneId} years of {name} building a beautiful life together. Your love inspires everyone around you. May your bond continue to grow stronger each day.`,
         };
     }
 
@@ -258,19 +257,19 @@ type MessageKey = keyof typeof MESSAGES;
 export default function LifeMilestonesFormScreen({ navigation }: Props) {
     const { width } = useWindowDimensions();
 
-    // Form state
+    // Form state - Prefilled with sample data
     const [milestoneCategory, setMilestoneCategory] = useState<'birthday' | 'graduation' | 'anniversary' | 'special'>('birthday');
     const [selectedMilestone, setSelectedMilestone] = useState<string>('birthday');
     const [showMilestoneModal, setShowMilestoneModal] = useState(false);
     const [selectedRecipient, setSelectedRecipient] = useState<string>('');
     const [showRecipientModal, setShowRecipientModal] = useState(false);
-    const [personName, setPersonName] = useState('Patrick McCullen');
-    const [spouse1, setSpouse1] = useState('');
-    const [spouse2, setSpouse2] = useState('');
-    const [lastName, setLastName] = useState('');
+    const [personName, setPersonName] = useState('Jessica Sample Doe');
+    const [spouse1, setSpouse1] = useState('Jane Doe');
+    const [spouse2, setSpouse2] = useState('John Doe');
+    const [lastName, setLastName] = useState('Doe');
     const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]);
     const [hometown, setHometown] = useState('Bellefontaine Neighbors, MO');
-    const [dobDate, setDobDate] = useState<Date>(new Date(1970, 10, 15)); // November 15, 1970
+    const [dobDate, setDobDate] = useState<Date>(new Date(2026, 1, 4)); // Feb 4, 2026
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedMessage, setSelectedMessage] = useState<MessageKey>('classic');
     const [customMessage, setCustomMessage] = useState('');
@@ -517,8 +516,14 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
 
         // Get the final message (use edited version if customer modified it)
         let finalMessage = getMessageForPreview();
-        if (selectedMilestone === 'birthday' || selectedMilestone === 'sweet16' || selectedMilestone === '21st') {
+        // Append the appropriate ending sentence based on milestone type
+        const anniversaryYears = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '15th', '20th', '25th', '30th', '40th', '50th', '60th'];
+        if (selectedMilestone === 'birthday' || selectedMilestone === 'sweet16' || selectedMilestone === '21st' || selectedMilestone === 'mothersday' || selectedMilestone === 'fathersday') {
             finalMessage = `${finalMessage} Here is some interesting information surrounding your birthday.`;
+        } else if (selectedMilestone === 'highschool' || selectedMilestone === 'college') {
+            finalMessage = `${finalMessage} Here is some interesting information surrounding your graduation.`;
+        } else if (anniversaryYears.includes(selectedMilestone)) {
+            finalMessage = `${finalMessage} Here is some interesting information surrounding your anniversary.`;
         }
 
         // Split personName into first/middle/last for proper name handling
@@ -907,17 +912,13 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
             >
                 <Text>{dobDate.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "2-digit", year: "numeric" })}</Text>
             </TouchableOpacity>
-            {showDatePicker && (
-                <DateTimePicker
-                    value={dobDate}
-                    onChange={(_e, d) => {
-                        setShowDatePicker(false);
-                        if (d) setDobDate(d);
-                    }}
-                    mode="date"
-                    display="default"
-                />
-            )}
+            <ScrollableDatePicker
+                visible={showDatePicker}
+                date={dobDate}
+                onDateChange={(date) => setDobDate(date)}
+                onClose={() => setShowDatePicker(false)}
+                title={milestoneCategory === 'anniversary' ? 'Wedding Date' : 'Date of Birth'}
+            />
 
             {/* Photos */}
             <PhotoUploadGrid
