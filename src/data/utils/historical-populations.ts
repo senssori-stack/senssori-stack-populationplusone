@@ -24,6 +24,19 @@ const STATE_ABBREV_MAP: Record<string, string> = {
     'dc': 'district of columbia'
 };
 
+/** Census designation suffixes to strip from CSV city names */
+const CENSUS_SUFFIXES = [' city', ' town', ' village', ' cdp', ' borough', ' municipality', ' urban county', ' metro township', ' charter township', ' consolidated government', ' metropolitan government', ' unified government'];
+
+function stripCensusSuffixFromCity(cityName: string): string {
+    const lower = cityName.toLowerCase();
+    for (const suffix of CENSUS_SUFFIXES) {
+        if (lower.endsWith(suffix)) {
+            return cityName.substring(0, cityName.length - suffix.length);
+        }
+    }
+    return cityName;
+}
+
 /**
  * Normalize city, state format to handle abbreviations
  * "St. Louis, Mo" -> ["st. louis, missouri", "st. louis, mo"]
@@ -37,16 +50,29 @@ function generateCityKeys(hometown: string): string[] {
     if (parts.length === 2) {
         const [city, state] = parts;
 
+        // Strip Census suffixes from the city name
+        const strippedCity = stripCensusSuffixFromCity(city);
+        if (strippedCity !== city) {
+            keys.push(`${strippedCity}, ${state}`);
+            keys.push(`${strippedCity},${state}`);
+        }
+
         // If state looks like abbreviation (2-3 chars), add full name version
         if (state.length <= 3 && STATE_ABBREV_MAP[state]) {
             const fullState = STATE_ABBREV_MAP[state];
             keys.push(`${city}, ${fullState}`);
+            if (strippedCity !== city) {
+                keys.push(`${strippedCity}, ${fullState}`);
+            }
         }
 
         // Also try without space after comma
         keys.push(`${city},${state}`);
         if (state.length <= 3 && STATE_ABBREV_MAP[state]) {
             keys.push(`${city},${STATE_ABBREV_MAP[state]}`);
+            if (strippedCity !== city) {
+                keys.push(`${strippedCity},${STATE_ABBREV_MAP[state]}`);
+            }
         }
     }
 
@@ -196,7 +222,12 @@ async function loadHistoricalPopulations(): Promise<Record<string, Record<number
             if (!city || !state) continue;
 
             // Create key as "city, state" (lowercase for case-insensitive matching)
-            const key = `${city}, ${state}`.toLowerCase();
+            // Strip Census designation suffixes (e.g., "Kansas City city" → "Kansas City")
+            const cleanCity = stripCensusSuffixFromCity(city);
+            const key = `${cleanCity}, ${state}`.toLowerCase();
+
+            // Also store with original city name as fallback key
+            const originalKey = `${city}, ${state}`.toLowerCase();
 
             // Parse population data for each year
             const yearData: Record<number, number> = {};
@@ -214,6 +245,10 @@ async function loadHistoricalPopulations(): Promise<Record<string, Record<number
             // Only add if we have at least some data
             if (Object.keys(yearData).length > 0) {
                 result[key] = yearData;
+                // Also store under original key if different (for direct CSV matches)
+                if (originalKey !== key) {
+                    result[originalKey] = yearData;
+                }
                 cityCount++;
             }
         }

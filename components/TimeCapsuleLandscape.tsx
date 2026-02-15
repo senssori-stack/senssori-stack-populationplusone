@@ -575,7 +575,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                                     </Text>
                                 )
                             ) : (
-                                (motherName || fatherName) && (
+                                (motherName || fatherName) ? (
                                     <Text style={[styles.title, {
                                         fontSize: titleSize * 0.7 * 1.4,
                                         color: colors.text,
@@ -585,7 +585,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                                     }]}>
                                         {[motherName, fatherName].filter(Boolean).join(' & ')}
                                     </Text>
-                                )
+                                ) : null
                             )}
 
                             {/* "Time Capsule" title */}
@@ -662,7 +662,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                                     url={getBirthstoneLink(birthstone)}
                                     style={{ fontSize: bodySize, color: colors.text, marginRight: 4 }}
                                 />
-                                {lifePathNumber && (
+                                {lifePathNumber != null && lifePathNumber > 0 ? (
                                     <>
                                         <Text style={{ fontSize: bodySize, color: colors.text, marginRight: 4, fontWeight: 'bold' }}>
                                             {'and has a life path number of ' + lifePathNumber}
@@ -673,7 +673,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                                             style={{ fontSize: bodySize, color: colors.text }}
                                         />
                                     </>
-                                )}
+                                ) : null}
                             </View>
                             <Text style={{ fontSize: bodySize, color: colors.text, marginTop: padding * 0.15, fontWeight: 'bold', textAlign: 'center' }}>
                                 {`Here are some interesting facts surrounding ${babyFirstOnly || namesForSentence}'s birthday.`}
@@ -703,7 +703,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                             </View>
                             {/* Flag centered over THEN column (or where THEN would be for baby mode) */}
                             <View style={{ width: '20%', alignItems: 'center', justifyContent: 'center' }}>
-                                {stateCode && (
+                                {stateCode ? (
                                     <Pressable
                                         onPress={() => {
                                             const url = getStateFlagLink(stateCode);
@@ -713,13 +713,13 @@ export default function TimeCapsuleLandscape(props: Props) {
                                         <Image
                                             source={{ uri: getStateFlagImage(stateCode) || '' }}
                                             style={{
-                                                width: labelSize * 2.5,
-                                                height: labelSize * 1.7,
+                                                width: labelSize * 3.75,
+                                                height: labelSize * 2.55,
                                                 resizeMode: 'contain'
                                             }}
                                         />
                                     </Pressable>
-                                )}
+                                ) : null}
                             </View>
                             {/* Governor on far right - aligned with NOW column */}
                             <View style={{ width: '40%', alignItems: 'flex-end', justifyContent: 'center' }}>
@@ -774,7 +774,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                                     borderBottomWidth: 0.8,
                                     borderBottomColor: colors.border || '#FFFFFF'
                                 }]}>
-                                    <View style={[styles.label, { fontSize: labelSize, color: colors.text, width: '40%', flexDirection: 'row', alignItems: 'center' }]}>
+                                    <View style={[styles.label, { width: '40%', flexDirection: 'row', alignItems: 'center' }]}>
                                         <Text style={{ fontSize: labelSize, color: colors.text }}>
                                             {labelText}
                                         </Text>
@@ -822,7 +822,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                         color: colors.text,
                         marginTop: padding * 0.2
                     }]}>
-                        SOURCES: bls.gov, eia.gov, fred.stlouisfed.org, census.gov, archives.gov, billboard.com, wikipedia.org
+                        SOURCES: gasprices.aaa.com, bls.gov, kitco.com, marketwatch.com, census.gov, espn.com, billboard.com, themoviedb.org, usa.gov
                     </Text>
                 </View>
             </View>

@@ -72,7 +72,7 @@ export default function SourcesScreen({ navigation }: Props) {
                     </View>
                     <Text style={styles.title}>Data Sources</Text>
                     <Text style={styles.subtitle}>
-                        All data in Population +1 is sourced from official, verified sources.
+                        All data in Population +1™ is sourced from official, verified sources.
                     </Text>
                 </View>
 

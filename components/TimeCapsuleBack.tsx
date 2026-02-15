@@ -1,8 +1,7 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { COLOR_SCHEMES } from '../src/data/utils/colors';
 import { formatSnapshotValue } from '../src/data/utils/formatSnapshot';
-import { calculateLifePath } from '../src/data/utils/life-path-calculator';
 import { extractStateFromHometown } from '../src/data/utils/state-flags';
 import type { ThemeName } from '../src/types';
 
@@ -173,7 +172,7 @@ export default function TimeCapsuleBack(props: Props) {
     const rows: [string, string][] = [
         ['Zodiac', props.zodiac],
         ['Birthstone', props.birthstone],
-        ...(props.lifePathNumber ? [['Life Path Number', String(props.lifePathNumber)]] : []),
+        ...(props.lifePathNumber ? [['Life Path Number', String(props.lifePathNumber)] as [string, string]] : []),
         ...SNAP_KEYS.map(({ label, key }) => [label, formatSnapshotValue(key, props.snapshot[key] ?? '')] as [string, string]),
     ];
 

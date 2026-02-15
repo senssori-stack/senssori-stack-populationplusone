@@ -10,6 +10,7 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
+import PhotoUploadGrid from '../../components/PhotoUploadGrid';
 import ScrollableDatePicker from '../../components/ScrollableDatePicker';
 
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -163,23 +164,29 @@ export default function FormScreen({ navigation, route }: Props) {
     // const [babyLast, setBabyLast] = useState("Montgomery-Williams-Henderson");
     // const [hometown, setHometown] = useState("San Francisco International Airport, California");
 
-    const [babyFirst, setBabyFirst] = useState("Emma");
+    const [babyFirst, setBabyFirst] = useState("Emily");
     const [babyMiddle, setBabyMiddle] = useState("Grace");
-    const [babyLast, setBabyLast] = useState("Johnson");
+    const [babyLast, setBabyLast] = useState("Sample");
     const [babies, setBabies] = useState<Array<{ first: string; middle?: string; last?: string; photoUri?: string | null }>>([
         {
-            first: 'Emma',
+            first: 'Emily',
             middle: 'Grace',
-            last: 'Johnson',
+            last: 'Sample',
+            photoUri: null
+        },
+        {
+            first: 'Jimmy',
+            middle: 'Bobby',
+            last: 'Sample',
             photoUri: null
         },
     ]);
-    const [babyCount, setBabyCount] = useState<number>(1); // Default to single baby
-    const [motherName, setMotherName] = useState("Sarah Johnson");
-    const [fatherName, setFatherName] = useState("Michael Johnson");
-    const [email, setEmail] = useState("sarah.johnson@email.com"); // For marketing
-    const [hometown, setHometown] = useState("Bellefontaine Neighbors, MO");
-    const [dobDate, setDobDate] = useState<Date>(new Date()); // Today's date
+    const [babyCount, setBabyCount] = useState<number>(2); // Twins
+    const [motherName, setMotherName] = useState("Sarah Sample");
+    const [fatherName, setFatherName] = useState("Jack Sample");
+    const [email, setEmail] = useState(""); // For marketing
+    const [hometown, setHometown] = useState("Kansas City, MO");
+    const [dobDate, setDobDate] = useState<Date>(new Date(2026, 1, 14)); // Feb 14, 2026
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [birthTime, setBirthTime] = useState<Date>(new Date()); // Time of birth
     const [showTimePicker, setShowTimePicker] = useState(false);
@@ -405,9 +412,13 @@ export default function FormScreen({ navigation, route }: Props) {
                     return;
                 }
             } catch (error) {
+                const err = error as Error;
+                const isNetworkError = err.message?.includes('fetch') || err.message?.includes('Network') || err.message?.includes('timeout');
                 Alert.alert(
-                    'City Not Found',
-                    'OUR RECORDS INDICATE THAT THIS CITY, ST DOES NOT EXIST, WAS NOT INCORPORATED AT THE DATE OF BIRTH OR THE SPELLING OF CITY, ST IS INCORRECT.',
+                    isNetworkError ? 'Network Error' : 'City Not Found',
+                    isNetworkError
+                        ? 'Unable to connect to population database. Please check your internet connection and try again.'
+                        : 'OUR RECORDS INDICATE THAT THIS CITY, ST DOES NOT EXIST, WAS NOT INCORPORATED AT THE DATE OF BIRTH OR THE SPELLING OF CITY, ST IS INCORRECT.',
                     [{ text: 'OK' }]
                 );
                 setLoading(false);
@@ -436,14 +447,27 @@ export default function FormScreen({ navigation, route }: Props) {
                 last: (b.last || '').trim(),
                 photoUri: b.photoUri ?? null
             }));
-            // Construct personName from first baby's name (matching milestone form structure)
-            const firstBaby = meaningfulBabies[0];
-            const nameParts = [
-                (firstBaby.first || '').trim(),
-                (firstBaby.middle || '').trim(),
-                (firstBaby.last || '').trim()
-            ].filter(Boolean);
-            payload.personName = nameParts.join(' ');
+            // Construct personName from ALL baby names for twins/triplets
+            if (babyCount === 1) {
+                const firstBaby = meaningfulBabies[0];
+                const nameParts = [
+                    (firstBaby.first || '').trim(),
+                    (firstBaby.middle || '').trim(),
+                    (firstBaby.last || '').trim()
+                ].filter(Boolean);
+                payload.personName = nameParts.join(' ');
+            } else {
+                // Join all baby first names: "Emma & Olivia" or "Emma, Olivia & Liam"
+                const firstNames = meaningfulBabies.map(b => (b.first || '').trim()).filter(Boolean);
+                if (firstNames.length === 2) {
+                    payload.personName = firstNames.join(' & ');
+                } else if (firstNames.length === 3) {
+                    payload.personName = `${firstNames[0]}, ${firstNames[1]} & ${firstNames[2]}`;
+                } else {
+                    payload.personName = firstNames.join(', ');
+                }
+            }
+            payload.babyCount = babyCount;
             // For single baby, use the photoUris state (3-slot picker); for twins/triplets, use individual baby photos
             if (babyCount === 1) {
                 payload.photoUris = photoUris.filter(p => p !== null);
@@ -460,6 +484,7 @@ export default function FormScreen({ navigation, route }: Props) {
             payload.personName = nameParts.join(' ');
         }
         payload.mode = 'baby';
+        payload.babyCount = payload.babyCount || babyCount;
         payload.frontOrientation = 'landscape';
         payload.timeCapsuleOrientation = 'landscape';
         payload.snapshot = snapshot;
@@ -470,8 +495,8 @@ export default function FormScreen({ navigation, route }: Props) {
     const C = COLOR_SCHEMES[theme as keyof typeof COLOR_SCHEMES];
 
     return (
-        <ScrollView style={[styles.container, { backgroundColor: C.bg }]} contentContainerStyle={styles.content}>
-            <Text style={styles.title}>+1 {mode === 'baby' ? 'Birth Announcement' : 'Time Capsule Gift'}</Text>
+        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+            <Text style={styles.title}>POPULATION +1 {mode === 'baby' ? 'Form Announcement' : 'Time Capsule Gift'}</Text>
 
             {/* Baby Count Toggle */}
             <Text style={styles.label}>{mode === 'baby' ? 'How many babies?' : 'How many people?'}</Text>
@@ -525,34 +550,12 @@ export default function FormScreen({ navigation, route }: Props) {
 
                     {/* Photo Upload - 3 slots for single baby, 1 per baby for twins/triplets */}
                     {babyCount === 1 ? (
-                        <>
-                            <Text style={styles.label}>Photos (up to 3, optional)</Text>
-                            <View style={styles.photoSlotsRow}>
-                                {[0, 1, 2].map(slotIdx => (
-                                    <View key={slotIdx} style={styles.photoSlotContainer}>
-                                        <TouchableOpacity
-                                            style={[styles.photoSlot, photoUris[slotIdx] && styles.photoSlotFilled]}
-                                            onPress={() => pickPhotoSlot(slotIdx)}
-                                        >
-                                            <Text style={styles.photoSlotText}>
-                                                {photoUris[slotIdx] ? '✓' : `${slotIdx + 1}`}
-                                            </Text>
-                                        </TouchableOpacity>
-                                        {photoUris[slotIdx] && (
-                                            <TouchableOpacity
-                                                style={styles.photoRemoveBtn}
-                                                onPress={() => removePhotoSlot(slotIdx)}
-                                            >
-                                                <Text style={styles.photoRemoveText}>✕</Text>
-                                            </TouchableOpacity>
-                                        )}
-                                    </View>
-                                ))}
-                            </View>
-                            <Text style={styles.photoHint}>
-                                {photoUris.filter(p => p).length}/3 photos selected
-                            </Text>
-                        </>
+                        <PhotoUploadGrid
+                            photos={photoUris}
+                            onPhotosChange={setPhotoUris}
+                            maxPhotos={3}
+                            label="Photos (Optional - up to 3)"
+                        />
                     ) : (
                         <>
                             <Text style={styles.label}>Photo (optional)</Text>
@@ -589,7 +592,7 @@ export default function FormScreen({ navigation, route }: Props) {
             />
 
             {/* Hometown */}
-            <Text style={styles.label}>Hometown (City, State) â€” required</Text>
+            <Text style={styles.label}>Hometown (City, State) - required</Text>
             <TextInput
                 style={[styles.input, touched.hometown && !hometown.trim() && styles.inputError]}
                 placeholder="e.g., Springfield, MO"
@@ -600,10 +603,10 @@ export default function FormScreen({ navigation, route }: Props) {
                 onBlur={() => setTouched(t => ({ ...t, hometown: true }))}
             />
             {loading && (
-                <Text style={styles.statusText}>ðŸ” Finding population data...</Text>
+                <Text style={styles.statusText}>Finding population data...</Text>
             )}
             {population && (
-                <Text style={styles.statusText}>âœ… Population: {population.toLocaleString()}</Text>
+                <Text style={styles.statusText}>Population: {population.toLocaleString()}</Text>
             )}
             {touched.hometown && !hometown.trim() && (
                 <Text style={styles.errorText}>Hometown is required</Text>
@@ -611,7 +614,7 @@ export default function FormScreen({ navigation, route }: Props) {
 
             {/* Date of Birth */}
             <View style={styles.row}>
-                <View style={{ flex: 2 }}>
+                <View style={{ flex: 1 }}>
                     <Text style={styles.label}>{mode === 'baby' ? 'Date of Birth' : 'Birthday'}</Text>
                     <TouchableOpacity style={styles.dateBtn} onPress={() => setShowDatePicker(true)}>
                         <Text style={styles.dateBtnText}>
@@ -627,7 +630,7 @@ export default function FormScreen({ navigation, route }: Props) {
                     />
                 </View>
                 {mode === 'baby' && (
-                    <View style={{ flex: 1 }}>
+                    <View style={{ width: 110 }}>
                         <Text style={styles.label}>Time of Birth</Text>
                         <TouchableOpacity style={styles.dateBtn} onPress={() => setShowTimePicker(true)}>
                             <Text style={styles.dateBtnText}>
@@ -688,7 +691,7 @@ export default function FormScreen({ navigation, route }: Props) {
             {mode === 'baby' && babyCount > 1 && (
                 <View style={styles.infoBox}>
                     <Text style={styles.infoText}>
-                        âš–ï¸ðŸ“ Weight & Length not available for {babyCount === 2 ? 'twins' : 'triplets'}
+                        Weight & Length not available for {babyCount === 2 ? 'twins' : 'triplets'}
                     </Text>
                 </View>
             )}
@@ -775,19 +778,18 @@ export default function FormScreen({ navigation, route }: Props) {
             {/* Build Button */}
             <TouchableOpacity
                 style={[
-                    styles.buildBtn,
-                    { backgroundColor: C.bg },
-                    (!canBuild || loading) && styles.btnDisabled
+                    styles.previewButton,
+                    (!canBuild || loading) && styles.previewButtonDisabled
                 ]}
                 onPress={onBuild}
                 disabled={!canBuild || loading}
             >
-                <Text style={styles.buildText}>
+                <Text style={styles.previewButtonText}>
                     {loading
-                        ? '⏳ LOADING...'
+                        ? 'Loading...'
                         : mode === 'baby'
-                            ? '✨ BUILD MY BIRTH ANNOUNCEMENT'
-                            : '✨ BUILD MY TIME CAPSULE GIFT'
+                            ? 'Preview Birth Announcement'
+                            : 'Preview Time Capsule Gift'
                     }
                 </Text>
             </TouchableOpacity>
@@ -798,9 +800,14 @@ export default function FormScreen({ navigation, route }: Props) {
 }
 
 const styles = StyleSheet.create({
-    // Main container - colored background  
-    container: { flex: 1 },
-    content: { padding: 20, paddingBottom: 40 },
+    container: {
+        flex: 1,
+        backgroundColor: '#1a472a',
+    },
+    content: {
+        padding: 20,
+        paddingBottom: 40,
+    },
 
     // Title
     title: {
@@ -885,27 +892,22 @@ const styles = StyleSheet.create({
     // Row layout
     row: { flexDirection: 'row', gap: 12 },
 
-    // Build button
-    buildBtn: {
+    // Preview button - white with dark green text (matches birthday/graduation forms)
+    previewButton: {
+        backgroundColor: '#fff',
         borderRadius: 12,
-        paddingVertical: 16,
-        alignItems: 'center',
+        padding: 16,
         marginTop: 24,
-        marginBottom: 40,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 8,
-        elevation: 6,
+        alignItems: 'center',
     },
-    buildText: {
-        color: '#fff',
+    previewButtonDisabled: {
+        opacity: 0.6,
+    },
+    previewButtonText: {
+        color: '#1a472a',
+        fontSize: 18,
         fontWeight: '900',
-        fontSize: 17,
-        textAlign: 'center',
-        letterSpacing: 0.5,
     },
-    btnDisabled: { opacity: 0.5 },
 
     // Info box
     infoBox: {
@@ -941,57 +943,5 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
 
-    // Photo slots for multi-photo upload
-    photoSlotsRow: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 16,
-        marginTop: 8,
-    },
-    photoSlotContainer: {
-        position: 'relative',
-    },
-    photoSlot: {
-        width: 70,
-        height: 70,
-        borderRadius: 12,
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        borderWidth: 2,
-        borderColor: 'rgba(255,255,255,0.5)',
-        borderStyle: 'dashed',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    photoSlotFilled: {
-        backgroundColor: 'rgba(255,255,255,0.35)',
-        borderColor: '#fff',
-        borderStyle: 'solid',
-    },
-    photoSlotText: {
-        color: '#fff',
-        fontSize: 24,
-        fontWeight: '700',
-    },
-    photoRemoveBtn: {
-        position: 'absolute',
-        top: -8,
-        right: -8,
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        backgroundColor: '#e74c3c',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    photoRemoveText: {
-        color: '#fff',
-        fontSize: 14,
-        fontWeight: '700',
-    },
-    photoHint: {
-        color: 'rgba(255,255,255,0.8)',
-        fontSize: 12,
-        textAlign: 'center',
-        marginTop: 8,
-    },
+
 });

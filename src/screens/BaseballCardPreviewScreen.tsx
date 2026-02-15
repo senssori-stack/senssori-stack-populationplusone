@@ -1,14 +1,16 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useRef, useState } from 'react';
 import {
+    Animated,
     Image,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
-    useWindowDimensions,
+    useWindowDimensions
 } from 'react-native';
+import { GestureHandlerRootView, PanGestureHandler, PinchGestureHandler, State, TapGestureHandler } from 'react-native-gesture-handler';
 import ViewShot from 'react-native-view-shot';
 import CartModal from '../../components/CartModal';
 import DownloadModal, { DownloadItem } from '../../components/DownloadModal';
@@ -72,7 +74,7 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
     const handleAddToCart = (productId: string) => {
         const productInfo = PRODUCT_PRICES[productId as keyof typeof PRODUCT_PRICES];
         const price = productInfo?.price || 0;
-        const productName = productInfo?.name || 'Baby Card';
+        const productName = productInfo?.name || 'Trading Card';
         addToCart({
             id: `${productId}-${fullName}-${Date.now()}`,
             name: productName,
@@ -88,8 +90,8 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
         { id: 'babycard-back', label: 'Card Back (Stats)', category: 'babycard' },
     ];
 
-    // Capture function
-    const handleCapture = async (itemId: string): Promise<string | null> => {
+    // Simple capture function for a single view
+    const captureView = async (itemId: string): Promise<string | null> => {
         try {
             let ref: React.RefObject<ViewShot | null> | null = null;
             if (itemId === 'babycard-front') ref = frontRef;
@@ -106,116 +108,230 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
         }
     };
 
+    // Capture for DownloadModal
+    const handleCapture = async (itemId: string): Promise<string | null> => {
+        return captureView(itemId);
+    };
+
+    // --- Zoom/Pan gesture state ---
+    const { height: screenHeight } = useWindowDimensions();
+    const zoomScale = useRef(new Animated.Value(1)).current;
+    const baseScale = useRef(new Animated.Value(1)).current;
+    const translateX = useRef(new Animated.Value(0)).current;
+    const translateY = useRef(new Animated.Value(0)).current;
+    const baseTranslateX = useRef(new Animated.Value(0)).current;
+    const baseTranslateY = useRef(new Animated.Value(0)).current;
+    const lastScale = useRef(1);
+    const lastTranslateX = useRef(0);
+    const lastTranslateY = useRef(0);
+    const doubleTapRef = useRef(null);
+    const isZoomedIn = useRef(false);
+
+    const onPinchGestureEvent = Animated.event(
+        [{ nativeEvent: { scale: zoomScale } }],
+        { useNativeDriver: false }
+    );
+    const onPinchHandlerStateChange = (event: any) => {
+        if (event.nativeEvent.oldState === State.ACTIVE) {
+            const newScale = lastScale.current * event.nativeEvent.scale;
+            lastScale.current = Math.max(0.5, Math.min(4.0, newScale));
+            baseScale.setValue(lastScale.current);
+            zoomScale.setValue(1);
+        }
+    };
+    const onPanGestureEvent = Animated.event(
+        [{ nativeEvent: { translationX: translateX, translationY: translateY } }],
+        { useNativeDriver: false }
+    );
+    const onPanHandlerStateChange = (event: any) => {
+        if (event.nativeEvent.oldState === State.ACTIVE) {
+            if (lastScale.current > 1.1) {
+                const cw = cardWidth * lastScale.current;
+                const ch = cardHeight * lastScale.current;
+                const maxX = Math.max(0, (cw - width) / 2);
+                const maxY = Math.max(0, (ch - screenHeight * 0.5) / 2);
+                let newTX = lastTranslateX.current + event.nativeEvent.translationX;
+                let newTY = lastTranslateY.current + event.nativeEvent.translationY;
+                newTX = Math.max(-maxX, Math.min(maxX, newTX));
+                newTY = Math.max(-maxY, Math.min(maxY, newTY));
+                lastTranslateX.current = newTX;
+                lastTranslateY.current = newTY;
+            } else {
+                lastTranslateX.current = 0;
+                lastTranslateY.current = 0;
+            }
+            baseTranslateX.setValue(lastTranslateX.current);
+            baseTranslateY.setValue(lastTranslateY.current);
+            translateX.setValue(0);
+            translateY.setValue(0);
+        }
+    };
+    const onDoubleTap = (event: any) => {
+        if (event.nativeEvent.state === State.ACTIVE) {
+            const target = isZoomedIn.current ? 1.0 : 2.0;
+            zoomScale.setValue(1);
+            baseScale.setValue(target);
+            translateX.setValue(0);
+            translateY.setValue(0);
+            baseTranslateX.setValue(0);
+            baseTranslateY.setValue(0);
+            lastScale.current = target;
+            lastTranslateX.current = 0;
+            lastTranslateY.current = 0;
+            isZoomedIn.current = !isZoomedIn.current;
+        }
+    };
+    const resetZoom = () => {
+        lastScale.current = 1;
+        lastTranslateX.current = 0;
+        lastTranslateY.current = 0;
+        isZoomedIn.current = false;
+        zoomScale.setValue(1);
+        baseScale.setValue(1);
+        translateX.setValue(0);
+        translateY.setValue(0);
+        baseTranslateX.setValue(0);
+        baseTranslateY.setValue(0);
+    };
+
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.title}>⚾ Baby Rookie Card</Text>
+            <Text style={styles.title}>⚾ Trading Cards</Text>
             <Text style={styles.subtitle}>A collectible keepsake!</Text>
 
-            {/* Card Front */}
-            <View style={styles.cardSection}>
-                <Text style={styles.sideLabel}>Front</Text>
-                <ViewShot ref={frontRef} options={{ format: 'png', quality: 1 }}>
-                    <View style={[styles.card, { width: cardWidth, height: cardHeight }]}>
-                        {/* Card border effect */}
-                        <View style={[styles.cardInner, { borderColor: colors.bg }]}>
-                            {/* Photo area */}
-                            <View style={styles.photoContainer}>
-                                {photoUri ? (
-                                    <Image source={{ uri: photoUri }} style={styles.photo} />
-                                ) : (
-                                    <View style={[styles.photoPlaceholder, { backgroundColor: colors.bg }]}>
-                                        <Text style={styles.placeholderEmoji}>👶</Text>
-                                    </View>
-                                )}
-                            </View>
+            {/* Zoomable card area */}
+            <View style={{ width: '100%', minHeight: 300, alignItems: 'center' }}>
+                <TouchableOpacity onPress={resetZoom} style={{ alignSelf: 'flex-end', marginBottom: 8, paddingHorizontal: 12, paddingVertical: 4, backgroundColor: '#ddd', borderRadius: 8 }}>
+                    <Text style={{ fontSize: 13, color: '#333' }}>Reset Zoom</Text>
+                </TouchableOpacity>
+                <GestureHandlerRootView style={{ width: '100%', alignItems: 'center' }}>
+                    <TapGestureHandler ref={doubleTapRef} onHandlerStateChange={onDoubleTap} numberOfTaps={2}>
+                        <Animated.View>
+                            <PanGestureHandler onGestureEvent={onPanGestureEvent} onHandlerStateChange={onPanHandlerStateChange}>
+                                <Animated.View>
+                                    <PinchGestureHandler onGestureEvent={onPinchGestureEvent} onHandlerStateChange={onPinchHandlerStateChange}>
+                                        <Animated.View style={{
+                                            transform: [
+                                                { scale: Animated.multiply(baseScale, zoomScale) },
+                                                { translateX: Animated.add(baseTranslateX, translateX) },
+                                                { translateY: Animated.add(baseTranslateY, translateY) },
+                                            ],
+                                        }}>
 
-                            {/* Name banner */}
-                            <View style={[styles.nameBanner, { backgroundColor: colors.bg }]}>
-                                <Text style={[styles.firstName, { fontSize: cardWidth * 0.1 }]}>
-                                    {babyFirst.toUpperCase()}
-                                </Text>
-                                {babyLast && (
-                                    <Text style={[styles.lastName, { fontSize: cardWidth * 0.06 }]}>
-                                        {babyLast}
-                                    </Text>
-                                )}
-                            </View>
+                                            {/* Card Front */}
+                                            <View style={styles.cardSection}>
+                                                <Text style={styles.sideLabel}>Front</Text>
+                                                <ViewShot ref={frontRef} options={{ format: 'png', quality: 1 }}>
+                                                    <View style={[styles.card, { width: cardWidth, height: cardHeight }]}>
+                                                        {/* Card border effect */}
+                                                        <View style={[styles.cardInner, { borderColor: colors.bg }]}>
+                                                            {/* Photo area */}
+                                                            <View style={styles.photoContainer}>
+                                                                {photoUri ? (
+                                                                    <Image source={{ uri: photoUri }} style={styles.photo} />
+                                                                ) : (
+                                                                    <View style={[styles.photoPlaceholder, { backgroundColor: colors.bg }]}>
+                                                                        <Text style={styles.placeholderEmoji}>👶</Text>
+                                                                    </View>
+                                                                )}
+                                                            </View>
 
-                            {/* Team/Location */}
-                            <View style={styles.teamBar}>
-                                <Text style={[styles.teamText, { fontSize: cardWidth * 0.04 }]}>
-                                    📍 {hometown}
-                                </Text>
-                            </View>
+                                                            {/* Name banner */}
+                                                            <View style={[styles.nameBanner, { backgroundColor: colors.bg }]}>
+                                                                <Text style={[styles.firstName, { fontSize: cardWidth * 0.1 }]}>
+                                                                    {babyFirst.toUpperCase()}
+                                                                </Text>
+                                                                {babyLast && (
+                                                                    <Text style={[styles.lastName, { fontSize: cardWidth * 0.06 }]}>
+                                                                        {babyLast}
+                                                                    </Text>
+                                                                )}
+                                                            </View>
 
-                            {/* Rookie badge */}
-                            <View style={[styles.rookieBadge, { backgroundColor: colors.bg }]}>
-                                <Text style={styles.rookieText}>ROOKIE</Text>
-                            </View>
-                        </View>
-                    </View>
-                </ViewShot>
-            </View>
+                                                            {/* Team/Location */}
+                                                            <View style={styles.teamBar}>
+                                                                <Text style={[styles.teamText, { fontSize: cardWidth * 0.04 }]}>
+                                                                    📍 {hometown}
+                                                                </Text>
+                                                            </View>
 
-            {/* Card Back */}
-            <View style={styles.cardSection}>
-                <Text style={styles.sideLabel}>Back</Text>
-                <ViewShot ref={backRef} options={{ format: 'png', quality: 1 }}>
-                    <View style={[styles.card, styles.cardBack, { width: cardWidth, height: cardHeight }]}>
-                        {/* Header */}
-                        <View style={[styles.backHeader, { backgroundColor: colors.bg }]}>
-                            <Text style={[styles.backName, { fontSize: cardWidth * 0.08 }]}>
-                                {fullName}
-                            </Text>
-                            <Text style={[styles.backPosition, { fontSize: cardWidth * 0.04 }]}>
-                                Position: NEWEST FAMILY MEMBER
-                            </Text>
-                        </View>
+                                                            {/* Rookie badge */}
+                                                            <View style={[styles.rookieBadge, { backgroundColor: colors.bg }]}>
+                                                                <Text style={styles.rookieText}>ROOKIE</Text>
+                                                            </View>
+                                                        </View>
+                                                    </View>
+                                                </ViewShot>
+                                            </View>
 
-                        {/* Stats table */}
-                        <View style={styles.statsTable}>
-                            <Text style={[styles.statsHeader, { fontSize: cardWidth * 0.05 }]}>
-                                VITAL STATS
-                            </Text>
+                                            {/* Card Back */}
+                                            <View style={styles.cardSection}>
+                                                <Text style={styles.sideLabel}>Back</Text>
+                                                <ViewShot ref={backRef} options={{ format: 'png', quality: 1 }}>
+                                                    <View style={[styles.card, styles.cardBack, { width: cardWidth, height: cardHeight }]}>
+                                                        {/* Header */}
+                                                        <View style={[styles.backHeader, { backgroundColor: colors.bg }]}>
+                                                            <Text style={[styles.backName, { fontSize: cardWidth * 0.08 }]}>
+                                                                {fullName}
+                                                            </Text>
+                                                            <Text style={[styles.backPosition, { fontSize: cardWidth * 0.04 }]}>
+                                                                Position: NEWEST FAMILY MEMBER
+                                                            </Text>
+                                                        </View>
 
-                            <View style={styles.statRow}>
-                                <Text style={styles.statLabel}>Debut Date</Text>
-                                <Text style={styles.statValue}>{birthDateStr}</Text>
-                            </View>
+                                                        {/* Stats table */}
+                                                        <View style={styles.statsTable}>
+                                                            <Text style={[styles.statsHeader, { fontSize: cardWidth * 0.05 }]}>
+                                                                VITAL STATS
+                                                            </Text>
 
-                            <View style={styles.statRow}>
-                                <Text style={styles.statLabel}>Weight</Text>
-                                <Text style={styles.statValue}>{weightLb} lbs {weightOz} oz</Text>
-                            </View>
+                                                            <View style={styles.statRow}>
+                                                                <Text style={styles.statLabel}>Debut Date</Text>
+                                                                <Text style={styles.statValue}>{birthDateStr}</Text>
+                                                            </View>
 
-                            <View style={styles.statRow}>
-                                <Text style={styles.statLabel}>Height</Text>
-                                <Text style={styles.statValue}>{lengthIn}"</Text>
-                            </View>
+                                                            <View style={styles.statRow}>
+                                                                <Text style={styles.statLabel}>Weight</Text>
+                                                                <Text style={styles.statValue}>{weightLb} lbs {weightOz} oz</Text>
+                                                            </View>
 
-                            <View style={styles.statRow}>
-                                <Text style={styles.statLabel}>Birthstone</Text>
-                                <Text style={styles.statValue}>{birthstone || 'Unknown'}</Text>
-                            </View>
+                                                            <View style={styles.statRow}>
+                                                                <Text style={styles.statLabel}>Height</Text>
+                                                                <Text style={styles.statValue}>{lengthIn}"</Text>
+                                                            </View>
 
-                            <View style={styles.statRow}>
-                                <Text style={styles.statLabel}>Zodiac</Text>
-                                <Text style={styles.statValue}>{zodiac || 'Unknown'}</Text>
-                            </View>
+                                                            <View style={styles.statRow}>
+                                                                <Text style={styles.statLabel}>Birthstone</Text>
+                                                                <Text style={styles.statValue}>{birthstone || 'Unknown'}</Text>
+                                                            </View>
 
-                            <View style={styles.statRow}>
-                                <Text style={styles.statLabel}>Team</Text>
-                                <Text style={styles.statValue}>{babyLast || 'TBD'} Family</Text>
-                            </View>
-                        </View>
+                                                            <View style={styles.statRow}>
+                                                                <Text style={styles.statLabel}>Zodiac</Text>
+                                                                <Text style={styles.statValue}>{zodiac || 'Unknown'}</Text>
+                                                            </View>
 
-                        {/* Footer */}
-                        <View style={styles.backFooter}>
-                            <Text style={styles.cardNumber}>#001</Text>
-                            <Text style={styles.brand}>PopulationPlusOne</Text>
-                        </View>
-                    </View>
-                </ViewShot>
+                                                            <View style={styles.statRow}>
+                                                                <Text style={styles.statLabel}>Team</Text>
+                                                                <Text style={styles.statValue}>{babyLast || 'TBD'} Family</Text>
+                                                            </View>
+                                                        </View>
+
+                                                        {/* Footer */}
+                                                        <View style={styles.backFooter}>
+                                                            <Text style={styles.cardNumber}>#001</Text>
+                                                            <Text style={styles.brand}>Population +1™</Text>
+                                                        </View>
+                                                    </View>
+                                                </ViewShot>
+                                            </View>
+
+                                        </Animated.View>
+                                    </PinchGestureHandler>
+                                </Animated.View>
+                            </PanGestureHandler>
+                        </Animated.View>
+                    </TapGestureHandler>
+                </GestureHandlerRootView>
             </View>
 
             {/* Download Button */}

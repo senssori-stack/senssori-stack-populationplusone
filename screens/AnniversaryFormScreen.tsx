@@ -227,6 +227,7 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
                 mode: 'milestone',
                 message: finalMessage,
                 population: pop || undefined,
+                babyCount: 2,
             });
         } catch (error) {
             console.error('Error fetching population:', error);
@@ -239,6 +240,7 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
                 dobISO: anniversaryDate.toISOString(),
                 mode: 'milestone',
                 message: finalMessage,
+                babyCount: 2,
             });
         } finally {
             setLoading(false);

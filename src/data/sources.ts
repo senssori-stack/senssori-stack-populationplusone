@@ -14,16 +14,16 @@ export const DATA_SOURCES: DataSource[] = [
     // PRICES
     {
         field: 'Gallon of Gasoline',
-        source: 'U.S. Energy Information Administration (EIA)',
-        url: 'https://www.eia.gov/petroleum/gasdiesel/',
-        updateFrequency: 'Weekly',
-        notes: 'Weekly retail gasoline prices, U.S. average regular grade',
+        source: 'AAA Gas Prices',
+        url: 'https://gasprices.aaa.com/',
+        updateFrequency: 'Daily',
+        notes: 'National average retail gasoline prices, regular grade',
         category: 'prices'
     },
     {
         field: 'Loaf of Bread',
         source: 'Bureau of Labor Statistics (BLS)',
-        url: 'https://www.bls.gov/cpi/',
+        url: 'https://www.bls.gov/charts/consumer-price-index/consumer-price-index-average-price-data.htm',
         updateFrequency: 'Monthly',
         notes: 'Consumer Price Index average prices',
         category: 'prices'
@@ -31,7 +31,7 @@ export const DATA_SOURCES: DataSource[] = [
     {
         field: 'Dozen Eggs',
         source: 'Bureau of Labor Statistics (BLS)',
-        url: 'https://www.bls.gov/cpi/',
+        url: 'https://www.bls.gov/charts/consumer-price-index/consumer-price-index-average-price-data.htm',
         updateFrequency: 'Monthly',
         notes: 'Consumer Price Index average prices, Grade A large',
         category: 'prices'
@@ -39,7 +39,7 @@ export const DATA_SOURCES: DataSource[] = [
     {
         field: 'Gallon of Milk',
         source: 'Bureau of Labor Statistics (BLS)',
-        url: 'https://www.bls.gov/cpi/',
+        url: 'https://www.bls.gov/charts/consumer-price-index/consumer-price-index-average-price-data.htm',
         updateFrequency: 'Monthly',
         notes: 'Consumer Price Index average prices, whole milk',
         category: 'prices'
@@ -56,24 +56,24 @@ export const DATA_SOURCES: DataSource[] = [
     // MARKETS
     {
         field: 'Gold Price (per oz)',
-        source: 'GoldPrice.org',
-        url: 'https://goldprice.org/',
+        source: 'Kitco',
+        url: 'https://www.kitco.com/charts/historicalgold.html',
         updateFrequency: 'Real-time',
         notes: 'Spot price per troy ounce in USD',
         category: 'markets'
     },
     {
         field: 'Silver Price (per oz)',
-        source: 'GoldPrice.org',
-        url: 'https://goldprice.org/',
+        source: 'Kitco',
+        url: 'https://www.kitco.com/charts/historicalsilver.html',
         updateFrequency: 'Real-time',
         notes: 'Spot price per troy ounce in USD',
         category: 'markets'
     },
     {
         field: 'Dow Jones Industrial Average',
-        source: 'Alpha Vantage / Yahoo Finance',
-        url: 'https://www.alphavantage.co/',
+        source: 'MarketWatch',
+        url: 'https://www.marketwatch.com/investing/index/djia',
         updateFrequency: 'Real-time (market hours)',
         notes: 'Daily closing price',
         category: 'markets'
@@ -108,16 +108,16 @@ export const DATA_SOURCES: DataSource[] = [
     // GOVERNMENT
     {
         field: 'U.S. President',
-        source: 'The White House',
-        url: 'https://www.whitehouse.gov/',
+        source: 'USA.gov',
+        url: 'https://www.usa.gov/presidents',
         updateFrequency: 'As inaugurated (Jan 20)',
         notes: 'Official presidential records',
         category: 'government'
     },
     {
         field: 'U.S. Vice President',
-        source: 'The White House',
-        url: 'https://www.whitehouse.gov/',
+        source: 'USA.gov',
+        url: 'https://www.usa.gov/presidents',
         updateFrequency: 'As inaugurated (Jan 20)',
         notes: 'Official vice presidential records',
         category: 'government'
@@ -142,26 +142,26 @@ export const DATA_SOURCES: DataSource[] = [
     },
     {
         field: '#1 Movie',
-        source: 'Box Office Mojo',
-        url: 'https://www.boxofficemojo.com/',
-        updateFrequency: 'Weekly',
-        notes: '#1 box office film for the week (domestic)',
+        source: 'TMDb (The Movie Database)',
+        url: 'https://www.themoviedb.org/',
+        updateFrequency: 'Daily (auto-fetched)',
+        notes: '#1 currently playing movie in US theaters',
         category: 'entertainment'
     },
 
     // SPORTS CHAMPIONS
     {
         field: 'Super Bowl Champion',
-        source: 'NFL.com',
-        url: 'https://www.nfl.com/',
+        source: 'ESPN.com',
+        url: 'https://www.espn.com/nfl/superbowl/history/winners',
         updateFrequency: 'Annually (February)',
         notes: 'Most recent Super Bowl winner',
         category: 'sports'
     },
     {
         field: 'World Series Champion',
-        source: 'MLB.com',
-        url: 'https://www.mlb.com/',
+        source: 'ESPN.com',
+        url: 'https://www.espn.com/mlb/worldseries/history/winners',
         updateFrequency: 'Annually (October/November)',
         notes: 'Most recent World Series winner',
         category: 'sports'
@@ -172,26 +172,26 @@ export const DATA_SOURCES: DataSource[] = [
 export const HISTORICAL_SOURCES: DataSource[] = [
     {
         field: 'Historical Gas Prices',
-        source: 'U.S. Energy Information Administration (EIA)',
-        url: 'https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?n=PET&s=EMM_EPM0_PTE_NUS_DPG&f=A',
+        source: 'AAA Gas Prices',
+        url: 'https://gasprices.aaa.com/',
         updateFrequency: 'Historical archive',
-        notes: 'Annual average prices from 1914 to present',
+        notes: 'National average gas price history',
         category: 'prices'
     },
     {
         field: 'Historical Consumer Prices',
         source: 'Bureau of Labor Statistics (BLS)',
-        url: 'https://www.bls.gov/cpi/data.htm',
+        url: 'https://www.bls.gov/charts/consumer-price-index/consumer-price-index-average-price-data.htm',
         updateFrequency: 'Historical archive',
         notes: 'CPI historical tables for bread, eggs, milk',
         category: 'prices'
     },
     {
         field: 'Historical Gold/Silver',
-        source: 'Macrotrends / Kitco',
-        url: 'https://www.macrotrends.net/1333/historical-gold-prices-100-year-chart',
+        source: 'Kitco',
+        url: 'https://www.kitco.com/charts/historicalgold.html',
         updateFrequency: 'Historical archive',
-        notes: 'Monthly/annual spot prices since 1914',
+        notes: 'Monthly/annual spot prices',
         category: 'markets'
     },
     {
@@ -220,10 +220,10 @@ export const HISTORICAL_SOURCES: DataSource[] = [
     },
     {
         field: 'Historical #1 Movies',
-        source: 'Box Office Mojo',
-        url: 'https://www.boxofficemojo.com/',
-        updateFrequency: 'Weekly since 1977',
-        notes: 'Weekend box office #1 records',
+        source: 'TMDb (The Movie Database)',
+        url: 'https://www.themoviedb.org/',
+        updateFrequency: 'Historical archive',
+        notes: 'Movie popularity and theatrical release data',
         category: 'entertainment'
     },
     {
@@ -236,16 +236,16 @@ export const HISTORICAL_SOURCES: DataSource[] = [
     },
     {
         field: 'Super Bowl History',
-        source: 'Pro Football Reference',
-        url: 'https://www.pro-football-reference.com/super-bowl/',
+        source: 'ESPN.com',
+        url: 'https://www.espn.com/nfl/superbowl/history/winners',
         updateFrequency: 'Historical archive',
         notes: 'All Super Bowl winners since 1967',
         category: 'sports'
     },
     {
         field: 'World Series History',
-        source: 'Baseball Reference',
-        url: 'https://www.baseball-reference.com/postseason/',
+        source: 'ESPN.com',
+        url: 'https://www.espn.com/mlb/worldseries/history/winners',
         updateFrequency: 'Historical archive',
         notes: 'All World Series winners since 1903',
         category: 'sports'

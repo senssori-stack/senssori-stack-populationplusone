@@ -574,7 +574,8 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
             lengthIn: '',
             snapshot: {},
             frontOrientation: 'landscape',
-            timeCapsuleOrientation: 'landscape'
+            timeCapsuleOrientation: 'landscape',
+            babyCount: isAnniversary ? 2 : 1,
         };
 
         setLoading(false);

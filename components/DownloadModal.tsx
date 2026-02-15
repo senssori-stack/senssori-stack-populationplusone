@@ -1,5 +1,6 @@
 import * as MediaLibrary from 'expo-media-library';
-import React, { useState } from 'react';
+import * as Sharing from 'expo-sharing';
+import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -9,7 +10,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 
 export type DownloadItem = {
@@ -23,7 +24,7 @@ type Props = {
     visible: boolean;
     onClose: () => void;
     items: DownloadItem[];
-    onCapture: (itemId: string) => Promise<string | null>; // Returns base64 or URI
+    onCapture: (itemId: string) => Promise<string | null>;
     babyName?: string;
 };
 
@@ -32,6 +33,14 @@ export default function DownloadModal({ visible, onClose, items, onCapture, baby
     const [activeTab, setActiveTab] = useState<'download' | 'print'>('download');
     const [isDownloading, setIsDownloading] = useState(false);
     const [downloadProgress, setDownloadProgress] = useState(0);
+
+    // Reset state when modal opens/closes to prevent stuck states
+    useEffect(() => {
+        if (visible) {
+            setIsDownloading(false);
+            setDownloadProgress(0);
+        }
+    }, [visible]);
 
     const toggleItem = (id: string) => {
         const newSet = new Set(selectedItems);
@@ -52,70 +61,124 @@ export default function DownloadModal({ visible, onClose, items, onCapture, baby
     };
 
     const handleDownload = async () => {
-        if (selectedItems.size === 0) {
-            Alert.alert('No items selected', 'Please select at least one item to download.');
-            return;
-        }
-
-        // Request permissions
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-        if (status !== 'granted') {
-            Alert.alert(
-                'Permission needed',
-                'Please allow access to save images to your device.',
-                [{ text: 'OK' }]
-            );
-            return;
-        }
-
-        setIsDownloading(true);
-        setDownloadProgress(0);
-
-        const selectedArray = Array.from(selectedItems);
-        let successCount = 0;
-        let failCount = 0;
-
-        for (let i = 0; i < selectedArray.length; i++) {
-            const itemId = selectedArray[i];
-            const item = items.find(it => it.id === itemId);
-
-            try {
-                // Capture the view as image
-                const uri = await onCapture(itemId);
-
-                if (uri) {
-                    // react-native-view-shot returns a file URI, save directly to media library
-                    await MediaLibrary.saveToLibraryAsync(uri);
-                    successCount++;
-                } else {
-                    failCount++;
-                }
-            } catch (error) {
-                console.error(`Failed to save ${item?.label}:`, error);
-                failCount++;
+        try {
+            if (selectedItems.size === 0) {
+                Alert.alert('No items selected', 'Please select at least one item to download.');
+                return;
             }
 
-            setDownloadProgress((i + 1) / selectedArray.length);
-        }
+            const itemsToSave = Array.from(selectedItems);
+            setIsDownloading(true);
+            setDownloadProgress(0);
 
-        setIsDownloading(false);
-        setDownloadProgress(0);
+            let successCount = 0;
+            let failCount = 0;
+            const savedUris: string[] = [];
 
-        if (successCount > 0) {
-            Alert.alert(
-                'Download Complete!',
-                `${successCount} image${successCount > 1 ? 's' : ''} saved to your photo library.${failCount > 0 ? `\n${failCount} failed.` : ''}`,
-                [{ text: 'OK', onPress: onClose }]
-            );
-        } else {
-            Alert.alert('Download Failed', 'Could not save images. Please try again.');
+            for (let i = 0; i < itemsToSave.length; i++) {
+                const itemId = itemsToSave[i];
+                setDownloadProgress((i + 1) / itemsToSave.length);
+                try {
+                    console.log(`📸 Capturing ${itemId}...`);
+                    const uri = await onCapture(itemId);
+                    console.log(`📸 Capture result for ${itemId}:`, uri ? 'SUCCESS' : 'NULL');
+
+                    if (uri) {
+                        // Use the ViewShot URI directly — no copy needed
+                        savedUris.push(uri);
+                        console.log(`✅ Captured ${itemId}: ${uri}`);
+                        successCount++;
+                    } else {
+                        console.warn(`⚠️ Capture returned null for ${itemId}`);
+                        failCount++;
+                    }
+                } catch (error: any) {
+                    console.error(`❌ Failed to capture/save ${itemId}:`, error?.message || error);
+                    failCount++;
+                }
+            }
+
+            setIsDownloading(false);
+            setDownloadProgress(0);
+
+            if (successCount > 0 && savedUris.length > 0) {
+                // Try MediaLibrary first (works in dev builds), fallback to sharing (works in Expo Go)
+                let savedToLibrary = false;
+                try {
+                    const { status } = await MediaLibrary.requestPermissionsAsync();
+                    if (status === 'granted') {
+                        for (const fileUri of savedUris) {
+                            await MediaLibrary.saveToLibraryAsync(fileUri);
+                        }
+                        savedToLibrary = true;
+                    }
+                } catch (mediaErr: any) {
+                    console.log('MediaLibrary save failed (expected in Expo Go), using share instead:', mediaErr?.message);
+                }
+
+                if (savedToLibrary) {
+                    Alert.alert(
+                        '✅ Download Complete!',
+                        `${successCount} image${successCount > 1 ? 's' : ''} saved to your photo library!${failCount > 0 ? `\n${failCount} failed.` : ''}`,
+                        [{ text: 'OK', onPress: onClose }]
+                    );
+                } else {
+                    // Fallback: share via system share sheet
+                    const canShare = await Sharing.isAvailableAsync();
+                    if (canShare) {
+                        Alert.alert(
+                            '📥 Images Ready!',
+                            `${successCount} image${successCount > 1 ? 's' : ''} captured! Tap OK to save/share ${successCount > 1 ? 'the first image' : 'it'}.\n\n(In Expo Go, images open via the share sheet — tap "Save Image" to save to your gallery)`,
+                            [{
+                                text: 'OK', onPress: async () => {
+                                    try {
+                                        // Share the first image (Android share sheet can only handle one at a time)
+                                        await Sharing.shareAsync(savedUris[0], {
+                                            mimeType: 'image/png',
+                                            dialogTitle: `Save ${babyName}'s Birth Announcement`,
+                                        });
+                                        // If there are more images, share them one by one
+                                        for (let i = 1; i < savedUris.length; i++) {
+                                            await Sharing.shareAsync(savedUris[i], {
+                                                mimeType: 'image/png',
+                                                dialogTitle: `Save ${babyName}'s Birth Announcement (${i + 1}/${savedUris.length})`,
+                                            });
+                                        }
+                                        onClose();
+                                    } catch (shareErr) {
+                                        console.log('Share cancelled or failed:', shareErr);
+                                        onClose();
+                                    }
+                                }
+                            }]
+                        );
+                    } else {
+                        Alert.alert(
+                            '✅ Images Captured!',
+                            `${successCount} image${successCount > 1 ? 's' : ''} captured but sharing is not available on this device.\n\nImages saved to: ${savedUris[0]}`,
+                            [{ text: 'OK', onPress: onClose }]
+                        );
+                    }
+                }
+            } else {
+                Alert.alert(
+                    'Download Failed',
+                    'Could not capture images. Please try again.',
+                    [{ text: 'OK' }]
+                );
+            }
+        } catch (err: any) {
+            setIsDownloading(false);
+            setDownloadProgress(0);
+            console.error('CRASH in handleDownload:', err?.message || err);
+            Alert.alert('Download Error', `Something went wrong: ${err?.message || String(err)}`);
         }
     };
 
     const handlePrintful = () => {
         Alert.alert(
             'Printful',
-            'Professional printing coming soon!\n\nWe\'re setting up direct integration with Printful for:\n• Yard Signs\n• Postcards\n• Baby Cards\n\nShipped directly to your door.',
+            'Professional printing coming soon!\n\nWe\'re setting up direct integration with Printful for:\n• Yard Signs\n• Postcards\n• Trading Cards\n\nShipped directly to your door.',
             [{ text: 'OK' }]
         );
     };
@@ -241,10 +304,10 @@ export default function DownloadModal({ visible, onClose, items, onCapture, baby
                                     </View>
                                 )}
 
-                                {/* Baby Cards */}
+                                {/* Trading Cards */}
                                 {groupedItems.babycard.length > 0 && (
                                     <View style={styles.category}>
-                                        <Text style={styles.categoryTitle}>⚾ Baby Cards</Text>
+                                        <Text style={styles.categoryTitle}>⚾ Trading Cards</Text>
                                         {groupedItems.babycard.map(item => (
                                             <TouchableOpacity
                                                 key={item.id}

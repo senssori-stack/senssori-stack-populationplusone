@@ -13,6 +13,7 @@ import {
     View
 } from 'react-native';
 import ScrollableDatePicker from '../../components/ScrollableDatePicker';
+import { getAllSnapshotValues } from '../data/utils/snapshot';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JustForFun'>;

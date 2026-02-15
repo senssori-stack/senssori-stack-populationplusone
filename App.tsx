@@ -20,13 +20,16 @@ import FormScreen from './src/screens/FormScreen';
 import FullAstrologyScreen from './src/screens/FullAstrologyScreen';
 import FuneralHomePortalScreen from './src/screens/FuneralHomePortalScreen';
 import GenerationsScreen from './src/screens/GenerationsScreen';
+import GrowthTrackerScreen from './src/screens/GrowthTrackerScreen';
 import HoroscopeScreen from './src/screens/HoroscopeScreen';
 import JustForFunScreen from './src/screens/JustForFunScreen';
 import LandingScreen from './src/screens/LandingScreen';
+import LearningScreen from './src/screens/LearningScreen';
 import LifePathNumberScreen from './src/screens/LifePathNumberScreen';
 import LuckyNumbersScreen from './src/screens/LuckyNumbersScreen';
 import MemorialBackScreen from './src/screens/MemorialBackScreen';
 import MemorialPreviewScreen from './src/screens/MemorialPreviewScreen';
+import MilestoneTrackerScreen from './src/screens/MilestoneTrackerScreen';
 import NatalChartWithReadingScreen from './src/screens/NatalChartWithReadingScreen';
 import ObituaryFormScreen from './src/screens/ObituaryFormScreen';
 import OnThisDayScreen from './src/screens/OnThisDayScreen';
@@ -73,6 +76,36 @@ export default function App() {
                         >
                             <Stack.Screen name="Landing" component={LandingScreen} options={{ headerShown: false }} />
                             <Stack.Screen
+                                name="MilestoneTracker"
+                                component={MilestoneTrackerScreen}
+                                options={{
+                                    headerTitle: 'Baby Milestone Tracker',
+                                    headerStyle: { backgroundColor: '#0d1b2a' },
+                                    headerTintColor: '#fff',
+                                    headerTitleStyle: { fontWeight: 'bold' }
+                                }}
+                            />
+                            <Stack.Screen
+                                name="GrowthTracker"
+                                component={GrowthTrackerScreen}
+                                options={{
+                                    headerTitle: 'Baby Growth Chart',
+                                    headerStyle: { backgroundColor: '#0d1b2a' },
+                                    headerTintColor: '#fff',
+                                    headerTitleStyle: { fontWeight: 'bold' }
+                                }}
+                            />
+                            <Stack.Screen
+                                name="LearningCenter"
+                                component={LearningScreen}
+                                options={{
+                                    headerTitle: 'Learning Center',
+                                    headerStyle: { backgroundColor: '#0a0e27' },
+                                    headerTintColor: '#fff',
+                                    headerTitleStyle: { fontWeight: 'bold' }
+                                }}
+                            />
+                            <Stack.Screen
                                 name="HospitalLogin"
                                 component={HospitalLoginScreen}
                                 options={{
@@ -87,7 +120,7 @@ export default function App() {
                                 component={FormScreen}
                                 options={{
                                     headerTitle: 'New Baby Announcement',
-                                    headerStyle: { backgroundColor: '#2d5016' },
+                                    headerStyle: { backgroundColor: '#1a472a' },
                                     headerTintColor: '#fff',
                                     headerTitleStyle: { fontWeight: 'bold' }
                                 }}

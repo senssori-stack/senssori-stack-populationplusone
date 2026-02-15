@@ -27,4 +27,6 @@ try {
     console.warn('The app will fall back to local snapshot data');
 }
 
-export { app, db };
+const auth = null; // Auth placeholder - initialize when needed
+export { app, auth, db };
+

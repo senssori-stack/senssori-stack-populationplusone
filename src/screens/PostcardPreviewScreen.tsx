@@ -1,13 +1,15 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useRef, useState } from 'react';
 import {
+    Animated,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
-    useWindowDimensions,
+    useWindowDimensions
 } from 'react-native';
+import { GestureHandlerRootView, PanGestureHandler, PinchGestureHandler, State, TapGestureHandler } from 'react-native-gesture-handler';
 import ViewShot from 'react-native-view-shot';
 import CartModal from '../../components/CartModal';
 import DownloadModal, { DownloadItem } from '../../components/DownloadModal';
@@ -30,11 +32,11 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
     const { width } = useWindowDimensions();
     const params = route.params || {};
 
-    // Get baby info
-    const babyFirst = params.babies?.[0]?.first || params.babyFirst || 'Baby';
+    // Get baby info (fall back to personName for milestone/anniversary mode)
+    const babyFirst = params.babies?.[0]?.first || params.babyFirst || '';
     const babyMiddle = params.babies?.[0]?.middle || params.babyMiddle || '';
     const babyLast = params.babies?.[0]?.last || params.babyLast || '';
-    const fullName = [babyFirst, babyMiddle, babyLast].filter(Boolean).join(' ');
+    const fullName = [babyFirst, babyMiddle, babyLast].filter(Boolean).join(' ') || params.personName || 'Baby';
     const photoUri = params.babies?.[0]?.photoUri || params.photoUri;
     const photoUris = params.photoUris || (photoUri ? [photoUri] : []);
     const motherName = params.motherName || '';
@@ -83,8 +85,8 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
         { id: 'postcard-back', label: 'Postcard Back (Invitation)', category: 'postcard' },
     ];
 
-    // Capture function
-    const handleCapture = async (itemId: string): Promise<string | null> => {
+    // Simple capture function for a single view
+    const captureView = async (itemId: string): Promise<string | null> => {
         try {
             let ref: React.RefObject<ViewShot | null> | null = null;
             if (itemId === 'postcard-front') ref = frontRef;
@@ -101,112 +103,227 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
         }
     };
 
+    // Capture for DownloadModal
+    const handleCapture = async (itemId: string): Promise<string | null> => {
+        return captureView(itemId);
+    };
+
     // Card dimensions - landscape 6x4 ratio
     const cardWidth = Math.min(width * 0.92, 420);
     const cardHeight = cardWidth * (4 / 6);
     const previewScale = cardWidth / 3300; // Scale from SignFrontLandscape dimensions
+
+    // --- Zoom/Pan gesture state ---
+    const { height: screenHeight } = useWindowDimensions();
+    const zoomScale = useRef(new Animated.Value(1)).current;
+    const baseScale = useRef(new Animated.Value(1)).current;
+    const translateX = useRef(new Animated.Value(0)).current;
+    const translateY = useRef(new Animated.Value(0)).current;
+    const baseTranslateX = useRef(new Animated.Value(0)).current;
+    const baseTranslateY = useRef(new Animated.Value(0)).current;
+    const lastScale = useRef(1);
+    const lastTranslateX = useRef(0);
+    const lastTranslateY = useRef(0);
+    const doubleTapRef = useRef(null);
+    const isZoomedIn = useRef(false);
+
+    const onPinchGestureEvent = Animated.event(
+        [{ nativeEvent: { scale: zoomScale } }],
+        { useNativeDriver: false }
+    );
+    const onPinchHandlerStateChange = (event: any) => {
+        if (event.nativeEvent.oldState === State.ACTIVE) {
+            const newScale = lastScale.current * event.nativeEvent.scale;
+            lastScale.current = Math.max(0.5, Math.min(4.0, newScale));
+            baseScale.setValue(lastScale.current);
+            zoomScale.setValue(1);
+        }
+    };
+    const onPanGestureEvent = Animated.event(
+        [{ nativeEvent: { translationX: translateX, translationY: translateY } }],
+        { useNativeDriver: false }
+    );
+    const onPanHandlerStateChange = (event: any) => {
+        if (event.nativeEvent.oldState === State.ACTIVE) {
+            if (lastScale.current > 1.1) {
+                const cw = cardWidth * lastScale.current;
+                const ch = cardHeight * lastScale.current;
+                const maxX = Math.max(0, (cw - width) / 2);
+                const maxY = Math.max(0, (ch - screenHeight * 0.5) / 2);
+                let newTX = lastTranslateX.current + event.nativeEvent.translationX;
+                let newTY = lastTranslateY.current + event.nativeEvent.translationY;
+                newTX = Math.max(-maxX, Math.min(maxX, newTX));
+                newTY = Math.max(-maxY, Math.min(maxY, newTY));
+                lastTranslateX.current = newTX;
+                lastTranslateY.current = newTY;
+            } else {
+                lastTranslateX.current = 0;
+                lastTranslateY.current = 0;
+            }
+            baseTranslateX.setValue(lastTranslateX.current);
+            baseTranslateY.setValue(lastTranslateY.current);
+            translateX.setValue(0);
+            translateY.setValue(0);
+        }
+    };
+    const onDoubleTap = (event: any) => {
+        if (event.nativeEvent.state === State.ACTIVE) {
+            const target = isZoomedIn.current ? 1.0 : 2.0;
+            zoomScale.setValue(1);
+            baseScale.setValue(target);
+            translateX.setValue(0);
+            translateY.setValue(0);
+            baseTranslateX.setValue(0);
+            baseTranslateY.setValue(0);
+            lastScale.current = target;
+            lastTranslateX.current = 0;
+            lastTranslateY.current = 0;
+            isZoomedIn.current = !isZoomedIn.current;
+        }
+    };
+    const resetZoom = () => {
+        lastScale.current = 1;
+        lastTranslateX.current = 0;
+        lastTranslateY.current = 0;
+        isZoomedIn.current = false;
+        zoomScale.setValue(1);
+        baseScale.setValue(1);
+        translateX.setValue(0);
+        translateY.setValue(0);
+        baseTranslateX.setValue(0);
+        baseTranslateY.setValue(0);
+    };
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
             <Text style={styles.title}>💌 Invitation Cards</Text>
             <Text style={styles.subtitle}>Mail or share with family & friends!</Text>
 
-            {/* Card Front - SignFrontLandscape */}
-            <View style={styles.cardSection}>
-                <Text style={styles.sideLabel}>Front</Text>
-                <ViewShot ref={frontRef} options={{ format: 'png', quality: 1 }}>
-                    <View style={styles.cardShadow}>
-                        <SignFrontLandscape
-                            theme={theme}
-                            previewScale={previewScale}
-                            photoUris={photoUris}
-                            hometown={hometown}
-                            population={population}
-                            personName={fullName}
-                        />
-                    </View>
-                </ViewShot>
-            </View>
+            {/* Zoomable card area */}
+            <View style={{ width: '100%', minHeight: 300, alignItems: 'center' }}>
+                <TouchableOpacity onPress={resetZoom} style={{ alignSelf: 'flex-end', marginBottom: 8, paddingHorizontal: 12, paddingVertical: 4, backgroundColor: '#ddd', borderRadius: 8 }}>
+                    <Text style={{ fontSize: 13, color: '#333' }}>Reset Zoom</Text>
+                </TouchableOpacity>
+                <GestureHandlerRootView style={{ width: '100%', alignItems: 'center' }}>
+                    <TapGestureHandler ref={doubleTapRef} onHandlerStateChange={onDoubleTap} numberOfTaps={2}>
+                        <Animated.View>
+                            <PanGestureHandler onGestureEvent={onPanGestureEvent} onHandlerStateChange={onPanHandlerStateChange}>
+                                <Animated.View>
+                                    <PinchGestureHandler onGestureEvent={onPinchGestureEvent} onHandlerStateChange={onPinchHandlerStateChange}>
+                                        <Animated.View style={{
+                                            transform: [
+                                                { scale: Animated.multiply(baseScale, zoomScale) },
+                                                { translateX: Animated.add(baseTranslateX, translateX) },
+                                                { translateY: Animated.add(baseTranslateY, translateY) },
+                                            ],
+                                        }}>
 
-            {/* Card Back - USPS Compliant Postcard */}
-            <View style={styles.cardSection}>
-                <Text style={styles.sideLabel}>Back (Mailable)</Text>
-                <ViewShot ref={backRef} options={{ format: 'png', quality: 1 }}>
-                    <View style={[styles.postcardBack, { width: cardWidth, height: cardHeight }]}>
-                        {/* LEFT SIDE - Message/Content Area (per USPS rules) */}
-                        <View style={styles.messageHalf}>
-                            <Text style={[styles.inviteHeader, { color: colors.bg, fontSize: cardWidth * 0.045 }]}>
-                                You're Invited!
-                            </Text>
-                            <Text style={[styles.inviteSubheader, { fontSize: cardWidth * 0.025 }]}>
-                                to celebrate the arrival of
-                            </Text>
-                            <Text style={[styles.inviteBabyName, { color: colors.bg, fontSize: cardWidth * 0.04 }]}>
-                                {fullName}
-                            </Text>
+                                            {/* Card Front - SignFrontLandscape */}
+                                            <View style={styles.cardSection}>
+                                                <Text style={styles.sideLabel}>Front</Text>
+                                                <ViewShot ref={frontRef} options={{ format: 'png', quality: 1 }}>
+                                                    <View style={styles.cardShadow}>
+                                                        <SignFrontLandscape
+                                                            theme={theme}
+                                                            previewScale={previewScale}
+                                                            photoUris={photoUris}
+                                                            hometown={hometown}
+                                                            population={population}
+                                                            personName={fullName}
+                                                            babyCount={params.babyCount || 1}
+                                                        />
+                                                    </View>
+                                                </ViewShot>
+                                            </View>
 
-                            {/* Baby Stats - Compact */}
-                            <View style={styles.statsCompact}>
-                                <Text style={[styles.statLine, { fontSize: cardWidth * 0.022 }]}>
-                                    Born: {birthDateStr}
-                                </Text>
-                                {weight && (
-                                    <Text style={[styles.statLine, { fontSize: cardWidth * 0.022 }]}>
-                                        {weight} • {length}
-                                    </Text>
-                                )}
-                            </View>
+                                            {/* Card Back - USPS Compliant Postcard */}
+                                            <View style={styles.cardSection}>
+                                                <Text style={styles.sideLabel}>Back (Mailable)</Text>
+                                                <ViewShot ref={backRef} options={{ format: 'png', quality: 1 }}>
+                                                    <View style={[styles.postcardBack, { width: cardWidth, height: cardHeight }]}>
+                                                        {/* LEFT SIDE - Message/Content Area (per USPS rules) */}
+                                                        <View style={styles.messageHalf}>
+                                                            <Text style={[styles.inviteHeader, { color: colors.bg, fontSize: cardWidth * 0.045 }]}>
+                                                                You're Invited!
+                                                            </Text>
+                                                            <Text style={[styles.inviteSubheader, { fontSize: cardWidth * 0.025 }]}>
+                                                                to celebrate the arrival of
+                                                            </Text>
+                                                            <Text style={[styles.inviteBabyName, { color: colors.bg, fontSize: cardWidth * 0.04 }]}>
+                                                                {fullName}
+                                                            </Text>
 
-                            {/* Party Details */}
-                            <View style={styles.partyCompact}>
-                                <View style={styles.detailRowCompact}>
-                                    <Text style={[styles.detailLabelCompact, { fontSize: cardWidth * 0.02 }]}>When:</Text>
-                                    <View style={[styles.blankLineCompact, { borderBottomColor: colors.bg }]} />
-                                </View>
-                                <View style={styles.detailRowCompact}>
-                                    <Text style={[styles.detailLabelCompact, { fontSize: cardWidth * 0.02 }]}>Where:</Text>
-                                    <View style={[styles.blankLineCompact, { borderBottomColor: colors.bg }]} />
-                                </View>
-                                <View style={styles.detailRowCompact}>
-                                    <Text style={[styles.detailLabelCompact, { fontSize: cardWidth * 0.02 }]}>RSVP:</Text>
-                                    <View style={[styles.blankLineCompact, { borderBottomColor: colors.bg }]} />
-                                </View>
-                            </View>
+                                                            {/* Baby Stats - Compact */}
+                                                            <View style={styles.statsCompact}>
+                                                                <Text style={[styles.statLine, { fontSize: cardWidth * 0.022 }]}>
+                                                                    Born: {birthDateStr}
+                                                                </Text>
+                                                                {weight && (
+                                                                    <Text style={[styles.statLine, { fontSize: cardWidth * 0.022 }]}>
+                                                                        {weight} • {length}
+                                                                    </Text>
+                                                                )}
+                                                            </View>
 
-                            {parents && (
-                                <Text style={[styles.hostedBy, { fontSize: cardWidth * 0.018 }]}>
-                                    Hosted by {parents}
-                                </Text>
-                            )}
-                        </View>
+                                                            {/* Party Details */}
+                                                            <View style={styles.partyCompact}>
+                                                                <View style={styles.detailRowCompact}>
+                                                                    <Text style={[styles.detailLabelCompact, { fontSize: cardWidth * 0.02 }]}>When:</Text>
+                                                                    <View style={[styles.blankLineCompact, { borderBottomColor: colors.bg }]} />
+                                                                </View>
+                                                                <View style={styles.detailRowCompact}>
+                                                                    <Text style={[styles.detailLabelCompact, { fontSize: cardWidth * 0.02 }]}>Where:</Text>
+                                                                    <View style={[styles.blankLineCompact, { borderBottomColor: colors.bg }]} />
+                                                                </View>
+                                                                <View style={styles.detailRowCompact}>
+                                                                    <Text style={[styles.detailLabelCompact, { fontSize: cardWidth * 0.02 }]}>RSVP:</Text>
+                                                                    <View style={[styles.blankLineCompact, { borderBottomColor: colors.bg }]} />
+                                                                </View>
+                                                            </View>
 
-                        {/* VERTICAL DIVIDER LINE (USPS requirement) */}
-                        <View style={styles.postalDivider} />
+                                                            {parents && (
+                                                                <Text style={[styles.hostedBy, { fontSize: cardWidth * 0.018 }]}>
+                                                                    Hosted by {parents}
+                                                                </Text>
+                                                            )}
+                                                        </View>
 
-                        {/* RIGHT SIDE - Address Area (per USPS rules) */}
-                        <View style={styles.addressHalf}>
-                            {/* Stamp Box - Upper Right */}
-                            <View style={styles.stampBox}>
-                                <Text style={styles.stampText}>PLACE</Text>
-                                <Text style={styles.stampText}>STAMP</Text>
-                                <Text style={styles.stampText}>HERE</Text>
-                            </View>
+                                                        {/* VERTICAL DIVIDER LINE (USPS requirement) */}
+                                                        <View style={styles.postalDivider} />
 
-                            {/* Address Lines */}
-                            <View style={styles.addressArea}>
-                                <View style={styles.addressLine} />
-                                <View style={styles.addressLine} />
-                                <View style={styles.addressLine} />
-                                <View style={styles.addressLine} />
-                            </View>
+                                                        {/* RIGHT SIDE - Address Area (per USPS rules) */}
+                                                        <View style={styles.addressHalf}>
+                                                            {/* Stamp Box - Upper Right */}
+                                                            <View style={styles.stampBox}>
+                                                                <Text style={styles.stampText}>PLACE</Text>
+                                                                <Text style={styles.stampText}>STAMP</Text>
+                                                                <Text style={styles.stampText}>HERE</Text>
+                                                            </View>
 
-                            {/* Brand watermark */}
-                            <Text style={[styles.brandText, { fontSize: cardWidth * 0.016 }]}>
-                                PopulationPlusOne.com
-                            </Text>
-                        </View>
-                    </View>
-                </ViewShot>
+                                                            {/* Address Lines */}
+                                                            <View style={styles.addressArea}>
+                                                                <View style={styles.addressLine} />
+                                                                <View style={styles.addressLine} />
+                                                                <View style={styles.addressLine} />
+                                                                <View style={styles.addressLine} />
+                                                            </View>
+
+                                                            {/* Brand watermark */}
+                                                            <Text style={[styles.brandText, { fontSize: cardWidth * 0.016 }]}>
+                                                                PopulationPlusOne.com
+                                                            </Text>
+                                                        </View>
+                                                    </View>
+                                                </ViewShot>
+                                            </View>
+
+                                        </Animated.View>
+                                    </PinchGestureHandler>
+                                </Animated.View>
+                            </PanGestureHandler>
+                        </Animated.View>
+                    </TapGestureHandler>
+                </GestureHandlerRootView>
             </View>
 
             {/* Download Button */}

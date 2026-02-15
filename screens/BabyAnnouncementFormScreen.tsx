@@ -32,15 +32,15 @@ export default function BabyAnnouncementFormScreen() {
 
     // Form state
     const [babyCount, setBabyCount] = useState<number>(1);
-    const [babies, setBabies] = useState<Baby[]>([{ first: '', middle: '', last: '' }]);
-    const [motherName, setMotherName] = useState('');
-    const [fatherName, setFatherName] = useState('');
-    const [hometown, setHometown] = useState('');
-    const [dobDate, setDobDate] = useState(new Date());
+    const [babies, setBabies] = useState<Baby[]>([{ first: 'Emily', middle: 'Grace', last: 'Sample' }]);
+    const [motherName, setMotherName] = useState('Sarah Sample');
+    const [fatherName, setFatherName] = useState('Jack Sample');
+    const [hometown, setHometown] = useState('Kansas City, MO');
+    const [dobDate, setDobDate] = useState(new Date(2026, 1, 14));
     const [showDatePicker, setShowDatePicker] = useState(false);
-    const [weightLb, setWeightLb] = useState('');
-    const [weightOz, setWeightOz] = useState('');
-    const [lengthIn, setLengthIn] = useState('');
+    const [weightLb, setWeightLb] = useState('7');
+    const [weightOz, setWeightOz] = useState('4');
+    const [lengthIn, setLengthIn] = useState('20');
     const [selectedColor, setSelectedColor] = useState('#1a472a');
     const frontOrientation = 'landscape'; // Only landscape supported
     const [loading, setLoading] = useState(false);
@@ -123,7 +123,7 @@ export default function BabyAnnouncementFormScreen() {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.title}>+1 New Baby Announcement</Text>
+            <Text style={styles.title}>POPULATION +1 Form Announcement</Text>
 
             {/* Baby Count Toggle */}
             <Text style={styles.label}>How many babies?</Text>
@@ -274,6 +274,7 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#1a472a' },
     content: { padding: 20, paddingBottom: 40 },
     title: { fontSize: 24, fontWeight: '900', marginBottom: 12, color: '#fff', textAlign: 'center' },
+    populationHeader: { fontSize: 18, fontWeight: '900', color: '#fff', textAlign: 'center', letterSpacing: 3, marginTop: 8, marginBottom: 2 },
     label: { fontSize: 16, fontWeight: '700', color: '#fff', marginTop: 16, marginBottom: 8 },
     input: {
         backgroundColor: '#fff',

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, useWindowDimensions } from 'react-native';
+import { Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 interface BaseballCardProps {
     babyName: string;
@@ -65,7 +65,7 @@ export default function BaseballCard({
                 {/* Header - Team name style */}
                 <View style={[styles.header, { backgroundColor, height: displayHeight * 0.08 }]}>
                     <Text style={[styles.teamName, { fontSize: baseFontSize * 0.9 }]}>
-                        ⭐ POPULATION +1 ⭐
+                        ⭐ POPULATION +1™ ⭐
                     </Text>
                 </View>
 

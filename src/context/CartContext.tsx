@@ -7,7 +7,7 @@ export type CartItem = {
     price: number; // $0.00 until printing services finalized
     quantity: number;
     imageUri?: string;
-    productType: 'front' | 'back' | 'natal' | 'yardsign' | 'postcard' | 'babycard';
+    productType: 'front' | 'back' | 'natal' | 'natalback' | 'yardsign' | 'postcard' | 'babycard';
     variant?: string; // e.g., 'classic', 'welcome', 'minimal' for yard signs
 };
 
@@ -95,6 +95,7 @@ export const PRODUCT_PRICES = {
     front: { name: 'Birth Announcement (Front)', price: 0.00 },
     back: { name: 'Time Capsule (Back)', price: 0.00 },
     natal: { name: 'Natal Chart', price: 0.00 },
+    natalback: { name: 'Chart Reading Guide', price: 0.00 },
 
     // Yard Signs
     'yardsign-classic': { name: 'Yard Sign - Classic', price: 0.00 },
@@ -106,11 +107,11 @@ export const PRODUCT_PRICES = {
     'postcard-back': { name: 'Postcard Back', price: 0.00 },
     'postcard-bundle-25': { name: '25 Mailable Postcards', price: 0.00 },
 
-    // Baby Cards
-    'babycard-front': { name: 'Baby Card Front', price: 0.00 },
-    'babycard-back': { name: 'Baby Card Back', price: 0.00 },
-    'babycard-bundle-10': { name: '10 Baby Cards', price: 0.00 },
-    'babycard-bundle-25': { name: '25 Baby Cards', price: 0.00 },
+    // Trading Cards
+    'babycard-front': { name: 'Trading Card Front', price: 0.00 },
+    'babycard-back': { name: 'Trading Card Back', price: 0.00 },
+    'babycard-bundle-10': { name: '10 Trading Cards', price: 0.00 },
+    'babycard-bundle-25': { name: '25 Trading Cards', price: 0.00 },
 };
 
 export default CartContext;

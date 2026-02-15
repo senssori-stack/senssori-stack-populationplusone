@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, useWindowDimensions, ScrollView } from 'react-native';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 interface TimeCapsuleData {
     label: string;
@@ -27,10 +27,8 @@ export default function TimeCapsule({
     dataPoints,
     backgroundColor = '#1a472a',
 }: TimeCapsuleProps) {
-    const { height } = useWindowDimensions();
+    const { width, height } = useWindowDimensions();
 
-    // Landscape only: 11x8.5" = 3300x2550px
-    const baseFontSize = height * 0.0675 * 0.5 * 1.15 * 0.8;
     const isLandscape = width > height;
 
     // Responsive font sizing

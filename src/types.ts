@@ -2,7 +2,8 @@ export type ThemeName = 'lightBlue' | 'royalBlue' | 'mediumBlue' | 'navyBlue' | 
     'darkGreen' | 'forestGreen' | 'green' | 'limeGreen' | 'mintGreen' |
     'lavender' | 'hotPink' | 'rose' | 'purple' | 'violet' |
     'coral' | 'red' | 'maroon' | 'orange' | 'gold' |
-    'charcoal' | 'slate' | 'gray' | 'silver' | 'lightGray';
+    'charcoal' | 'slate' | 'gray' | 'silver' | 'lightGray' |
+    'pink' | 'blue';
 
 export type PreviewParams = {
     theme?: ThemeName;
@@ -31,6 +32,7 @@ export type PreviewParams = {
     mode?: 'baby' | 'milestone'; // 'baby' for birth announcement, 'milestone' for birthdays
     personName?: string; // For milestone mode - the person's full name
     message?: string; // Prewritten message for milestone mode
+    babyCount?: number; // 1 = single, 2 = twins, 3 = triplets
 };
 
 export type MemorialParams = {
@@ -107,7 +109,11 @@ export type RootStackParamList = {
     Test: undefined;
     AboutUs: undefined;
     Sources: undefined;
+    CustomerLogin: undefined;
     FuneralHomePortal: undefined;
     BabyRegistryPortal: undefined;
     RabbitHole: undefined;
+    MilestoneTracker: undefined;
+    GrowthTracker: undefined;
+    LearningCenter: undefined;
 };

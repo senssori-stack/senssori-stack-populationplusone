@@ -1,10 +1,12 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Platform, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Animated, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { GestureHandlerRootView, PanGestureHandler, PinchGestureHandler, State, TapGestureHandler } from 'react-native-gesture-handler';
 import ViewShot from 'react-native-view-shot';
 import CartModal from '../../components/CartModal';
+import CelebrationOverlay from '../../components/CelebrationOverlay';
 import DownloadModal, { DownloadItem } from '../../components/DownloadModal';
+import NatalChartBack from '../../components/NatalChartBack';
 import NatalChartPrintable from '../../components/NatalChartPrintable';
 import SignFrontLandscape from '../../components/SignFrontLandscape';
 import TimeCapsuleLandscape from '../../components/TimeCapsuleLandscape';
@@ -19,11 +21,13 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Preview'>;
 export default function PreviewScreen({ navigation, route }: Props) {
     const params = route.params || {};
     const [viewMode, setViewMode] = useState<'front' | 'back' | 'natal'>('front');
+    const [showCelebration, setShowCelebration] = useState(true);
 
     // ViewShot refs for capturing
     const frontRef = useRef<ViewShot | null>(null);
     const backRef = useRef<ViewShot | null>(null);
     const natalRef = useRef<ViewShot | null>(null);
+    const natalBackRef = useRef<ViewShot | null>(null);
 
     // Download modal state
     const [showDownloadModal, setShowDownloadModal] = useState(false);
@@ -52,23 +56,44 @@ export default function PreviewScreen({ navigation, route }: Props) {
         { id: 'front', label: 'Birth Announcement (Front)', category: 'yardsign' },
         { id: 'back', label: 'Time Capsule (Back)', category: 'yardsign' },
         { id: 'natal', label: 'Natal Chart', category: 'yardsign' },
+        { id: 'natalback', label: 'Natal Chart Guide (Back)', category: 'yardsign' },
     ];
 
-    // Capture function
-    const handleCapture = async (itemId: string): Promise<string | null> => {
+    // Capture a single view by ref
+    const captureView = async (itemId: string): Promise<string | null> => {
         try {
             let ref: React.RefObject<ViewShot | null> | null = null;
             if (itemId === 'front') ref = frontRef;
             if (itemId === 'back') ref = backRef;
             if (itemId === 'natal') ref = natalRef;
+            if (itemId === 'natalback') ref = natalBackRef;
 
             if (ref?.current?.capture) {
-                const uri = await ref.current.capture();
-                return uri;
+                return await ref.current.capture();
             }
             return null;
         } catch (error) {
             console.error('Capture error:', error);
+            return null;
+        }
+    };
+
+    // Handle capture — switches viewMode if needed, waits for render, then captures
+    const handleCapture = async (itemId: string): Promise<string | null> => {
+        try {
+            // For natal/natalback, both are rendered in 'natal' view
+            if (itemId === 'natal' || itemId === 'natalback') {
+                setViewMode('natal');
+            } else {
+                setViewMode(itemId as 'front' | 'back');
+            }
+            resetView();
+            // Wait for React to re-render and mount the ViewShot
+            // (longer delay to ensure complex components like NatalChart are fully rendered)
+            await new Promise(r => setTimeout(r, 1200));
+            return await captureView(itemId);
+        } catch (error) {
+            console.error(`Capture error for ${itemId}:`, error);
             return null;
         }
     };
@@ -83,6 +108,8 @@ export default function PreviewScreen({ navigation, route }: Props) {
     const scale = useRef(new Animated.Value(1)).current;
     const translateX = useRef(new Animated.Value(0)).current;
     const translateY = useRef(new Animated.Value(0)).current;
+    const baseTranslateX = useRef(new Animated.Value(0)).current;
+    const baseTranslateY = useRef(new Animated.Value(0)).current;
     const lastScale = useRef(1);
     const lastTranslateX = useRef(0);
     const lastTranslateY = useRef(0);
@@ -99,7 +126,15 @@ export default function PreviewScreen({ navigation, route }: Props) {
         const availableWidth = screenWidth;
         const availableHeight = screenHeight - 120; // Space for buttons and padding
 
-        // Birth announcement dimensions
+        if (viewMode === 'natal') {
+            // Natal view shows both chart (landscape) and guide (portrait) stacked
+            // Scale guide to fit roughly half the container width
+            const portraitW = 2550, portraitH = 3300;
+            const guideWidth = availableWidth * 0.85;
+            return guideWidth / portraitW;
+        }
+
+        // Birth announcement & natal chart dimensions (all landscape)
         const landscapeW = 3300, landscapeH = 2550;
 
         // Scale to fit screen without cropping
@@ -120,6 +155,8 @@ export default function PreviewScreen({ navigation, route }: Props) {
         scale.setValue(1);
         translateX.setValue(0);
         translateY.setValue(0);
+        baseTranslateX.setValue(0);
+        baseTranslateY.setValue(0);
         lastTranslateX.current = 0;
         lastTranslateY.current = 0;
     }, [screenWidth, screenHeight]);
@@ -175,6 +212,9 @@ export default function PreviewScreen({ navigation, route }: Props) {
                 lastTranslateY.current = 0;
             }
 
+            // Commit the accumulated offset to the base and reset the gesture delta
+            baseTranslateX.setValue(lastTranslateX.current);
+            baseTranslateY.setValue(lastTranslateY.current);
             translateX.setValue(0);
             translateY.setValue(0);
         }
@@ -190,6 +230,8 @@ export default function PreviewScreen({ navigation, route }: Props) {
         scale.setValue(1);
         translateX.setValue(0);
         translateY.setValue(0);
+        baseTranslateX.setValue(0);
+        baseTranslateY.setValue(0);
     };
 
     // Initialize at 100% of full screen whenever view changes
@@ -200,6 +242,8 @@ export default function PreviewScreen({ navigation, route }: Props) {
         scale.setValue(1);
         translateX.setValue(0);
         translateY.setValue(0);
+        baseTranslateX.setValue(0);
+        baseTranslateY.setValue(0);
         lastTranslateX.current = 0;
         lastTranslateY.current = 0;
     }, [viewMode, fullScreenScale]);
@@ -213,6 +257,8 @@ export default function PreviewScreen({ navigation, route }: Props) {
             scale.setValue(1);
             translateX.setValue(0);
             translateY.setValue(0);
+            baseTranslateX.setValue(0);
+            baseTranslateY.setValue(0);
 
             // Update scale and zoom state
             lastScale.current = targetZoom;
@@ -285,8 +331,9 @@ export default function PreviewScreen({ navigation, route }: Props) {
                             photoUris={allPhotoUris}
                             previewScale={finalScale}
                             hometown={formData.hometown}
-                            population={formData.population}
+                            population={formData.population ?? undefined}
                             personName={params.personName || ''}
+                            babyCount={params.babyCount || 1}
                         />
                     </View>
                 </ViewShot>
@@ -318,168 +365,195 @@ export default function PreviewScreen({ navigation, route }: Props) {
                 </ViewShot>
             );
         } else if (viewMode === 'natal') {
-            // Natal Chart view
+            // Natal Chart (front) + Chart Reading Guide (back) — shown together like postcards
             const babyName = `${formData.babyFirst} ${formData.babyMiddle ? formData.babyMiddle + ' ' : ''}${formData.babyLast}`.trim() || params.personName || 'Baby';
             return (
-                <ViewShot ref={natalRef} options={{ format: 'png', quality: 1 }}>
-                    <View style={styles.announcementContainer}>
-                        <NatalChartPrintable
-                            theme={formData.theme}
-                            babyName={babyName}
-                            dobISO={dobISO}
-                            hometown={formData.hometown}
-                            previewScale={finalScale}
-                        />
-                    </View>
-                </ViewShot>
+                <View style={{ alignItems: 'center', paddingHorizontal: 10 }}>
+                    {/* Natal Chart Front */}
+                    <Text style={{ color: '#888', fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 4 }}>Front — Natal Chart (11" × 8.5")</Text>
+                    <ViewShot ref={natalRef} options={{ format: 'png', quality: 1 }}>
+                        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                            <NatalChartPrintable
+                                theme={formData.theme}
+                                babyName={babyName}
+                                dobISO={dobISO}
+                                hometown={formData.hometown}
+                                previewScale={finalScale}
+                            />
+                        </View>
+                    </ViewShot>
+
+                    {/* Chart Reading Guide Back */}
+                    <Text style={{ color: '#888', fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 16 }}>Back — Chart Reading Guide (8.5" × 11")</Text>
+                    <ViewShot ref={natalBackRef} options={{ format: 'png', quality: 1 }}>
+                        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                            <NatalChartBack
+                                theme={formData.theme}
+                                babyName={babyName}
+                                previewScale={finalScale}
+                            />
+                        </View>
+                    </ViewShot>
+                </View>
             );
         }
     };
 
+    // Determine celebration message based on mode
+    const celebrationMessage = params.mode === 'milestone'
+        ? '🎉 Your creation is ready!'
+        : '🎉 Welcome to the world!';
+
     return (
-        <GestureHandlerRootView style={styles.container}>
-            {/* Page title */}
-            <View style={styles.titleContainer}>
-                <Text style={styles.title}>
-                    {viewMode === 'front' ? 'Birth Announcement' : viewMode === 'back' ? 'Time Capsule' : 'Natal Chart'} - 11" × 8.5"
-                </Text>
-            </View>
-
-            {/* Control buttons */}
-            <View style={styles.controls}>
-                <TouchableOpacity
-                    style={[styles.button, viewMode === 'front' && styles.activeButton]}
-                    onPress={() => { setViewMode('front'); resetView(); }}
-                >
-                    <Text style={[styles.buttonText, viewMode === 'front' && styles.activeButtonText]}>Front</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.button, viewMode === 'back' && styles.activeButton]}
-                    onPress={() => { setViewMode('back'); resetView(); }}
-                >
-                    <Text style={[styles.buttonText, viewMode === 'back' && styles.activeButtonText]}>Back</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.button, viewMode === 'natal' && styles.activeButton]}
-                    onPress={() => { setViewMode('natal'); resetView(); }}
-                >
-                    <Text style={[styles.buttonText, viewMode === 'natal' && styles.activeButtonText]}>Natal Chart</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.button]}
-                    onPress={resetView}
-                >
-                    <Text style={[styles.buttonText]}>Reset</Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* Add-on Product Buttons */}
-            <View style={styles.productButtons}>
-                <TouchableOpacity
-                    style={styles.productButton}
-                    onPress={() => navigation.navigate('YardSignPreview', params)}
-                >
-                    <Text style={styles.productButtonText}>🏡 Yard Signs</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.productButton}
-                    onPress={() => navigation.navigate('PostcardPreview', params)}
-                >
-                    <Text style={styles.productButtonText}>💌 Postcards</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.productButton}
-                    onPress={() => navigation.navigate('BaseballCardPreview', params)}
-                >
-                    <Text style={styles.productButtonText}>⚾ Baby Cards</Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* Birth announcement preview with gesture handling */}
-            <View style={styles.previewContainer}>
-                <TapGestureHandler
-                    ref={doubleTapRef}
-                    onHandlerStateChange={onDoubleTap}
-                    numberOfTaps={2}
-                >
-                    <Animated.View style={{ flex: 1 }}>
-                        <PanGestureHandler
-                            onGestureEvent={onPanGestureEvent}
-                            onHandlerStateChange={onPanHandlerStateChange}
-                        >
-                            <Animated.View style={{ flex: 1 }}>
-                                <PinchGestureHandler
-                                    onGestureEvent={onPinchGestureEvent}
-                                    onHandlerStateChange={onPinchHandlerStateChange}
-                                >
-                                    <Animated.View
-                                        style={[
-                                            styles.gestureContainer,
-                                            {
-                                                transform: [
-                                                    { scale: scale },
-                                                    { translateX: translateX },
-                                                    { translateY: translateY },
-                                                ],
-                                            },
-                                        ]}
-                                    >
-                                        {renderCurrentView()}
-                                    </Animated.View>
-                                </PinchGestureHandler>
-                            </Animated.View>
-                        </PanGestureHandler>
-                    </Animated.View>
-                </TapGestureHandler>
-            </View>
-
-            {/* Download Button */}
-            <TouchableOpacity
-                style={styles.downloadButton}
-                onPress={() => setShowDownloadModal(true)}
-            >
-                <Text style={styles.downloadButtonText}>📥 Download / Print Options</Text>
-            </TouchableOpacity>
-
-            {/* Cart Actions */}
-            <View style={styles.cartActions}>
-                <TouchableOpacity
-                    style={styles.addToCartButton}
-                    onPress={handleAddToCart}
-                >
-                    <Text style={styles.addToCartButtonText}>🛒 Add {viewMode === 'front' ? 'Front' : viewMode === 'back' ? 'Back' : 'Natal'} to Cart - $0.00</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.viewCartButton}
-                    onPress={() => setShowCartModal(true)}
-                >
-                    <Text style={styles.viewCartButtonText}>
-                        🛒 {getItemCount() > 0 ? `(${getItemCount()})` : ''}
+        <View style={{ flex: 1, backgroundColor: '#fff' }}>
+            <CelebrationOverlay
+                visible={showCelebration}
+                message={celebrationMessage}
+                onComplete={() => setShowCelebration(false)}
+            />
+            <ScrollView style={{ flex: 1, paddingTop: 40 }} contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
+                {/* Page title */}
+                <View style={styles.titleContainer}>
+                    <Text style={styles.title}>
+                        {viewMode === 'front' ? 'Birth Announcement' : viewMode === 'back' ? 'Time Capsule' : 'Natal Chart & Guide'} - {viewMode === 'natal' ? 'Front & Back' : '11" × 8.5"'}
                     </Text>
-                </TouchableOpacity>
-            </View>
+                </View>
 
-            {/* Back button */}
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                <Text style={styles.backButtonText}>← Back to Form</Text>
-            </TouchableOpacity>
+                {/* Control buttons */}
+                <View style={styles.controls}>
+                    <TouchableOpacity
+                        style={[styles.button, viewMode === 'front' && styles.activeButton]}
+                        onPress={() => { setViewMode('front'); resetView(); }}
+                    >
+                        <Text style={[styles.buttonText, viewMode === 'front' && styles.activeButtonText]}>Front</Text>
+                    </TouchableOpacity>
 
-            <DownloadModal
-                visible={showDownloadModal}
-                onClose={() => setShowDownloadModal(false)}
-                items={downloadItems}
-                onCapture={handleCapture}
-                babyName={params.babies?.[0]?.first || params.babyFirst || params.personName || 'Baby'}
-            />
+                    <TouchableOpacity
+                        style={[styles.button, viewMode === 'back' && styles.activeButton]}
+                        onPress={() => { setViewMode('back'); resetView(); }}
+                    >
+                        <Text style={[styles.buttonText, viewMode === 'back' && styles.activeButtonText]}>Back</Text>
+                    </TouchableOpacity>
 
-            <CartModal
-                visible={showCartModal}
-                onClose={() => setShowCartModal(false)}
-            />
-        </GestureHandlerRootView>
+                    <TouchableOpacity
+                        style={[styles.button, viewMode === 'natal' && styles.activeButton]}
+                        onPress={() => { setViewMode('natal'); resetView(); }}
+                    >
+                        <Text style={[styles.buttonText, viewMode === 'natal' && styles.activeButtonText]}>Natal Chart</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.button]}
+                        onPress={resetView}
+                    >
+                        <Text style={[styles.buttonText]}>Reset</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Add-on Product Buttons */}
+                <View style={styles.productButtons}>
+                    <TouchableOpacity
+                        style={styles.productButton}
+                        onPress={() => navigation.navigate('YardSignPreview', params)}
+                    >
+                        <Text style={styles.productButtonText}>🏡 Yard Signs</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.productButton}
+                        onPress={() => navigation.navigate('PostcardPreview', params)}
+                    >
+                        <Text style={styles.productButtonText}>💌 Postcards</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.productButton}
+                        onPress={() => navigation.navigate('BaseballCardPreview', params)}
+                    >
+                        <Text style={styles.productButtonText}>⚾ Trading Cards</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Birth announcement preview with gesture handling */}
+                <GestureHandlerRootView style={[styles.previewContainer, { height: viewMode === 'natal' ? screenHeight * 0.65 : screenHeight * 0.5 }]}>
+                    <TapGestureHandler
+                        ref={doubleTapRef}
+                        onHandlerStateChange={onDoubleTap}
+                        numberOfTaps={2}
+                    >
+                        <Animated.View style={{ flex: 1 }}>
+                            <PanGestureHandler
+                                onGestureEvent={onPanGestureEvent}
+                                onHandlerStateChange={onPanHandlerStateChange}
+                            >
+                                <Animated.View style={{ flex: 1 }}>
+                                    <PinchGestureHandler
+                                        onGestureEvent={onPinchGestureEvent}
+                                        onHandlerStateChange={onPinchHandlerStateChange}
+                                    >
+                                        <Animated.View
+                                            style={[
+                                                styles.gestureContainer,
+                                                {
+                                                    transform: [
+                                                        { scale: scale },
+                                                        { translateX: Animated.add(baseTranslateX, translateX) },
+                                                        { translateY: Animated.add(baseTranslateY, translateY) },
+                                                    ],
+                                                },
+                                            ]}
+                                        >
+                                            {renderCurrentView()}
+                                        </Animated.View>
+                                    </PinchGestureHandler>
+                                </Animated.View>
+                            </PanGestureHandler>
+                        </Animated.View>
+                    </TapGestureHandler>
+                </GestureHandlerRootView>
+
+                {/* Bottom action bar */}
+                <View style={styles.bottomBar}>
+                    <View style={styles.bottomBarRow}>
+                        <TouchableOpacity style={styles.backButtonSmall} onPress={() => navigation.goBack()}>
+                            <Text style={styles.backButtonSmallText}>← Back</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.downloadButtonSmall}
+                            onPress={() => setShowDownloadModal(true)}
+                        >
+                            <Text style={styles.downloadButtonSmallText}>📥 Download</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.addToCartButtonSmall}
+                            onPress={handleAddToCart}
+                        >
+                            <Text style={styles.addToCartButtonSmallText}>🛒 Add to Cart</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.viewCartButtonSmall}
+                            onPress={() => setShowCartModal(true)}
+                        >
+                            <Text style={styles.viewCartButtonSmallText}>
+                                🛒 {getItemCount() > 0 ? `(${getItemCount()})` : ''}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                <DownloadModal
+                    visible={showDownloadModal}
+                    onClose={() => setShowDownloadModal(false)}
+                    items={downloadItems}
+                    onCapture={handleCapture}
+                    babyName={params.babies?.[0]?.first || params.babyFirst || params.personName || 'Baby'}
+                />
+
+                <CartModal
+                    visible={showCartModal}
+                    onClose={() => setShowCartModal(false)}
+                />
+
+            </ScrollView>
+        </View>
     );
 }
 
@@ -506,37 +580,33 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'center',
-        paddingHorizontal: 20,
+        gap: 8,
+        paddingHorizontal: 16,
         paddingVertical: 10,
         backgroundColor: '#f5f5f5',
         borderBottomWidth: 1,
         borderBottomColor: '#ddd',
     },
     button: {
-        paddingHorizontal: 15,
+        backgroundColor: '#1a472a',
         paddingVertical: 8,
-        marginHorizontal: 5,
-        marginVertical: 2,
-        backgroundColor: '#fff',
+        paddingHorizontal: 14,
         borderRadius: 20,
-        borderWidth: 1,
-        borderColor: '#ddd',
     },
     activeButton: {
-        backgroundColor: '#007AFF',
-        borderColor: '#007AFF',
+        backgroundColor: '#f59e0b',
     },
     buttonText: {
-        fontSize: 14,
-        color: '#333',
-        fontWeight: '500',
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '600',
     },
     activeButtonText: {
         color: '#fff',
     },
     previewContainer: {
-        flex: 1,
         backgroundColor: '#f9f9f9',
+        overflow: 'hidden',
     },
     gestureContainer: {
         flex: 1,
@@ -585,6 +655,68 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
     },
+    bottomBar: {
+        backgroundColor: '#fff',
+        borderTopWidth: 1,
+        borderTopColor: '#ddd',
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        paddingBottom: 20,
+    },
+    bottomBarRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 6,
+    },
+    backButtonSmall: {
+        backgroundColor: '#555',
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+    },
+    backButtonSmallText: {
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    downloadButtonSmall: {
+        backgroundColor: '#1a472a',
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+        flex: 1,
+        alignItems: 'center',
+    },
+    downloadButtonSmallText: {
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    addToCartButtonSmall: {
+        backgroundColor: '#1a472a',
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+        flex: 1,
+        alignItems: 'center',
+    },
+    addToCartButtonSmallText: {
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    viewCartButtonSmall: {
+        backgroundColor: '#f59e0b',
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+    },
+    viewCartButtonSmallText: {
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '600',
+    },
     pdfButton: {
         backgroundColor: '#ffd700',
         paddingHorizontal: 12,
@@ -611,38 +743,6 @@ const styles = StyleSheet.create({
     productButtonText: {
         color: '#fff',
         fontSize: 13,
-        fontWeight: '600',
-    },
-    cartActions: {
-        flexDirection: 'row',
-        marginHorizontal: 20,
-        marginTop: 8,
-        gap: 10,
-    },
-    addToCartButton: {
-        flex: 1,
-        backgroundColor: '#1a472a',
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        borderRadius: 12,
-        alignItems: 'center',
-    },
-    addToCartButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    viewCartButton: {
-        backgroundColor: '#f59e0b',
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        borderRadius: 12,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    viewCartButtonText: {
-        color: '#fff',
-        fontSize: 16,
         fontWeight: '600',
     },
 });

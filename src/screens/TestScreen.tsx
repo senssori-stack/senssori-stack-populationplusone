@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../types';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import SignFrontLandscape from '../../components/SignFrontLandscape';
 import TimeCapsuleLandscape from '../../components/TimeCapsuleLandscape';
-import { getAllSnapshotValues } from '../data/utils/snapshot';
-import { getPopulationForCity } from '../data/utils/populations';
 import { calculateLifePath } from '../data/utils/life-path-calculator';
+import { getPopulationForCity } from '../data/utils/populations';
+import { getAllSnapshotValues } from '../data/utils/snapshot';
+import type { RootStackParamList } from '../types';
 
 type TestMode = 'front-landscape' | 'back-landscape';
 type Props = NativeStackScreenProps<RootStackParamList, 'Test'>;
@@ -65,7 +65,7 @@ export default function TestScreen({ navigation }: Props) {
     const testProps = {
         theme: 'green' as const,
         hometown: 'CHICAGO, IL',
-        population,
+        population: population ?? undefined,
         babies: [{ first: 'Emma', middle: 'Grace', last: 'Smith', photoUri: null }],
         babyName: 'Emma Grace Smith',
         photoUri: null,

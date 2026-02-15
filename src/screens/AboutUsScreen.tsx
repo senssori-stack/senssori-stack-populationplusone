@@ -2,12 +2,13 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef, useState } from 'react';
 import {
+    Linking,
     ScrollView,
     StatusBar,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import type { RootStackParamList } from '../types';
 
@@ -56,9 +57,9 @@ export default function AboutUsScreen({ navigation }: Props) {
                 {/* Content */}
                 <View style={styles.contentSection}>
                     <View style={styles.card}>
-                        <Text style={styles.cardTitle}>Welcome to Population +1</Text>
+                        <Text style={styles.cardTitle}>Welcome to Population +1™</Text>
                         <Text style={styles.cardText}>
-                            Population +1 helps you create beautiful, personalized announcements
+                            Population +1™ helps you create beautiful, personalized announcements
                             for life's most precious moments. From welcoming a new baby to
                             celebrating major milestones, we make it easy to share your joy
                             with friends and family.
@@ -81,6 +82,64 @@ export default function AboutUsScreen({ navigation }: Props) {
                             Have questions or feedback? We'd love to hear from you!
                         </Text>
                         <Text style={styles.email}>info@populationplusone.com</Text>
+                    </View>
+
+                    <View style={styles.card}>
+                        <Text style={styles.cardTitle}>📚 Data Sources</Text>
+                        <Text style={styles.cardText}>
+                            All data in Population +1™ is sourced from official, verified sources:
+                        </Text>
+
+                        <Text style={styles.sourceCategory}>Consumer Prices</Text>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://gasprices.aaa.com/')}>
+                            <Text style={styles.sourceLink}>⛽ Gas Prices — AAA (gasprices.aaa.com)</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://www.bls.gov/charts/consumer-price-index/consumer-price-index-average-price-data.htm')}>
+                            <Text style={styles.sourceLink}>🍞🥚🥛 Bread, Eggs, Milk — Bureau of Labor Statistics (bls.gov)</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://www.dol.gov/agencies/whd/minimum-wage')}>
+                            <Text style={styles.sourceLink}>💵 Minimum Wage — U.S. Dept. of Labor (dol.gov)</Text>
+                        </TouchableOpacity>
+
+                        <Text style={styles.sourceCategory}>Financial Markets</Text>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://www.kitco.com/charts/historicalgold.html')}>
+                            <Text style={styles.sourceLink}>🪙 Gold Prices — Kitco (kitco.com)</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://www.kitco.com/charts/historicalsilver.html')}>
+                            <Text style={styles.sourceLink}>💍 Silver Prices — Kitco (kitco.com)</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://www.marketwatch.com/investing/index/djia')}>
+                            <Text style={styles.sourceLink}>📈 Dow Jones — MarketWatch (marketwatch.com)</Text>
+                        </TouchableOpacity>
+
+                        <Text style={styles.sourceCategory}>Population</Text>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://www.census.gov/popclock/')}>
+                            <Text style={styles.sourceLink}>🇺🇸🌍 U.S. & World Population — U.S. Census Bureau (census.gov)</Text>
+                        </TouchableOpacity>
+
+                        <Text style={styles.sourceCategory}>Government</Text>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://www.usa.gov/presidents')}>
+                            <Text style={styles.sourceLink}>🏠️ President & VP — USA.gov (usa.gov/presidents)</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://www.nga.org/governors/')}>
+                            <Text style={styles.sourceLink}>🏛️ Governors — National Governors Association (nga.org)</Text>
+                        </TouchableOpacity>
+
+                        <Text style={styles.sourceCategory}>Entertainment</Text>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://www.billboard.com/charts/hot-100/')}>
+                            <Text style={styles.sourceLink}>🎵 #1 Song — Billboard Hot 100 (billboard.com)</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://www.themoviedb.org/')}>
+                            <Text style={styles.sourceLink}>🎬 #1 Movie — TMDb / The Movie Database (themoviedb.org)</Text>
+                        </TouchableOpacity>
+
+                        <Text style={styles.sourceCategory}>Sports</Text>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://www.espn.com/nfl/superbowl/history/winners')}>
+                            <Text style={styles.sourceLink}>🏈 Super Bowl — ESPN.com</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://www.espn.com/mlb/worldseries/history/winners')}>
+                            <Text style={styles.sourceLink}>⚾ World Series — ESPN.com</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -216,6 +275,19 @@ const styles = StyleSheet.create({
         color: '#2d5016',
         fontWeight: '600',
         marginTop: 8,
+    },
+    sourceCategory: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#2d5016',
+        marginTop: 14,
+        marginBottom: 4,
+    },
+    sourceLink: {
+        fontSize: 13,
+        color: '#1a6db0',
+        lineHeight: 22,
+        paddingVertical: 2,
     },
     buttonSection: {
         paddingHorizontal: 20,

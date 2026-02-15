@@ -228,10 +228,10 @@ export default function SampleGallery({ navigation }: Props) {
                     {viewMode === 'front' ? (
                         <SignFrontLandscape
                             theme={selectedTheme}
-                            babies={[sampleBaby]}
+                            photoUris={[sampleBaby.photoUri]}
                             hometown={sampleData.hometown}
                             population={sampleData.population}
-                            photoUri={sampleBaby.photoUri}
+                            personName={`${sampleBaby.first} ${sampleBaby.middle} ${sampleBaby.last}`}
                             previewScale={previewScale}
                         />
                     ) : (

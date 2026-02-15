@@ -131,21 +131,21 @@ export const LIFE_PATH_LINKS: Record<number, string> = {
 
 // Snapshot emoji links for the data table
 export const SNAPSHOT_EMOJI_LINKS: Record<string, string> = {
-    '⛽': 'https://www.eia.gov/',
+    '⛽': 'https://gasprices.aaa.com/',
     '💵': 'https://www.dol.gov/agencies/whd/minimum-wage',
-    '🍞': 'https://www.bls.gov/',
-    '🥚': 'https://www.bls.gov/',
-    '🥛': 'https://www.bls.gov/',
+    '🍞': 'https://www.bls.gov/charts/consumer-price-index/consumer-price-index-average-price-data.htm',
+    '🥚': 'https://www.bls.gov/charts/consumer-price-index/consumer-price-index-average-price-data.htm',
+    '🥛': 'https://www.bls.gov/charts/consumer-price-index/consumer-price-index-average-price-data.htm',
     '🪙': 'https://www.kitco.com/charts/historicalgold.html',
     '💍': 'https://www.kitco.com/charts/historicalsilver.html',
     '📈': 'https://www.marketwatch.com/investing/index/djia',
     '🎵': 'https://www.billboard.com/',
-    '🎬': 'https://www.imdb.com/chart/250/',
+    '🎬': 'https://www.themoviedb.org/',
     '🏈': 'https://www.espn.com/nfl/superbowl/history/winners',
     '⚾': 'https://www.espn.com/mlb/worldseries/history/winners',
-    '🇺🇸': 'https://www.census.gov/',
-    '🌍': 'https://www.worldometers.info/',
-    '🏛️': 'https://www.archives.gov/',
+    '🇺🇸': 'https://www.census.gov/popclock/',
+    '🌍': 'https://www.census.gov/popclock/',
+    '🏠️': 'https://www.usa.gov/presidents',
     '🏓': 'https://www.numerology.com/articles/your-numerology-chart/life-path-number-meanings/', // Ping pong emoji for life path
 };
 

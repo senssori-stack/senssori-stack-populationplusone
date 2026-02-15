@@ -200,7 +200,7 @@ export default function HospitalLoginScreen({ navigation }: Props) {
                                 <Text style={styles.noCodeTitle}>Don't have a code?</Text>
                                 <Text style={styles.noCodeText}>
                                     No problem! You can still create beautiful announcements.
-                                    Ask your nurse if your hospital partners with Population +1.
+                                    Ask your nurse if your hospital partners with Population +1™.
                                 </Text>
 
                                 <TouchableOpacity

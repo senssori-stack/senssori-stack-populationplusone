@@ -214,11 +214,46 @@ function toFullState(s: string): string {
     return guess;
 }
 
+/** Census designation suffixes to strip from CSV area names */
+const CENSUS_SUFFIXES = [' city', ' town', ' village', ' cdp', ' borough', ' municipality', ' urban county', ' metro township', ' charter township', ' consolidated government', ' metropolitan government', ' unified government'];
+
+/**
+ * Strip Census designation suffixes from a city name.
+ * Census data often stores "Kansas City city" or "Nashville-Davidson metropolitan government".
+ */
+function stripCensusSuffix(area: string): string {
+    const lower = area.toLowerCase();
+    for (const suffix of CENSUS_SUFFIXES) {
+        // Only strip if the suffix is at the end of the city part (before the comma)
+        const commaIdx = lower.indexOf(',');
+        const cityPart = commaIdx >= 0 ? lower.substring(0, commaIdx) : lower;
+        if (cityPart.endsWith(suffix)) {
+            const stripped = area.substring(0, cityPart.length - suffix.length) + (commaIdx >= 0 ? area.substring(commaIdx) : '');
+            return stripped;
+        }
+    }
+    return area;
+}
+
 function normArea(city: string, stateFull: string): string[] {
     // Sheet sometimes has no space after comma: "City,Alabama"
     const c = city.replace(/\s+/g, ' ').replace(/\./g, '').trim();
     const s = stateFull.replace(/\s+/g, ' ').trim();
-    return [`${c},${s}`, `${c}, ${s}`];
+
+    // Also generate candidate with state abbreviation
+    const stateAbbr = Object.entries(STATE_MAP).find(([, v]) => v.toLowerCase() === s.toLowerCase())?.[0] || '';
+
+    const candidates = [
+        `${c},${s}`,
+        `${c}, ${s}`,
+    ];
+
+    if (stateAbbr) {
+        candidates.push(`${c},${stateAbbr}`);
+        candidates.push(`${c}, ${stateAbbr}`);
+    }
+
+    return candidates;
 }
 
 async function ensureLoaded(): Promise<void> {
@@ -265,7 +300,9 @@ async function ensureLoaded(): Promise<void> {
         POP_ROWS = dataRows
             .filter(r => r[areaIdx] && r[popIdx])
             .map(r => {
-                const area = r[areaIdx].trim();
+                const rawArea = r[areaIdx].trim();
+                // Strip Census designation suffixes (e.g., "Kansas City city" → "Kansas City")
+                const area = stripCensusSuffix(rawArea);
                 const pop = parseInt(r[popIdx].replace(/,/g, ''), 10);
                 return { area, pop: Number.isFinite(pop) ? pop : NaN };
             });
@@ -275,7 +312,9 @@ async function ensureLoaded(): Promise<void> {
         POP_ROWS = dataRows
             .filter(r => r.length >= 2 && r[0] && r[1])
             .map(r => {
-                const area = r[0].trim();
+                const rawArea = r[0].trim();
+                // Strip Census designation suffixes (e.g., "Kansas City city" → "Kansas City")
+                const area = stripCensusSuffix(rawArea);
                 const popStr = (r[1] || '').toString().replace(/[",]/g, '');
                 const pop = parseInt(popStr, 10);
                 return { area, pop: Number.isFinite(pop) ? pop : NaN };
@@ -349,20 +388,33 @@ export async function getPopulationForCity(hometown: string, dobISO?: string): P
         const candidates = normArea(city, stateFull).map(x => x.toLowerCase());
         console.log('🎯 Search candidates:', candidates);
 
+        // ── PASS 1: Exact match against candidates ──
         const found = POP_ROWS!.find(r => candidates.includes(r.area.toLowerCase()));
         if (found && Number.isFinite(found.pop)) {
             console.log('✅ Exact match found:', found);
             return found.pop;
         }
 
-        // Try more flexible search: normalize spaces and special characters
+        // ── PASS 2: Exact match after stripping Census suffixes from records ──
+        const strippedMatch = POP_ROWS!.find(r => {
+            const stripped = stripCensusSuffix(r.area).toLowerCase();
+            return candidates.includes(stripped);
+        });
+        if (strippedMatch && Number.isFinite(strippedMatch.pop)) {
+            console.log('✅ Census-suffix-stripped match found:', strippedMatch);
+            return strippedMatch.pop;
+        }
+
+        // ── PASS 3: Flexible search - normalize & check includes ──
         const normalizeCity = (str: string) => str.toLowerCase().replace(/\s+/g, ' ').replace(/[^\w\s,]/g, '').trim();
         const normalizedInput = normalizeCity(`${city}, ${stateFull}`);
+        const normalizedCityOnly = normalizeCity(city);
+        const normalizedStateOnly = normalizeCity(stateFull);
 
         const flexibleMatch = POP_ROWS!.find(r => {
             const normalizedRecord = normalizeCity(r.area);
             return normalizedRecord === normalizedInput ||
-                normalizedRecord.includes(normalizeCity(city)) && normalizedRecord.includes(normalizeCity(stateFull));
+                (normalizedRecord.includes(normalizedCityOnly) && normalizedRecord.includes(normalizedStateOnly));
         });
 
         if (flexibleMatch && Number.isFinite(flexibleMatch.pop)) {
@@ -370,8 +422,12 @@ export async function getPopulationForCity(hometown: string, dobISO?: string): P
             return flexibleMatch.pop;
         }
 
-        // Try loosy search: startsWith city + includes state
-        const byCity = POP_ROWS!.filter(r => r.area.toLowerCase().startsWith(city.toLowerCase() + ','));
+        // ── PASS 4: City starts with + state includes ──
+        const cityLower = city.toLowerCase();
+        const byCity = POP_ROWS!.filter(r => {
+            const rLower = r.area.toLowerCase();
+            return rLower.startsWith(cityLower + ',') || rLower.startsWith(cityLower + ' ');
+        });
         console.log('🔍 Cities starting with', city + ':', byCity.length, 'found');
         const fuzzy = byCity.find(r => r.area.toLowerCase().includes(stateFull.toLowerCase()));
         if (fuzzy && Number.isFinite(fuzzy.pop)) {
@@ -379,16 +435,33 @@ export async function getPopulationForCity(hometown: string, dobISO?: string): P
             return fuzzy.pop;
         }
 
-        // Try partial city name matching 
+        // ── PASS 5: Partial city name contains + state contains ──
         const partialMatch = POP_ROWS!.find(r => {
             const recordCity = r.area.split(',')[0].toLowerCase().trim();
-            const recordState = r.area.split(',')[1]?.toLowerCase().trim() || '';
-            return recordCity.includes(city.toLowerCase()) && recordState.includes(stateFull.toLowerCase());
+            const recordState = r.area.split(',').slice(1).join(',').toLowerCase().trim();
+            return (recordCity.includes(cityLower) || cityLower.includes(recordCity)) &&
+                recordState.includes(stateFull.toLowerCase());
         });
 
         if (partialMatch && Number.isFinite(partialMatch.pop)) {
             console.log('✅ Partial match found:', partialMatch);
             return partialMatch.pop;
+        }
+
+        // ── PASS 6: Try with state abbreviation in CSV records ──
+        const stateAbbr = Object.entries(STATE_MAP).find(([, v]) => v.toLowerCase() === stateFull.toLowerCase())?.[0] || '';
+        if (stateAbbr) {
+            const abbrMatch = POP_ROWS!.find(r => {
+                const rLower = r.area.toLowerCase();
+                return rLower.includes(cityLower) && (
+                    rLower.includes(stateAbbr.toLowerCase()) ||
+                    rLower.includes(stateFull.toLowerCase())
+                );
+            });
+            if (abbrMatch && Number.isFinite(abbrMatch.pop)) {
+                console.log('✅ Abbreviation match found:', abbrMatch);
+                return abbrMatch.pop;
+            }
         }
 
         // Show some example cities that are available
@@ -450,14 +523,26 @@ export async function getCurrentPopulationForCity(hometown: string): Promise<num
             return found.pop;
         }
 
+        // Census suffix stripped match
+        const strippedMatch = POP_ROWS!.find(r => {
+            const stripped = stripCensusSuffix(r.area).toLowerCase();
+            return candidates.includes(stripped);
+        });
+        if (strippedMatch && Number.isFinite(strippedMatch.pop)) {
+            console.log('✅ NOW Census-suffix-stripped match found:', strippedMatch);
+            return strippedMatch.pop;
+        }
+
         // Flexible matching
         const normalizeCity = (str: string) => str.toLowerCase().replace(/\s+/g, ' ').replace(/[^\w\s,]/g, '').trim();
         const normalizedInput = normalizeCity(`${city}, ${stateFull}`);
+        const normalizedCityOnly = normalizeCity(city);
+        const normalizedStateOnly = normalizeCity(stateFull);
 
         const flexibleMatch = POP_ROWS!.find(r => {
             const normalizedRecord = normalizeCity(r.area);
             return normalizedRecord === normalizedInput ||
-                normalizedRecord.includes(normalizeCity(city)) && normalizedRecord.includes(normalizeCity(stateFull));
+                (normalizedRecord.includes(normalizedCityOnly) && normalizedRecord.includes(normalizedStateOnly));
         });
 
         if (flexibleMatch && Number.isFinite(flexibleMatch.pop)) {
@@ -465,12 +550,28 @@ export async function getCurrentPopulationForCity(hometown: string): Promise<num
             return flexibleMatch.pop;
         }
 
-        // Fuzzy search
-        const byCity = POP_ROWS!.filter(r => r.area.toLowerCase().startsWith(city.toLowerCase() + ','));
+        // Fuzzy search - city starts with + state includes
+        const cityLower = city.toLowerCase();
+        const byCity = POP_ROWS!.filter(r => {
+            const rLower = r.area.toLowerCase();
+            return rLower.startsWith(cityLower + ',') || rLower.startsWith(cityLower + ' ');
+        });
         const fuzzy = byCity.find(r => r.area.toLowerCase().includes(stateFull.toLowerCase()));
         if (fuzzy && Number.isFinite(fuzzy.pop)) {
             console.log('✅ NOW fuzzy match found:', fuzzy);
             return fuzzy.pop;
+        }
+
+        // Partial match - city contains + state contains
+        const partialMatch = POP_ROWS!.find(r => {
+            const recordCity = r.area.split(',')[0].toLowerCase().trim();
+            const recordState = r.area.split(',').slice(1).join(',').toLowerCase().trim();
+            return (recordCity.includes(cityLower) || cityLower.includes(recordCity)) &&
+                recordState.includes(stateFull.toLowerCase());
+        });
+        if (partialMatch && Number.isFinite(partialMatch.pop)) {
+            console.log('✅ NOW partial match found:', partialMatch);
+            return partialMatch.pop;
         }
 
         console.log('❌ City not found in CURRENT CSV for NOW section:', hometown);

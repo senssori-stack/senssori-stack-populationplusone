@@ -198,7 +198,7 @@ export default function RabbitHoleScreen({ navigation }: Props) {
 
                     {showCredits && (
                         <View style={styles.creditsCard}>
-                            <Text style={styles.creditsTitle}>🎬 Population +1 🎬</Text>
+                            <Text style={styles.creditsTitle}>🎬 Population +1™ 🎬</Text>
                             <Text style={styles.creditsSubtitle}>Created with ❤️</Text>
 
                             <View style={styles.creditRow}>
@@ -245,7 +245,7 @@ export default function RabbitHoleScreen({ navigation }: Props) {
                     </TouchableOpacity>
 
                     <Text style={styles.footerText}>
-                        Population +1 © 2026{'\n'}
+                        Population +1™ © 2026{'\n'}
                         Making every life count.
                     </Text>
                 </Animated.View>

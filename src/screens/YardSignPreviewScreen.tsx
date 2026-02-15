@@ -1,16 +1,19 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useRef, useState } from 'react';
 import {
+    Animated,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
-    useWindowDimensions,
+    useWindowDimensions
 } from 'react-native';
+import { GestureHandlerRootView, PanGestureHandler, PinchGestureHandler, State, TapGestureHandler } from 'react-native-gesture-handler';
 import ViewShot from 'react-native-view-shot';
 import CartModal from '../../components/CartModal';
 import DownloadModal, { DownloadItem } from '../../components/DownloadModal';
+import SignFrontLandscape from '../../components/SignFrontLandscape';
 import { PRODUCT_PRICES, useCart } from '../context/CartContext';
 import { COLOR_SCHEMES } from '../data/utils/colors';
 import type { RootStackParamList } from '../types';
@@ -30,14 +33,46 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
     const { width } = useWindowDimensions();
     const params = route.params || {};
 
-    // Get baby name with middle
+    // Get baby count (1=single, 2=twins, 3=triplets)
+    const babyCount = params.babyCount || 1;
+    const plusLabel = `+${babyCount}`;
+
+    // Get baby name(s)
     const babyFirst = params.babies?.[0]?.first || params.babyFirst || params.personName || 'Baby';
     const babyMiddle = params.babies?.[0]?.middle || params.babyMiddle || '';
-    const babyName = [babyFirst, babyMiddle].filter(Boolean).join(' ');
+
+    // Build display name: single uses first+middle, twins/triplets uses personName (already "Emma & Olivia" etc.)
+    let babyName: string;
+    if (babyCount > 1 && params.personName) {
+        babyName = params.personName; // Already formatted as "Emma & Olivia" or "Emma, Olivia & Liam"
+    } else {
+        babyName = [babyFirst, babyMiddle].filter(Boolean).join(' ');
+    }
     const theme = params.theme || 'green';
     const colors = COLOR_SCHEMES[theme] || COLOR_SCHEMES.green;
 
+    // Extract city/state from hometown
+    const hometown = params.hometown || '';
+    const [city, state] = hometown.includes(',')
+        ? [hometown.split(',')[0].trim(), hometown.split(',').slice(1).join(',').trim()]
+        : [hometown, ''];
+    const population = params.population || undefined;
+
+    // Collect photoUris same way as PreviewScreen
+    const babies = params.babies || [{ first: babyFirst, middle: babyMiddle, photoUri: params.photoUri }];
+    let photoUris: (string | null | undefined)[] = [];
+    if (params.photoUris && params.photoUris.length > 0) {
+        photoUris = params.photoUris.filter(uri => uri);
+    } else {
+        photoUris = babies.filter(b => b.photoUri).map(b => b.photoUri);
+    }
+    photoUris = photoUris.slice(0, 3);
+
+    // Preview scale for SignFrontLandscape
+    const signFrontPreviewScale = (width * 0.92) / 3300;
+
     // Refs for capturing
+    const signFrontRef = useRef<ViewShot | null>(null);
     const classicRef = useRef<ViewShot | null>(null);
     const welcomeRef = useRef<ViewShot | null>(null);
     const minimalRef = useRef<ViewShot | null>(null);
@@ -49,38 +84,41 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
     // Cart
     const { addToCart } = useCart();
 
-    const handleAddToCart = (styleId: string, styleName: string) => {
+    const handleAddToCart = (styleId: string, styleName: string, doubleSided: boolean = false) => {
         const productInfo = PRODUCT_PRICES[styleId as keyof typeof PRODUCT_PRICES];
-        const price = productInfo?.price || 0;
+        const basePrice = productInfo?.price || 0;
+        const price = doubleSided ? basePrice * 1.5 : basePrice; // 50% more for double-sided
+        const sidedLabel = doubleSided ? 'Double-Sided' : 'Single-Sided';
         const productName = productInfo?.name || `Yard Sign - ${styleName}`;
         addToCart({
-            id: `${styleId}-${babyName}-${Date.now()}`,
-            name: productName,
-            description: `For ${babyName}`,
+            id: `${styleId}-${doubleSided ? '2side' : '1side'}-${babyName}-${Date.now()}`,
+            name: `${productName} (${sidedLabel})`,
+            description: `${sidedLabel} for ${babyName}`,
             productType: 'yardsign',
             price,
-            variant: styleName.toLowerCase(),
+            variant: `${styleName.toLowerCase()}-${doubleSided ? 'double' : 'single'}`,
         });
     };
 
     // Download items
     const downloadItems: DownloadItem[] = [
+        { id: 'yardsign-signfront', label: 'Sign Front (Full)', category: 'yardsign' },
         { id: 'yardsign-classic', label: 'Classic Style', category: 'yardsign' },
         { id: 'yardsign-welcome', label: 'Welcome Style', category: 'yardsign' },
         { id: 'yardsign-minimal', label: 'Minimal Style', category: 'yardsign' },
     ];
 
-    // Capture function
-    const handleCapture = async (itemId: string): Promise<string | null> => {
+    // Capture a single view
+    const captureView = async (itemId: string): Promise<string | null> => {
         try {
             let ref: React.RefObject<ViewShot | null> | null = null;
+            if (itemId === 'yardsign-signfront') ref = signFrontRef;
             if (itemId === 'yardsign-classic') ref = classicRef;
             if (itemId === 'yardsign-welcome') ref = welcomeRef;
             if (itemId === 'yardsign-minimal') ref = minimalRef;
 
             if (ref?.current?.capture) {
-                const uri = await ref.current.capture();
-                return uri;
+                return await ref.current.capture();
             }
             return null;
         } catch (error) {
@@ -89,97 +127,254 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
         }
     };
 
+    const handleCapture = async (itemId: string): Promise<string | null> => captureView(itemId);
+
     // Yard sign dimensions (24x18" landscape at preview scale)
     const signWidth = Math.min(width * 0.92, 380);
     const signHeight = signWidth * (18 / 24); // 24x18 landscape ratio
+
+    // Scale factor to shrink SignFront (renders at screen width) into yard sign box
+    const signFrontNaturalWidth = width; // SignFront uses useWindowDimensions width
+    const signFrontNaturalHeight = signFrontNaturalWidth * (2550 / 3300);
+    const signFrontScale = Math.min(signWidth / signFrontNaturalWidth, signHeight / signFrontNaturalHeight);
+
+    // --- Zoom/Pan gesture state ---
+    const scale = useRef(new Animated.Value(1)).current;
+    const baseScale = useRef(new Animated.Value(1)).current;
+    const translateX = useRef(new Animated.Value(0)).current;
+    const translateY = useRef(new Animated.Value(0)).current;
+    const baseTranslateX = useRef(new Animated.Value(0)).current;
+    const baseTranslateY = useRef(new Animated.Value(0)).current;
+    const lastScale = useRef(1);
+    const lastTranslateX = useRef(0);
+    const lastTranslateY = useRef(0);
+    const doubleTapRef = useRef(null);
+    const isZoomedIn = useRef(false);
+
+    const { height: screenHeight } = useWindowDimensions();
+
+    const onPinchGestureEvent = Animated.event(
+        [{ nativeEvent: { scale: scale } }],
+        { useNativeDriver: false }
+    );
+
+    const onPinchHandlerStateChange = (event: any) => {
+        if (event.nativeEvent.oldState === State.ACTIVE) {
+            const newScale = lastScale.current * event.nativeEvent.scale;
+            lastScale.current = Math.max(0.5, Math.min(4.0, newScale));
+            baseScale.setValue(lastScale.current);
+            scale.setValue(1);
+        }
+    };
+
+    const onPanGestureEvent = Animated.event(
+        [{ nativeEvent: { translationX: translateX, translationY: translateY } }],
+        { useNativeDriver: false }
+    );
+
+    const onPanHandlerStateChange = (event: any) => {
+        if (event.nativeEvent.oldState === State.ACTIVE) {
+            if (lastScale.current > 1.1) {
+                const contentWidth = signWidth * lastScale.current;
+                const contentHeight = signHeight * lastScale.current;
+                const maxX = Math.max(0, (contentWidth - width) / 2);
+                const maxY = Math.max(0, (contentHeight - screenHeight * 0.5) / 2);
+                let newTX = lastTranslateX.current + event.nativeEvent.translationX;
+                let newTY = lastTranslateY.current + event.nativeEvent.translationY;
+                newTX = Math.max(-maxX, Math.min(maxX, newTX));
+                newTY = Math.max(-maxY, Math.min(maxY, newTY));
+                lastTranslateX.current = newTX;
+                lastTranslateY.current = newTY;
+            } else {
+                lastTranslateX.current = 0;
+                lastTranslateY.current = 0;
+            }
+            baseTranslateX.setValue(lastTranslateX.current);
+            baseTranslateY.setValue(lastTranslateY.current);
+            translateX.setValue(0);
+            translateY.setValue(0);
+        }
+    };
+
+    const onDoubleTap = (event: any) => {
+        if (event.nativeEvent.state === State.ACTIVE) {
+            const target = isZoomedIn.current ? 1.0 : 2.0;
+            scale.setValue(1);
+            baseScale.setValue(target);
+            translateX.setValue(0);
+            translateY.setValue(0);
+            baseTranslateX.setValue(0);
+            baseTranslateY.setValue(0);
+            lastScale.current = target;
+            lastTranslateX.current = 0;
+            lastTranslateY.current = 0;
+            isZoomedIn.current = !isZoomedIn.current;
+        }
+    };
+
+    const resetZoom = () => {
+        lastScale.current = 1;
+        lastTranslateX.current = 0;
+        lastTranslateY.current = 0;
+        isZoomedIn.current = false;
+        scale.setValue(1);
+        baseScale.setValue(1);
+        translateX.setValue(0);
+        translateY.setValue(0);
+        baseTranslateX.setValue(0);
+        baseTranslateY.setValue(0);
+    };
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
             <Text style={styles.title}>🏡 Yard Sign Options</Text>
             <Text style={styles.subtitle}>Perfect for the front lawn!</Text>
 
-            {/* Option 1: Simple +1 */}
-            <View style={styles.optionContainer}>
-                <Text style={styles.optionLabel}>Style 1: Classic</Text>
-                <ViewShot ref={classicRef} options={{ format: 'png', quality: 1 }}>
-                    <View style={[
-                        styles.yardSign,
-                        {
-                            width: signWidth,
-                            height: signHeight,
-                            backgroundColor: colors.bg,
-                        }
-                    ]}>
-                        <View style={styles.signBorder}>
-                            <View style={{ marginTop: -15, alignItems: 'center' }}>
-                                <Text style={[styles.plusOne, { fontSize: signWidth * 0.28, marginBottom: -10, textAlign: 'center' }]}>
-                                    +1
-                                </Text>
-                                <Text style={[styles.babyName, { fontSize: signWidth * 0.09 }]}>
-                                    {babyName.toUpperCase()}
-                                </Text>
-                            </View>
-                        </View>
-                    </View>
-                </ViewShot>
-            </View>
+            {/* Zoomable card area */}
+            <View style={{ width: '100%', minHeight: 300, alignItems: 'center' }}>
+                <TouchableOpacity onPress={resetZoom} style={{ alignSelf: 'flex-end', marginBottom: 8, paddingHorizontal: 12, paddingVertical: 4, backgroundColor: '#ddd', borderRadius: 8 }}>
+                    <Text style={{ fontSize: 13, color: '#333' }}>Reset Zoom</Text>
+                </TouchableOpacity>
+                <GestureHandlerRootView style={{ width: '100%', alignItems: 'center' }}>
+                    <TapGestureHandler ref={doubleTapRef} onHandlerStateChange={onDoubleTap} numberOfTaps={2}>
+                        <Animated.View>
+                            <PanGestureHandler onGestureEvent={onPanGestureEvent} onHandlerStateChange={onPanHandlerStateChange}>
+                                <Animated.View>
+                                    <PinchGestureHandler onGestureEvent={onPinchGestureEvent} onHandlerStateChange={onPinchHandlerStateChange}>
+                                        <Animated.View style={{
+                                            transform: [
+                                                { scale: Animated.multiply(baseScale, scale) },
+                                                { translateX: Animated.add(baseTranslateX, translateX) },
+                                                { translateY: Animated.add(baseTranslateY, translateY) },
+                                            ],
+                                        }}>
 
-            {/* Option 2: Welcome Style */}
-            <View style={styles.optionContainer}>
-                <Text style={styles.optionLabel}>Style 2: Welcome</Text>
-                <ViewShot ref={welcomeRef} options={{ format: 'png', quality: 1 }}>
-                    <View style={[
-                        styles.yardSign,
-                        {
-                            width: signWidth,
-                            height: signHeight,
-                            backgroundColor: colors.bg,
-                        }
-                    ]}>
-                        <View style={styles.signBorder}>
-                            <Text style={[styles.plusOne, { fontSize: signWidth * 0.28, marginBottom: 4 }]}>
-                                +1
-                            </Text>
-                            <View style={{ marginTop: -20, alignItems: 'center' }}>
-                                <Text style={[styles.welcomeText, { fontSize: signWidth * 0.078, marginBottom: 4, textAlign: 'center' }]}>
-                                    Welcome To
-                                </Text>
-                                <Text style={[styles.babyName, { fontSize: signWidth * 0.09 }]}>
-                                    {babyName.toUpperCase()}
-                                </Text>
-                            </View>
-                        </View>
-                    </View>
-                </ViewShot>
-            </View>
+                                            {/* Option 0: Full Announcement - Same as main preview SignFrontLandscape */}
+                                            <View style={styles.optionContainer}>
+                                                <Text style={styles.optionLabel}>Style: Full Announcement</Text>
+                                                <ViewShot ref={signFrontRef} options={{ format: 'png', quality: 1 }}>
+                                                    <SignFrontLandscape
+                                                        theme={theme}
+                                                        photoUris={photoUris}
+                                                        previewScale={signFrontPreviewScale}
+                                                        hometown={hometown}
+                                                        population={population}
+                                                        personName={params.personName || ''}
+                                                    />
+                                                </ViewShot>
+                                                {/* Ground stakes */}
+                                                <View style={styles.stakesRow}>
+                                                    <View style={styles.stake} />
+                                                    <View style={styles.stake} />
+                                                </View>
+                                            </View>
 
-            {/* Option 3: Minimal */}
-            <View style={styles.optionContainer}>
-                <Text style={styles.optionLabel}>Style 3: Minimal</Text>
-                <ViewShot ref={minimalRef} options={{ format: 'png', quality: 1 }}>
-                    <View style={[
-                        styles.yardSign,
-                        {
-                            width: signWidth,
-                            height: signHeight,
-                            backgroundColor: '#ffffff',
-                        }
-                    ]}>
-                        <View style={[styles.signBorder, { borderColor: colors.bg }]}>
-                            <Text style={[styles.plusOneOutline, { fontSize: signWidth * 0.28, color: colors.bg, marginBottom: 4 }]}>
-                                +1
-                            </Text>
-                            <View style={{ marginTop: -20, alignItems: 'center' }}>
-                                <Text style={[styles.welcomeText, { fontSize: signWidth * 0.078, marginBottom: 4, textAlign: 'center', color: colors.bg, fontStyle: 'italic' }]}>
-                                    Welcome To
-                                </Text>
-                                <Text style={[styles.babyNameMinimal, { fontSize: signWidth * 0.09, color: colors.bg }]}>
-                                    {babyName.toUpperCase()}
-                                </Text>
-                            </View>
-                        </View>
-                    </View>
-                </ViewShot>
+                                            {/* Option 1: Simple +1 */}}
+                                            <View style={styles.optionContainer}>
+                                                <Text style={styles.optionLabel}>Style 1: Classic</Text>
+                                                <ViewShot ref={classicRef} options={{ format: 'png', quality: 1 }}>
+                                                    <View style={[
+                                                        styles.yardSign,
+                                                        {
+                                                            width: signWidth,
+                                                            height: signHeight,
+                                                            backgroundColor: colors.bg,
+                                                        }
+                                                    ]}>
+                                                        <View style={styles.signBorder}>
+                                                            <View style={{ marginTop: -15, alignItems: 'center' }}>
+                                                                <Text style={[styles.plusOne, { fontSize: signWidth * 0.28, marginBottom: -10, textAlign: 'center' }]}>
+                                                                    {plusLabel}
+                                                                </Text>
+                                                                <Text style={[styles.babyName, { fontSize: signWidth * 0.09 }]}>
+                                                                    {babyName.toUpperCase()}
+                                                                </Text>
+                                                            </View>
+                                                        </View>
+                                                    </View>
+                                                </ViewShot>
+                                                {/* Ground stakes */}
+                                                <View style={styles.stakesRow}>
+                                                    <View style={styles.stake} />
+                                                    <View style={styles.stake} />
+                                                </View>
+                                            </View>
+
+                                            {/* Option 2: Welcome Style */}}
+                                            <View style={styles.optionContainer}>
+                                                <Text style={styles.optionLabel}>Style 2: Welcome</Text>
+                                                <ViewShot ref={welcomeRef} options={{ format: 'png', quality: 1 }}>
+                                                    <View style={[
+                                                        styles.yardSign,
+                                                        {
+                                                            width: signWidth,
+                                                            height: signHeight,
+                                                            backgroundColor: colors.bg,
+                                                        }
+                                                    ]}>
+                                                        <View style={styles.signBorder}>
+                                                            <Text style={[styles.plusOne, { fontSize: signWidth * 0.28, marginBottom: 4 }]}>
+                                                                {plusLabel}
+                                                            </Text>
+                                                            <View style={{ marginTop: -20, alignItems: 'center' }}>
+                                                                <Text style={[styles.welcomeText, { fontSize: signWidth * 0.078, marginBottom: 4, textAlign: 'center' }]}>
+                                                                    Welcome To
+                                                                </Text>
+                                                                <Text style={[styles.babyName, { fontSize: signWidth * 0.09 }]}>
+                                                                    {babyName.toUpperCase()}
+                                                                </Text>
+                                                            </View>
+                                                        </View>
+                                                    </View>
+                                                </ViewShot>
+                                                {/* Ground stakes */}
+                                                <View style={styles.stakesRow}>
+                                                    <View style={styles.stake} />
+                                                    <View style={styles.stake} />
+                                                </View>
+                                            </View>
+
+                                            {/* Option 3: Minimal */}}
+                                            <View style={styles.optionContainer}>
+                                                <Text style={styles.optionLabel}>Style 3: Minimal</Text>
+                                                <ViewShot ref={minimalRef} options={{ format: 'png', quality: 1 }}>
+                                                    <View style={[
+                                                        styles.yardSign,
+                                                        {
+                                                            width: signWidth,
+                                                            height: signHeight,
+                                                            backgroundColor: '#ffffff',
+                                                        }
+                                                    ]}>
+                                                        <View style={[styles.signBorder, { borderColor: colors.bg }]}>
+                                                            <Text style={[styles.plusOneOutline, { fontSize: signWidth * 0.28, color: colors.bg, marginBottom: 4 }]}>
+                                                                {plusLabel}
+                                                            </Text>
+                                                            <View style={{ marginTop: -20, alignItems: 'center' }}>
+                                                                <Text style={[styles.welcomeText, { fontSize: signWidth * 0.078, marginBottom: 4, textAlign: 'center', color: colors.bg, fontStyle: 'italic' }]}>
+                                                                    Welcome To
+                                                                </Text>
+                                                                <Text style={[styles.babyNameMinimal, { fontSize: signWidth * 0.09, color: colors.bg }]}>
+                                                                    {babyName.toUpperCase()}
+                                                                </Text>
+                                                            </View>
+                                                        </View>
+                                                    </View>
+                                                </ViewShot>
+                                                {/* Ground stakes */}
+                                                <View style={styles.stakesRow}>
+                                                    <View style={styles.stake} />
+                                                    <View style={styles.stake} />
+                                                </View>
+                                            </View>
+
+                                        </Animated.View>
+                                    </PinchGestureHandler>
+                                </Animated.View>
+                            </PanGestureHandler>
+                        </Animated.View>
+                    </TapGestureHandler>
+                </GestureHandlerRootView>
             </View>
 
             {/* Download Button */}
@@ -193,24 +388,70 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
             {/* Cart Actions */}
             <View style={styles.cartActions}>
                 <Text style={styles.cartTitle}>Add to Cart:</Text>
-                <TouchableOpacity
-                    style={styles.addToCartButton}
-                    onPress={() => handleAddToCart('yardsign-classic', 'Classic')}
-                >
-                    <Text style={styles.addToCartButtonText}>+ Style 1 (Classic)</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.addToCartButton}
-                    onPress={() => handleAddToCart('yardsign-welcome', 'Welcome')}
-                >
-                    <Text style={styles.addToCartButtonText}>+ Style 2 (Welcome)</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.addToCartButton}
-                    onPress={() => handleAddToCart('yardsign-minimal', 'Minimal')}
-                >
-                    <Text style={styles.addToCartButtonText}>+ Style 3 (Minimal)</Text>
-                </TouchableOpacity>
+
+                <Text style={styles.cartSectionLabel}>Full Announcement</Text>
+                <View style={styles.sidedRow}>
+                    <TouchableOpacity
+                        style={styles.addToCartButtonHalf}
+                        onPress={() => handleAddToCart('yardsign-signfront', 'Sign Front', false)}
+                    >
+                        <Text style={styles.addToCartButtonText}>1-Sided</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.addToCartButtonHalf}
+                        onPress={() => handleAddToCart('yardsign-signfront', 'Sign Front', true)}
+                    >
+                        <Text style={styles.addToCartButtonText}>2-Sided</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <Text style={styles.cartSectionLabel}>Classic</Text>
+                <View style={styles.sidedRow}>
+                    <TouchableOpacity
+                        style={styles.addToCartButtonHalf}
+                        onPress={() => handleAddToCart('yardsign-classic', 'Classic', false)}
+                    >
+                        <Text style={styles.addToCartButtonText}>1-Sided</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.addToCartButtonHalf}
+                        onPress={() => handleAddToCart('yardsign-classic', 'Classic', true)}
+                    >
+                        <Text style={styles.addToCartButtonText}>2-Sided</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <Text style={styles.cartSectionLabel}>Welcome</Text>
+                <View style={styles.sidedRow}>
+                    <TouchableOpacity
+                        style={styles.addToCartButtonHalf}
+                        onPress={() => handleAddToCart('yardsign-welcome', 'Welcome', false)}
+                    >
+                        <Text style={styles.addToCartButtonText}>1-Sided</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.addToCartButtonHalf}
+                        onPress={() => handleAddToCart('yardsign-welcome', 'Welcome', true)}
+                    >
+                        <Text style={styles.addToCartButtonText}>2-Sided</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <Text style={styles.cartSectionLabel}>Minimal</Text>
+                <View style={styles.sidedRow}>
+                    <TouchableOpacity
+                        style={styles.addToCartButtonHalf}
+                        onPress={() => handleAddToCart('yardsign-minimal', 'Minimal', false)}
+                    >
+                        <Text style={styles.addToCartButtonText}>1-Sided</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.addToCartButtonHalf}
+                        onPress={() => handleAddToCart('yardsign-minimal', 'Minimal', true)}
+                    >
+                        <Text style={styles.addToCartButtonText}>2-Sided</Text>
+                    </TouchableOpacity>
+                </View>
                 <TouchableOpacity
                     style={styles.viewCartButton}
                     onPress={() => setShowCartModal(true)}
@@ -243,7 +484,7 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
                 visible={showCartModal}
                 onClose={() => setShowCartModal(false)}
             />
-        </ScrollView>
+        </ScrollView >
     );
 }
 
@@ -270,6 +511,19 @@ const styles = StyleSheet.create({
     optionContainer: {
         marginBottom: 32,
         alignItems: 'center',
+    },
+    stakesRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 60,
+        marginTop: -2,
+    },
+    stake: {
+        width: 6,
+        height: 40,
+        backgroundColor: '#888',
+        borderBottomLeftRadius: 2,
+        borderBottomRightRadius: 2,
     },
     optionLabel: {
         fontSize: 18,
@@ -384,6 +638,28 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         minWidth: 200,
         alignItems: 'center',
+    },
+    addToCartButtonHalf: {
+        backgroundColor: '#1a472a',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 10,
+        flex: 1,
+        alignItems: 'center',
+    },
+    sidedRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 12,
+        width: '100%',
+        paddingHorizontal: 20,
+    },
+    cartSectionLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#555',
+        marginBottom: 6,
+        marginTop: 4,
     },
     addToCartButtonText: {
         color: '#ffffff',

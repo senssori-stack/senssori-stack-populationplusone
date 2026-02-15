@@ -130,21 +130,28 @@ async function fetchTopSong() {
 
 async function fetchTopMovie() {
     return new Promise((resolve, reject) => {
-        const url = `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&region=US`;
+        // Use now_playing for current theatrical releases (closest to box office #1)
+        const url = `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_API_KEY}&region=US&language=en-US&page=1`;
         https.get(url, (res) => {
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => {
                 try {
                     const json = JSON.parse(data);
-                    const movie = json.results[0];
-                    resolve(movie.title);
+                    // Sort by popularity descending to get the most popular currently playing movie
+                    const movies = json.results || [];
+                    movies.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+                    const movie = movies[0];
+                    resolve(movie ? movie.title : 'Unknown Movie');
                 } catch (e) {
                     console.warn('Movie error:', e);
                     resolve('Unknown Movie');
                 }
             });
-        }).on('error', reject);
+        }).on('error', (e) => {
+            console.warn('Movie fetch error:', e);
+            resolve('Unknown Movie');
+        });
     });
 }
 

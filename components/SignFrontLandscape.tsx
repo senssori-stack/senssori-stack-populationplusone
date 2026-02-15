@@ -14,6 +14,7 @@ type Props = {
     hometown?: string;
     population?: number;
     personName?: string;
+    babyCount?: number; // 1 = single (+1), 2 = twins (+2), 3 = triplets (+3)
 };
 
 export default function SignFrontLandscape(props: Props) {
@@ -24,9 +25,11 @@ export default function SignFrontLandscape(props: Props) {
         hometown = '',
         population,
         personName = '',
+        babyCount = 1,
     } = props;
 
     const colors = COLOR_SCHEMES[theme] || COLOR_SCHEMES.green;
+    const plusLabel = `+${babyCount}`;
 
     // ====== FIXED DIMENSIONS - LOCKED ======
     const displayWidth = LANDSCAPE_WIDTH * previewScale;
@@ -196,7 +199,7 @@ export default function SignFrontLandscape(props: Props) {
                                 color: '#FFFFFF',
                                 marginTop: Math.round(welcomeToFontSize * -0.14)
                             }]}>
-                                +1
+                                {plusLabel}
                             </Text>
                         </View>
                     )}
