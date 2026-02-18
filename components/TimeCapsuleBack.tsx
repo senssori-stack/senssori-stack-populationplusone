@@ -89,22 +89,22 @@ export default function TimeCapsuleBack(props: Props) {
     const S = useMemo(
         () =>
             StyleSheet.create({
-                card: { borderWidth: 6, borderRadius: 28, padding: 10, borderColor: C.border, backgroundColor: C.bg },
-                inner: { borderRadius: 22, padding: 16, backgroundColor: C.bg },
-                title: { fontSize: 22, lineHeight: 27, fontWeight: '900', color: C.text, marginBottom: 10, textAlign: 'center' },
-                body: { fontSize: 13, lineHeight: 19, color: C.text, marginTop: 10, textAlign: 'center' },
-                hr: { height: 1, backgroundColor: C.border, marginVertical: 12, opacity: 0.9 },
+                card: { borderWidth: 6, borderRadius: 28, padding: 6, borderColor: C.border, backgroundColor: C.bg },
+                inner: { borderRadius: 22, padding: 10, backgroundColor: C.bg },
+                title: { fontSize: 22, lineHeight: 24, fontWeight: '900', color: C.text, marginBottom: 2, textAlign: 'center' },
+                body: { fontSize: 13, lineHeight: 15, fontWeight: '800', color: C.text, marginTop: 2, textAlign: 'center' },
+                hr: { height: 1, backgroundColor: C.border, marginVertical: 3, opacity: 0.9 },
                 row: {
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    paddingVertical: 6,
+                    paddingVertical: 1,
                     borderBottomWidth: 0.8,
                     borderColor: C.border,
                 },
                 tdLabel: { fontSize: 7, fontWeight: '800', color: C.text },
                 tdValue: { fontSize: 7, fontWeight: '800', color: C.text },
-                sources: { fontSize: 5, fontWeight: '400', color: C.text, textAlign: 'center', marginTop: 8, opacity: 0.7 },
+                sources: { fontSize: 5, fontWeight: '800', color: C.text, textAlign: 'center', marginTop: 2, opacity: 0.7 },
             }),
         [C],
     );

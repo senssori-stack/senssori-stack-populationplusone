@@ -125,7 +125,10 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
     const lastTranslateX = useRef(0);
     const lastTranslateY = useRef(0);
     const doubleTapRef = useRef(null);
+    const pinchRef = useRef(null);
+    const panRef = useRef(null);
     const isZoomedIn = useRef(false);
+    const [scrollEnabled, setScrollEnabled] = useState(true);
 
     const onPinchGestureEvent = Animated.event(
         [{ nativeEvent: { scale: zoomScale } }],
@@ -137,6 +140,7 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
             lastScale.current = Math.max(0.5, Math.min(4.0, newScale));
             baseScale.setValue(lastScale.current);
             zoomScale.setValue(1);
+            setScrollEnabled(lastScale.current <= 1.05);
         }
     };
     const onPanGestureEvent = Animated.event(
@@ -145,21 +149,10 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
     );
     const onPanHandlerStateChange = (event: any) => {
         if (event.nativeEvent.oldState === State.ACTIVE) {
-            if (lastScale.current > 1.1) {
-                const cw = cardWidth * lastScale.current;
-                const ch = cardHeight * lastScale.current;
-                const maxX = Math.max(0, (cw - width) / 2);
-                const maxY = Math.max(0, (ch - screenHeight * 0.5) / 2);
-                let newTX = lastTranslateX.current + event.nativeEvent.translationX;
-                let newTY = lastTranslateY.current + event.nativeEvent.translationY;
-                newTX = Math.max(-maxX, Math.min(maxX, newTX));
-                newTY = Math.max(-maxY, Math.min(maxY, newTY));
-                lastTranslateX.current = newTX;
-                lastTranslateY.current = newTY;
-            } else {
-                lastTranslateX.current = 0;
-                lastTranslateY.current = 0;
-            }
+            let newTX = lastTranslateX.current + event.nativeEvent.translationX;
+            let newTY = lastTranslateY.current + event.nativeEvent.translationY;
+            lastTranslateX.current = newTX;
+            lastTranslateY.current = newTY;
             baseTranslateX.setValue(lastTranslateX.current);
             baseTranslateY.setValue(lastTranslateY.current);
             translateX.setValue(0);
@@ -179,6 +172,7 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
             lastTranslateX.current = 0;
             lastTranslateY.current = 0;
             isZoomedIn.current = !isZoomedIn.current;
+            setScrollEnabled(target <= 1.05);
         }
     };
     const resetZoom = () => {
@@ -192,10 +186,11 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
         translateY.setValue(0);
         baseTranslateX.setValue(0);
         baseTranslateY.setValue(0);
+        setScrollEnabled(true);
     };
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.content} scrollEnabled={scrollEnabled}>
             <Text style={styles.title}>💌 Invitation Cards</Text>
             <Text style={styles.subtitle}>Mail or share with family & friends!</Text>
 
@@ -207,9 +202,21 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
                 <GestureHandlerRootView style={{ width: '100%', alignItems: 'center' }}>
                     <TapGestureHandler ref={doubleTapRef} onHandlerStateChange={onDoubleTap} numberOfTaps={2}>
                         <Animated.View>
-                            <PanGestureHandler onGestureEvent={onPanGestureEvent} onHandlerStateChange={onPanHandlerStateChange}>
+                            <PanGestureHandler
+                                ref={panRef}
+                                onGestureEvent={onPanGestureEvent}
+                                onHandlerStateChange={onPanHandlerStateChange}
+                                waitFor={doubleTapRef}
+                                simultaneousHandlers={pinchRef}
+                                minPointers={1}
+                                maxPointers={1}
+                            >
                                 <Animated.View>
-                                    <PinchGestureHandler onGestureEvent={onPinchGestureEvent} onHandlerStateChange={onPinchHandlerStateChange}>
+                                    <PinchGestureHandler
+                                        ref={pinchRef}
+                                        onGestureEvent={onPinchGestureEvent}
+                                        onHandlerStateChange={onPinchHandlerStateChange}
+                                    >
                                         <Animated.View style={{
                                             transform: [
                                                 { scale: Animated.multiply(baseScale, zoomScale) },
@@ -326,14 +333,6 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
                 </GestureHandlerRootView>
             </View>
 
-            {/* Download Button */}
-            <TouchableOpacity
-                style={[styles.downloadButton, { backgroundColor: '#2563eb' }]}
-                onPress={() => setShowDownloadModal(true)}
-            >
-                <Text style={styles.downloadButtonText}>📥 Download / Print Options</Text>
-            </TouchableOpacity>
-
             {/* Cart Actions */}
             <View style={styles.cartActions}>
                 <Text style={styles.cartTitle}>Add to Cart:</Text>
@@ -355,25 +354,39 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
                 >
                     <Text style={styles.addToCartButtonText}>+ 25 Mailable Cards</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.viewCartButton}
-                    onPress={() => setShowCartModal(true)}
-                >
-                    <Text style={styles.viewCartButtonText}>🛒 View Cart</Text>
-                </TouchableOpacity>
             </View>
 
-            <Text style={styles.description}>
-                Premium 6×4" invitation cards on thick cardstock{'\n'}
-                Includes envelopes • USPS ready
-            </Text>
-
-            <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => navigation.goBack()}
-            >
-                <Text style={styles.backButtonText}>← Back to Preview</Text>
-            </TouchableOpacity>
+            {/* Action Tiles */}
+            <View style={styles.actionTileGrid}>
+                <TouchableOpacity
+                    style={[styles.actionTile, { backgroundColor: '#2563eb' }]}
+                    onPress={() => setShowDownloadModal(true)}
+                >
+                    <Text style={styles.actionTileEmoji}>📥</Text>
+                    <Text style={styles.actionTileLabel}>Save / Print</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.actionTile, { backgroundColor: '#d97706' }]}
+                    onPress={() => setShowCartModal(true)}
+                >
+                    <Text style={styles.actionTileEmoji}>🛒</Text>
+                    <Text style={styles.actionTileLabel}>View Cart</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.actionTile, { backgroundColor: '#dc2626' }]}
+                    onPress={() => navigation.navigate('GiftSuggestions', { occasion: 'newborn' })}
+                >
+                    <Text style={styles.actionTileEmoji}>🎁</Text>
+                    <Text style={styles.actionTileLabel}>Find a Gift</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.actionTile, { backgroundColor: '#455a64' }]}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Text style={styles.actionTileEmoji}>←</Text>
+                    <Text style={styles.actionTileLabel}>Go Back</Text>
+                </TouchableOpacity>
+            </View>
 
             <DownloadModal
                 visible={showDownloadModal}
@@ -557,7 +570,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     addToCartButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#2e8b57',
         paddingVertical: 14,
         paddingHorizontal: 24,
         borderRadius: 12,
@@ -615,17 +628,37 @@ const styles = StyleSheet.create({
         marginTop: 16,
         marginBottom: 24,
     },
-    backButton: {
-        backgroundColor: '#1a472a',
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        borderRadius: 12,
-        margin: 20,
-        alignItems: 'center',
+    actionTileGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        gap: 12,
     },
-    backButtonText: {
-        color: '#ffffff',
-        fontSize: 16,
-        fontWeight: '600',
+    actionTile: {
+        width: '47%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 18,
+        borderRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
+        minHeight: 90,
+    },
+    actionTileEmoji: {
+        fontSize: 32,
+        marginBottom: 6,
+        color: '#fff',
+    },
+    actionTileLabel: {
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
 });

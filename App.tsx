@@ -1,6 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
+import { Text, TouchableOpacity } from 'react-native';
 import SplashScreen from './components/SplashScreen';
 import AnniversaryFormScreen from './screens/AnniversaryFormScreen';
 import BirthdayFormScreen from './screens/BirthdayFormScreen';
@@ -11,7 +12,6 @@ import { CartProvider } from './src/context/CartContext';
 import { FormProvider } from './src/context/FormContext';
 import { HospitalProvider } from './src/context/HospitalContext';
 import AboutUsScreen from './src/screens/AboutUsScreen';
-import BabyRegistryPortalScreen from './src/screens/BabyRegistryPortalScreen';
 import BaseballCardPreviewScreen from './src/screens/BaseballCardPreviewScreen';
 import BirthstoneScreen from './src/screens/BirthstoneScreen';
 import CheckoutScreen from './src/screens/CheckoutScreen';
@@ -20,6 +20,7 @@ import FormScreen from './src/screens/FormScreen';
 import FullAstrologyScreen from './src/screens/FullAstrologyScreen';
 import FuneralHomePortalScreen from './src/screens/FuneralHomePortalScreen';
 import GenerationsScreen from './src/screens/GenerationsScreen';
+import GiftSuggestionsScreen from './src/screens/GiftSuggestionsScreen';
 import GrowthTrackerScreen from './src/screens/GrowthTrackerScreen';
 import HoroscopeScreen from './src/screens/HoroscopeScreen';
 import JustForFunScreen from './src/screens/JustForFunScreen';
@@ -43,6 +44,7 @@ import SampleGallery from './src/screens/SampleGallery';
 import SourcesScreen from './src/screens/SourcesScreen';
 import SurnameSearchScreen from './src/screens/SurnameSearchScreen';
 import ThenAndNowScreen from './src/screens/ThenAndNowScreen';
+import TipOfTheDayScreen from './src/screens/TipOfTheDayScreen';
 import YardSignPreviewScreen from './src/screens/YardSignPreviewScreen';
 import ZodiacSignScreen from './src/screens/ZodiacSignScreen';
 import type { RootStackParamList } from './src/types';
@@ -72,127 +74,117 @@ export default function App() {
                     <NavigationContainer>
                         <Stack.Navigator
                             initialRouteName="Landing"
-                            screenOptions={{ headerShown: true }}
+                            screenOptions={({ navigation }) => ({
+                                headerShown: true,
+                                headerTitle: '',
+                                headerBackTitle: 'BACK TO HOME SCREEN',
+                                headerLeft: () => (
+                                    <TouchableOpacity
+                                        onPress={() => navigation.goBack()}
+                                        style={{ flexDirection: 'row', alignItems: 'center', marginLeft: -4 }}
+                                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                    >
+                                        <Text style={{ color: '#fff', fontSize: 22, marginRight: 4 }}>‹</Text>
+                                        <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>BACK TO HOME SCREEN</Text>
+                                    </TouchableOpacity>
+                                ),
+                            })}
                         >
                             <Stack.Screen name="Landing" component={LandingScreen} options={{ headerShown: false }} />
                             <Stack.Screen
                                 name="MilestoneTracker"
                                 component={MilestoneTrackerScreen}
                                 options={{
-                                    headerTitle: 'Baby Milestone Tracker',
                                     headerStyle: { backgroundColor: '#0d1b2a' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="GrowthTracker"
                                 component={GrowthTrackerScreen}
                                 options={{
-                                    headerTitle: 'Baby Growth Chart',
                                     headerStyle: { backgroundColor: '#0d1b2a' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="LearningCenter"
                                 component={LearningScreen}
                                 options={{
-                                    headerTitle: 'Learning Center',
                                     headerStyle: { backgroundColor: '#0a0e27' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="HospitalLogin"
                                 component={HospitalLoginScreen}
                                 options={{
-                                    headerTitle: 'Hospital Partner',
                                     headerStyle: { backgroundColor: '#1a472a' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="Form"
                                 component={FormScreen}
                                 options={{
-                                    headerTitle: 'New Baby Announcement',
                                     headerStyle: { backgroundColor: '#1a472a' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="ObituaryForm"
                                 component={ObituaryFormScreen}
                                 options={{
-                                    headerTitle: 'Memorial Information',
                                     headerStyle: { backgroundColor: '#1a1a2e' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="MemorialPreview"
                                 component={MemorialPreviewScreen}
                                 options={{
-                                    headerTitle: 'Memorial Announcement',
                                     headerStyle: { backgroundColor: '#0a0a0a' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="MemorialBack"
                                 component={MemorialBackScreen}
                                 options={{
-                                    headerTitle: 'Service Arrangements',
                                     headerStyle: { backgroundColor: '#0a0a0a' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="LifeMilestones"
                                 component={LifeMilestonesFormScreen}
                                 options={{
-                                    headerTitle: 'LifeMilestones',
                                     headerStyle: { backgroundColor: '#2d5016' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="BirthdayForm"
                                 component={BirthdayFormScreen}
                                 options={{
-                                    headerTitle: 'Birthday Announcement',
                                     headerStyle: { backgroundColor: '#1a472a' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="GraduationForm"
                                 component={GraduationFormScreen}
                                 options={{
-                                    headerTitle: 'Graduation Announcement',
                                     headerStyle: { backgroundColor: '#1a3a5c' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="AnniversaryForm"
                                 component={AnniversaryFormScreen}
                                 options={{
-                                    headerTitle: 'Anniversary Announcement',
                                     headerStyle: { backgroundColor: '#5c3a1a' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen name="Preview" component={PreviewScreen} options={{ headerShown: false }} />
@@ -200,10 +192,8 @@ export default function App() {
                                 name="ChartReading"
                                 component={NatalChartWithReadingScreen}
                                 options={{
-                                    headerTitle: 'Natal Chart & Reading',
                                     headerStyle: { backgroundColor: '#2d5016' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen name="PrintService" component={PrintServiceScreen} options={{ headerShown: false }} />
@@ -215,10 +205,8 @@ export default function App() {
                                 name="Checkout"
                                 component={CheckoutScreen}
                                 options={{
-                                    headerTitle: 'Checkout',
                                     headerStyle: { backgroundColor: '#1a472a' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
@@ -229,187 +217,159 @@ export default function App() {
                                     headerStyle: { backgroundColor: '#1a472a' },
                                     headerTintColor: '#fff',
                                     headerTitleStyle: { fontWeight: 'bold' },
-                                    headerBackVisible: false
+                                    headerBackVisible: false,
+                                    headerLeft: () => null,
                                 }}
                             />
                             <Stack.Screen
                                 name="JustForFun"
                                 component={JustForFunScreen}
                                 options={{
-                                    headerTitle: 'Just For Fun',
                                     headerStyle: { backgroundColor: '#4a148c' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="Generations"
                                 component={GenerationsScreen}
                                 options={{
-                                    headerTitle: 'The Living Generations',
                                     headerStyle: { backgroundColor: '#4a5568' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="LifePathNumber"
                                 component={LifePathNumberScreen}
                                 options={{
-                                    headerTitle: 'Life Path Number',
                                     headerStyle: { backgroundColor: '#4a148c' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="LuckyNumbers"
                                 component={LuckyNumbersScreen}
                                 options={{
-                                    headerTitle: 'Lucky Numbers',
                                     headerStyle: { backgroundColor: '#1a5f2a' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="RomanNumerals"
                                 component={RomanNumeralsScreen}
                                 options={{
-                                    headerTitle: 'Roman Numerals',
                                     headerStyle: { backgroundColor: '#5d4037' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="Birthstone"
                                 component={BirthstoneScreen}
                                 options={{
-                                    headerTitle: 'Your Birthstone',
                                     headerStyle: { backgroundColor: '#7B2D26' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="ZodiacSign"
                                 component={ZodiacSignScreen}
                                 options={{
-                                    headerTitle: 'Your Zodiac Sign',
                                     headerStyle: { backgroundColor: '#1565c0' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="OnThisDay"
                                 component={OnThisDayScreen}
                                 options={{
-                                    headerTitle: 'On This Day',
                                     headerStyle: { backgroundColor: '#1a237e' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="FamousBirthdays"
                                 component={FamousBirthdaysScreen}
                                 options={{
-                                    headerTitle: 'Famous Birthday Twins',
                                     headerStyle: { backgroundColor: '#ad1457' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="ThenAndNow"
                                 component={ThenAndNowScreen}
                                 options={{
-                                    headerTitle: 'Then & Now',
                                     headerStyle: { backgroundColor: '#1a5f2a' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="SurnameSearch"
                                 component={SurnameSearchScreen}
                                 options={{
-                                    headerTitle: 'Surname Search',
                                     headerStyle: { backgroundColor: '#5d4037' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="FullAstrology"
                                 component={FullAstrologyScreen}
                                 options={{
-                                    headerTitle: 'Your Natal Chart',
                                     headerStyle: { backgroundColor: '#1a237e' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="Horoscope"
                                 component={HoroscopeScreen}
                                 options={{
-                                    headerTitle: 'Daily Horoscope',
                                     headerStyle: { backgroundColor: '#311b92' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
+                                }}
+                            />
+                            <Stack.Screen
+                                name="TipOfTheDay"
+                                component={TipOfTheDayScreen}
+                                options={{
+                                    headerStyle: { backgroundColor: '#4a148c' },
+                                    headerTintColor: '#fff',
                                 }}
                             />
                             <Stack.Screen
                                 name="AboutUs"
                                 component={AboutUsScreen}
                                 options={{
-                                    headerTitle: 'About Us',
                                     headerStyle: { backgroundColor: '#2d5016' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="Sources"
                                 component={SourcesScreen}
                                 options={{
-                                    headerTitle: 'Data Sources',
                                     headerStyle: { backgroundColor: '#2d5016' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
                                 name="FuneralHomePortal"
                                 component={FuneralHomePortalScreen}
                                 options={{
-                                    headerTitle: 'Funeral Directors Portal',
                                     headerStyle: { backgroundColor: '#1a1a2e' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                             <Stack.Screen
-                                name="BabyRegistryPortal"
-                                component={BabyRegistryPortalScreen}
+                                name="GiftSuggestions"
+                                component={GiftSuggestionsScreen}
                                 options={{
-                                    headerTitle: 'Baby Registry Portal',
-                                    headerStyle: { backgroundColor: '#ff9a9e' },
-                                    headerTintColor: '#333',
-                                    headerTitleStyle: { fontWeight: 'bold' }
+                                    headerShown: false,
                                 }}
                             />
                             <Stack.Screen
                                 name="RabbitHole"
                                 component={RabbitHoleScreen}
                                 options={{
-                                    headerTitle: '🐰 Rabbit Hole',
                                     headerStyle: { backgroundColor: '#302b63' },
                                     headerTintColor: '#fff',
-                                    headerTitleStyle: { fontWeight: 'bold' }
                                 }}
                             />
                         </Stack.Navigator>

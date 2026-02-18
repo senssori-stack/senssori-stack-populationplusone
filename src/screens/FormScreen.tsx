@@ -200,6 +200,52 @@ export default function FormScreen({ navigation, route }: Props) {
     const [population, setPopulation] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
 
+    // Letter to Baby — separate letters from Mom and Dad
+    const babyDisplayName = babies[0]?.first?.trim() || 'Baby';
+
+    const MOM_SAMPLE_LETTERS = [
+        `Dear BABYNAME,\n\nI still remember the moment they placed you in my arms for the very first time. You were so tiny, so perfect, and I couldn't stop crying — happy tears, the best kind. The whole world just stopped. Nothing else mattered except you.\n\nThe ride to the hospital was a blur of excitement and nerves. Your dad was trying so hard to stay calm, but I could see his hands shaking on the steering wheel. We'd been waiting for you for so long, and suddenly it was really happening.\n\nThe doctor said you were perfect — and I already knew. I'd been talking to you for months, feeling you kick, wondering what you'd look like. And there you were. Ten tiny fingers, ten tiny toes, the softest skin I'd ever touched.\n\nWe were up all night that first night — just staring at you, counting your breaths, making sure you were real. I whispered promises to you in the dark: that I would always protect you, that I would always be there, that you would always know how deeply you are loved.\n\nIf you're reading this years from now, I hope you know that nothing in my life has ever come close to the joy of being your mother. You made me braver, stronger, and more grateful than I ever thought possible.\n\nI love you more than words could ever say.\n\nForever yours,\nMom 💕`,
+        `My sweet BABYNAME,\n\nThe night before you were born, I couldn't sleep. Not because I was uncomfortable — well, maybe a little — but because I was so excited to finally meet you. I'd been dreaming about your face for nine months.\n\nWhen we got to the hospital, everything felt surreal. The nurses were so kind, your dad held my hand the entire time, and the doctor kept saying everything was going beautifully. And then — there you were. The most incredible sound I've ever heard was your first cry.\n\nI held you against my chest and time just stopped. Your tiny hand wrapped around my finger and I knew — I knew right then — that I would move mountains for you. I would walk through fire. I would do anything and everything to give you a beautiful life.\n\nYour dad and I barely slept those first few days, but we didn't care. We just wanted to watch you — every yawn, every stretch, every little sound you made. You were our miracle.\n\nSomeday when you read this, I want you to know: from the very first second, you were wanted. You were celebrated. You were the answer to every prayer I ever whispered.\n\nAll my love, always,\nMom 💕`,
+        `To my beautiful BABYNAME,\n\nI want to tell you about the day that changed everything — the day you arrived.\n\nWe rushed to the hospital early that morning. I remember the sunrise through the car window, all gold and pink, like the sky already knew something wonderful was about to happen. Your dad drove so carefully, checking on me at every red light.\n\nThe hours in that hospital room were long, but I wasn't scared. I just kept thinking about you — who you'd look like, what your laugh would sound like, all the adventures we'd have together.\n\nAnd then the doctor placed you on my chest. BABYNAME, I have never felt anything like that moment. Pure, overwhelming love. I looked at your face and thought, "There you are. I've been waiting my whole life for you."\n\nThat first night, I held you while the whole world slept. I promised you the moon and the stars. I promised you safety, warmth, and a home full of love. I promised you that no matter what life brings, I will always, always be in your corner.\n\nYou are my greatest gift. You are my reason for everything.\n\nWith all the love in my heart,\nMom 💕`,
+    ];
+
+    const DAD_SAMPLE_LETTERS = [
+        `Dear BABYNAME,\n\nI'm going to be honest with you — the day you were born, I was terrified. Not of you, of course. I was terrified of messing this up. Being someone's dad? That's the biggest job in the world, and I wanted to get it right from the very first second.\n\nThe drive to the hospital was the longest drive of my life. My hands were shaking. Your mom was so strong, so calm — way calmer than me. I kept thinking, "We're really doing this. We're about to meet our baby."\n\nWhen the doctor held you up and I heard your first cry, something inside me changed forever. I can't explain it. It was like my whole life suddenly made sense. Every decision, every path I'd ever taken — it all led to this moment. To you.\n\nI held you for the first time and you were so small. Your whole hand barely wrapped around my finger. I looked down at you and made you a promise right then: I will protect you. I will provide for you. I will be there — for every game, every scraped knee, every bad day, every celebration. I will show up. Every single time.\n\nWe were up all night that first night. Your mom and I just took turns holding you, staring at you, wondering how we got so lucky. The nurses probably thought we were crazy — but we didn't care. We had you.\n\nIf you're reading this someday, know this: you are the best thing I have ever done. Being your dad is my greatest honor.\n\nI love you, kid. More than you'll ever know.\n\nDad 💙`,
+        `BABYNAME,\n\nLet me tell you something — nothing prepares you for the moment you become a dad. You can read all the books, watch all the videos, get all the advice from friends. But nothing comes close to the real thing.\n\nI remember pacing the hospital hallway, nervous out of my mind. Your mom was incredible — she's the toughest person I know. The doctors and nurses were amazing. And then it happened. You were here.\n\nThey put you in my arms and I just froze. I couldn't speak. I couldn't move. I just stared at you. This tiny little person, looking up at me, trusting me completely. And I thought, "I will never let you down."\n\nThat first night was chaos in the best way. You fussed, we figured it out. You cried, we figured it out. We were a team from day one — you, me, and your mom. And I realized that's what family is. You don't have to know all the answers. You just have to show up and love each other through it.\n\nI want you to know that I will work every single day to give you a life full of joy, safety, and opportunity. I will be at every game, every recital, every parent-teacher conference. I will teach you to ride a bike, throw a ball, and stand up for what's right.\n\nYou are my purpose, BABYNAME. You always will be.\n\nLove,\nDad 💙`,
+        `Hey BABYNAME,\n\nIf you're reading this, it means you're old enough to understand how much this day meant to me. So let me take you back.\n\nThe morning you were born started with your mom waking me up at 3 AM. "It's time," she said. I jumped out of bed so fast I almost tripped over the hospital bag we'd packed three weeks early. We'd been ready for you for a long time.\n\nThe hospital was quiet that early in the morning. The hallway lights were dim, the nurses were calm, and everything felt like it was moving in slow motion. Your mom was a warrior — I've never been more proud of anyone.\n\nAnd then you arrived. The doctor lifted you up, you let out your first cry, and I completely lost it. Tears just streaming down my face. I didn't care who saw. My baby was here.\n\nI cut the cord. They cleaned you up. And then they handed you to me. BABYNAME, I looked at your face and I saw the future. I saw birthday parties and first days of school. I saw teaching you to drive and watching you graduate. I saw every moment that mattered, and I promised myself I would be there for all of them.\n\nYour mom and I didn't sleep that night. We just held you, talked about your future, and thanked God for the gift of you. The best gift either of us has ever received.\n\nI love you more than I'll ever be able to put into words. But I'll spend my whole life trying.\n\nYour biggest fan,\nDad 💙`,
+    ];
+
+    const getMomSample = (idx: number) => MOM_SAMPLE_LETTERS[idx].replace(/BABYNAME/g, babyDisplayName);
+    const getDadSample = (idx: number) => DAD_SAMPLE_LETTERS[idx].replace(/BABYNAME/g, babyDisplayName);
+
+    const JOINT_SAMPLE_LETTERS = [
+        `Dear BABYNAME,\n\nWe're writing this letter together, side by side, just hours after you arrived — and we still can't believe you're really here.\n\nThe ride to the hospital felt like the longest drive of our lives. We held hands the whole way, barely speaking, just knowing that everything was about to change. And then it did.\n\nWhen the doctor placed you in our arms for the first time, we both cried. There's no other way to say it. You were so small, so perfect, and so completely ours. We counted your fingers and your toes. We studied your face. We whispered your name over and over because it finally belonged to someone real.\n\nThe nurses checked on us all night, but we barely slept. We just took turns holding you, watching you breathe, marveling at every tiny sound you made. At one point we looked at each other and said, "We made this incredible person."\n\nBABYNAME, we want you to know something we promised each other the night you were born: we will always put you first. We will protect you from everything we can, prepare you for everything we can't, and love you through all of it. We will build a life for you that is safe, warm, full of laughter, and overflowing with love.\n\nWe don't know exactly what the future holds, but we know this — we will face it together, as a family. And that family started the moment we met you.\n\nYou are our greatest adventure. You are our whole heart.\n\nWith all the love in the world,\nMom & Dad 💕💙`,
+        `Our precious BABYNAME,\n\nAs we sit here writing this together, you're sleeping peacefully in the hospital bassinet beside us, and we're still trying to catch our breath after the most incredible day of our lives.\n\nWe'd been planning for you for so long — putting the crib together, washing the tiny clothes, arguing over names (in the best way). But nothing could have prepared us for this.\n\nYour mom was a warrior today. The bravest, strongest person in any room. And your dad? Well, he tried to be brave too — but honestly, the tears came the moment we heard your first cry. No shame in that.\n\nThe doctor said everything went beautifully. And when they handed you to us, the whole world went quiet. It was just you, and us, and this overwhelming feeling that life would never be the same — and we wouldn't want it to be.\n\nWe stayed up all that first night. Not because we had to, but because we couldn't look away. Every time you moved, we smiled. Every time you yawned, we melted. We took turns whispering our promises to you: We will always be here. We will always show up. We will always choose you.\n\nIf you're reading this years from now, we want you to know — you were the most wanted, most celebrated, most loved baby on the planet. And nothing will ever change that.\n\nForever and always yours,\nMom & Dad 💕💙`,
+        `To our darling BABYNAME,\n\nWe're writing this letter together because that's how we want to do everything from now on — together, with you.\n\nLet us tell you about the day we became a family.\n\nIt started early — before the sun came up. We grabbed the hospital bag, double-checked the car seat (for the third time), and headed out. The streets were empty, the sky was still dark, and somewhere between the house and the hospital, the reality hit us both at the same time: this was really happening.\n\nThe hours that followed were intense, beautiful, and unforgettable. We leaned on the doctors and nurses, we leaned on each other, and we kept reminding ourselves that you were worth every single second.\n\nAnd then — there you were. BABYNAME. Our baby. The most perfect thing we'd ever seen. We held you between us and just cried — happy, grateful, overwhelmed tears. The doctor smiled at us and said, "Congratulations, you have a beautiful baby." We already knew.\n\nThat night in the hospital was magical. We barely slept, but we didn't care. We talked about your future — where you'd go to school, what sports you'd play, whether you'd like chocolate or vanilla. We dreamed big dreams for you while you slept small in our arms.\n\nBABYNAME, here is our promise: we will provide for you, protect you, and pour everything we have into giving you the life you deserve. We will be your biggest fans, your safest place, and your loudest cheerleaders. Always.\n\nYou completed us. You really did.\n\nAll our love, today and every day,\nMom & Dad 💕💙`,
+    ];
+
+    const getJointSample = (idx: number) => JOINT_SAMPLE_LETTERS[idx].replace(/BABYNAME/g, babyDisplayName);
+
+    const [motherLetter, setMotherLetter] = useState('');
+    const [fatherLetter, setFatherLetter] = useState('');
+    const [jointLetter, setJointLetter] = useState('');
+    const [selectedMomIdx, setSelectedMomIdx] = useState<number | null>(null);
+    const [selectedDadIdx, setSelectedDadIdx] = useState<number | null>(null);
+    const [selectedJointIdx, setSelectedJointIdx] = useState<number | null>(null);
+
+    const selectMomSample = (idx: number) => {
+        setSelectedMomIdx(idx);
+        setMotherLetter(getMomSample(idx));
+    };
+    const selectDadSample = (idx: number) => {
+        setSelectedDadIdx(idx);
+        setFatherLetter(getDadSample(idx));
+    };
+    const selectJointSample = (idx: number) => {
+        setSelectedJointIdx(idx);
+        setJointLetter(getJointSample(idx));
+    };
+
     const canBuild = (babies.some(b => (b.first || '').trim().length > 0) || babyFirst.trim().length > 0) && hometown.trim().length > 0;
 
     // Sync form data to context when fields change
@@ -489,6 +535,10 @@ export default function FormScreen({ navigation, route }: Props) {
         payload.timeCapsuleOrientation = 'landscape';
         payload.snapshot = snapshot;
         payload.population = finalPopulation;
+        // Letter to Baby
+        payload.motherLetter = motherLetter;
+        payload.fatherLetter = fatherLetter;
+        payload.jointLetter = jointLetter;
         navigation.navigate('Preview', payload);
     }
 
@@ -496,7 +546,7 @@ export default function FormScreen({ navigation, route }: Props) {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.title}>POPULATION +1 {mode === 'baby' ? 'Form Announcement' : 'Time Capsule Gift'}</Text>
+            <Text style={styles.title}>{mode === 'baby' ? 'Newborn Baby Announcement' : 'Time Capsule Gift'}</Text>
 
             {/* Baby Count Toggle */}
             <Text style={styles.label}>{mode === 'baby' ? 'How many babies?' : 'How many people?'}</Text>
@@ -693,6 +743,139 @@ export default function FormScreen({ navigation, route }: Props) {
                     <Text style={styles.infoText}>
                         Weight & Length not available for {babyCount === 2 ? 'twins' : 'triplets'}
                     </Text>
+                </View>
+            )}
+
+            {/* 💌 Letter to Baby — Separate keepsake page */}
+            {mode === 'baby' && (
+                <View style={styles.messageSectionContainer}>
+                    <Text style={styles.messageSectionTitle}>💌 Letter to {babyDisplayName}</Text>
+                    <Text style={styles.messageSectionSubtitle}>
+                        Write a heartfelt letter for {babyDisplayName} to read someday. This will be its own keepsake page — separate from the announcement and time capsule. Choose a sample and make it your own, or write from scratch.
+                    </Text>
+
+                    {/* Mom's Letter */}
+                    <View style={styles.letterSection}>
+                        <Text style={styles.letterSectionHeader}>From {motherName || 'Mom'} 💕</Text>
+                        <View style={styles.sampleBtnRow}>
+                            {(['Sample 1', 'Sample 2', 'Sample 3'] as const).map((label, idx) => (
+                                <TouchableOpacity
+                                    key={idx}
+                                    style={[styles.sampleBtn, selectedMomIdx === idx && styles.sampleBtnActive]}
+                                    onPress={() => selectMomSample(idx)}
+                                >
+                                    <Text style={[styles.sampleBtnText, selectedMomIdx === idx && styles.sampleBtnTextActive]}>
+                                        {label}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                        <TextInput
+                            style={styles.messageInput}
+                            placeholder={`${motherName || 'Mom'}'s letter to ${babyDisplayName}...`}
+                            placeholderTextColor="#999"
+                            value={motherLetter}
+                            onChangeText={(text) => {
+                                setMotherLetter(text);
+                                if (selectedMomIdx !== null && text !== getMomSample(selectedMomIdx)) {
+                                    setSelectedMomIdx(null);
+                                }
+                            }}
+                            multiline
+                            textAlignVertical="top"
+                        />
+                        {motherLetter.length > 0 && (
+                            <TouchableOpacity
+                                style={styles.clearMessageBtn}
+                                onPress={() => { setMotherLetter(''); setSelectedMomIdx(null); }}
+                            >
+                                <Text style={styles.clearMessageBtnText}>✕ Clear</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    {/* Dad's Letter */}
+                    <View style={[styles.letterSection, { marginTop: 20 }]}>
+                        <Text style={styles.letterSectionHeader}>From {fatherName || 'Dad'} 💙</Text>
+                        <View style={styles.sampleBtnRow}>
+                            {(['Sample 1', 'Sample 2', 'Sample 3'] as const).map((label, idx) => (
+                                <TouchableOpacity
+                                    key={idx}
+                                    style={[styles.sampleBtn, selectedDadIdx === idx && styles.sampleBtnActive]}
+                                    onPress={() => selectDadSample(idx)}
+                                >
+                                    <Text style={[styles.sampleBtnText, selectedDadIdx === idx && styles.sampleBtnTextActive]}>
+                                        {label}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                        <TextInput
+                            style={styles.messageInput}
+                            placeholder={`${fatherName || 'Dad'}'s letter to ${babyDisplayName}...`}
+                            placeholderTextColor="#999"
+                            value={fatherLetter}
+                            onChangeText={(text) => {
+                                setFatherLetter(text);
+                                if (selectedDadIdx !== null && text !== getDadSample(selectedDadIdx)) {
+                                    setSelectedDadIdx(null);
+                                }
+                            }}
+                            multiline
+                            textAlignVertical="top"
+                        />
+                        {fatherLetter.length > 0 && (
+                            <TouchableOpacity
+                                style={styles.clearMessageBtn}
+                                onPress={() => { setFatherLetter(''); setSelectedDadIdx(null); }}
+                            >
+                                <Text style={styles.clearMessageBtnText}>✕ Clear</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    {/* Joint Letter from Both Parents */}
+                    <View style={[styles.letterSection, { marginTop: 20 }]}>
+                        <Text style={styles.letterSectionHeader}>From Both of Us Together 💕💙</Text>
+                        <Text style={[styles.messageSectionSubtitle, { marginBottom: 10 }]}>
+                            A single letter from both parents, written as one voice.
+                        </Text>
+                        <View style={styles.sampleBtnRow}>
+                            {(['Sample 1', 'Sample 2', 'Sample 3'] as const).map((label, idx) => (
+                                <TouchableOpacity
+                                    key={idx}
+                                    style={[styles.sampleBtn, selectedJointIdx === idx && styles.sampleBtnActive]}
+                                    onPress={() => selectJointSample(idx)}
+                                >
+                                    <Text style={[styles.sampleBtnText, selectedJointIdx === idx && styles.sampleBtnTextActive]}>
+                                        {label}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                        <TextInput
+                            style={styles.messageInput}
+                            placeholder={`A joint letter from ${motherName || 'Mom'} & ${fatherName || 'Dad'} to ${babyDisplayName}...`}
+                            placeholderTextColor="#999"
+                            value={jointLetter}
+                            onChangeText={(text) => {
+                                setJointLetter(text);
+                                if (selectedJointIdx !== null && text !== getJointSample(selectedJointIdx)) {
+                                    setSelectedJointIdx(null);
+                                }
+                            }}
+                            multiline
+                            textAlignVertical="top"
+                        />
+                        {jointLetter.length > 0 && (
+                            <TouchableOpacity
+                                style={styles.clearMessageBtn}
+                                onPress={() => { setJointLetter(''); setSelectedJointIdx(null); }}
+                            >
+                                <Text style={styles.clearMessageBtnText}>✕ Clear</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
                 </View>
             )}
 
@@ -943,5 +1126,84 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
 
+    // Letter to Baby
+    letterSection: {
+        marginTop: 12,
+    },
+    letterSectionHeader: {
+        fontSize: 16,
+        fontWeight: '800',
+        color: '#fff',
+        marginBottom: 10,
+    },
+    messageSectionContainer: {
+        marginTop: 28,
+        marginBottom: 8,
+        backgroundColor: 'rgba(255,255,255,0.08)',
+        borderRadius: 16,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.15)',
+    },
+    messageSectionTitle: {
+        fontSize: 20,
+        fontWeight: '900',
+        color: '#fff',
+        textAlign: 'center',
+        marginBottom: 6,
+    },
+    messageSectionSubtitle: {
+        fontSize: 13,
+        color: 'rgba(255,255,255,0.7)',
+        textAlign: 'center',
+        marginBottom: 16,
+        lineHeight: 18,
+    },
+    sampleBtnRow: {
+        flexDirection: 'row',
+        gap: 8,
+        marginBottom: 14,
+    },
+    sampleBtn: {
+        flex: 1,
+        paddingVertical: 10,
+        borderRadius: 8,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
+    },
+    sampleBtnActive: {
+        backgroundColor: '#fff',
+        borderColor: '#fff',
+    },
+    sampleBtnText: {
+        fontWeight: '700',
+        color: '#fff',
+        fontSize: 13,
+    },
+    sampleBtnTextActive: {
+        color: '#1a472a',
+    },
+    messageInput: {
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 14,
+        fontSize: 15,
+        color: '#333',
+        minHeight: 180,
+        lineHeight: 22,
+    },
+    clearMessageBtn: {
+        alignSelf: 'flex-end',
+        marginTop: 10,
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+    },
+    clearMessageBtnText: {
+        color: 'rgba(255,255,255,0.6)',
+        fontSize: 13,
+        fontWeight: '600',
+    },
 
 });

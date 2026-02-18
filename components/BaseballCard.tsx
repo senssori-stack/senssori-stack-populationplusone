@@ -158,11 +158,11 @@ export default function BaseballCard({
                         </View>
                     </View>
 
-                    {/* Hometown */}
+                    {/* Team Name */}
                     <View style={[styles.hometownSection, { marginTop: displayHeight * 0.01 }]}>
-                        <Text style={[styles.hometownLabel, { fontSize: baseFontSize * 0.5 }]}>HOMETOWN</Text>
+                        <Text style={[styles.hometownLabel, { fontSize: baseFontSize * 0.5 }]}>TEAM</Text>
                         <Text style={[styles.hometownValue, { fontSize: baseFontSize * 0.65 }]}>
-                            {city}, {state}
+                            {(lastName || babyName.split(' ').pop() || 'BABY').toUpperCase()} FAMILY
                         </Text>
                     </View>
                 </View>

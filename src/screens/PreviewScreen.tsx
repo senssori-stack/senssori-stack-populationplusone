@@ -1,11 +1,14 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { GestureHandlerRootView, PanGestureHandler, PinchGestureHandler, State, TapGestureHandler } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ViewShot from 'react-native-view-shot';
 import CartModal from '../../components/CartModal';
 import CelebrationOverlay from '../../components/CelebrationOverlay';
 import DownloadModal, { DownloadItem } from '../../components/DownloadModal';
+import LetterToBaby from '../../components/LetterToBaby';
 import NatalChartBack from '../../components/NatalChartBack';
 import NatalChartPrintable from '../../components/NatalChartPrintable';
 import SignFrontLandscape from '../../components/SignFrontLandscape';
@@ -20,7 +23,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Preview'>;
 
 export default function PreviewScreen({ navigation, route }: Props) {
     const params = route.params || {};
-    const [viewMode, setViewMode] = useState<'front' | 'back' | 'natal'>('front');
+    const insets = useSafeAreaInsets();
+    const [viewMode, setViewMode] = useState<'front' | 'back' | 'natal' | 'guide' | 'letter'>('front');
     const [showCelebration, setShowCelebration] = useState(true);
 
     // ViewShot refs for capturing
@@ -28,6 +32,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
     const backRef = useRef<ViewShot | null>(null);
     const natalRef = useRef<ViewShot | null>(null);
     const natalBackRef = useRef<ViewShot | null>(null);
+    const letterRef = useRef<ViewShot | null>(null);
 
     // Download modal state
     const [showDownloadModal, setShowDownloadModal] = useState(false);
@@ -38,7 +43,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
 
     // Add current view to cart
     const handleAddToCart = () => {
-        const productKey = viewMode as 'front' | 'back' | 'natal';
+        const productKey = (viewMode === 'guide' ? 'natal' : viewMode) as 'front' | 'back' | 'natal';
         const product = PRODUCT_PRICES[productKey];
         const babyName = params.babies?.[0]?.first || params.babyFirst || params.personName || 'Baby';
 
@@ -57,6 +62,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
         { id: 'back', label: 'Time Capsule (Back)', category: 'yardsign' },
         { id: 'natal', label: 'Natal Chart', category: 'yardsign' },
         { id: 'natalback', label: 'Natal Chart Guide (Back)', category: 'yardsign' },
+        { id: 'letter', label: 'Letter to Baby', category: 'yardsign' },
     ];
 
     // Capture a single view by ref
@@ -67,6 +73,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
             if (itemId === 'back') ref = backRef;
             if (itemId === 'natal') ref = natalRef;
             if (itemId === 'natalback') ref = natalBackRef;
+            if (itemId === 'letter') ref = letterRef;
 
             if (ref?.current?.capture) {
                 return await ref.current.capture();
@@ -81,9 +88,12 @@ export default function PreviewScreen({ navigation, route }: Props) {
     // Handle capture — switches viewMode if needed, waits for render, then captures
     const handleCapture = async (itemId: string): Promise<string | null> => {
         try {
-            // For natal/natalback, both are rendered in 'natal' view
-            if (itemId === 'natal' || itemId === 'natalback') {
+            if (itemId === 'natal') {
                 setViewMode('natal');
+            } else if (itemId === 'natalback') {
+                setViewMode('guide');
+            } else if (itemId === 'letter') {
+                setViewMode('letter');
             } else {
                 setViewMode(itemId as 'front' | 'back');
             }
@@ -106,6 +116,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
 
     // Gesture handling refs and state
     const scale = useRef(new Animated.Value(1)).current;
+    const baseScale = useRef(new Animated.Value(1)).current;
     const translateX = useRef(new Animated.Value(0)).current;
     const translateY = useRef(new Animated.Value(0)).current;
     const baseTranslateX = useRef(new Animated.Value(0)).current;
@@ -114,7 +125,10 @@ export default function PreviewScreen({ navigation, route }: Props) {
     const lastTranslateX = useRef(0);
     const lastTranslateY = useRef(0);
     const doubleTapRef = useRef(null);
+    const pinchRef = useRef(null);
+    const panRef = useRef(null);
     const isZoomedIn = useRef(false); // Track zoom state for double-tap toggle
+    const [scrollEnabled, setScrollEnabled] = useState(true);
 
     // Detect device type for responsive scaling
     const isTablet = Math.min(screenWidth, screenHeight) >= 768;
@@ -126,9 +140,8 @@ export default function PreviewScreen({ navigation, route }: Props) {
         const availableWidth = screenWidth;
         const availableHeight = screenHeight - 120; // Space for buttons and padding
 
-        if (viewMode === 'natal') {
-            // Natal view shows both chart (landscape) and guide (portrait) stacked
-            // Scale guide to fit roughly half the container width
+        if (viewMode === 'guide') {
+            // Guide is portrait layout
             const portraitW = 2550, portraitH = 3300;
             const guideWidth = availableWidth * 0.85;
             return guideWidth / portraitW;
@@ -153,6 +166,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
         setZoomScale(1.0);
         isZoomedIn.current = false;
         scale.setValue(1);
+        baseScale.setValue(1);
         translateX.setValue(0);
         translateY.setValue(0);
         baseTranslateX.setValue(0);
@@ -174,12 +188,15 @@ export default function PreviewScreen({ navigation, route }: Props) {
             const maxScale = 4.0;
 
             lastScale.current = Math.max(minScale, Math.min(maxScale, newScale));
+            baseScale.setValue(lastScale.current);
             scale.setValue(1);
+            isZoomedIn.current = lastScale.current > 1.1;
             setZoomScale(lastScale.current);
+            setScrollEnabled(lastScale.current <= 1.05);
         }
     };
 
-    // Pan gesture handler - only allow panning when zoomed in
+    // Pan gesture handler - allow panning at any zoom level
     const onPanGestureEvent = Animated.event(
         [{ nativeEvent: { translationX: translateX, translationY: translateY } }],
         { useNativeDriver: false }
@@ -187,30 +204,11 @@ export default function PreviewScreen({ navigation, route }: Props) {
 
     const onPanHandlerStateChange = (event: any) => {
         if (event.nativeEvent.oldState === State.ACTIVE) {
-            if (lastScale.current > 1.1) {
-                // Calculate max pan based on current zoom level
-                const actualScale = fullScreenScale * lastScale.current;
-                // Birth announcement is 3300x2550
-                const contentWidth = 3300 * actualScale;
-                const contentHeight = 2550 * actualScale;
+            let newTranslateX = lastTranslateX.current + event.nativeEvent.translationX;
+            let newTranslateY = lastTranslateY.current + event.nativeEvent.translationY;
 
-                const maxX = Math.max(0, (contentWidth - screenWidth) / 2);
-                const maxY = Math.max(0, (contentHeight - screenHeight) / 2);
-
-                // Apply pan with bounds
-                let newTranslateX = lastTranslateX.current + event.nativeEvent.translationX;
-                let newTranslateY = lastTranslateY.current + event.nativeEvent.translationY;
-
-                newTranslateX = Math.max(-maxX, Math.min(maxX, newTranslateX));
-                newTranslateY = Math.max(-maxY, Math.min(maxY, newTranslateY));
-
-                lastTranslateX.current = newTranslateX;
-                lastTranslateY.current = newTranslateY;
-            } else {
-                // Not zoomed enough to pan, reset to center
-                lastTranslateX.current = 0;
-                lastTranslateY.current = 0;
-            }
+            lastTranslateX.current = newTranslateX;
+            lastTranslateY.current = newTranslateY;
 
             // Commit the accumulated offset to the base and reset the gesture delta
             baseTranslateX.setValue(lastTranslateX.current);
@@ -228,10 +226,12 @@ export default function PreviewScreen({ navigation, route }: Props) {
         lastTranslateY.current = 0;
         isZoomedIn.current = false;
         scale.setValue(1);
+        baseScale.setValue(1);
         translateX.setValue(0);
         translateY.setValue(0);
         baseTranslateX.setValue(0);
         baseTranslateY.setValue(0);
+        setScrollEnabled(true);
     };
 
     // Initialize at 100% of full screen whenever view changes
@@ -240,6 +240,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
         setZoomScale(1.0);
         isZoomedIn.current = false;
         scale.setValue(1);
+        baseScale.setValue(1);
         translateX.setValue(0);
         translateY.setValue(0);
         baseTranslateX.setValue(0);
@@ -255,6 +256,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
 
             // Reset animated values
             scale.setValue(1);
+            baseScale.setValue(targetZoom);
             translateX.setValue(0);
             translateY.setValue(0);
             baseTranslateX.setValue(0);
@@ -266,6 +268,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
             lastTranslateY.current = 0;
             isZoomedIn.current = !isZoomedIn.current;
             setZoomScale(targetZoom);
+            setScrollEnabled(targetZoom <= 1.05);
         }
     };
 
@@ -365,39 +368,77 @@ export default function PreviewScreen({ navigation, route }: Props) {
                 </ViewShot>
             );
         } else if (viewMode === 'natal') {
-            // Natal Chart (front) + Chart Reading Guide (back) — shown together like postcards
+            // Natal Chart front only
             const babyName = `${formData.babyFirst} ${formData.babyMiddle ? formData.babyMiddle + ' ' : ''}${formData.babyLast}`.trim() || params.personName || 'Baby';
             return (
-                <View style={{ alignItems: 'center', paddingHorizontal: 10 }}>
-                    {/* Natal Chart Front */}
-                    <Text style={{ color: '#888', fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 4 }}>Front — Natal Chart (11" × 8.5")</Text>
-                    <ViewShot ref={natalRef} options={{ format: 'png', quality: 1 }}>
-                        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                            <NatalChartPrintable
-                                theme={formData.theme}
-                                babyName={babyName}
-                                dobISO={dobISO}
-                                hometown={formData.hometown}
-                                previewScale={finalScale}
-                            />
-                        </View>
-                    </ViewShot>
-
-                    {/* Chart Reading Guide Back */}
-                    <Text style={{ color: '#888', fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 16 }}>Back — Chart Reading Guide (8.5" × 11")</Text>
-                    <ViewShot ref={natalBackRef} options={{ format: 'png', quality: 1 }}>
-                        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                            <NatalChartBack
-                                theme={formData.theme}
-                                babyName={babyName}
-                                previewScale={finalScale}
-                            />
-                        </View>
-                    </ViewShot>
-                </View>
+                <ViewShot ref={natalRef} options={{ format: 'png', quality: 1 }}>
+                    <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                        <NatalChartPrintable
+                            theme={formData.theme}
+                            babyName={babyName}
+                            dobISO={dobISO}
+                            hometown={formData.hometown}
+                            previewScale={finalScale}
+                        />
+                    </View>
+                </ViewShot>
+            );
+        } else if (viewMode === 'guide') {
+            // Chart Reading Guide back only
+            const babyName = `${formData.babyFirst} ${formData.babyMiddle ? formData.babyMiddle + ' ' : ''}${formData.babyLast}`.trim() || params.personName || 'Baby';
+            return (
+                <ViewShot ref={natalBackRef} options={{ format: 'png', quality: 1 }}>
+                    <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                        <NatalChartBack
+                            theme={formData.theme}
+                            babyName={babyName}
+                            zodiacSign={zodiac}
+                            previewScale={finalScale}
+                        />
+                    </View>
+                </ViewShot>
+            );
+        } else if (viewMode === 'letter') {
+            // Letter to Baby — standalone keepsake page
+            const babyName = babies[0]?.first || params.personName || 'Baby';
+            return (
+                <ViewShot ref={letterRef} options={{ format: 'png', quality: 1 }}>
+                    <View style={styles.announcementContainer}>
+                        <LetterToBaby
+                            theme={formData.theme}
+                            babyName={babyName}
+                            dobISO={dobISO}
+                            motherName={formData.motherName}
+                            fatherName={formData.fatherName}
+                            motherLetter={params.motherLetter}
+                            fatherLetter={params.fatherLetter}
+                            jointLetter={params.jointLetter}
+                            previewScale={finalScale}
+                        />
+                    </View>
+                </ViewShot>
             );
         }
     };
+
+    // Determine occasion type from message or mode for dynamic headers
+    const occasionType = (() => {
+        if (params.mode !== 'milestone') return 'baby';
+        const msg = (params.message || '').toLowerCase();
+        if (msg.includes('graduation')) return 'graduation';
+        if (msg.includes('anniversary')) return 'anniversary';
+        if (msg.includes('birthday')) return 'birthday';
+        return 'milestone';
+    })();
+
+    const occasionLabels = {
+        baby: { front: '📜 Birth Announcement', capsule: '⏳ Time Capsule', letter: '💌 Letter to Baby', chart: '🔮 Natal Chart', guide: '📖 Chart Reading Guide' },
+        birthday: { front: '🎂 Birthday Celebration', capsule: '⏳ Time Capsule', letter: '💌 Birthday Letter', chart: '🔮 Natal Chart', guide: '📖 Chart Reading Guide' },
+        graduation: { front: '🎓 Graduation Celebration', capsule: '⏳ Time Capsule', letter: '💌 Graduation Letter', chart: '🔮 Natal Chart', guide: '📖 Chart Reading Guide' },
+        anniversary: { front: '💍 Anniversary Celebration', capsule: '⏳ Time Capsule', letter: '💌 Anniversary Letter', chart: '🔮 Natal Chart', guide: '📖 Chart Reading Guide' },
+        milestone: { front: '🎉 Milestone Celebration', capsule: '⏳ Time Capsule', letter: '💌 Personal Letter', chart: '🔮 Natal Chart', guide: '📖 Chart Reading Guide' },
+    };
+    const labels = occasionLabels[occasionType];
 
     // Determine celebration message based on mode
     const celebrationMessage = params.mode === 'milestone'
@@ -411,69 +452,97 @@ export default function PreviewScreen({ navigation, route }: Props) {
                 message={celebrationMessage}
                 onComplete={() => setShowCelebration(false)}
             />
-            <ScrollView style={{ flex: 1, paddingTop: 40 }} contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
-                {/* Page title */}
-                <View style={styles.titleContainer}>
-                    <Text style={styles.title}>
-                        {viewMode === 'front' ? 'Birth Announcement' : viewMode === 'back' ? 'Time Capsule' : 'Natal Chart & Guide'} - {viewMode === 'natal' ? 'Front & Back' : '11" × 8.5"'}
+            <ScrollView style={{ flex: 1, paddingTop: 40 }} contentContainerStyle={{ flexGrow: 1 }} bounces={false} scrollEnabled={scrollEnabled}>
+                {/* ═══ PREMIUM CONTROL PANEL ═══ */}
+                <LinearGradient colors={['#1a472a', '#2d6b3f']} style={styles.controlPanel}>
+                    {/* Dynamic Title */}
+                    <Text style={styles.panelTitle}>
+                        {viewMode === 'front' ? labels.front : viewMode === 'back' ? labels.capsule : viewMode === 'letter' ? labels.letter : viewMode === 'natal' ? labels.chart : labels.guide}
                     </Text>
-                </View>
+                    <Text style={styles.panelSubtitle}>
+                        {viewMode === 'guide' ? '8.5" × 11" Portrait' : '11" × 8.5" Landscape'}
+                    </Text>
 
-                {/* Control buttons */}
-                <View style={styles.controls}>
-                    <TouchableOpacity
-                        style={[styles.button, viewMode === 'front' && styles.activeButton]}
-                        onPress={() => { setViewMode('front'); resetView(); }}
-                    >
-                        <Text style={[styles.buttonText, viewMode === 'front' && styles.activeButtonText]}>Front</Text>
-                    </TouchableOpacity>
+                    {/* View toggle tabs */}
+                    <View style={styles.tabRow}>
+                        <TouchableOpacity
+                            style={[styles.tab, { backgroundColor: '#2e8b57' }, viewMode === 'front' && styles.tabActive]}
+                            onPress={() => { setViewMode('front'); resetView(); }}
+                        >
+                            <Text style={styles.tabIcon}>+1</Text>
+                            <Text style={styles.tabText}>Sign</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tab, { backgroundColor: '#2563eb' }, viewMode === 'back' && styles.tabActive]}
+                            onPress={() => { setViewMode('back'); resetView(); }}
+                        >
+                            <Text style={styles.tabIcon}>🕐</Text>
+                            <Text style={styles.tabText}>Capsule</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tab, { backgroundColor: '#7c3aed' }, viewMode === 'natal' && styles.tabActive]}
+                            onPress={() => { setViewMode('natal'); resetView(); }}
+                        >
+                            <Text style={styles.tabIcon}>✨</Text>
+                            <Text style={styles.tabText}>Chart</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tab, { backgroundColor: '#6366f1' }, viewMode === 'guide' && styles.tabActive]}
+                            onPress={() => { setViewMode('guide'); resetView(); }}
+                        >
+                            <Text style={styles.tabIcon}>📖</Text>
+                            <Text style={styles.tabText}>Guide</Text>
+                        </TouchableOpacity>
+                        {(params.motherLetter || params.fatherLetter || params.jointLetter) && (
+                            <TouchableOpacity
+                                style={[styles.tab, { backgroundColor: '#dc2626' }, viewMode === 'letter' && styles.tabActive]}
+                                onPress={() => { setViewMode('letter'); resetView(); }}
+                            >
+                                <Text style={styles.tabIcon}>💌</Text>
+                                <Text style={styles.tabText}>Letter</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
 
-                    <TouchableOpacity
-                        style={[styles.button, viewMode === 'back' && styles.activeButton]}
-                        onPress={() => { setViewMode('back'); resetView(); }}
-                    >
-                        <Text style={[styles.buttonText, viewMode === 'back' && styles.activeButtonText]}>Back</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.button, viewMode === 'natal' && styles.activeButton]}
-                        onPress={() => { setViewMode('natal'); resetView(); }}
-                    >
-                        <Text style={[styles.buttonText, viewMode === 'natal' && styles.activeButtonText]}>Natal Chart</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.button]}
-                        onPress={resetView}
-                    >
-                        <Text style={[styles.buttonText]}>Reset</Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/* Add-on Product Buttons */}
-                <View style={styles.productButtons}>
-                    <TouchableOpacity
-                        style={styles.productButton}
-                        onPress={() => navigation.navigate('YardSignPreview', params)}
-                    >
-                        <Text style={styles.productButtonText}>🏡 Yard Signs</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.productButton}
-                        onPress={() => navigation.navigate('PostcardPreview', params)}
-                    >
-                        <Text style={styles.productButtonText}>💌 Postcards</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.productButton}
-                        onPress={() => navigation.navigate('BaseballCardPreview', params)}
-                    >
-                        <Text style={styles.productButtonText}>⚾ Trading Cards</Text>
-                    </TouchableOpacity>
-                </View>
+                    {/* Add-on keepsakes */}
+                    <View style={styles.addOnDivider} />
+                    <Text style={styles.addOnLabel}>ALSO INCLUDED WITH YOUR +1</Text>
+                    <View style={styles.tabRow}>
+                        <TouchableOpacity
+                            style={[styles.tab, { backgroundColor: '#d97706' }]}
+                            onPress={() => {
+                                const resolvedPhoto = params.photoUris?.find(u => u) || params.babies?.[0]?.photoUri || params.photoUri || null;
+                                navigation.navigate('YardSignPreview', { ...params, photoUri: resolvedPhoto });
+                            }}
+                        >
+                            <Text style={styles.tabIcon}>🏡</Text>
+                            <Text style={styles.tabText}>Yard Signs</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tab, { backgroundColor: '#0ea5e9' }]}
+                            onPress={() => {
+                                const resolvedPhoto = params.photoUris?.find(u => u) || params.babies?.[0]?.photoUri || params.photoUri || null;
+                                navigation.navigate('PostcardPreview', { ...params, photoUri: resolvedPhoto });
+                            }}
+                        >
+                            <Text style={styles.tabIcon}>✉️</Text>
+                            <Text style={styles.tabText}>Postcards</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tab, { backgroundColor: '#dc2626' }]}
+                            onPress={() => {
+                                const resolvedPhoto = params.photoUris?.find(u => u) || params.babies?.[0]?.photoUri || params.photoUri || null;
+                                navigation.navigate('BaseballCardPreview', { ...params, photoUri: resolvedPhoto });
+                            }}
+                        >
+                            <Text style={styles.tabIcon}>⚾</Text>
+                            <Text style={styles.tabText}>Cards</Text>
+                        </TouchableOpacity>
+                    </View>
+                </LinearGradient>
 
                 {/* Birth announcement preview with gesture handling */}
-                <GestureHandlerRootView style={[styles.previewContainer, { height: viewMode === 'natal' ? screenHeight * 0.65 : screenHeight * 0.5 }]}>
+                <GestureHandlerRootView style={[styles.previewContainer, { height: viewMode === 'guide' ? screenHeight * 0.65 : screenHeight * 0.5 }]}>
                     <TapGestureHandler
                         ref={doubleTapRef}
                         onHandlerStateChange={onDoubleTap}
@@ -481,11 +550,17 @@ export default function PreviewScreen({ navigation, route }: Props) {
                     >
                         <Animated.View style={{ flex: 1 }}>
                             <PanGestureHandler
+                                ref={panRef}
                                 onGestureEvent={onPanGestureEvent}
                                 onHandlerStateChange={onPanHandlerStateChange}
+                                waitFor={doubleTapRef}
+                                simultaneousHandlers={pinchRef}
+                                minPointers={1}
+                                maxPointers={1}
                             >
                                 <Animated.View style={{ flex: 1 }}>
                                     <PinchGestureHandler
+                                        ref={pinchRef}
                                         onGestureEvent={onPinchGestureEvent}
                                         onHandlerStateChange={onPinchHandlerStateChange}
                                     >
@@ -494,7 +569,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
                                                 styles.gestureContainer,
                                                 {
                                                     transform: [
-                                                        { scale: scale },
+                                                        { scale: Animated.multiply(baseScale, scale) },
                                                         { translateX: Animated.add(baseTranslateX, translateX) },
                                                         { translateY: Animated.add(baseTranslateY, translateY) },
                                                     ],
@@ -510,31 +585,40 @@ export default function PreviewScreen({ navigation, route }: Props) {
                     </TapGestureHandler>
                 </GestureHandlerRootView>
 
-                {/* Bottom action bar */}
-                <View style={styles.bottomBar}>
+                {/* Bottom action bar - Tile buttons */}
+                <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 12) + 8 }]}>
                     <View style={styles.bottomBarRow}>
-                        <TouchableOpacity style={styles.backButtonSmall} onPress={() => navigation.goBack()}>
-                            <Text style={styles.backButtonSmallText}>← Back</Text>
+                        <TouchableOpacity style={[styles.tileButton, { backgroundColor: '#6b7280' }]} onPress={() => navigation.goBack()}>
+                            <Text style={styles.tileEmoji}>←</Text>
+                            <Text style={styles.tileLabel}>Back</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={styles.downloadButtonSmall}
+                            style={[styles.tileButton, { backgroundColor: '#2563eb' }]}
                             onPress={() => setShowDownloadModal(true)}
                         >
-                            <Text style={styles.downloadButtonSmallText}>📥 Download</Text>
+                            <Text style={styles.tileEmoji}>📥</Text>
+                            <Text style={styles.tileLabel}>Save</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={styles.addToCartButtonSmall}
+                            style={[styles.tileButton, { backgroundColor: '#2e8b57' }]}
                             onPress={handleAddToCart}
                         >
-                            <Text style={styles.addToCartButtonSmallText}>🛒 Add to Cart</Text>
+                            <Text style={styles.tileEmoji}>🛒</Text>
+                            <Text style={styles.tileLabel}>Add</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={styles.viewCartButtonSmall}
+                            style={[styles.tileButton, { backgroundColor: '#d97706' }]}
                             onPress={() => setShowCartModal(true)}
                         >
-                            <Text style={styles.viewCartButtonSmallText}>
-                                🛒 {getItemCount() > 0 ? `(${getItemCount()})` : ''}
-                            </Text>
+                            <Text style={styles.tileEmoji}>🧾</Text>
+                            <Text style={styles.tileLabel}>Cart{getItemCount() > 0 ? ` (${getItemCount()})` : ''}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tileButton, { backgroundColor: '#dc2626' }]}
+                            onPress={() => navigation.navigate('GiftSuggestions', { occasion: params.mode === 'milestone' ? 'milestone' : 'newborn' })}
+                        >
+                            <Text style={styles.tileEmoji}>🎁</Text>
+                            <Text style={styles.tileLabel}>Gift</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -576,33 +660,84 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         color: '#333',
     },
-    controls: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        gap: 8,
+    // ══════ PREMIUM CONTROL PANEL ══════
+    controlPanel: {
         paddingHorizontal: 16,
-        paddingVertical: 10,
-        backgroundColor: '#f5f5f5',
-        borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
+        paddingTop: 16,
+        paddingBottom: 14,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 6,
     },
-    button: {
-        backgroundColor: '#1a472a',
-        paddingVertical: 8,
-        paddingHorizontal: 14,
-        borderRadius: 20,
-    },
-    activeButton: {
-        backgroundColor: '#f59e0b',
-    },
-    buttonText: {
+    panelTitle: {
+        fontSize: 20,
+        fontWeight: '800',
         color: '#fff',
-        fontSize: 13,
+        textAlign: 'center',
+        marginBottom: 2,
+    },
+    panelSubtitle: {
+        fontSize: 12,
         fontWeight: '600',
+        color: 'rgba(255,255,255,0.6)',
+        textAlign: 'center',
+        marginBottom: 14,
+        letterSpacing: 0.5,
     },
-    activeButtonText: {
+    tabRow: {
+        flexDirection: 'row',
+        backgroundColor: 'transparent',
+        borderRadius: 12,
+        padding: 3,
+        marginBottom: 14,
+        gap: 6,
+    },
+    tab: {
+        flex: 1,
+        paddingVertical: 10,
+        alignItems: 'center',
+        borderRadius: 12,
+        opacity: 0.75,
+    },
+    tabActive: {
+        opacity: 1,
+        borderWidth: 2,
+        borderColor: '#fff',
+    },
+    tabIcon: {
+        fontSize: 18,
+        fontWeight: '900',
         color: '#fff',
+        marginBottom: 2,
+    },
+    tabIconActive: {
+        color: '#fff',
+    },
+    tabText: {
+        fontSize: 10,
+        fontWeight: '700',
+        color: '#fff',
+    },
+    tabTextActive: {
+        color: '#fff',
+        fontWeight: '800',
+    },
+    addOnDivider: {
+        height: 1,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        marginBottom: 10,
+    },
+    addOnLabel: {
+        fontSize: 10,
+        fontWeight: '800',
+        color: 'rgba(255,255,255,0.5)',
+        letterSpacing: 1.5,
+        textAlign: 'center',
+        marginBottom: 6,
     },
     previewContainer: {
         backgroundColor: '#f9f9f9',
@@ -656,12 +791,11 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     bottomBar: {
-        backgroundColor: '#fff',
-        borderTopWidth: 1,
-        borderTopColor: '#ddd',
+        backgroundColor: '#f5f5f5',
         paddingHorizontal: 10,
-        paddingVertical: 8,
-        paddingBottom: 20,
+        paddingTop: 8,
+        borderTopWidth: 1,
+        borderTopColor: '#e0e0e0',
     },
     bottomBarRow: {
         flexDirection: 'row',
@@ -669,53 +803,26 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 6,
     },
-    backButtonSmall: {
-        backgroundColor: '#555',
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderRadius: 10,
-    },
-    backButtonSmallText: {
-        color: '#fff',
-        fontSize: 13,
-        fontWeight: '600',
-    },
-    downloadButtonSmall: {
-        backgroundColor: '#1a472a',
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderRadius: 10,
+    tileButton: {
         flex: 1,
         alignItems: 'center',
-    },
-    downloadButtonSmallText: {
-        color: '#fff',
-        fontSize: 13,
-        fontWeight: '600',
-    },
-    addToCartButtonSmall: {
-        backgroundColor: '#1a472a',
+        justifyContent: 'center',
         paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderRadius: 10,
-        flex: 1,
-        alignItems: 'center',
+        borderRadius: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
     },
-    addToCartButtonSmallText: {
+    tileEmoji: {
+        fontSize: 18,
+        marginBottom: 2,
+    },
+    tileLabel: {
         color: '#fff',
-        fontSize: 13,
-        fontWeight: '600',
-    },
-    viewCartButtonSmall: {
-        backgroundColor: '#f59e0b',
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderRadius: 10,
-    },
-    viewCartButtonSmallText: {
-        color: '#fff',
-        fontSize: 13,
-        fontWeight: '600',
+        fontSize: 10,
+        fontWeight: '700',
     },
     pdfButton: {
         backgroundColor: '#ffd700',

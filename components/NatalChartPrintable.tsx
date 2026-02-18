@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Circle, G, Line, Svg, Text as SvgText } from 'react-native-svg';
+import { Circle, ClipPath, Defs, Ellipse, G, Line, Svg, Text as SvgText } from 'react-native-svg';
 import { COLOR_SCHEMES } from '../src/data/utils/colors';
 import { calculateNatalChart } from '../src/data/utils/natal-chart-calculator';
 import type { ThemeName } from '../src/types';
@@ -131,8 +131,8 @@ export default function NatalChartPrintable(props: Props) {
     const bodySize = displayHeight * 0.018;
     const smallSize = displayHeight * 0.014;
 
-    // Chart wheel sizing (scaled for print)
-    const svgSize = displayHeight * 0.42;
+    // Chart wheel sizing (scaled for print) — 20% larger diameter
+    const svgSize = displayHeight * 0.504;
     const cx = svgSize / 2;
     const cy = svgSize / 2;
     const r_outer = svgSize * 0.45;
@@ -179,21 +179,21 @@ export default function NatalChartPrintable(props: Props) {
                             </Text>
 
                             {/* Sun */}
-                            <View style={[styles.bigThreeCard, { backgroundColor: 'rgba(255,255,255,0.15)', flex: 1, marginBottom: '2%' }]}>
+                            <View style={[styles.bigThreeCard, { backgroundColor: 'transparent', flex: 1, marginBottom: '2%' }]}>
                                 <Text style={[styles.bigThreeLabel, { fontSize: smallSize, color: colors.text }]}>☉ SUN SIGN</Text>
                                 <Text style={[styles.bigThreeSign, { fontSize: sectionTitleSize * 1.1, color: '#ffd54f' }]}>{sunSign}</Text>
                                 <Text style={[styles.bigThreeDesc, { fontSize: smallSize, color: colors.text }]}>{ZODIAC_SUN_SHORT[sunSign]}</Text>
                             </View>
 
                             {/* Moon */}
-                            <View style={[styles.bigThreeCard, { backgroundColor: 'rgba(255,255,255,0.15)', flex: 1, marginBottom: '2%' }]}>
+                            <View style={[styles.bigThreeCard, { backgroundColor: 'transparent', flex: 1, marginBottom: '2%' }]}>
                                 <Text style={[styles.bigThreeLabel, { fontSize: smallSize, color: colors.text }]}>☽ MOON SIGN</Text>
                                 <Text style={[styles.bigThreeSign, { fontSize: sectionTitleSize * 1.1, color: '#b0bec5' }]}>{moonSign}</Text>
                                 <Text style={[styles.bigThreeDesc, { fontSize: smallSize, color: colors.text }]}>{ZODIAC_MOON_SHORT[moonSign]}</Text>
                             </View>
 
                             {/* Rising */}
-                            <View style={[styles.bigThreeCard, { backgroundColor: 'rgba(255,255,255,0.15)', flex: 1, marginBottom: '2%' }]}>
+                            <View style={[styles.bigThreeCard, { backgroundColor: 'transparent', flex: 1, marginBottom: '2%' }]}>
                                 <Text style={[styles.bigThreeLabel, { fontSize: smallSize, color: colors.text }]}>↑ RISING SIGN</Text>
                                 <Text style={[styles.bigThreeSign, { fontSize: sectionTitleSize * 1.1, color: colors.text }]}>{ascendantSign}</Text>
                                 <Text style={[styles.bigThreeDesc, { fontSize: smallSize, color: colors.text }]}>{ASCENDANT_SHORT[ascendantSign]}</Text>
@@ -215,11 +215,11 @@ export default function NatalChartPrintable(props: Props) {
                             <Text style={[styles.sectionTitle, { fontSize: sectionTitleSize, color: colors.text }]}>
                                 🌌 Birth Chart Wheel
                             </Text>
-                            <View style={[styles.chartWrapper, { backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: svgSize * 0.05 }]}>
+                            <View style={[styles.chartWrapper, { backgroundColor: 'transparent', borderRadius: svgSize * 0.05, marginTop: -displayHeight * 0.03 }]}>
                                 <Svg width={svgSize} height={svgSize}>
                                     {/* Outer circle */}
-                                    <Circle cx={cx} cy={cy} r={r_outer} stroke="#fff" strokeWidth={2} fill="rgba(255,255,255,0.1)" />
-                                    <Circle cx={cx} cy={cy} r={r_sign} stroke="rgba(255,255,255,0.3)" strokeWidth={1} fill="none" />
+                                    <Circle cx={cx} cy={cy} r={r_outer} stroke="#fff" strokeWidth={2} fill="#000000" />
+                                    <Circle cx={cx} cy={cy} r={r_sign} stroke="rgba(255,255,255,0.3)" strokeWidth={1} fill="#000000" />
 
                                     {/* Zodiac sign dividers and symbols */}
                                     {zodiacSigns.map((sign, i) => {
@@ -235,9 +235,9 @@ export default function NatalChartPrintable(props: Props) {
                                                 <SvgText
                                                     x={labelPos.x}
                                                     y={labelPos.y}
-                                                    fill={sign === sunSign ? '#ffd54f' : '#fff'}
-                                                    fontSize={svgSize * 0.045}
-                                                    fontWeight={sign === sunSign ? 'bold' : 'normal'}
+                                                    fill={sign === sunSign ? '#ffea00' : '#00ffff'}
+                                                    fontSize={svgSize * 0.055}
+                                                    fontWeight="bold"
                                                     textAnchor="middle"
                                                     alignmentBaseline="middle"
                                                 >
@@ -267,8 +267,28 @@ export default function NatalChartPrintable(props: Props) {
                                         );
                                     })}
 
-                                    {/* Center dot */}
-                                    <Circle cx={cx} cy={cy} r={4} fill="#fff" />
+                                    {/* Center - Planet Earth */}
+                                    <Defs>
+                                        <ClipPath id="earthClip">
+                                            <Circle cx={cx} cy={cy} r={12} />
+                                        </ClipPath>
+                                    </Defs>
+                                    {/* Ocean */}
+                                    <Circle cx={cx} cy={cy} r={12} fill="#1a6fc4" />
+                                    {/* Continents - simplified landmasses */}
+                                    <G clipPath="url(#earthClip)">
+                                        {/* North America */}
+                                        <Ellipse cx={cx - 5} cy={cy - 5} rx={5} ry={4} fill="#2e8b57" transform={`rotate(-20 ${cx - 5} ${cy - 5})`} />
+                                        {/* South America */}
+                                        <Ellipse cx={cx - 3} cy={cy + 5} rx={3} ry={5} fill="#2e8b57" transform={`rotate(10 ${cx - 3} ${cy + 5})`} />
+                                        {/* Europe/Africa */}
+                                        <Ellipse cx={cx + 5} cy={cy - 2} rx={3} ry={4} fill="#2e8b57" transform={`rotate(5 ${cx + 5} ${cy - 2})`} />
+                                        <Ellipse cx={cx + 5} cy={cy + 5} rx={2.5} ry={4} fill="#2e8b57" />
+                                        {/* Asia */}
+                                        <Ellipse cx={cx + 9} cy={cy - 5} rx={4} ry={3} fill="#2e8b57" transform={`rotate(-10 ${cx + 9} ${cy - 5})`} />
+                                    </G>
+                                    {/* Atmosphere highlight */}
+                                    <Circle cx={cx - 3} cy={cy - 3} r={10} fill="rgba(255,255,255,0.15)" />
                                 </Svg>
                             </View>
 
@@ -312,7 +332,7 @@ export default function NatalChartPrintable(props: Props) {
                                         zodiacSigns[Math.floor(natalChart.houses[i] / 30) % 12] :
                                         zodiacSigns[i];
                                     return (
-                                        <View key={i} style={[styles.houseCard, { backgroundColor: 'rgba(255,255,255,0.1)', height: '22%', justifyContent: 'center' }]}>
+                                        <View key={i} style={[styles.houseCard, { backgroundColor: 'transparent', height: '22%', justifyContent: 'center' }]}>
                                             <Text style={[styles.houseNumber, { fontSize: smallSize * 1.2, color: colors.text }]}>
                                                 {i + 1}
                                             </Text>
@@ -362,10 +382,11 @@ const styles = StyleSheet.create({
         letterSpacing: 2,
     },
     subtitle: {
-        fontWeight: '600',
+        fontWeight: 'bold',
         marginTop: '0.5%',
     },
     dateText: {
+        fontWeight: 'bold',
         marginTop: '0.3%',
     },
     mainContent: {
@@ -386,9 +407,11 @@ const styles = StyleSheet.create({
         padding: '4%',
         marginBottom: '3%',
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#FFFFFF',
     },
     bigThreeLabel: {
-        fontWeight: '600',
+        fontWeight: 'bold',
         letterSpacing: 1,
         opacity: 0.8,
     },
@@ -398,6 +421,7 @@ const styles = StyleSheet.create({
     },
     bigThreeDesc: {
         textAlign: 'center',
+        fontWeight: 'bold',
         opacity: 0.9,
     },
     elementCard: {
@@ -410,6 +434,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     elementDesc: {
+        fontWeight: 'bold',
         marginTop: '1%',
     },
     chartWrapper: {
@@ -417,7 +442,7 @@ const styles = StyleSheet.create({
     },
     planetLegend: {
         flexDirection: 'row',
-        marginTop: '3%',
+        marginTop: '-5%',
         width: '100%',
         justifyContent: 'space-around',
     },
@@ -430,10 +455,12 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     planetSymbol: {
+        fontWeight: 'bold',
         width: 20,
         textAlign: 'center',
     },
     planetText: {
+        fontWeight: 'bold',
         opacity: 0.9,
     },
     housesGrid: {
@@ -448,14 +475,18 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         padding: '2%',
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#FFFFFF',
     },
     houseNumber: {
         fontWeight: 'bold',
     },
     houseTheme: {
+        fontWeight: 'bold',
         textAlign: 'center',
     },
     houseSign: {
+        fontWeight: 'bold',
         marginTop: 2,
     },
     footer: {

@@ -2,7 +2,6 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef } from 'react';
 import {
-    Alert,
     Dimensions,
     ScrollView,
     StatusBar,
@@ -60,9 +59,9 @@ export default function LandingScreen({ navigation }: Props) {
 
                     {/* Tagline */}
                     <Text style={[styles.tagline, { marginTop: 12 }]}>Welcome To</Text>
-                    <Text style={[styles.tagline]}>The POPULATION +1™ Announcement App Creator Studio!</Text>
-                    <Text style={[styles.taglineSecond, { marginTop: 12 }]}>CREATE • EDUCATE • GIFT • REMINISCE</Text>
-                    <Text style={[styles.taglineSecond, { marginTop: 12 }]}>ENCAPSULATE MAJOR LIFE MILESTONES THAT WILL ENDURE THE TEST OF TIME!</Text>
+                    <Text style={[styles.tagline]}>The POPULATION +1™ Keepsake Announcement App Creator Studio</Text>
+                    <Text style={[styles.taglineSecond, { marginTop: 12 }]}>ANNOUNCE • CELEBRATE • CAPTURE • CHERISH</Text>
+                    <Text style={[styles.taglineSecond, { marginTop: 12 }]}>"YOUR +1 COUNTS"</Text>
                 </View>
 
                 {/* What Would You Like Section */}
@@ -78,19 +77,8 @@ export default function LandingScreen({ navigation }: Props) {
                                 <Text style={styles.cardEmoji}>👁️</Text>
                             </View>
                             <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>SAMPLE GALLERY!</Text>
+                                <Text style={styles.cardTitle}>SAMPLE GALLERY</Text>
                             </View>
-                            <TouchableOpacity
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    Alert.alert('SAMPLE GALLERY', 'View actual examples of how your signs will look!');
-                                }}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                style={styles.infoButton}
-                            >
-                                <Text style={styles.infoIcon}>ℹ️</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.cardArrow}>→</Text>
                         </View>
                     </TouchableOpacity>
 
@@ -107,103 +95,8 @@ export default function LandingScreen({ navigation }: Props) {
                                 <Text style={styles.cardEmoji}>👶</Text>
                             </View>
                             <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>NEWBORN BABY POPULATION +1!</Text>
+                                <Text style={styles.cardTitle}>Newborn Baby Announcement</Text>
                             </View>
-                            <TouchableOpacity
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    Alert.alert(
-                                        'NEWBORN BABY POPULATION +1 ANNOUNCEMENT',
-                                        'Welcome your +1 to friends & family with a custom announcement!'
-                                    );
-                                }}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                style={styles.infoButton}
-                            >
-                                <Text style={styles.infoIcon}>ℹ️</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.cardArrow}>→</Text>
-                        </View>
-                    </TouchableOpacity>
-
-                    {/* Baby Milestone Tracker */}
-                    <TouchableOpacity
-                        style={styles.cardButton}
-                        onPress={() => navigation.navigate('MilestoneTracker')}
-                        activeOpacity={0.85}
-                    >
-                        <View style={styles.cardContent}>
-                            <View style={[styles.cardIconBox, { backgroundColor: '#0d1b2a' }]}>
-                                <Text style={styles.cardEmoji}>📊</Text>
-                            </View>
-                            <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Baby Milestone Tracker!</Text>
-                            </View>
-                            <TouchableOpacity
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    Alert.alert('Baby Milestone Tracker', 'Track your baby\'s developmental milestones with CDC-aligned guidance, tips, badges & rewards!');
-                                }}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                style={styles.infoButton}
-                            >
-                                <Text style={styles.infoIcon}>ℹ️</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.cardArrow}>→</Text>
-                        </View>
-                    </TouchableOpacity>
-
-                    {/* Baby Growth Chart */}
-                    <TouchableOpacity
-                        style={styles.cardButton}
-                        onPress={() => navigation.navigate('GrowthTracker')}
-                        activeOpacity={0.85}
-                    >
-                        <View style={styles.cardContent}>
-                            <View style={[styles.cardIconBox, { backgroundColor: '#1a237e' }]}>
-                                <Text style={styles.cardEmoji}>📈</Text>
-                            </View>
-                            <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Baby Growth Chart!</Text>
-                            </View>
-                            <TouchableOpacity
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    Alert.alert('Baby Growth Chart', 'Track weight, length & head circumference with CDC/WHO percentile curves, visit prep sheets & growth tips!');
-                                }}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                style={styles.infoButton}
-                            >
-                                <Text style={styles.infoIcon}>ℹ️</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.cardArrow}>→</Text>
-                        </View>
-                    </TouchableOpacity>
-
-                    {/* Learning Center */}
-                    <TouchableOpacity
-                        style={styles.cardButton}
-                        onPress={() => navigation.navigate('LearningCenter')}
-                        activeOpacity={0.85}
-                    >
-                        <View style={styles.cardContent}>
-                            <View style={[styles.cardIconBox, { backgroundColor: '#4a148c' }]}>
-                                <Text style={styles.cardEmoji}>📚</Text>
-                            </View>
-                            <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Learning Center!</Text>
-                            </View>
-                            <TouchableOpacity
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    Alert.alert('Learning Center', 'Explore the alphabet, numbers 0-20, shapes & colors with fun activities, tips & progress tracking!');
-                                }}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                style={styles.infoButton}
-                            >
-                                <Text style={styles.infoIcon}>ℹ️</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.cardArrow}>→</Text>
                         </View>
                     </TouchableOpacity>
 
@@ -218,19 +111,8 @@ export default function LandingScreen({ navigation }: Props) {
                                 <Text style={styles.cardEmoji}>🎂</Text>
                             </View>
                             <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Birthday Announcement!</Text>
+                                <Text style={styles.cardTitle}>Birthday Announcement</Text>
                             </View>
-                            <TouchableOpacity
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    Alert.alert('Birthday Announcement', 'Sweet 16, 21st Birthday, Over the Hill & more!');
-                                }}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                style={styles.infoButton}
-                            >
-                                <Text style={styles.infoIcon}>ℹ️</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.cardArrow}>→</Text>
                         </View>
                     </TouchableOpacity>
 
@@ -245,19 +127,8 @@ export default function LandingScreen({ navigation }: Props) {
                                 <Text style={styles.cardEmoji}>🎓</Text>
                             </View>
                             <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Graduation Announcement!</Text>
+                                <Text style={styles.cardTitle}>Graduation Announcement</Text>
                             </View>
-                            <TouchableOpacity
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    Alert.alert('Graduation Announcement', 'High School, College, Technical/Trade School!');
-                                }}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                style={styles.infoButton}
-                            >
-                                <Text style={styles.infoIcon}>ℹ️</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.cardArrow}>→</Text>
                         </View>
                     </TouchableOpacity>
 
@@ -272,19 +143,8 @@ export default function LandingScreen({ navigation }: Props) {
                                 <Text style={styles.cardEmoji}>💍</Text>
                             </View>
                             <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Anniversary Announcement!</Text>
+                                <Text style={styles.cardTitle}>Anniversary Announcement</Text>
                             </View>
-                            <TouchableOpacity
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    Alert.alert('Anniversary Announcement', 'Celebrate your special milestones together!');
-                                }}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                style={styles.infoButton}
-                            >
-                                <Text style={styles.infoIcon}>ℹ️</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.cardArrow}>→</Text>
                         </View>
                     </TouchableOpacity>
 
@@ -299,19 +159,8 @@ export default function LandingScreen({ navigation }: Props) {
                                 <Text style={styles.cardEmoji}>🎉</Text>
                             </View>
                             <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Life Milestones!</Text>
+                                <Text style={styles.cardTitle}>Life Milestones</Text>
                             </View>
-                            <TouchableOpacity
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    Alert.alert('Life Milestones', "Mother's Day, Father's Day & more!");
-                                }}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                style={styles.infoButton}
-                            >
-                                <Text style={styles.infoIcon}>ℹ️</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.cardArrow}>→</Text>
                         </View>
                     </TouchableOpacity>
 
@@ -329,19 +178,72 @@ export default function LandingScreen({ navigation }: Props) {
                                 <Text style={styles.cardEmoji}>🎲</Text>
                             </View>
                             <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Just For Fun!</Text>
+                                <Text style={styles.cardTitle}>Just For Fun</Text>
                             </View>
-                            <TouchableOpacity
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    Alert.alert('Just For Fun', 'Life Path Numbers, Lucky Numbers, Roman Numerals & more!');
-                                }}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                style={styles.infoButton}
-                            >
-                                <Text style={styles.infoIcon}>ℹ️</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.cardArrow}>→</Text>
+                        </View>
+                    </TouchableOpacity>
+
+                    {/* Gift Suggestions */}
+                    <TouchableOpacity
+                        style={styles.cardButton}
+                        onPress={() => navigation.navigate('GiftSuggestions')}
+                        activeOpacity={0.85}
+                    >
+                        <View style={styles.cardContent}>
+                            <View style={[styles.cardIconBox, { backgroundColor: '#b71c1c' }]}>
+                                <Text style={styles.cardEmoji}>🎁</Text>
+                            </View>
+                            <View style={styles.cardTextContainer}>
+                                <Text style={styles.cardTitle}>Gift Suggestions</Text>
+                            </View>
+                        </View>
+                    </TouchableOpacity>
+
+                    {/* Baby Milestone Tracker */}
+                    <TouchableOpacity
+                        style={styles.cardButton}
+                        onPress={() => navigation.navigate('MilestoneTracker')}
+                        activeOpacity={0.85}
+                    >
+                        <View style={styles.cardContent}>
+                            <View style={[styles.cardIconBox, { backgroundColor: '#0d1b2a' }]}>
+                                <Text style={styles.cardEmoji}>📊</Text>
+                            </View>
+                            <View style={styles.cardTextContainer}>
+                                <Text style={styles.cardTitle}>Baby Milestone Tracker</Text>
+                            </View>
+                        </View>
+                    </TouchableOpacity>
+
+                    {/* Baby Growth Chart */}
+                    <TouchableOpacity
+                        style={styles.cardButton}
+                        onPress={() => navigation.navigate('GrowthTracker')}
+                        activeOpacity={0.85}
+                    >
+                        <View style={styles.cardContent}>
+                            <View style={[styles.cardIconBox, { backgroundColor: '#1a237e' }]}>
+                                <Text style={styles.cardEmoji}>📈</Text>
+                            </View>
+                            <View style={styles.cardTextContainer}>
+                                <Text style={styles.cardTitle}>Baby Growth Chart</Text>
+                            </View>
+                        </View>
+                    </TouchableOpacity>
+
+                    {/* Learning Center */}
+                    <TouchableOpacity
+                        style={styles.cardButton}
+                        onPress={() => navigation.navigate('LearningCenter')}
+                        activeOpacity={0.85}
+                    >
+                        <View style={styles.cardContent}>
+                            <View style={[styles.cardIconBox, { backgroundColor: '#4a148c' }]}>
+                                <Text style={styles.cardEmoji}>📚</Text>
+                            </View>
+                            <View style={styles.cardTextContainer}>
+                                <Text style={styles.cardTitle}>Learning Center</Text>
+                            </View>
                         </View>
                     </TouchableOpacity>
 
@@ -356,19 +258,8 @@ export default function LandingScreen({ navigation }: Props) {
                                 <Text style={styles.cardEmoji}>ℹ️</Text>
                             </View>
                             <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>About Us!</Text>
+                                <Text style={styles.cardTitle}>About Us</Text>
                             </View>
-                            <TouchableOpacity
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    Alert.alert('About Us', 'Learn more about Population +1™');
-                                }}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                style={styles.infoButton}
-                            >
-                                <Text style={styles.infoIcon}>ℹ️</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.cardArrow}>→</Text>
                         </View>
                     </TouchableOpacity>
                 </View>
@@ -498,19 +389,6 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#666',
         lineHeight: 18,
-    },
-    cardArrow: {
-        fontSize: 22,
-        color: '#1a472a',
-        fontWeight: '800',
-        marginLeft: 10,
-    },
-    infoButton: {
-        marginLeft: 6,
-        padding: 2,
-    },
-    infoIcon: {
-        fontSize: 16,
     },
     footerSection: {
         alignItems: 'center',

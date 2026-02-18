@@ -93,6 +93,7 @@ export type RootStackParamList = {
     SurnameSearch: { surname?: string };
     FullAstrology: { birthDate: string; birthTime?: string; birthLocation?: string };
     Horoscope: { birthDate: string; birthTime?: string; birthLocation?: string };
+    TipOfTheDay: { birthDate: string };
     Preview: PreviewParams;
     ChartReading: PreviewParams; // Natal chart with reading and descriptions
     FramingIdeas: undefined;
@@ -111,7 +112,7 @@ export type RootStackParamList = {
     Sources: undefined;
     CustomerLogin: undefined;
     FuneralHomePortal: undefined;
-    BabyRegistryPortal: undefined;
+    GiftSuggestions: { occasion?: string } | undefined;
     RabbitHole: undefined;
     MilestoneTracker: undefined;
     GrowthTracker: undefined;

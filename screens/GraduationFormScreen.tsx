@@ -260,6 +260,8 @@ export default function GraduationFormScreen({ navigation }: Props) {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+            <Text style={styles.title}>Graduation Announcement</Text>
+
             {/* Graduation Type Dropdown */}
             <Text style={styles.label}>Graduation Type</Text>
             <TouchableOpacity
@@ -434,6 +436,13 @@ const styles = StyleSheet.create({
     content: {
         padding: 20,
         paddingBottom: 40,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: '900',
+        marginBottom: 12,
+        color: '#fff',
+        textAlign: 'center',
     },
     label: {
         color: '#fff',

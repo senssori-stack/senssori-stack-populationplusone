@@ -443,7 +443,9 @@ export default function TimeCapsuleLandscape(props: Props) {
         if (hometown && hometown.trim()) {
             getCityCoordinatesAsync(hometown).then(coords => {
                 if (coords) {
-                    setCoordinates(`${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`);
+                    const latDir = coords.lat >= 0 ? 'N' : 'S';
+                    const lngDir = coords.lng >= 0 ? 'E' : 'W';
+                    setCoordinates(`${Math.abs(coords.lat).toFixed(4)}° ${latDir}, ${Math.abs(coords.lng).toFixed(4)}° ${lngDir}`);
                 }
             }).catch(err => {
                 console.error('Failed to fetch coordinates:', err);

@@ -1,14 +1,11 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState } from 'react';
+import React from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
+    Linking,
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
@@ -16,220 +13,182 @@ import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BabyRegistryPortal'>;
 
-// Sample registry partner database
-const REGISTRY_DATABASE = [
+interface Registry {
+    id: string;
+    name: string;
+    emoji: string;
+    tagline: string;
+    color: string;
+    url: string;
+    features: string[];
+}
+
+const REGISTRIES: Registry[] = [
     {
-        id: 'demo-registry',
-        name: 'Demo Baby Registry',
-        code: 'DEMO-REG',
-        tagline: 'Your One-Stop Baby Shop',
-        isActive: true,
+        id: 'amazon',
+        name: 'Amazon Baby Registry',
+        emoji: '📦',
+        tagline: 'The everything store for your little one',
+        color: '#ff9900',
+        url: 'https://www.amazon.com/baby-reg',
+        features: ['15% completion discount', 'Free 90-day returns', 'Universal registry option'],
     },
     {
         id: 'babylist',
         name: 'Babylist',
-        code: 'BABYLIST26',
-        tagline: 'The Baby Registry That Gets You',
-        primaryColor: '#6fcf97',
-        isActive: true,
+        emoji: '🍼',
+        tagline: 'The baby registry that lets you add anything',
+        color: '#6fcf97',
+        url: 'https://www.babylist.com',
+        features: ['Add items from any store', '15% completion discount', 'Free Hello Baby Box'],
     },
     {
-        id: 'amazon-baby',
-        name: 'Amazon Baby Registry',
-        code: 'AMAZON26',
-        tagline: 'Everything You Need',
-        primaryColor: '#ff9900',
-        isActive: true,
-    },
-    {
-        id: 'target-baby',
+        id: 'target',
         name: 'Target Baby Registry',
-        code: 'TARGET26',
-        tagline: 'Expect More. Pay Less.',
-        primaryColor: '#cc0000',
-        isActive: true,
+        emoji: '🎯',
+        tagline: 'Expect more. Pay less.',
+        color: '#cc0000',
+        url: 'https://www.target.com/gift-registry/baby',
+        features: ['15% completion coupon', 'Free welcome kit', 'Easy in-store returns'],
+    },
+    {
+        id: 'walmart',
+        name: 'Walmart Baby Registry',
+        emoji: '🛒',
+        tagline: 'Save money. Live better.',
+        color: '#0071dc',
+        url: 'https://www.walmart.com/registry/baby',
+        features: ['Price match guarantee', 'Free welcome box', 'In-store & online pickup'],
+    },
+    {
+        id: 'buybuybaby',
+        name: 'buybuy BABY',
+        emoji: '👶',
+        tagline: 'Everything baby, all in one place',
+        color: '#e91e63',
+        url: 'https://www.buybuybaby.com/pages/registry',
+        features: ['Completion discount', 'Registry checklist', 'Expert advice'],
+    },
+    {
+        id: 'potterybarn',
+        name: 'Pottery Barn Kids',
+        emoji: '🏠',
+        tagline: 'Beautifully designed for growing families',
+        color: '#8B4513',
+        url: 'https://www.potterybarnkids.com/registry/',
+        features: ['10% completion discount', 'Free design services', 'Premium nursery items'],
+    },
+    {
+        id: 'crateandkids',
+        name: 'Crate & Kids',
+        emoji: '🪑',
+        tagline: 'Modern style for little ones',
+        color: '#2c3e50',
+        url: 'https://www.crateandbarrel.com/gift-registry/baby',
+        features: ['15% completion discount', 'Modern designs', 'Quality furniture & decor'],
+    },
+    {
+        id: 'myregistry',
+        name: 'MyRegistry',
+        emoji: '🔗',
+        tagline: 'One registry to sync them all',
+        color: '#9b59b6',
+        url: 'https://www.myregistry.com/baby-registry',
+        features: ['Sync all registries into one', 'Universal wish list', 'Cash fund option'],
+    },
+    {
+        id: 'zola',
+        name: 'Zola Baby',
+        emoji: '✨',
+        tagline: 'The registry reinvented for baby',
+        color: '#1a8fe3',
+        url: 'https://www.zola.com/baby-registry',
+        features: ['Add from any store', 'Group gifting', 'Cash funds & experiences'],
+    },
+    {
+        id: 'nordstrom',
+        name: 'Nordstrom Baby',
+        emoji: '🛍️',
+        tagline: 'Premium picks for your newest arrival',
+        color: '#1c1c1c',
+        url: 'https://www.nordstrom.com/browse/kids/baby-registry',
+        features: ['Personal stylist access', 'Premium brands', 'Easy exchanges'],
     },
 ];
 
 export default function BabyRegistryPortalScreen({ navigation }: Props) {
-    const [code, setCode] = useState('');
-    const [error, setError] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [connectedRegistry, setConnectedRegistry] = useState<typeof REGISTRY_DATABASE[0] | null>(null);
-
-    const handleSubmit = () => {
-        if (!code.trim()) {
-            setError('Please enter a partner code');
-            return;
-        }
-
-        setIsLoading(true);
-        setError('');
-
-        setTimeout(() => {
-            const normalizedCode = code.trim().toUpperCase();
-            const found = REGISTRY_DATABASE.find(
-                r => r.code.toUpperCase() === normalizedCode && r.isActive
-            );
-
-            setIsLoading(false);
-
-            if (found) {
-                setConnectedRegistry(found);
-                Alert.alert(
-                    '🎁 Connected!',
-                    `Welcome, ${found.name} Partner!\n\n${found.tagline}`,
-                    [{ text: 'Awesome!' }]
-                );
-                setCode('');
-            } else {
-                setError('Invalid partner code. Contact your registry representative.');
-            }
-        }, 500);
-    };
-
-    const handleDisconnect = () => {
-        Alert.alert(
-            'Disconnect Registry?',
-            'Registry linking features will be disabled.',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Disconnect',
-                    style: 'destructive',
-                    onPress: () => setConnectedRegistry(null),
-                },
-            ]
-        );
+    const openRegistry = (url: string) => {
+        Linking.openURL(url).catch(() => {});
     };
 
     return (
-        <LinearGradient colors={['#ff9a9e', '#fad0c4', '#ffecd2']} style={styles.container}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.keyboardView}
+        <LinearGradient colors={['#1a472a', '#2d6a3f', '#1a472a']} style={styles.container}>
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
             >
-                <ScrollView
-                    contentContainerStyle={styles.scrollContent}
-                    keyboardShouldPersistTaps="handled"
+                <View style={styles.header}>
+                    <Text style={styles.headerEmoji}>{'🎁'}</Text>
+                    <Text style={styles.title}>Baby Registry</Text>
+                    <Text style={styles.subtitle}>
+                        Set up your baby registry with any of these popular services.
+                        Tap a registry to get started.
+                    </Text>
+                </View>
+
+                <View style={styles.registryList}>
+                    {REGISTRIES.map((registry) => (
+                        <TouchableOpacity
+                            key={registry.id}
+                            style={styles.registryCard}
+                            onPress={() => openRegistry(registry.url)}
+                            activeOpacity={0.85}
+                        >
+                            <View style={styles.cardHeader}>
+                                <View style={[styles.emojiCircle, { backgroundColor: registry.color + '20' }]}>
+                                    <Text style={styles.cardEmoji}>{registry.emoji}</Text>
+                                </View>
+                                <View style={styles.cardTitleArea}>
+                                    <Text style={styles.cardName}>{registry.name}</Text>
+                                    <Text style={styles.cardTagline}>{registry.tagline}</Text>
+                                </View>
+                            </View>
+                            <View style={styles.featuresRow}>
+                                {registry.features.map((feature, i) => (
+                                    <View key={i} style={[styles.featureBadge, { backgroundColor: registry.color + '15' }]}>
+                                        <Text style={[styles.featureText, { color: registry.color }]}>
+                                            {feature}
+                                        </Text>
+                                    </View>
+                                ))}
+                            </View>
+                            <View style={[styles.visitButton, { backgroundColor: registry.color }]}>
+                                <Text style={styles.visitButtonText}>Visit {registry.name.split(' ')[0]}</Text>
+                            </View>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+
+                <View style={styles.tipsCard}>
+                    <Text style={styles.tipsTitle}>Registry Tips</Text>
+                    <Text style={styles.tipItem}>{'📋'}  Start your registry early - aim for 12-20 weeks</Text>
+                    <Text style={styles.tipItem}>{'🔗'}  Use MyRegistry to combine multiple registries into one link</Text>
+                    <Text style={styles.tipItem}>{'💰'}  Do not forget to claim your completion discount</Text>
+                    <Text style={styles.tipItem}>{'📱'}  Add your registry link to your Population +1 announcement</Text>
+                    <Text style={styles.tipItem}>{'🎉'}  Share your registry at your baby shower</Text>
+                </View>
+
+                <Text style={styles.disclosure}>
+                    We may earn a small commission when you sign up through these links at no extra cost to you.
+                </Text>
+
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
                 >
-                    {/* Header */}
-                    <View style={styles.header}>
-                        <Text style={styles.emoji}>🎁</Text>
-                        <Text style={styles.title}>Baby Registry Portal</Text>
-                        <Text style={styles.subtitle}>
-                            Registry partner integration
-                        </Text>
-                    </View>
-
-                    {connectedRegistry ? (
-                        <View style={styles.connectedCard}>
-                            <Text style={styles.connectedEmoji}>✅</Text>
-                            <Text style={styles.connectedTitle}>Connected</Text>
-                            <Text style={styles.registryName}>{connectedRegistry.name}</Text>
-                            <Text style={styles.registryTagline}>{connectedRegistry.tagline}</Text>
-
-                            <View style={styles.benefitsCard}>
-                                <Text style={styles.benefitsTitle}>Active Integration</Text>
-                                <Text style={styles.benefitsText}>
-                                    • Registry link on announcements{'\n'}
-                                    • QR code to registry{'\n'}
-                                    • Custom branding options
-                                </Text>
-                            </View>
-
-                            <TouchableOpacity
-                                style={styles.createButton}
-                                onPress={() => navigation.navigate('Form')}
-                            >
-                                <Text style={styles.createButtonText}>Create Announcement</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={styles.disconnectButton}
-                                onPress={handleDisconnect}
-                            >
-                                <Text style={styles.disconnectButtonText}>Disconnect</Text>
-                            </TouchableOpacity>
-                        </View>
-                    ) : (
-                        <View style={styles.loginCard}>
-                            <Text style={styles.loginTitle}>Partner Access</Text>
-                            <Text style={styles.loginSubtitle}>
-                                Enter your registry partner code to enable integration features
-                            </Text>
-
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Enter code (e.g., BABYLIST26)"
-                                placeholderTextColor="#999"
-                                value={code}
-                                onChangeText={(text) => {
-                                    setCode(text.toUpperCase());
-                                    setError('');
-                                }}
-                                autoCapitalize="characters"
-                                autoCorrect={false}
-                            />
-
-                            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-                            <TouchableOpacity
-                                style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
-                                onPress={handleSubmit}
-                                disabled={isLoading}
-                            >
-                                <Text style={styles.submitButtonText}>
-                                    {isLoading ? 'Connecting...' : 'Connect Registry'}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-
-                    {/* How It Works */}
-                    <View style={styles.howItWorks}>
-                        <Text style={styles.howTitle}>How It Works</Text>
-
-                        <View style={styles.step}>
-                            <View style={styles.stepNumber}>
-                                <Text style={styles.stepNumberText}>1</Text>
-                            </View>
-                            <View style={styles.stepContent}>
-                                <Text style={styles.stepTitle}>Connect Your Registry</Text>
-                                <Text style={styles.stepDesc}>Enter your partner code above</Text>
-                            </View>
-                        </View>
-
-                        <View style={styles.step}>
-                            <View style={styles.stepNumber}>
-                                <Text style={styles.stepNumberText}>2</Text>
-                            </View>
-                            <View style={styles.stepContent}>
-                                <Text style={styles.stepTitle}>Create Announcement</Text>
-                                <Text style={styles.stepDesc}>Build your baby announcement</Text>
-                            </View>
-                        </View>
-
-                        <View style={styles.step}>
-                            <View style={styles.stepNumber}>
-                                <Text style={styles.stepNumberText}>3</Text>
-                            </View>
-                            <View style={styles.stepContent}>
-                                <Text style={styles.stepTitle}>Share With QR Code</Text>
-                                <Text style={styles.stepDesc}>Registry link included in your design</Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    {/* Back Button */}
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => navigation.goBack()}
-                    >
-                        <Text style={styles.backButtonText}>← Back</Text>
-                    </TouchableOpacity>
-                </ScrollView>
-            </KeyboardAvoidingView>
+                    <Text style={styles.backButtonText}>{'←'} Back</Text>
+                </TouchableOpacity>
+            </ScrollView>
         </LinearGradient>
     );
 }
@@ -238,205 +197,129 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    keyboardView: {
-        flex: 1,
-    },
     scrollContent: {
-        paddingHorizontal: 20,
-        paddingVertical: 40,
+        paddingHorizontal: 16,
+        paddingTop: 50,
+        paddingBottom: 40,
     },
     header: {
         alignItems: 'center',
-        marginBottom: 30,
+        marginBottom: 24,
     },
-    emoji: {
-        fontSize: 60,
-        marginBottom: 16,
+    headerEmoji: {
+        fontSize: 56,
+        marginBottom: 12,
     },
     title: {
         fontSize: 28,
         fontWeight: '800',
-        color: '#333',
+        color: '#fff',
         textAlign: 'center',
         marginBottom: 8,
     },
     subtitle: {
         fontSize: 14,
-        color: '#666',
+        color: 'rgba(255,255,255,0.75)',
         textAlign: 'center',
+        lineHeight: 20,
+        paddingHorizontal: 20,
     },
-    connectedCard: {
-        backgroundColor: '#fff',
-        borderRadius: 20,
-        padding: 24,
-        alignItems: 'center',
+    registryList: {
+        gap: 14,
         marginBottom: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 5,
     },
-    connectedEmoji: {
-        fontSize: 48,
-        marginBottom: 12,
-    },
-    connectedTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#4ade80',
-        marginBottom: 4,
-    },
-    registryName: {
-        fontSize: 24,
-        fontWeight: '800',
-        color: '#333',
-        textAlign: 'center',
-        marginBottom: 4,
-    },
-    registryTagline: {
-        fontSize: 14,
-        color: '#666',
-        fontStyle: 'italic',
-        marginBottom: 20,
-    },
-    benefitsCard: {
-        backgroundColor: '#f0fdf4',
-        borderRadius: 12,
-        padding: 16,
-        width: '100%',
-        marginBottom: 20,
-    },
-    benefitsTitle: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: '#166534',
-        marginBottom: 8,
-    },
-    benefitsText: {
-        fontSize: 13,
-        color: '#166534',
-        lineHeight: 22,
-    },
-    createButton: {
-        backgroundColor: '#ff6b9d',
-        borderRadius: 12,
-        paddingVertical: 16,
-        paddingHorizontal: 32,
-        marginBottom: 12,
-    },
-    createButtonText: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#fff',
-    },
-    disconnectButton: {
-        paddingVertical: 12,
-    },
-    disconnectButtonText: {
-        fontSize: 14,
-        color: '#999',
-        fontWeight: '600',
-    },
-    loginCard: {
+    registryCard: {
         backgroundColor: '#fff',
-        borderRadius: 20,
-        padding: 24,
-        marginBottom: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 5,
-    },
-    loginTitle: {
-        fontSize: 20,
-        fontWeight: '800',
-        color: '#333',
-        textAlign: 'center',
-        marginBottom: 8,
-    },
-    loginSubtitle: {
-        fontSize: 13,
-        color: '#666',
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-    input: {
-        backgroundColor: '#f5f5f5',
-        borderRadius: 12,
-        padding: 16,
-        fontSize: 18,
-        fontWeight: '600',
-        textAlign: 'center',
-        letterSpacing: 2,
-        marginBottom: 12,
-        color: '#333',
-    },
-    errorText: {
-        color: '#ff6b6b',
-        fontSize: 13,
-        textAlign: 'center',
-        marginBottom: 12,
-    },
-    submitButton: {
-        backgroundColor: '#ff6b9d',
-        borderRadius: 12,
-        paddingVertical: 16,
-        alignItems: 'center',
-    },
-    submitButtonDisabled: {
-        opacity: 0.6,
-    },
-    submitButtonText: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#fff',
-    },
-    howItWorks: {
-        backgroundColor: 'rgba(255,255,255,0.8)',
         borderRadius: 16,
-        padding: 20,
-        marginBottom: 24,
+        padding: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        elevation: 4,
     },
-    howTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#333',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    step: {
+    cardHeader: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
-        marginBottom: 16,
+        alignItems: 'center',
+        marginBottom: 12,
     },
-    stepNumber: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#ff6b9d',
+    emojiCircle: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
     },
-    stepNumberText: {
-        fontSize: 16,
-        fontWeight: '800',
-        color: '#fff',
+    cardEmoji: {
+        fontSize: 26,
     },
-    stepContent: {
+    cardTitleArea: {
         flex: 1,
     },
-    stepTitle: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: '#333',
+    cardName: {
+        fontSize: 17,
+        fontWeight: '800',
+        color: '#1a1a1a',
         marginBottom: 2,
     },
-    stepDesc: {
+    cardTagline: {
+        fontSize: 12,
+        color: '#888',
+        fontStyle: 'italic',
+    },
+    featuresRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 6,
+        marginBottom: 12,
+    },
+    featureBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 20,
+    },
+    featureText: {
+        fontSize: 11,
+        fontWeight: '700',
+    },
+    visitButton: {
+        borderRadius: 10,
+        paddingVertical: 12,
+        alignItems: 'center',
+    },
+    visitButtonText: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#fff',
+    },
+    tipsCard: {
+        backgroundColor: 'rgba(255,255,255,0.12)',
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
+    },
+    tipsTitle: {
+        fontSize: 18,
+        fontWeight: '800',
+        color: '#fff',
+        marginBottom: 14,
+        textAlign: 'center',
+    },
+    tipItem: {
         fontSize: 13,
-        color: '#666',
+        color: 'rgba(255,255,255,0.85)',
+        lineHeight: 22,
+        marginBottom: 8,
+    },
+    disclosure: {
+        fontSize: 11,
+        color: 'rgba(255,255,255,0.45)',
+        textAlign: 'center',
+        marginBottom: 16,
+        paddingHorizontal: 20,
     },
     backButton: {
         alignItems: 'center',
@@ -444,7 +327,7 @@ const styles = StyleSheet.create({
     },
     backButtonText: {
         fontSize: 16,
-        color: '#666',
+        color: 'rgba(255,255,255,0.7)',
         fontWeight: '600',
     },
 });

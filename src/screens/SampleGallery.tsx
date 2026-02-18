@@ -75,13 +75,13 @@ export default function SampleGallery({ navigation }: Props) {
                         style={[styles.button, viewMode === 'front' && styles.activeButton]}
                         onPress={() => setViewMode('front')}
                     >
-                        <Text style={[styles.buttonText, viewMode === 'front' && styles.activeButtonText]}>Front</Text>
+                        <Text style={[styles.buttonText, viewMode === 'front' && styles.activeButtonText]}>+1 Sign</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={[styles.button, viewMode === 'back' && styles.activeButton]}
                         onPress={() => setViewMode('back')}
                     >
-                        <Text style={[styles.buttonText, viewMode === 'back' && styles.activeButtonText]}>Back</Text>
+                        <Text style={[styles.buttonText, viewMode === 'back' && styles.activeButtonText]}>Time Capsule</Text>
                     </TouchableOpacity>
                 </View>
 

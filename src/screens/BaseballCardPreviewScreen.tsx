@@ -14,6 +14,7 @@ import { GestureHandlerRootView, PanGestureHandler, PinchGestureHandler, State, 
 import ViewShot from 'react-native-view-shot';
 import CartModal from '../../components/CartModal';
 import DownloadModal, { DownloadItem } from '../../components/DownloadModal';
+import TradingCardLogo from '../../components/TradingCardLogo';
 import { PRODUCT_PRICES, useCart } from '../context/CartContext';
 import { birthstoneFromISO } from '../data/utils/birthstone';
 import { COLOR_SCHEMES } from '../data/utils/colors';
@@ -40,7 +41,8 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
     const babyMiddle = params.babies?.[0]?.middle || params.babyMiddle || '';
     const babyLast = params.babies?.[0]?.last || params.babyLast || '';
     const fullName = [babyFirst, babyMiddle, babyLast].filter(Boolean).join(' ');
-    const photoUri = params.babies?.[0]?.photoUri || params.photoUri || params.photoUris?.[0];
+    // Resolve photo from all possible sources (photoUris array from 3-slot picker, babies array, or direct photoUri)
+    const photoUri = params.photoUri || params.photoUris?.find((u: string | null) => u) || params.babies?.[0]?.photoUri || null;
     const hometown = params.hometown || 'Hometown, USA';
     const dobDate = params.dobISO ? new Date(params.dobISO) : new Date();
     const birthDateStr = dobDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -125,7 +127,10 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
     const lastTranslateX = useRef(0);
     const lastTranslateY = useRef(0);
     const doubleTapRef = useRef(null);
+    const pinchRef = useRef(null);
+    const panRef = useRef(null);
     const isZoomedIn = useRef(false);
+    const [scrollEnabled, setScrollEnabled] = useState(true);
 
     const onPinchGestureEvent = Animated.event(
         [{ nativeEvent: { scale: zoomScale } }],
@@ -137,6 +142,7 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
             lastScale.current = Math.max(0.5, Math.min(4.0, newScale));
             baseScale.setValue(lastScale.current);
             zoomScale.setValue(1);
+            setScrollEnabled(lastScale.current <= 1.05);
         }
     };
     const onPanGestureEvent = Animated.event(
@@ -145,21 +151,10 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
     );
     const onPanHandlerStateChange = (event: any) => {
         if (event.nativeEvent.oldState === State.ACTIVE) {
-            if (lastScale.current > 1.1) {
-                const cw = cardWidth * lastScale.current;
-                const ch = cardHeight * lastScale.current;
-                const maxX = Math.max(0, (cw - width) / 2);
-                const maxY = Math.max(0, (ch - screenHeight * 0.5) / 2);
-                let newTX = lastTranslateX.current + event.nativeEvent.translationX;
-                let newTY = lastTranslateY.current + event.nativeEvent.translationY;
-                newTX = Math.max(-maxX, Math.min(maxX, newTX));
-                newTY = Math.max(-maxY, Math.min(maxY, newTY));
-                lastTranslateX.current = newTX;
-                lastTranslateY.current = newTY;
-            } else {
-                lastTranslateX.current = 0;
-                lastTranslateY.current = 0;
-            }
+            let newTX = lastTranslateX.current + event.nativeEvent.translationX;
+            let newTY = lastTranslateY.current + event.nativeEvent.translationY;
+            lastTranslateX.current = newTX;
+            lastTranslateY.current = newTY;
             baseTranslateX.setValue(lastTranslateX.current);
             baseTranslateY.setValue(lastTranslateY.current);
             translateX.setValue(0);
@@ -179,6 +174,7 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
             lastTranslateX.current = 0;
             lastTranslateY.current = 0;
             isZoomedIn.current = !isZoomedIn.current;
+            setScrollEnabled(target <= 1.05);
         }
     };
     const resetZoom = () => {
@@ -192,10 +188,11 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
         translateY.setValue(0);
         baseTranslateX.setValue(0);
         baseTranslateY.setValue(0);
+        setScrollEnabled(true);
     };
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.content} scrollEnabled={scrollEnabled}>
             <Text style={styles.title}>⚾ Trading Cards</Text>
             <Text style={styles.subtitle}>A collectible keepsake!</Text>
 
@@ -207,9 +204,21 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
                 <GestureHandlerRootView style={{ width: '100%', alignItems: 'center' }}>
                     <TapGestureHandler ref={doubleTapRef} onHandlerStateChange={onDoubleTap} numberOfTaps={2}>
                         <Animated.View>
-                            <PanGestureHandler onGestureEvent={onPanGestureEvent} onHandlerStateChange={onPanHandlerStateChange}>
+                            <PanGestureHandler
+                                ref={panRef}
+                                onGestureEvent={onPanGestureEvent}
+                                onHandlerStateChange={onPanHandlerStateChange}
+                                waitFor={doubleTapRef}
+                                simultaneousHandlers={pinchRef}
+                                minPointers={1}
+                                maxPointers={1}
+                            >
                                 <Animated.View>
-                                    <PinchGestureHandler onGestureEvent={onPinchGestureEvent} onHandlerStateChange={onPinchHandlerStateChange}>
+                                    <PinchGestureHandler
+                                        ref={pinchRef}
+                                        onGestureEvent={onPinchGestureEvent}
+                                        onHandlerStateChange={onPinchHandlerStateChange}
+                                    >
                                         <Animated.View style={{
                                             transform: [
                                                 { scale: Animated.multiply(baseScale, zoomScale) },
@@ -238,26 +247,26 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
 
                                                             {/* Name banner */}
                                                             <View style={[styles.nameBanner, { backgroundColor: colors.bg }]}>
-                                                                <Text style={[styles.firstName, { fontSize: cardWidth * 0.1 }]}>
-                                                                    {babyFirst.toUpperCase()}
+                                                                <Text style={[styles.firstName, { fontSize: cardWidth * 0.06 }]}>
+                                                                    {babyFirst.toUpperCase()}{babyLast ? ` ${babyLast.toUpperCase()}` : ''}
                                                                 </Text>
-                                                                {babyLast && (
-                                                                    <Text style={[styles.lastName, { fontSize: cardWidth * 0.06 }]}>
-                                                                        {babyLast}
-                                                                    </Text>
-                                                                )}
                                                             </View>
 
                                                             {/* Team/Location */}
                                                             <View style={styles.teamBar}>
                                                                 <Text style={[styles.teamText, { fontSize: cardWidth * 0.04 }]}>
-                                                                    📍 {hometown}
+                                                                    🏠 TEAM {(babyLast || 'BABY').toUpperCase()} FAMILY
                                                                 </Text>
                                                             </View>
 
                                                             {/* Rookie badge */}
                                                             <View style={[styles.rookieBadge, { backgroundColor: colors.bg }]}>
                                                                 <Text style={styles.rookieText}>ROOKIE</Text>
+                                                            </View>
+
+                                                            {/* Brand logo - top left like Topps */}
+                                                            <View style={styles.brandLogo}>
+                                                                <TradingCardLogo size={cardWidth * 0.107} bgColor={colors.bg} />
                                                             </View>
                                                         </View>
                                                     </View>
@@ -314,11 +323,17 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
                                                                 <Text style={styles.statLabel}>Team</Text>
                                                                 <Text style={styles.statValue}>{babyLast || 'TBD'} Family</Text>
                                                             </View>
+
+                                                            <View style={styles.statRow}>
+                                                                <Text style={styles.statLabel}>Hometown</Text>
+                                                                <Text style={styles.statValue}>{hometown}</Text>
+                                                            </View>
                                                         </View>
 
                                                         {/* Footer */}
                                                         <View style={styles.backFooter}>
                                                             <Text style={styles.cardNumber}>#001</Text>
+                                                            <TradingCardLogo size={cardWidth * 0.067} bgColor={colors.bg} />
                                                             <Text style={styles.brand}>Population +1™</Text>
                                                         </View>
                                                     </View>
@@ -333,14 +348,6 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
                     </TapGestureHandler>
                 </GestureHandlerRootView>
             </View>
-
-            {/* Download Button */}
-            <TouchableOpacity
-                style={styles.downloadButton}
-                onPress={() => setShowDownloadModal(true)}
-            >
-                <Text style={styles.downloadButtonText}>📥 Download / Print Options</Text>
-            </TouchableOpacity>
 
             {/* Cart Actions */}
             <View style={styles.cartActions}>
@@ -369,25 +376,39 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
                 >
                     <Text style={styles.addToCartButtonText}>+ 25 Cards Bundle</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.viewCartButton}
-                    onPress={() => setShowCartModal(true)}
-                >
-                    <Text style={styles.viewCartButtonText}>🛒 View Cart</Text>
-                </TouchableOpacity>
             </View>
 
-            <Text style={styles.description}>
-                2.5" × 3.5" premium cardstock{'\n'}
-                UV coating • Collectible quality
-            </Text>
-
-            <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => navigation.goBack()}
-            >
-                <Text style={styles.backButtonText}>← Back to Preview</Text>
-            </TouchableOpacity>
+            {/* Action Tiles */}
+            <View style={styles.actionTileGrid}>
+                <TouchableOpacity
+                    style={[styles.actionTile, { backgroundColor: '#2563eb' }]}
+                    onPress={() => setShowDownloadModal(true)}
+                >
+                    <Text style={styles.actionTileEmoji}>📥</Text>
+                    <Text style={styles.actionTileLabel}>Save / Print</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.actionTile, { backgroundColor: '#d97706' }]}
+                    onPress={() => setShowCartModal(true)}
+                >
+                    <Text style={styles.actionTileEmoji}>🛒</Text>
+                    <Text style={styles.actionTileLabel}>View Cart</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.actionTile, { backgroundColor: '#dc2626' }]}
+                    onPress={() => navigation.navigate('GiftSuggestions', { occasion: 'newborn' })}
+                >
+                    <Text style={styles.actionTileEmoji}>🎁</Text>
+                    <Text style={styles.actionTileLabel}>Find a Gift</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.actionTile, { backgroundColor: '#455a64' }]}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Text style={styles.actionTileEmoji}>←</Text>
+                    <Text style={styles.actionTileLabel}>Go Back</Text>
+                </TouchableOpacity>
+            </View>
 
             <DownloadModal
                 visible={showDownloadModal}
@@ -471,8 +492,8 @@ const styles = StyleSheet.create({
         fontSize: 60,
     },
     nameBanner: {
-        paddingVertical: 10,
-        paddingHorizontal: 12,
+        paddingVertical: 6,
+        paddingHorizontal: 8,
         alignItems: 'center',
     },
     firstName: {
@@ -501,6 +522,12 @@ const styles = StyleSheet.create({
         paddingVertical: 4,
         borderRadius: 4,
         transform: [{ rotate: '15deg' }],
+    },
+    brandLogo: {
+        position: 'absolute',
+        top: 8,
+        left: 8,
+        zIndex: 10,
     },
     rookieText: {
         color: '#ffffff',
@@ -593,7 +620,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     addToCartButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#2e8b57',
         paddingVertical: 14,
         paddingHorizontal: 24,
         borderRadius: 12,
@@ -653,17 +680,37 @@ const styles = StyleSheet.create({
         marginTop: 16,
         marginBottom: 24,
     },
-    backButton: {
-        backgroundColor: '#1a472a',
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        borderRadius: 12,
-        margin: 20,
-        alignItems: 'center',
+    actionTileGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        gap: 12,
     },
-    backButtonText: {
-        color: '#ffffff',
-        fontSize: 16,
-        fontWeight: '600',
+    actionTile: {
+        width: '47%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 18,
+        borderRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
+        minHeight: 90,
+    },
+    actionTileEmoji: {
+        fontSize: 32,
+        marginBottom: 6,
+        color: '#fff',
+    },
+    actionTileLabel: {
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
 });

@@ -997,9 +997,13 @@ export default function MilestoneTrackerScreen({ navigation }: Props) {
                             <Text style={styles.completeButtonText}>Save & Start Tracking! 🚀</Text>
                         </TouchableOpacity>
 
-                        {babyInfo && (
+                        {babyInfo ? (
                             <TouchableOpacity style={[styles.modalClose, { marginTop: 8 }]} onPress={() => setShowSetup(false)}>
                                 <Text style={styles.modalCloseText}>Cancel</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity style={[styles.modalClose, { marginTop: 8 }]} onPress={() => navigation.goBack()}>
+                                <Text style={styles.modalCloseText}>← Go Back</Text>
                             </TouchableOpacity>
                         )}
                     </View>

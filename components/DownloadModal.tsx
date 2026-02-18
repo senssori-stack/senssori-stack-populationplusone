@@ -12,6 +12,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import GiftSuggestionsPanel from './GiftSuggestionsPanel';
 
 export type DownloadItem = {
     id: string;
@@ -26,9 +27,11 @@ type Props = {
     items: DownloadItem[];
     onCapture: (itemId: string) => Promise<string | null>;
     babyName?: string;
+    /** App mode for gift suggestions (default: 'baby') */
+    appMode?: 'baby' | 'birthday' | 'graduation' | 'anniversary' | 'milestone' | 'memorial';
 };
 
-export default function DownloadModal({ visible, onClose, items, onCapture, babyName = 'Baby' }: Props) {
+export default function DownloadModal({ visible, onClose, items, onCapture, babyName = 'Baby', appMode = 'baby' }: Props) {
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
     const [activeTab, setActiveTab] = useState<'download' | 'print'>('download');
     const [isDownloading, setIsDownloading] = useState(false);
@@ -392,6 +395,13 @@ export default function DownloadModal({ visible, onClose, items, onCapture, baby
                                     No file downloads needed - we handle everything.
                                 </Text>
                             </View>
+
+                            {/* Gift Suggestions — affiliate revenue */}
+                            <GiftSuggestionsPanel
+                                mode={appMode}
+                                recipientName={babyName}
+                                compact
+                            />
                         </ScrollView>
                     )}
                 </View>

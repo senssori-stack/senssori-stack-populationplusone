@@ -656,6 +656,15 @@ export default function JustForFunScreen({ navigation }: Props) {
                     </TouchableOpacity>
 
                     <TouchableOpacity
+                        style={styles.featureButton}
+                        onPress={() => navigation.navigate('TipOfTheDay', { birthDate: birthDate.toISOString() })}
+                    >
+                        <Text style={styles.featureEmoji}>💫</Text>
+                        <Text style={styles.featureTitle}>Tip of the Day</Text>
+                        <Text style={styles.featureDesc}>A daily astrology tip just for your sign</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
                         style={[styles.featureButton, selectedFeature === 'roman' && styles.featureButtonActive]}
                         onPress={() => navigation.navigate('RomanNumerals', { birthDate: birthDate.toISOString() })}
                     >

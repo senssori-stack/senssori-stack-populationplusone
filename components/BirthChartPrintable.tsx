@@ -1,12 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
-import { getWesternBirthChart, BirthChartData } from '../src/data/utils/astrology-api';
+import { Image, StyleSheet, Text, View } from 'react-native';
+import { BirthChartData, getWesternBirthChart } from '../src/data/utils/astrology-api';
 import { COLOR_SCHEMES } from '../src/data/utils/colors';
 import type { ThemeName } from '../src/types';
 
 // Landscape 11x8.5 at 300 DPI = 3300x2550 pixels
 const LANDSCAPE_WIDTH = 3300;
 const LANDSCAPE_HEIGHT = 2550;
+
+// Lighten a hex color by mixing with white
+function lightenColor(hex: string, amount: number): string {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    const lr = Math.round(r + (255 - r) * amount);
+    const lg = Math.round(g + (255 - g) * amount);
+    const lb = Math.round(b + (255 - b) * amount);
+    return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
+}
 
 type Props = {
     theme: ThemeName;
@@ -52,6 +64,7 @@ export default function BirthChartPrintable(props: Props) {
     }, [dobISO, timeOfBirth, latitude, longitude]);
 
     const colors = COLOR_SCHEMES[theme];
+    const lighterBg = lightenColor(colors.bg, 0.55);
     const displayWidth = LANDSCAPE_WIDTH * previewScale;
     const displayHeight = LANDSCAPE_HEIGHT * previewScale;
 
@@ -64,7 +77,7 @@ export default function BirthChartPrintable(props: Props) {
 
     if (loading) {
         return (
-            <View style={[styles.container, { width: displayWidth, height: displayHeight, backgroundColor: colors.bg }]}>
+            <View style={[styles.container, { width: displayWidth, height: displayHeight, backgroundColor: lighterBg }]}>
                 <View style={[styles.border, { borderWidth, borderColor: colors.border || '#FFFFFF', margin: padding }]}>
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: padding * 2 }}>
                         <Text style={{ color: colors.text, fontSize: titleSize * 0.9, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>
@@ -87,7 +100,7 @@ export default function BirthChartPrintable(props: Props) {
 
     if (!chartData) {
         return (
-            <View style={[styles.container, { width: displayWidth, height: displayHeight, backgroundColor: colors.bg }]}>
+            <View style={[styles.container, { width: displayWidth, height: displayHeight, backgroundColor: lighterBg }]}>
                 <View style={[styles.border, { borderWidth, borderColor: colors.border || '#FFFFFF', margin: padding }]}>
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: padding * 2 }}>
                         <Text style={{ color: colors.text, fontSize: titleSize * 0.8, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>
@@ -110,7 +123,7 @@ export default function BirthChartPrintable(props: Props) {
     });
 
     return (
-        <View style={[styles.container, { width: displayWidth, height: displayHeight, backgroundColor: colors.bg }]}>
+        <View style={[styles.container, { width: displayWidth, height: displayHeight, backgroundColor: lighterBg }]}>
             {/* White border frame */}
             <View style={[styles.border, { borderWidth, borderColor: colors.border || '#FFFFFF', margin: padding }]}>
                 <View style={[styles.content, { padding: padding * 0.8 }]}>
@@ -127,7 +140,7 @@ export default function BirthChartPrintable(props: Props) {
 
                     {/* Birth Details Box */}
                     <View style={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.28)',
                         padding: padding * 0.4,
                         borderRadius: 8,
                         marginBottom: padding * 0.4,
@@ -282,7 +295,7 @@ const styles = StyleSheet.create({
         fontStyle: 'italic',
     },
     section: {
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        backgroundColor: 'rgba(255, 255, 255, 0.25)',
         padding: 8,
         borderRadius: 8,
     },

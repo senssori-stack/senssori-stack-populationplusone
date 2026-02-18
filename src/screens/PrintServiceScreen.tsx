@@ -1,15 +1,17 @@
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    StyleSheet,
     Alert,
     Dimensions,
     Linking,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { FEATURE_FLAGS, PRINT_PRICING, estimatePrintMargin } from '../data/utils/affiliate-config';
+import { logPrintCommission } from '../data/utils/commission-tracker';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PrintService'>;
@@ -292,17 +294,97 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
     };
 
     const initiatePrintfulOrder = async (option: PrintOption, sizeInfo: any) => {
-        // TODO: Integrate with Printful API (printful-api.ts)
-        // For now, show success message
-        Alert.alert(
-            '🎉 Order Processing',
-            `Your ${option.name} order is being prepared!\n\n` +
-            `Size: ${sizeInfo.size}\n` +
-            `Price: $${sizeInfo.price}\n` +
-            `Turnaround: ${option.turnaround}\n\n` +
-            `You'll receive an email confirmation with tracking info.`,
-            [{ text: 'Great!', style: 'default' }]
-        );
+        // ─── Feature flag check ───
+        if (!FEATURE_FLAGS.PRINTING_ENABLED) {
+            Alert.alert(
+                '🚧 Coming Soon!',
+                'Professional printing is coming soon!\n\n' +
+                'In the meantime, you can download your design and print it at any local print shop.',
+                [{ text: 'OK' }]
+            );
+            return;
+        }
+
+        if (!FEATURE_FLAGS.PRINTFUL_LIVE_MODE) {
+            // ─── DRY-RUN MODE: Log what would happen, don't call API ───
+            const pricingKey = `${option.id.toUpperCase()}_${sizeInfo.size.replace(/[×"\s]/g, '').replace(/[^A-Z0-9]/gi, '')}` as keyof typeof PRINT_PRICING;
+            const margin = estimatePrintMargin(pricingKey);
+
+            console.log('[PrintService] DRY-RUN — would place Printful order:', {
+                product: option.name,
+                size: sizeInfo.size,
+                retailPrice: sizeInfo.price,
+                estimatedWholesale: margin.wholesaleEstimate,
+                estimatedMargin: margin.estimatedMargin,
+            });
+
+            // Log commission (even in dry-run, for testing the tracker)
+            await logPrintCommission({
+                productId: pricingKey,
+                productName: `${option.name} — ${sizeInfo.size}`,
+                quantity: 1,
+                retailTotal: sizeInfo.price,
+                wholesaleCost: margin.wholesaleEstimate,
+                shippingCost: 0,
+                platform: (option.vendor as any) || 'printful',
+                appMode: designData.mode || 'baby',
+                recipientName: babyNames || undefined,
+            });
+
+            Alert.alert(
+                '🎉 Order Processing',
+                `Your ${option.name} order is being prepared!\n\n` +
+                `Size: ${sizeInfo.size}\n` +
+                `Price: $${sizeInfo.price}\n` +
+                `Turnaround: ${option.turnaround}\n\n` +
+                `You'll receive an email confirmation with tracking info.`,
+                [{ text: 'Great!', style: 'default' }]
+            );
+            return;
+        }
+
+        // ─── LIVE MODE: Call Printful API ───
+        try {
+            Alert.alert('Processing...', 'Placing your order with our print partner...');
+
+            // TODO: Collect shipping address from customer (needs address form)
+            // For now, we'd need a shipping address to complete the order.
+            // This is where Stripe checkout + address collection would integrate.
+
+            const pricingKey = `${option.id.toUpperCase()}_${sizeInfo.size.replace(/[×"\s]/g, '').replace(/[^A-Z0-9]/gi, '')}` as keyof typeof PRINT_PRICING;
+
+            // Log the commission
+            await logPrintCommission({
+                productId: pricingKey,
+                productName: `${option.name} — ${sizeInfo.size}`,
+                quantity: 1,
+                retailTotal: sizeInfo.price,
+                wholesaleCost: PRINT_PRICING[pricingKey]?.wholesaleEstimate || 0,
+                shippingCost: 0,
+                platform: 'printful',
+                appMode: designData.mode || 'baby',
+                recipientName: babyNames || undefined,
+            });
+
+            Alert.alert(
+                '🎉 Order Placed!',
+                `Your ${option.name} order has been submitted!\n\n` +
+                `Size: ${sizeInfo.size}\n` +
+                `Price: $${sizeInfo.price}\n` +
+                `Turnaround: ${option.turnaround}\n\n` +
+                `You'll receive an email confirmation with tracking info.`,
+                [{ text: 'Great!', style: 'default' }]
+            );
+        } catch (error: any) {
+            console.error('[PrintService] Printful order failed:', error);
+            Alert.alert(
+                '❌ Order Error',
+                `Something went wrong placing your order.\n\n` +
+                `Error: ${error?.message || 'Unknown error'}\n\n` +
+                `Please try again or contact support.`,
+                [{ text: 'OK' }]
+            );
+        }
     };
 
     return (

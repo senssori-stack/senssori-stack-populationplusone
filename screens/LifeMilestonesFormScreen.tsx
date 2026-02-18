@@ -585,7 +585,6 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
             <Text style={styles.title}>🎉 Life Milestones</Text>
-            <Text style={styles.hint}>Create a time capsule for life's special moments</Text>
 
             {/* Milestone Type Dropdown */}
             <Text style={styles.label}>Milestone Type</Text>
