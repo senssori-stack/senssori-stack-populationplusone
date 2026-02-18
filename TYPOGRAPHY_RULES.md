@@ -44,12 +44,6 @@ const babyNameFontSize = citySize; // Matches city size exactly
 - **HIERARCHY RULE**: Standard text 15 percentage points larger than city/baby name
 - Status: **LOCKED FINAL - DO NOT CHANGE**
 
-### Front Portrait (SignFrontPortrait.tsx) - ✅ LOCKED FINAL
-- Base calculation: `displayWidth * 0.054 * fontScale * 1.17`
-- **Standard text**: `baseFont * 1.25` (25% larger) - WELCOME TO, POPULATION, number, +1
-- **City/Baby name**: `baseFont * 1.60` (60% larger) - City/State, Baby Name
-- **HIERARCHY RULE**: City/Baby name 35 percentage points larger than standard text
-- Status: **LOCKED FINAL - DO NOT CHANGE**
 
 ## CONSISTENCY RULES FOR VARYING TEXT LENGTHS
 
@@ -116,10 +110,7 @@ const babyName = [first, middleInitial, last].filter(Boolean).join(' ');
 - **Size**: Each photo 42% of total area  
 - **Gap**: 8% vertical, 4% horizontal spacing
 
-#### **Quadruplets+ (4+ babies)**
-- **Layout**: 2x2 grid arrangement
-- **Size**: Each photo 45% of total area
-- **Gap**: 5% spacing between photos
+
 
 ### Implementation Features:
 - ✅ **Individual photos** for each baby (customer uploads separate images)
@@ -129,14 +120,12 @@ const babyName = [first, middleInitial, last].filter(Boolean).join(' ');
 - ✅ **Fallback support** - uses single photo if only one provided
 
 ### Component Integration:
-- **Front Portrait**: `SmartPhotoLayout` component replaces single Image
 - **Front Landscape**: `SmartPhotoLayout` component replaces single Image  
 - **Time Capsule**: Text already supports multiples ("Emma & Grace's Time Capsule")
 
 **Customer Experience**: Upload individual photos for twins/triplets → automatic professional layout!
 
 ### To Apply to Other Components:
-1. ⏳ **Time Capsule Portrait** (TimeCapsulePortrait.tsx) 
 2. ✅ **Time Capsule Landscape** (TimeCapsuleLandscape.tsx) - UPDATED
 
 ## Time Capsule Pages - Custom Hierarchy

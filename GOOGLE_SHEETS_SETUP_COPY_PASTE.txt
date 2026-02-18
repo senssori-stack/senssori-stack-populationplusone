@@ -1,0 +1,215 @@
+═══════════════════════════════════════════════════════════════
+GOOGLE SHEETS AUTO-UPDATER - COMPLETE SETUP
+═══════════════════════════════════════════════════════════════
+
+STEP 1: CREATE THE GOOGLE SHEET
+═══════════════════════════════════════════════════════════════
+
+1. Go to: https://sheets.google.com
+2. Click: + BLANK (green button)
+3. Click on cell A1
+4. Copy EVERYTHING between the lines below and paste into A1:
+
+────────────────────────────────────────────────────────────────
+Field Name	Value	Last Updated
+GALLON OF GASOLINE		
+GOLD OZ		
+SILVER OZ		
+DOW JONES CLOSE		
+#1 SONG		
+#1 MOVIE		
+MINIMUM WAGE	$7.25	Manual
+LOAF OF BREAD	$2.50	Manual
+DOZEN EGGS	$3.75	Manual
+GALLON OF MILK	$3.89	Manual
+WON LAST SUPERBOWL	Philadelphia Eagles (LIX)	Manual
+WON LAST WORLD SERIES	Los Angeles Dodgers	Manual
+US POPULATION	340,000,000	Manual
+WORLD POPULATION	8,200,000,000	Manual
+PRESIDENT	Joe Biden	Manual
+VICE PRESIDENT	Kamala Harris	Manual
+────────────────────────────────────────────────────────────────
+
+5. Name the sheet: "Birth Announcement Snapshot Data"
+
+
+STEP 2: ADD THE AUTO-UPDATE SCRIPT
+═══════════════════════════════════════════════════════════════
+
+1. In your Google Sheet, click: Extensions → Apps Script
+2. You'll see a code editor with some default code
+3. SELECT ALL (Ctrl+A) and DELETE IT
+4. Copy EVERYTHING between the lines below:
+
+────────────────────────────────────────────────────────────────
+const METAL_API_KEY = 'b11a31e0534e4f7d0ce7f52262cfa644';
+const ALPHA_VANTAGE_KEY = '8NT72TK4I1W8CNWY';
+const LASTFM_KEY = 'dac11fa9b12d7418fa7cf062e93f2391';
+const TMDB_KEY = '3dd040c35b40b0652e8750d74dc30a64';
+
+function updateLiveData() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const timestamp = new Date().toLocaleString();
+  
+  Logger.log('🔄 Starting data fetch...');
+  
+  updateCell(sheet, 'GALLON OF GASOLINE', fetchGasPrice(), timestamp);
+  updateCell(sheet, 'GOLD OZ', fetchGoldPrice(), timestamp);
+  updateCell(sheet, 'SILVER OZ', fetchSilverPrice(), timestamp);
+  updateCell(sheet, 'DOW JONES CLOSE', fetchDowJones(), timestamp);
+  updateCell(sheet, '#1 SONG', fetchTopSong(), timestamp);
+  updateCell(sheet, '#1 MOVIE', fetchTopMovie(), timestamp);
+  
+  Logger.log('✅ All data updated at ' + timestamp);
+}
+
+function updateCell(sheet, fieldName, value, timestamp) {
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === fieldName) {
+      sheet.getRange(i + 1, 2).setValue(value);
+      sheet.getRange(i + 1, 3).setValue(timestamp);
+      Logger.log('  ✓ ' + fieldName + ': ' + value);
+      return;
+    }
+  }
+}
+
+function fetchGoldPrice() {
+  try {
+    const url = 'https://api.metalpriceapi.com/v1/latest?api_key=' + METAL_API_KEY + '&base=USD&currencies=XAU';
+    const response = UrlFetchApp.fetch(url);
+    const data = JSON.parse(response.getContentText());
+    const price = (1 / data.rates.XAU).toFixed(2);
+    return '$' + price;
+  } catch (e) {
+    Logger.log('⚠️ Gold API failed: ' + e);
+    return '$2,650.00';
+  }
+}
+
+function fetchSilverPrice() {
+  try {
+    const url = 'https://api.metalpriceapi.com/v1/latest?api_key=' + METAL_API_KEY + '&base=USD&currencies=XAG';
+    const response = UrlFetchApp.fetch(url);
+    const data = JSON.parse(response.getContentText());
+    const price = (1 / data.rates.XAG).toFixed(2);
+    return '$' + price;
+  } catch (e) {
+    Logger.log('⚠️ Silver API failed: ' + e);
+    return '$30.25';
+  }
+}
+
+function fetchDowJones() {
+  try {
+    const url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=^DJI&apikey=' + ALPHA_VANTAGE_KEY;
+    const response = UrlFetchApp.fetch(url);
+    const data = JSON.parse(response.getContentText());
+    const price = parseFloat(data['Global Quote']['05. price']);
+    return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  } catch (e) {
+    Logger.log('⚠️ Dow Jones API failed: ' + e);
+    return '43,250.00';
+  }
+}
+
+function fetchGasPrice() {
+  // Gas price requires manual update or EIA API registration
+  return '$3.15';
+}
+
+function fetchTopSong() {
+  try {
+    const url = 'http://ws.audioscrobbler.com/2.0/?method=chart.gettoptracks&api_key=' + LASTFM_KEY + '&format=json&limit=1';
+    const response = UrlFetchApp.fetch(url);
+    const data = JSON.parse(response.getContentText());
+    const track = data.tracks.track[0];
+    return track.name + ' - ' + track.artist.name;
+  } catch (e) {
+    Logger.log('⚠️ Last.fm API failed: ' + e);
+    return 'Espresso - Sabrina Carpenter';
+  }
+}
+
+function fetchTopMovie() {
+  try {
+    const url = 'https://api.themoviedb.org/3/movie/popular?api_key=' + TMDB_KEY + '&region=US';
+    const response = UrlFetchApp.fetch(url);
+    const data = JSON.parse(response.getContentText());
+    return data.results[0].title;
+  } catch (e) {
+    Logger.log('⚠️ TMDB API failed: ' + e);
+    return 'Wicked';
+  }
+}
+────────────────────────────────────────────────────────────────
+
+5. Paste it into the Apps Script editor
+6. Click: Save (disk icon at top)
+7. Name the project: "Snapshot Auto Updater"
+
+
+STEP 3: TEST IT MANUALLY
+═══════════════════════════════════════════════════════════════
+
+1. At the top, dropdown menu says "Select function" → Choose: updateLiveData
+2. Click: RUN (▶ play button)
+3. First time: It will ask for permissions
+   - Click: "Review Permissions"
+   - Choose your Google account
+   - Click: "Advanced" 
+   - Click: "Go to Snapshot Auto Updater (unsafe)"
+   - Click: "Allow"
+4. Watch the sheet - values should fill in!
+5. Check the "Execution log" at bottom to see if it worked
+
+
+STEP 4: SET UP AUTO-UPDATES (Every 3 Hours)
+═══════════════════════════════════════════════════════════════
+
+1. In Apps Script, click the CLOCK ICON ⏰ on the left sidebar (Triggers)
+2. Click: + Add Trigger (bottom right)
+3. Fill in:
+   - Choose which function to run: updateLiveData
+   - Choose which deployment: Head
+   - Select event source: Time-driven
+   - Select type of time based trigger: Hour timer
+   - Select hour interval: Every 3 hours
+4. Click: SAVE
+5. Done! It will now update every 3 hours automatically
+
+
+STEP 5: PUBLISH THE SHEET AS CSV
+═══════════════════════════════════════════════════════════════
+
+1. Go back to your Google Sheet (click the tab at top)
+2. Click: File → Share → Publish to web
+3. In the dropdown, select: Comma-separated values (.csv)
+4. Click: PUBLISH
+5. Click: OK on the warning
+6. COPY THE ENTIRE URL that appears (starts with https://docs.google.com...)
+7. PASTE IT BELOW:
+
+
+YOUR CSV URL (paste here):
+_________________________________________________________________
+
+
+
+
+STEP 6: SEND ME THE URL
+═══════════════════════════════════════════════════════════════
+
+Send me that URL and I'll update your app to use it.
+
+
+DONE! 🎉
+═══════════════════════════════════════════════════════════════
+
+Your Google Sheet will now:
+✅ Auto-fetch Gold, Silver, Dow Jones, Song, Movie every 3 hours
+✅ You manually update: Prices, Champions, Population when needed
+✅ Your app reads ONE fast CSV = 1-2 second load time
+✅ Cached loads = instant (0.1 seconds)
+

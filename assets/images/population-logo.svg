@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750" viewBox="0 0 600 750">
+  <!-- Outer dark green background -->
+  <rect x="0" y="0" width="600" height="600" rx="60" ry="60" fill="#2d8c00"/>
+  
+  <!-- White border -->
+  <rect x="18" y="18" width="564" height="564" rx="48" ry="48" fill="none" stroke="#ffffff" stroke-width="10"/>
+  
+  <!-- Inner green fill -->
+  <rect x="28" y="28" width="544" height="544" rx="42" ry="42" fill="#38b000"/>
+  
+  <!-- POPULATION text inside the box -->
+  <text x="300" y="200" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="900" fill="#ffffff" letter-spacing="4">POPULATION</text>
+  
+  <!-- +1 text below POPULATION -->
+  <text x="300" y="460" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="260" font-weight="900" fill="#ffffff">+1</text>
+  
+  <!-- TM small, bottom-right of +1 -->
+  <text x="445" y="465" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="400" fill="rgba(255,255,255,0.7)">™</text>
+  
+  <!-- Website below the box -->
+  <text x="300" y="680" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="400" fill="#666666">www.PopulationPlusOne.com</text>
+</svg>

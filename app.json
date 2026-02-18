@@ -1,80 +1,49 @@
 {
   "expo": {
-    "name": "Population +1",
-    "slug": "birth-announcement-studio",
+    "name": "PopulationPlusOne",
+    "slug": "PopulationPlusOne",
     "version": "1.0.0",
-    "sdkVersion": "54.0.0",
     "orientation": "default",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#224c39"
-    },
-    "plugins": [
-      [
-        "expo-media-library",
-        {
-          "photosPermission": "Allow Population +1 to save your announcements to your photo library.",
-          "savePhotosPermission": "Allow Population +1 to save your announcements to your photo library.",
-          "isAccessMediaLocationEnabled": true,
-          "accessMediaLocationPermission": "Allow Population +1 to access photo locations."
-        }
-      ],
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "Allow Population +1 to access your photos to add to announcements."
-        }
-      ],
-      "expo-font"
-    ],
+    "icon": "./assets/images/icon.png",
+    "scheme": "populationplusone",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.populationplusone.app",
-      "buildNumber": "1",
-      "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "Allow Population +1 to access your photos to add to announcements.",
-        "NSPhotoLibraryAddUsageDescription": "Allow Population +1 to save your announcements to your photo library.",
-        "NSCameraUsageDescription": "Allow Population +1 to take photos for your announcements."
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#224c39"
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "permissions": [
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.READ_MEDIA_IMAGES",
-        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
-        "android.permission.ACCESS_MEDIA_LOCATION",
-        "android.permission.READ_MEDIA_VIDEO",
-        "android.permission.READ_MEDIA_AUDIO",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.READ_MEDIA_IMAGES",
-        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
-        "android.permission.ACCESS_MEDIA_LOCATION",
-        "android.permission.READ_MEDIA_VIDEO",
-        "android.permission.READ_MEDIA_AUDIO",
-        "android.permission.RECORD_AUDIO"
-      ],
-      "package": "com.newearthling.birthannouncementstudio"
+      "edgeToEdgeEnabled": false,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.newearthling.PopulationPlusOne"
     },
+    "web": {
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "assets/images/*",
+      "assets/pdfs/*"
+    ],
+    "plugins": [
+      "expo-splash-screen",
+      "expo-asset",
+      "@react-native-community/datetimepicker"
+    ],
     "extra": {
       "eas": {
-        "projectId": "7e8163d6-889e-4be7-8ff0-06602c0fd73c"
+        "projectId": "c079b022-053b-4d3a-b76a-6142f96a95b5"
       }
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/7e8163d6-889e-4be7-8ff0-06602c0fd73c"
     }
   }
 }
