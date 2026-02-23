@@ -1294,8 +1294,11 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
 export function getHistoricalSnapshotForDate(targetDate: string): Record<string, string> {
     const result: Record<string, string> = {};
 
+    // Normalize: strip time portion if full ISO string was passed (e.g. "2026-02-04T06:00:00.000Z" → "2026-02-04")
+    const normalizedDate = targetDate.includes('T') ? targetDate.split('T')[0] : targetDate;
+
     // Parse target date (YYYY-MM-DD to YYYY-MM)
-    const dateMatch = targetDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const dateMatch = normalizedDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (!dateMatch) return result;
 
     const targetYear = parseInt(dateMatch[1]);

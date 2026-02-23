@@ -46,20 +46,8 @@ export default function BabyAnnouncementFormScreen() {
     const [loading, setLoading] = useState(false);
 
     // Message to Baby
-    const SAMPLE_MESSAGES = [
-        `Dear BABYNAME,\n\nThe day you were born was the most beautiful day of our lives. From the moment we first held you, we knew our world had changed forever. Mom and Dad promise to always protect you, provide for you, and love you with everything we have. You are our greatest blessing and we will spend every day making sure you know how loved you are.\n\nLove always,\nMom & Dad`,
-        `To our precious BABYNAME,\n\nWe waited so long for you, and the moment you arrived, every dream we ever had came true. We promise to be there for every step, every smile, and every milestone. We will always keep you safe, guide you with love, and give you the world. No matter where life takes you, remember — you were wanted, you are cherished, and you will always be enough.\n\nWith all our love,\nMom & Dad`,
-        `Sweet BABYNAME,\n\nOn the day you were born, the whole world got a little brighter. You are the answer to every prayer and the joy of our hearts. We promise to protect you, to provide for you, and to love you unconditionally — today, tomorrow, and forever. One day when you read this, we hope you know just how special that day was and how much you mean to us.\n\nAll our love,\nMom & Dad`,
-    ];
     const babyDisplayName = babies[0]?.first?.trim() || 'Baby';
-    const getSampleMessage = (idx: number) => SAMPLE_MESSAGES[idx].replace(/BABYNAME/g, babyDisplayName);
     const [messageToBaby, setMessageToBaby] = useState('');
-    const [selectedMessageIdx, setSelectedMessageIdx] = useState<number | null>(null);
-
-    const selectSampleMessage = (idx: number) => {
-        setSelectedMessageIdx(idx);
-        setMessageToBaby(getSampleMessage(idx));
-    };
 
     // Update babies array when count changes
     useEffect(() => {
@@ -270,49 +258,18 @@ export default function BabyAnnouncementFormScreen() {
             <View style={styles.messageSectionContainer}>
                 <Text style={styles.messageSectionTitle}>💌 Message to {babyDisplayName}</Text>
                 <Text style={styles.messageSectionSubtitle}>
-                    Write a heartfelt message for {babyDisplayName} to read someday. Choose a sample below and make it your own, or write from scratch.
+                    Write a letter for {babyDisplayName} to read someday.
                 </Text>
 
-                {/* Sample Message Buttons */}
-                <View style={styles.sampleBtnRow}>
-                    {(['Sample 1', 'Sample 2', 'Sample 3'] as const).map((label, idx) => (
-                        <TouchableOpacity
-                            key={idx}
-                            style={[styles.sampleBtn, selectedMessageIdx === idx && styles.sampleBtnActive]}
-                            onPress={() => selectSampleMessage(idx)}
-                        >
-                            <Text style={[styles.sampleBtnText, selectedMessageIdx === idx && styles.sampleBtnTextActive]}>
-                                {label}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-
-                {/* Editable Message TextInput */}
                 <TextInput
                     style={styles.messageInput}
-                    placeholder={`Write your message to ${babyDisplayName} here...`}
+                    placeholder={`Dear ${babyDisplayName},\n\nWrite your message here...`}
                     placeholderTextColor="#999"
                     value={messageToBaby}
-                    onChangeText={(text) => {
-                        setMessageToBaby(text);
-                        // If user edits, deselect the sample indicator
-                        if (selectedMessageIdx !== null && text !== getSampleMessage(selectedMessageIdx)) {
-                            setSelectedMessageIdx(null);
-                        }
-                    }}
+                    onChangeText={setMessageToBaby}
                     multiline
                     textAlignVertical="top"
                 />
-
-                {messageToBaby.length > 0 && (
-                    <TouchableOpacity
-                        style={styles.clearMessageBtn}
-                        onPress={() => { setMessageToBaby(''); setSelectedMessageIdx(null); }}
-                    >
-                        <Text style={styles.clearMessageBtnText}>✕ Clear Message</Text>
-                    </TouchableOpacity>
-                )}
             </View>
 
             {/* Color Picker */}
@@ -426,50 +383,13 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         lineHeight: 18,
     },
-    sampleBtnRow: {
-        flexDirection: 'row',
-        gap: 8,
-        marginBottom: 14,
-    },
-    sampleBtn: {
-        flex: 1,
-        paddingVertical: 10,
-        borderRadius: 8,
-        backgroundColor: 'rgba(255,255,255,0.15)',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.2)',
-    },
-    sampleBtnActive: {
-        backgroundColor: '#fff',
-        borderColor: '#fff',
-    },
-    sampleBtnText: {
-        fontWeight: '700',
-        color: '#fff',
-        fontSize: 13,
-    },
-    sampleBtnTextActive: {
-        color: '#1a472a',
-    },
     messageInput: {
         backgroundColor: '#fff',
-        borderRadius: 10,
-        padding: 14,
+        borderRadius: 12,
+        padding: 16,
         fontSize: 15,
         color: '#333',
-        minHeight: 180,
+        minHeight: 200,
         lineHeight: 22,
-    },
-    clearMessageBtn: {
-        alignSelf: 'flex-end',
-        marginTop: 10,
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-    },
-    clearMessageBtnText: {
-        color: 'rgba(255,255,255,0.6)',
-        fontSize: 13,
-        fontWeight: '600',
     },
 });

@@ -7,7 +7,7 @@ import type { ThemeName } from '../src/types';
 
 type Props = {
     theme: ThemeName;
-    babies?: Array<{ first?: string; middle?: string; last?: string; photoUri?: string | null }>;
+    babies?: Array<{ first?: string; middle?: string; last?: string; photoUri?: string | null; photoUris?: (string | null)[] }>;
     babyName?: string;
     dobISO: string;
     motherName: string;

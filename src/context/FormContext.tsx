@@ -5,6 +5,8 @@ export type BabyInfo = {
     middle?: string;
     last?: string;
     photoUri?: string | null;
+    photoUris?: (string | null)[];
+    gender?: 'boy' | 'girl';
 };
 
 export type FormData = {

@@ -58,6 +58,15 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
         : [hometown, ''];
     const population = params.population || undefined;
 
+    // Determine if date is before Jan 1, 2020 for EST./year labels
+    const dobISO = params.dobISO || '';
+    const isPreYear2020 = (() => {
+        if (!dobISO) return false;
+        const d = new Date(dobISO + 'T00:00:00');
+        return d < new Date('2020-01-01T00:00:00');
+    })();
+    const displayYear = isPreYear2020 && dobISO ? new Date(dobISO + 'T00:00:00').getFullYear().toString() : null;
+
     // Collect photoUris same way as PreviewScreen
     const babies = params.babies || [{ first: babyFirst, middle: babyMiddle, photoUri: params.photoUri }];
     let photoUris: (string | null | undefined)[] = [];
@@ -267,6 +276,7 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
                                                         hometown={hometown}
                                                         population={population}
                                                         personName={params.personName || ''}
+                                                        dobISO={params.dobISO}
                                                     />
                                                 </ViewShot>
                                                 {/* Ground stakes */}
@@ -276,7 +286,7 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
                                                 </View>
                                             </View>
 
-                                            {/* Option 1: Simple +1 */}}
+                                            {/* Option 1: Simple +1 */}
                                             <View style={styles.optionContainer}>
                                                 <Text style={styles.optionLabel}>Style 1: Classic</Text>
                                                 <ViewShot ref={classicRef} options={{ format: 'png', quality: 1 }}>
@@ -289,6 +299,13 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
                                                         }
                                                     ]}>
                                                         <View style={styles.signBorder}>
+                                                            {/* EST./Year labels for pre-2020 */}
+                                                            {isPreYear2020 && (
+                                                                <Text style={{ position: 'absolute', top: 6, left: 8, color: '#fff', fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1 }}>EST.</Text>
+                                                            )}
+                                                            {isPreYear2020 && displayYear && (
+                                                                <Text style={{ position: 'absolute', top: 6, right: 8, color: '#fff', fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1 }}>{displayYear}</Text>
+                                                            )}
                                                             <View style={{ marginTop: -15, alignItems: 'center' }}>
                                                                 <Text style={[styles.plusOne, { fontSize: signWidth * 0.28, marginBottom: -10, textAlign: 'center' }]}>
                                                                     {plusLabel}
@@ -307,7 +324,7 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
                                                 </View>
                                             </View>
 
-                                            {/* Option 2: Welcome Style */}}
+                                            {/* Option 2: Welcome Style */}
                                             <View style={styles.optionContainer}>
                                                 <Text style={styles.optionLabel}>Style 2: Welcome</Text>
                                                 <ViewShot ref={welcomeRef} options={{ format: 'png', quality: 1 }}>
@@ -320,6 +337,13 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
                                                         }
                                                     ]}>
                                                         <View style={styles.signBorder}>
+                                                            {/* EST./Year labels for pre-2020 */}
+                                                            {isPreYear2020 && (
+                                                                <Text style={{ position: 'absolute', top: 6, left: 8, color: '#fff', fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1 }}>EST.</Text>
+                                                            )}
+                                                            {isPreYear2020 && displayYear && (
+                                                                <Text style={{ position: 'absolute', top: 6, right: 8, color: '#fff', fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1 }}>{displayYear}</Text>
+                                                            )}
                                                             <Text style={[styles.plusOne, { fontSize: signWidth * 0.28, marginBottom: 4 }]}>
                                                                 {plusLabel}
                                                             </Text>
@@ -341,7 +365,7 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
                                                 </View>
                                             </View>
 
-                                            {/* Option 3: Minimal */}}
+                                            {/* Option 3: Minimal */}
                                             <View style={styles.optionContainer}>
                                                 <Text style={styles.optionLabel}>Style 3: Minimal</Text>
                                                 <ViewShot ref={minimalRef} options={{ format: 'png', quality: 1 }}>
@@ -354,6 +378,13 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
                                                         }
                                                     ]}>
                                                         <View style={[styles.signBorder, { borderColor: colors.bg }]}>
+                                                            {/* EST./Year labels for pre-2020 */}
+                                                            {isPreYear2020 && (
+                                                                <Text style={{ position: 'absolute', top: 6, left: 8, color: colors.bg, fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1 }}>EST.</Text>
+                                                            )}
+                                                            {isPreYear2020 && displayYear && (
+                                                                <Text style={{ position: 'absolute', top: 6, right: 8, color: colors.bg, fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1 }}>{displayYear}</Text>
+                                                            )}
                                                             <Text style={[styles.plusOneOutline, { fontSize: signWidth * 0.28, color: colors.bg, marginBottom: 4 }]}>
                                                                 {plusLabel}
                                                             </Text>
@@ -733,13 +764,13 @@ const styles = StyleSheet.create({
         minHeight: 90,
     },
     actionTileEmoji: {
-        fontSize: 32,
+        fontSize: 48,
         marginBottom: 6,
         color: '#fff',
     },
     actionTileLabel: {
         color: '#fff',
-        fontSize: 13,
+        fontSize: 20,
         fontWeight: '800',
     },
 });

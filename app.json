@@ -9,7 +9,12 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -33,12 +38,20 @@
     },
     "assetBundlePatterns": [
       "assets/images/*",
-      "assets/pdfs/*"
+      "assets/pdfs/*",
+      "assets/lullabies/*"
     ],
     "plugins": [
       "expo-splash-screen",
       "expo-asset",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.newearthling.PopulationPlusOne",
+          "enableGooglePay": true
+        }
+      ]
     ],
     "extra": {
       "eas": {

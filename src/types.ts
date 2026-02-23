@@ -7,7 +7,7 @@ export type ThemeName = 'lightBlue' | 'royalBlue' | 'mediumBlue' | 'navyBlue' | 
 
 export type PreviewParams = {
     theme?: ThemeName;
-    babies?: Array<{ first?: string; middle?: string; last?: string; photoUri?: string | null }>;
+    babies?: Array<{ first?: string; middle?: string; last?: string; photoUri?: string | null; photoUris?: (string | null)[]; gender?: 'boy' | 'girl' }>;
     babyFirst?: string;
     babyMiddle?: string;
     babyLast?: string;
@@ -107,6 +107,7 @@ export type RootStackParamList = {
     BaseballCardPreview: PreviewParams; // Baseball card add-on
     Checkout: undefined; // Checkout flow
     OrderConfirmation: { orderId: string; email: string; itemCount: number; total: number }; // Order confirmation
+    SendAsGift: PreviewParams; // Gift sending flow
     Test: undefined;
     AboutUs: undefined;
     Sources: undefined;
@@ -117,4 +118,8 @@ export type RootStackParamList = {
     MilestoneTracker: undefined;
     GrowthTracker: undefined;
     LearningCenter: undefined;
+    Lullabies: undefined;
+    BedtimeStories: undefined;
+    AllThingsBaby: undefined;
+    JumpstartAmericanDream: undefined;
 };

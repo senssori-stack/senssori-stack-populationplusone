@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Image } from 'react-native';
+import { Image, View } from 'react-native';
 
 interface SmartPhotoLayoutProps {
-    babies?: Array<{ first?: string; middle?: string; last?: string; photoUri?: string | null }>;
+    babies?: Array<{ first?: string; middle?: string; last?: string; photoUri?: string | null; photoUris?: (string | null)[] }>;
     fallbackPhotoUri?: string | null;
     totalPhotoSize: number; // The total area available for photos
     containerWidth: number;
@@ -24,7 +24,7 @@ export default function SmartPhotoLayout({
     if (babies && babies.length > 0) {
         babies.forEach(baby => {
             // Use baby's photo if they have one, otherwise use fallback
-            const photoToUse = baby.photoUri || fallback;
+            const photoToUse = baby.photoUris?.find(u => u) || baby.photoUri || fallback;
             photos.push(photoToUse);
         });
     } else {
@@ -49,7 +49,9 @@ export default function SmartPhotoLayout({
                             style={{
                                 width: totalPhotoSize,
                                 height: totalPhotoSize,
-                                borderRadius: totalPhotoSize * 0.02
+                                borderRadius: 0,
+                                borderWidth: 2,
+                                borderColor: '#FFFFFF',
                             }}
                         />
                     </View>
@@ -73,7 +75,9 @@ export default function SmartPhotoLayout({
                             style={{
                                 width: twinPhotoSize,
                                 height: twinPhotoSize,
-                                borderRadius: twinPhotoSize * 0.02,
+                                borderRadius: 0,
+                                borderWidth: 2,
+                                borderColor: '#FFFFFF',
                                 marginRight: gap / 2
                             }}
                         />
@@ -82,7 +86,9 @@ export default function SmartPhotoLayout({
                             style={{
                                 width: twinPhotoSize,
                                 height: twinPhotoSize,
-                                borderRadius: twinPhotoSize * 0.02,
+                                borderRadius: 0,
+                                borderWidth: 2,
+                                borderColor: '#FFFFFF',
                                 marginLeft: gap / 2
                             }}
                         />
@@ -114,7 +120,9 @@ export default function SmartPhotoLayout({
                                 style={{
                                     width: tripletPhotoSize,
                                     height: tripletPhotoSize,
-                                    borderRadius: tripletPhotoSize * 0.02,
+                                    borderRadius: 0,
+                                    borderWidth: 2,
+                                    borderColor: '#FFFFFF',
                                     marginRight: tripletGap / 2
                                 }}
                             />
@@ -123,7 +131,9 @@ export default function SmartPhotoLayout({
                                 style={{
                                     width: tripletPhotoSize,
                                     height: tripletPhotoSize,
-                                    borderRadius: tripletPhotoSize * 0.02,
+                                    borderRadius: 0,
+                                    borderWidth: 2,
+                                    borderColor: '#FFFFFF',
                                     marginLeft: tripletGap / 2
                                 }}
                             />
@@ -139,7 +149,9 @@ export default function SmartPhotoLayout({
                                 style={{
                                     width: tripletPhotoSize,
                                     height: tripletPhotoSize,
-                                    borderRadius: tripletPhotoSize * 0.02
+                                    borderRadius: 0,
+                                    borderWidth: 2,
+                                    borderColor: '#FFFFFF',
                                 }}
                             />
                         </View>
@@ -167,7 +179,9 @@ export default function SmartPhotoLayout({
                                 style={{
                                     width: gridPhotoSize,
                                     height: gridPhotoSize,
-                                    borderRadius: gridPhotoSize * 0.02,
+                                    borderRadius: 0,
+                                    borderWidth: 2,
+                                    borderColor: '#FFFFFF',
                                     marginRight: gridGap / 2
                                 }}
                             />
@@ -176,7 +190,9 @@ export default function SmartPhotoLayout({
                                 style={{
                                     width: gridPhotoSize,
                                     height: gridPhotoSize,
-                                    borderRadius: gridPhotoSize * 0.02,
+                                    borderRadius: 0,
+                                    borderWidth: 2,
+                                    borderColor: '#FFFFFF',
                                     marginLeft: gridGap / 2
                                 }}
                             />
@@ -190,7 +206,9 @@ export default function SmartPhotoLayout({
                                 style={{
                                     width: gridPhotoSize,
                                     height: gridPhotoSize,
-                                    borderRadius: gridPhotoSize * 0.02,
+                                    borderRadius: 0,
+                                    borderWidth: 2,
+                                    borderColor: '#FFFFFF',
                                     marginRight: gridGap / 2
                                 }}
                             />
@@ -199,7 +217,9 @@ export default function SmartPhotoLayout({
                                 style={{
                                     width: gridPhotoSize,
                                     height: gridPhotoSize,
-                                    borderRadius: gridPhotoSize * 0.02,
+                                    borderRadius: 0,
+                                    borderWidth: 2,
+                                    borderColor: '#FFFFFF',
                                     marginLeft: gridGap / 2
                                 }}
                             />

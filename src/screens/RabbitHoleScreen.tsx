@@ -147,7 +147,7 @@ export default function RabbitHoleScreen({ navigation }: Props) {
                 >
                     {/* Giant Pulsing +1 */}
                     <Animated.View style={[styles.giantIconBox, { transform: [{ scale: pulseAnim }] }]}>
-                        <Text style={styles.giantIconText}>+1</Text>
+                        <Text style={styles.giantIconText}>+1<Text style={{ fontSize: 24, position: 'relative', top: 20, left: 2 }}>™</Text></Text>
                     </Animated.View>
 
                     <Text style={styles.welcomeText}>You Found It!</Text>

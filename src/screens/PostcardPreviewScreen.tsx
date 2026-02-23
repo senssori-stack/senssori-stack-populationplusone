@@ -37,8 +37,8 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
     const babyMiddle = params.babies?.[0]?.middle || params.babyMiddle || '';
     const babyLast = params.babies?.[0]?.last || params.babyLast || '';
     const fullName = [babyFirst, babyMiddle, babyLast].filter(Boolean).join(' ') || params.personName || 'Baby';
-    const photoUri = params.babies?.[0]?.photoUri || params.photoUri;
-    const photoUris = params.photoUris || (photoUri ? [photoUri] : []);
+    const photoUri = params.babies?.[0]?.photoUris?.find((u: string | null | undefined) => u) || params.babies?.[0]?.photoUri || params.photoUri;
+    const photoUris = params.photoUris || params.babies?.[0]?.photoUris?.filter((u: string | null | undefined) => u) as string[] || (photoUri ? [photoUri] : []);
     const motherName = params.motherName || '';
     const fatherName = params.fatherName || '';
     const parents = [motherName, fatherName].filter(Boolean).join(' & ');
@@ -238,6 +238,7 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
                                                             population={population}
                                                             personName={fullName}
                                                             babyCount={params.babyCount || 1}
+                                                            dobISO={params.dobISO}
                                                         />
                                                     </View>
                                                 </ViewShot>
@@ -650,13 +651,13 @@ const styles = StyleSheet.create({
         minHeight: 90,
     },
     actionTileEmoji: {
-        fontSize: 32,
+        fontSize: 48,
         marginBottom: 6,
         color: '#fff',
     },
     actionTileLabel: {
         color: '#fff',
-        fontSize: 13,
+        fontSize: 20,
         fontWeight: '800',
         textTransform: 'uppercase',
         letterSpacing: 0.5,

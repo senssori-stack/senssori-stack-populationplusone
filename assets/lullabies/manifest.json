@@ -1,0 +1,152 @@
+[
+  {
+    "id": "01-twinkle-twinkle-little-star",
+    "title": "Twinkle Twinkle Little Star",
+    "filename": "01-twinkle-twinkle-little-star.wav",
+    "duration": 57.6
+  },
+  {
+    "id": "02-brahms-lullaby",
+    "title": "Brahms' Lullaby",
+    "filename": "02-brahms-lullaby.wav",
+    "duration": 66
+  },
+  {
+    "id": "03-rock-a-bye-baby",
+    "title": "Rock-a-Bye Baby",
+    "filename": "03-rock-a-bye-baby.wav",
+    "duration": 41.3
+  },
+  {
+    "id": "04-hush-little-baby",
+    "title": "Hush Little Baby (Mockingbird)",
+    "filename": "04-hush-little-baby.wav",
+    "duration": 38.4
+  },
+  {
+    "id": "05-mary-had-a-little-lamb",
+    "title": "Mary Had a Little Lamb",
+    "filename": "05-mary-had-a-little-lamb.wav",
+    "duration": 34.9
+  },
+  {
+    "id": "06-frere-jacques",
+    "title": "Frère Jacques (Are You Sleeping)",
+    "filename": "06-frere-jacques.wav",
+    "duration": 34.9
+  },
+  {
+    "id": "07-baa-baa-black-sheep",
+    "title": "Baa Baa Black Sheep",
+    "filename": "07-baa-baa-black-sheep.wav",
+    "duration": 54.9
+  },
+  {
+    "id": "08-london-bridge",
+    "title": "London Bridge Is Falling Down",
+    "filename": "08-london-bridge.wav",
+    "duration": 34.9
+  },
+  {
+    "id": "09-row-row-row-your-boat",
+    "title": "Row Row Row Your Boat",
+    "filename": "09-row-row-row-your-boat.wav",
+    "duration": 19.2
+  },
+  {
+    "id": "10-old-macdonald",
+    "title": "Old MacDonald Had a Farm",
+    "filename": "10-old-macdonald.wav",
+    "duration": 33.4
+  },
+  {
+    "id": "11-itsy-bitsy-spider",
+    "title": "Itsy Bitsy Spider",
+    "filename": "11-itsy-bitsy-spider.wav",
+    "duration": 26.3
+  },
+  {
+    "id": "12-hickory-dickory-dock",
+    "title": "Hickory Dickory Dock",
+    "filename": "12-hickory-dickory-dock.wav",
+    "duration": 22.9
+  },
+  {
+    "id": "13-three-blind-mice",
+    "title": "Three Blind Mice",
+    "filename": "13-three-blind-mice.wav",
+    "duration": 28.4
+  },
+  {
+    "id": "14-this-old-man",
+    "title": "This Old Man",
+    "filename": "14-this-old-man.wav",
+    "duration": 32.7
+  },
+  {
+    "id": "15-hot-cross-buns",
+    "title": "Hot Cross Buns",
+    "filename": "15-hot-cross-buns.wav",
+    "duration": 19.2
+  },
+  {
+    "id": "16-lavenders-blue",
+    "title": "Lavender's Blue",
+    "filename": "16-lavenders-blue.wav",
+    "duration": 42.4
+  },
+  {
+    "id": "17-golden-slumbers",
+    "title": "Golden Slumbers",
+    "filename": "17-golden-slumbers.wav",
+    "duration": 51.2
+  },
+  {
+    "id": "18-all-the-pretty-horses",
+    "title": "All the Pretty Horses",
+    "filename": "18-all-the-pretty-horses.wav",
+    "duration": 48
+  },
+  {
+    "id": "19-oranges-and-lemons",
+    "title": "Oranges and Lemons",
+    "filename": "19-oranges-and-lemons.wav",
+    "duration": 38.4
+  },
+  {
+    "id": "20-jack-and-jill",
+    "title": "Jack and Jill",
+    "filename": "20-jack-and-jill.wav",
+    "duration": 22.9
+  },
+  {
+    "id": "21-sleep-baby-sleep",
+    "title": "Sleep Baby Sleep",
+    "filename": "21-sleep-baby-sleep.wav",
+    "duration": 51.2
+  },
+  {
+    "id": "22-twinkle-variation-gentle",
+    "title": "Twinkle Twinkle (Gentle)",
+    "filename": "22-twinkle-variation-gentle.wav",
+    "duration": 80
+  },
+  {
+    "id": "23-humpty-dumpty",
+    "title": "Humpty Dumpty",
+    "filename": "23-humpty-dumpty.wav",
+    "duration": 38.4
+  },
+  {
+    "id": "24-ring-around-rosie",
+    "title": "Ring Around the Rosie",
+    "filename": "24-ring-around-rosie.wav",
+    "duration": 29.7
+  },
+  {
+    "id": "25-star-light-star-bright",
+    "title": "Star Light Star Bright",
+    "filename": "25-star-light-star-bright.wav",
+    "duration": 42.7
+  }
+]

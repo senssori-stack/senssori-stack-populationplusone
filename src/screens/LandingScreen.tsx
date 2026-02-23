@@ -1,7 +1,8 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
+    Animated,
     Dimensions,
     ScrollView,
     StatusBar,
@@ -19,6 +20,24 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 export default function LandingScreen({ navigation }: Props) {
     const tapCountRef = useRef(0);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const pulseAnim = useRef(new Animated.Value(1)).current;
+
+    useEffect(() => {
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(pulseAnim, {
+                    toValue: 1.1,
+                    duration: 1000,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(pulseAnim, {
+                    toValue: 1,
+                    duration: 1000,
+                    useNativeDriver: true,
+                }),
+            ])
+        ).start();
+    }, []);
 
     const handleIconTap = () => {
         // Clear any existing timeout
@@ -41,8 +60,8 @@ export default function LandingScreen({ navigation }: Props) {
     };
 
     return (
-        <LinearGradient colors={['#1a472a', '#2d6a3f']} style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#1a472a" />
+        <LinearGradient colors={['#000080', '#1a1a9e']} style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#000080" />
 
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 {/* Logo & Title Section */}
@@ -51,17 +70,17 @@ export default function LandingScreen({ navigation }: Props) {
                     <TouchableOpacity onPress={handleIconTap} activeOpacity={0.8}>
                         <View style={{ alignItems: 'center' }}>
                             <Text style={styles.mainTitle}>POPULATION</Text>
-                            <View style={styles.iconBox}>
+                            <Animated.View style={[styles.iconBox, { transform: [{ scale: pulseAnim }] }]}>
                                 <Text style={styles.iconText}>+1<Text style={{ fontSize: 14, position: 'relative', top: 16, left: 2 }}>™</Text></Text>
-                            </View>
+                            </Animated.View>
                         </View>
                     </TouchableOpacity>
 
                     {/* Tagline */}
                     <Text style={[styles.tagline, { marginTop: 12 }]}>Welcome To</Text>
-                    <Text style={[styles.tagline]}>The POPULATION +1™ Keepsake Announcement App Creator Studio</Text>
+                    <Text style={[styles.tagline]}>The POPULATION +1™ Announcement App Keepsake Creator Studio</Text>
                     <Text style={[styles.taglineSecond, { marginTop: 12 }]}>ANNOUNCE • CELEBRATE • CAPTURE • CHERISH</Text>
-                    <Text style={[styles.taglineSecond, { marginTop: 12 }]}>"YOUR +1 COUNTS"</Text>
+                    <Text style={[styles.taglineSecond, { marginTop: 12, fontSize: 23, fontWeight: '900' }]}>"CREATE...ENSURE EVERY +1 COUNTS"</Text>
                 </View>
 
                 {/* What Would You Like Section */}
@@ -199,50 +218,34 @@ export default function LandingScreen({ navigation }: Props) {
                         </View>
                     </TouchableOpacity>
 
-                    {/* Baby Milestone Tracker */}
+                    {/* All Things Baby */}
                     <TouchableOpacity
                         style={styles.cardButton}
-                        onPress={() => navigation.navigate('MilestoneTracker')}
+                        onPress={() => navigation.navigate('AllThingsBaby')}
                         activeOpacity={0.85}
                     >
                         <View style={styles.cardContent}>
-                            <View style={[styles.cardIconBox, { backgroundColor: '#0d1b2a' }]}>
-                                <Text style={styles.cardEmoji}>📊</Text>
+                            <View style={[styles.cardIconBox, { backgroundColor: '#1a1040' }]}>
+                                <Text style={styles.cardEmoji}>👶</Text>
                             </View>
                             <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Baby Milestone Tracker</Text>
+                                <Text style={styles.cardTitle}>All Things Baby</Text>
                             </View>
                         </View>
                     </TouchableOpacity>
 
-                    {/* Baby Growth Chart */}
+                    {/* Jumpstart the American Dream */}
                     <TouchableOpacity
                         style={styles.cardButton}
-                        onPress={() => navigation.navigate('GrowthTracker')}
+                        onPress={() => navigation.navigate('JumpstartAmericanDream')}
                         activeOpacity={0.85}
                     >
                         <View style={styles.cardContent}>
-                            <View style={[styles.cardIconBox, { backgroundColor: '#1a237e' }]}>
-                                <Text style={styles.cardEmoji}>📈</Text>
+                            <View style={[styles.cardIconBox, { backgroundColor: '#001f3f' }]}>
+                                <Text style={styles.cardEmoji}>🇺🇸</Text>
                             </View>
                             <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Baby Growth Chart</Text>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
-
-                    {/* Learning Center */}
-                    <TouchableOpacity
-                        style={styles.cardButton}
-                        onPress={() => navigation.navigate('LearningCenter')}
-                        activeOpacity={0.85}
-                    >
-                        <View style={styles.cardContent}>
-                            <View style={[styles.cardIconBox, { backgroundColor: '#4a148c' }]}>
-                                <Text style={styles.cardEmoji}>📚</Text>
-                            </View>
-                            <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Learning Center</Text>
+                                <Text style={styles.cardTitle}>Jumpstart the American Dream  <Text style={{ fontSize: 24, fontWeight: '900', color: '#000000', letterSpacing: 1 }}>CRITICAL STEPS</Text></Text>
                             </View>
                         </View>
                     </TouchableOpacity>
@@ -276,7 +279,7 @@ export default function LandingScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
     },
     scrollView: {
         flex: 1,
@@ -367,7 +370,7 @@ const styles = StyleSheet.create({
     cardIconBox: {
         width: 54,
         height: 54,
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         borderRadius: 14,
         justifyContent: 'center',
         alignItems: 'center',
@@ -382,7 +385,7 @@ const styles = StyleSheet.create({
     cardTitle: {
         fontSize: 17,
         fontWeight: '800',
-        color: '#1a472a',
+        color: '#000080',
         marginBottom: 4,
     },
     cardDescription: {

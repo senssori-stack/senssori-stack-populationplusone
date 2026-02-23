@@ -26,6 +26,7 @@ type Props = {
     hometown?: string;
     population?: number;
     personName?: string;
+    dobISO?: string; // ISO date string for EST./year labels on pre-2020 dates
 };
 
 export default function AnnouncementYardSign(props: Props) {
@@ -36,7 +37,16 @@ export default function AnnouncementYardSign(props: Props) {
         hometown = '',
         population,
         personName = '',
+        dobISO,
     } = props;
+
+    // Determine if date is before Jan 1, 2020 for EST./year labels
+    const isPreYear2020 = (() => {
+        if (!dobISO) return false;
+        const d = new Date(dobISO + 'T00:00:00');
+        return d < new Date('2020-01-01T00:00:00');
+    })();
+    const displayYear = isPreYear2020 && dobISO ? new Date(dobISO + 'T00:00:00').getFullYear().toString() : null;
 
     const colors = COLOR_SCHEMES[theme] || COLOR_SCHEMES.green;
 
@@ -127,6 +137,40 @@ export default function AnnouncementYardSign(props: Props) {
                     height: '100%',
                     position: 'relative'
                 }]}>
+
+                    {/* EST. label - top left corner (pre-2020 dates only) */}
+                    {isPreYear2020 && (
+                        <Text style={[styles.text, {
+                            position: 'absolute',
+                            top: Math.round(displayWidth * 0.02),
+                            left: Math.round(displayWidth * 0.03),
+                            fontSize: Math.round(baseFontSize * 1.3),
+                            color: '#FFFFFF',
+                            fontWeight: '900',
+                            letterSpacing: 2,
+                            textAlign: 'left',
+                            zIndex: 10,
+                        }]}>
+                            EST.
+                        </Text>
+                    )}
+
+                    {/* Year label - top right corner (pre-2020 dates only) */}
+                    {isPreYear2020 && displayYear && (
+                        <Text style={[styles.text, {
+                            position: 'absolute',
+                            top: Math.round(displayWidth * 0.02),
+                            right: Math.round(displayWidth * 0.03),
+                            fontSize: Math.round(baseFontSize * 1.3),
+                            color: '#FFFFFF',
+                            fontWeight: '900',
+                            letterSpacing: 2,
+                            textAlign: 'right',
+                            zIndex: 10,
+                        }]}>
+                            {displayYear}
+                        </Text>
+                    )}
 
                     {/* WELCOME TO */}
                     <Text style={[styles.text, {

@@ -1,7 +1,10 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useStripe } from '@stripe/stripe-react-native';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import React, { useState } from 'react';
 import {
+    ActivityIndicator,
     Alert,
     KeyboardAvoidingView,
     Platform,
@@ -10,9 +13,10 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import { useCart } from '../context/CartContext';
+import { app } from '../data/utils/firebase-config';
 import type { RootStackParamList } from '../types';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -32,6 +36,7 @@ type ShippingAddress = {
 export default function CheckoutScreen() {
     const navigation = useNavigation<NavigationProp>();
     const { items, getTotal, getItemCount, clearCart } = useCart();
+    const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
     const [shipping, setShipping] = useState<ShippingAddress>({
         firstName: '',
@@ -46,6 +51,7 @@ export default function CheckoutScreen() {
     });
 
     const [isProcessing, setIsProcessing] = useState(false);
+    const [termsAccepted, setTermsAccepted] = useState(false);
 
     const formatPrice = (price: number) => `$${price.toFixed(2)}`;
 
@@ -78,6 +84,10 @@ export default function CheckoutScreen() {
             Alert.alert('Missing Information', 'Please enter a valid ZIP code.');
             return false;
         }
+        if (!termsAccepted) {
+            Alert.alert('Terms Required', 'Please confirm that all details are correct and accept the Terms of Service to continue.');
+            return false;
+        }
         return true;
     };
 
@@ -86,20 +96,95 @@ export default function CheckoutScreen() {
 
         setIsProcessing(true);
 
-        // Simulate order processing (placeholder for Stripe integration)
         try {
-            // TODO: Replace with actual Stripe payment processing
-            // const paymentIntent = await stripe.createPaymentIntent({
-            //     amount: Math.round(getTotal() * 100), // cents
-            //     currency: 'usd',
-            // });
-            // await stripe.confirmPayment(paymentIntent.clientSecret);
-
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
             // Generate order ID
             const orderId = `PP1-${Date.now().toString(36).toUpperCase()}`;
+
+            // 1. Call Cloud Function to create PaymentIntent
+            const functions = getFunctions(app);
+            const createPaymentIntent = httpsCallable(functions, 'createPaymentIntent');
+            const { data: paymentData } = await createPaymentIntent({
+                amount: Math.round(total * 100), // convert to cents
+                currency: 'usd',
+                orderId,
+                customerEmail: shipping.email.trim(),
+            }) as { data: { clientSecret: string; paymentIntentId: string } };
+
+            // 2. Initialize PaymentSheet
+            const { error: initError } = await initPaymentSheet({
+                paymentIntentClientSecret: paymentData.clientSecret,
+                merchantDisplayName: 'Population Plus One',
+                defaultBillingDetails: {
+                    name: `${shipping.firstName} ${shipping.lastName}`.trim(),
+                    email: shipping.email.trim(),
+                    phone: shipping.phone.trim() || undefined,
+                    address: {
+                        line1: shipping.address1.trim(),
+                        line2: shipping.address2.trim() || undefined,
+                        city: shipping.city.trim(),
+                        state: shipping.state.trim(),
+                        postalCode: shipping.zipCode.trim(),
+                        country: 'US',
+                    },
+                },
+            });
+
+            if (initError) {
+                Alert.alert('Payment Error', initError.message);
+                setIsProcessing(false);
+                return;
+            }
+
+            // 3. Present PaymentSheet to user
+            const { error: paymentError } = await presentPaymentSheet();
+
+            if (paymentError) {
+                if (paymentError.code === 'Canceled') {
+                    // User dismissed — not an error
+                    setIsProcessing(false);
+                    return;
+                }
+                Alert.alert('Payment Failed', paymentError.message);
+                setIsProcessing(false);
+                return;
+            }
+
+            // 4. Payment succeeded!
+
+            // Save order record to Firebase
+            await saveOrderRecord({
+                orderId,
+                status: 'pending',
+                customer: {
+                    firstName: shipping.firstName.trim(),
+                    lastName: shipping.lastName.trim(),
+                    email: shipping.email.trim(),
+                    phone: shipping.phone.trim() || undefined,
+                },
+                shipping: {
+                    address1: shipping.address1.trim(),
+                    address2: shipping.address2.trim() || undefined,
+                    city: shipping.city.trim(),
+                    state: shipping.state.trim(),
+                    zipCode: shipping.zipCode.trim(),
+                },
+                items: items.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    description: item.description,
+                    quantity: item.quantity,
+                    price: item.price,
+                })),
+                pricing: {
+                    subtotal,
+                    shipping: shipping_cost,
+                    tax,
+                    total,
+                },
+                termsAccepted: true,
+                termsAcceptedAt: new Date().toISOString(),
+                createdAt: null, // Set by serverTimestamp() in orderService
+            });
 
             // Navigate to confirmation
             clearCart();
@@ -150,6 +235,9 @@ export default function CheckoutScreen() {
                             <View key={item.id} style={styles.summaryItem}>
                                 <View style={styles.summaryItemInfo}>
                                     <Text style={styles.summaryItemName}>{item.name}</Text>
+                                    {item.description ? (
+                                        <Text style={styles.summaryItemDesc}>{item.description}</Text>
+                                    ) : null}
                                     <Text style={styles.summaryItemQty}>Qty: {item.quantity}</Text>
                                 </View>
                                 <Text style={styles.summaryItemPrice}>
@@ -260,17 +348,13 @@ export default function CheckoutScreen() {
                     </View>
                 </View>
 
-                {/* Payment Section */}
+                {/* Payment Info */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Payment</Text>
-                    <View style={styles.paymentPlaceholder}>
-                        <Text style={styles.placeholderIcon}>💳</Text>
-                        <Text style={styles.placeholderTitle}>Payment Coming Soon</Text>
-                        <Text style={styles.placeholderText}>
-                            Secure payment processing via Stripe will be available once we finalize our printing partners.
-                        </Text>
-                        <Text style={styles.placeholderNote}>
-                            For now, all orders are free during our beta period!
+                    <View style={styles.paymentInfo}>
+                        <Text style={styles.paymentInfoIcon}>🔒</Text>
+                        <Text style={styles.paymentInfoText}>
+                            Secure payment via Stripe. Your card will be collected when you tap "Place Order" below.
                         </Text>
                     </View>
                 </View>
@@ -302,24 +386,50 @@ export default function CheckoutScreen() {
                     </View>
                 </View>
 
-                {/* Beta Notice */}
-                <View style={styles.betaNotice}>
-                    <Text style={styles.betaText}>
-                        🎉 Beta Period: All prints are currently FREE! Pricing will be applied once our printing partners are finalized.
-                    </Text>
+
+
+                {/* Terms Acceptance */}
+                <View style={styles.termsSection}>
+                    <TouchableOpacity
+                        style={styles.termsRow}
+                        onPress={() => setTermsAccepted(!termsAccepted)}
+                        activeOpacity={0.7}
+                    >
+                        <View style={[styles.checkbox, termsAccepted && styles.checkboxChecked]}>
+                            {termsAccepted && <Text style={styles.checkmark}>✓</Text>}
+                        </View>
+                        <Text style={styles.termsText}>
+                            I confirm all names, dates, and details are correct. I agree to the{' '}
+                            <Text
+                                style={styles.termsLink}
+                                onPress={() => Linking.openURL('https://populationplusone.com/terms-of-service.html')}
+                            >
+                                Terms of Service
+                            </Text>
+                            {' '}and{' '}
+                            <Text
+                                style={styles.termsLink}
+                                onPress={() => Linking.openURL('https://populationplusone.com/privacy-policy.html')}
+                            >
+                                Privacy Policy
+                            </Text>.
+                        </Text>
+                    </TouchableOpacity>
                 </View>
             </ScrollView>
 
             {/* Bottom Action */}
             <View style={styles.bottomAction}>
                 <TouchableOpacity
-                    style={[styles.placeOrderButton, isProcessing && styles.buttonDisabled]}
+                    style={[styles.placeOrderButton, (isProcessing || !termsAccepted) && styles.buttonDisabled]}
                     onPress={handlePlaceOrder}
                     disabled={isProcessing}
                 >
-                    <Text style={styles.placeOrderText}>
-                        {isProcessing ? 'Processing...' : 'Place Order'}
-                    </Text>
+                    {isProcessing ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <Text style={styles.placeOrderText}>Place Order — {formatPrice(total)}</Text>
+                    )}
                 </TouchableOpacity>
                 <Text style={styles.secureText}>🔒 Your information is secure</Text>
             </View>
@@ -376,6 +486,11 @@ const styles = StyleSheet.create({
         color: '#666',
         marginTop: 2,
     },
+    summaryItemDesc: {
+        fontSize: 12,
+        color: '#888',
+        marginTop: 2,
+    },
     summaryItemPrice: {
         fontSize: 14,
         fontWeight: '600',
@@ -414,37 +529,24 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#333',
     },
-    paymentPlaceholder: {
-        backgroundColor: '#f0f9f0',
-        borderRadius: 12,
-        padding: 20,
+    paymentInfo: {
+        flexDirection: 'row',
         alignItems: 'center',
+        backgroundColor: '#f0f4ff',
+        borderRadius: 12,
+        padding: 16,
         borderWidth: 1,
-        borderColor: '#c8e6c9',
-        borderStyle: 'dashed',
+        borderColor: '#667eea',
     },
-    placeholderIcon: {
-        fontSize: 40,
-        marginBottom: 12,
+    paymentInfoIcon: {
+        fontSize: 28,
+        marginRight: 12,
     },
-    placeholderTitle: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#1a472a',
-        marginBottom: 8,
-    },
-    placeholderText: {
+    paymentInfoText: {
+        flex: 1,
         fontSize: 14,
-        color: '#666',
-        textAlign: 'center',
+        color: '#4a5568',
         lineHeight: 20,
-    },
-    placeholderNote: {
-        fontSize: 13,
-        color: '#1a472a',
-        fontWeight: '600',
-        marginTop: 12,
-        textAlign: 'center',
     },
     priceBreakdown: {
         backgroundColor: '#f9f9f9',
@@ -482,20 +584,7 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#1a472a',
     },
-    betaNotice: {
-        margin: 16,
-        padding: 16,
-        backgroundColor: '#fff9e6',
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: '#ffd700',
-    },
-    betaText: {
-        fontSize: 13,
-        color: '#666',
-        textAlign: 'center',
-        lineHeight: 20,
-    },
+
     bottomAction: {
         backgroundColor: '#fff',
         padding: 16,
@@ -550,5 +639,47 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',
+    },
+    termsSection: {
+        marginHorizontal: 16,
+        marginBottom: 8,
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 16,
+    },
+    termsRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: 12,
+    },
+    checkbox: {
+        width: 24,
+        height: 24,
+        borderRadius: 6,
+        borderWidth: 2,
+        borderColor: '#ccc',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 1,
+    },
+    checkboxChecked: {
+        backgroundColor: '#1a472a',
+        borderColor: '#1a472a',
+    },
+    checkmark: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    termsText: {
+        flex: 1,
+        fontSize: 13,
+        color: '#555',
+        lineHeight: 20,
+    },
+    termsLink: {
+        color: '#1a472a',
+        fontWeight: '600',
+        textDecorationLine: 'underline',
     },
 });

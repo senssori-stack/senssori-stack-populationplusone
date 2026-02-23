@@ -42,7 +42,7 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
     const babyLast = params.babies?.[0]?.last || params.babyLast || '';
     const fullName = [babyFirst, babyMiddle, babyLast].filter(Boolean).join(' ');
     // Resolve photo from all possible sources (photoUris array from 3-slot picker, babies array, or direct photoUri)
-    const photoUri = params.photoUri || params.photoUris?.find((u: string | null) => u) || params.babies?.[0]?.photoUri || null;
+    const photoUri = params.photoUri || params.photoUris?.find((u: string | null) => u) || params.babies?.[0]?.photoUris?.find((u: string | null | undefined) => u) || params.babies?.[0]?.photoUri || null;
     const hometown = params.hometown || 'Hometown, USA';
     const dobDate = params.dobISO ? new Date(params.dobISO) : new Date();
     const birthDateStr = dobDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -702,13 +702,13 @@ const styles = StyleSheet.create({
         minHeight: 90,
     },
     actionTileEmoji: {
-        fontSize: 32,
+        fontSize: 48,
         marginBottom: 6,
         color: '#fff',
     },
     actionTileLabel: {
         color: '#fff',
-        fontSize: 13,
+        fontSize: 20,
         fontWeight: '800',
         textTransform: 'uppercase',
         letterSpacing: 0.5,

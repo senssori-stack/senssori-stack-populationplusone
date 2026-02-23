@@ -183,7 +183,8 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
 
     const getCoupleNames = () => {
         if (spouse1Name.trim() && spouse2Name.trim()) {
-            return `${spouse1Name.trim()} & ${spouse2Name.trim()}`;
+            const firstName1 = spouse1Name.trim().split(' ')[0];
+            return `${firstName1} and ${spouse2Name.trim()}`;
         }
         return spouse1Name.trim() || spouse2Name.trim() || 'The Happy Couple';
     };
@@ -216,6 +217,8 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
         try {
             const pop = await getPopulationForCity(hometown.trim());
             setPopulation(pop);
+            // Format date as YYYY-MM-DD (required by historical snapshot lookup)
+            const dobISO = `${anniversaryDate.getFullYear()}-${String(anniversaryDate.getMonth() + 1).padStart(2, '0')}-${String(anniversaryDate.getDate()).padStart(2, '0')}`;
 
             navigation.navigate('Preview', {
                 theme: selectedColor,
@@ -223,7 +226,7 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
                 motherName: getCoupleNames(),
                 photoUris: photos.filter(p => p !== null) as string[],
                 hometown: hometown.trim(),
-                dobISO: anniversaryDate.toISOString(),
+                dobISO: dobISO,
                 mode: 'milestone',
                 message: finalMessage,
                 population: pop || undefined,
@@ -231,13 +234,14 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
             });
         } catch (error) {
             console.error('Error fetching population:', error);
+            const dobISO = `${anniversaryDate.getFullYear()}-${String(anniversaryDate.getMonth() + 1).padStart(2, '0')}-${String(anniversaryDate.getDate()).padStart(2, '0')}`;
             navigation.navigate('Preview', {
                 theme: selectedColor,
                 personName: getCoupleNames(),
                 motherName: getCoupleNames(),
                 photoUris: photos.filter(p => p !== null) as string[],
                 hometown: hometown.trim(),
-                dobISO: anniversaryDate.toISOString(),
+                dobISO: dobISO,
                 mode: 'milestone',
                 message: finalMessage,
                 babyCount: 2,

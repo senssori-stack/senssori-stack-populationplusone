@@ -84,6 +84,23 @@ export default function AboutUsScreen({ navigation }: Props) {
                         <Text style={styles.email}>info@populationplusone.com</Text>
                     </View>
 
+                    {/* Legal Links */}
+                    <View style={styles.card}>
+                        <Text style={styles.cardTitle}>Legal</Text>
+                        <TouchableOpacity
+                            style={styles.legalLink}
+                            onPress={() => Linking.openURL('https://populationplusone.com/privacy-policy.html')}
+                        >
+                            <Text style={styles.legalLinkText}>🔒  Privacy Policy</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.legalLink}
+                            onPress={() => Linking.openURL('https://populationplusone.com/terms-of-service.html')}
+                        >
+                            <Text style={styles.legalLinkText}>📋  Terms of Service</Text>
+                        </TouchableOpacity>
+                    </View>
+
                     <View style={styles.card}>
                         <Text style={styles.cardTitle}>📚 Data Sources</Text>
                         <Text style={styles.cardText}>
@@ -275,6 +292,16 @@ const styles = StyleSheet.create({
         color: '#2d5016',
         fontWeight: '600',
         marginTop: 8,
+    },
+    legalLink: {
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    legalLinkText: {
+        fontSize: 15,
+        color: '#2d5016',
+        fontWeight: '600',
     },
     sourceCategory: {
         fontSize: 14,

@@ -24,6 +24,11 @@ export const API_KEYS = {
 
     // Read Access Token (for data sources)
     READ_ACCESS_TOKEN: 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzZGQwNDBjMzViNDBiMDY1MmU4NzUwZDc0ZGMzMGE2NCIsIm5iZiI6MTc2OTcyMDAyMi42OTUwMDAyLCJzdWIiOiI2OTdiYzhkNjc1MWQxNTg5YzM2NjZhNTAiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.wpzmuQ3jipr31jMiB5S7dlgxxpLhcFMqlTMBewHB4hY',
+
+    // Stripe payment processing (publishable key only — secret key is in Cloud Functions config)
+    STRIPE: {
+        publishableKey: 'pk_test_51T3LiORrqgpktGAGkYZsfCjOaP7VkXTHm7cNnOc3gupEl6uYEtjym2HU0aUOMo09tUX9M0JhZQicUGQzMkcIQKPC00DDNPETIN',
+    },
 };
 
 export const FIREBASE_CONFIG = {

@@ -17,7 +17,8 @@
     "dependencies": {
         "firebase-admin": "^11.8.0",
         "firebase-functions": "^4.3.1",
-        "populationplusone": "file:.."
+        "populationplusone": "file:..",
+        "stripe": "^20.3.1"
     },
     "devDependencies": {
         "eslint": "^8.0.0",

@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     photo: {
-        borderRadius: 8,
+        borderRadius: 0,
         borderWidth: 2,
         borderColor: '#fff',
     },

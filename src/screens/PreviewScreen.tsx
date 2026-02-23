@@ -27,6 +27,14 @@ export default function PreviewScreen({ navigation, route }: Props) {
     const [viewMode, setViewMode] = useState<'front' | 'back' | 'natal' | 'guide' | 'letter'>('front');
     const [showCelebration, setShowCelebration] = useState(true);
 
+    // Compute zodiac sign for celebration overlay
+    const celebrationZodiac = (() => {
+        try {
+            const dobISO = params.dobISO || new Date().toISOString().split('T')[0];
+            return getZodiacFromISO(dobISO);
+        } catch { return undefined; }
+    })();
+
     // ViewShot refs for capturing
     const frontRef = useRef<ViewShot | null>(null);
     const backRef = useRef<ViewShot | null>(null);
@@ -312,14 +320,14 @@ export default function PreviewScreen({ navigation, route }: Props) {
         const lifePathNumber = lifePathResult.number;
 
         if (viewMode === 'front') {
-            // Collect all photoUris - prioritize params.photoUris for milestone mode
+            // Collect all photoUris - prioritize params.photoUris array (used for all modes now)
             let allPhotoUris: (string | null | undefined)[] = [];
 
             if (params.photoUris && params.photoUris.length > 0) {
-                // Use photoUris array directly (milestone mode)
+                // Use photoUris array directly (all modes: single, twins, triplets, milestone)
                 allPhotoUris = params.photoUris.filter(uri => uri);
             } else {
-                // Collect from babies array (baby mode)
+                // Fallback: collect from babies array
                 allPhotoUris = babies
                     .filter(baby => baby.photoUri)
                     .map(baby => baby.photoUri);
@@ -337,6 +345,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
                             population={formData.population ?? undefined}
                             personName={params.personName || ''}
                             babyCount={params.babyCount || 1}
+                            dobISO={dobISO}
                         />
                     </View>
                 </ViewShot>
@@ -399,8 +408,14 @@ export default function PreviewScreen({ navigation, route }: Props) {
                 </ViewShot>
             );
         } else if (viewMode === 'letter') {
-            // Letter to Baby — standalone keepsake page
-            const babyName = babies[0]?.first || params.personName || 'Baby';
+            // Letter to Baby — standalone keepsake page (show all names for twins/triplets)
+            const babyName = (() => {
+                const names = babies.map(b => (b.first || '').trim()).filter(Boolean);
+                if (names.length === 0) return params.personName || 'Baby';
+                if (names.length === 1) return names[0];
+                if (names.length === 2) return `${names[0]} & ${names[1]}`;
+                return `${names[0]}, ${names[1]} & ${names[2]}`;
+            })();
             return (
                 <ViewShot ref={letterRef} options={{ format: 'png', quality: 1 }}>
                     <View style={styles.announcementContainer}>
@@ -443,13 +458,14 @@ export default function PreviewScreen({ navigation, route }: Props) {
     // Determine celebration message based on mode
     const celebrationMessage = params.mode === 'milestone'
         ? '🎉 Your creation is ready!'
-        : '🎉 Welcome to the world!';
+        : '🎉 Congratulations On Your Creation!';
 
     return (
         <View style={{ flex: 1, backgroundColor: '#fff' }}>
             <CelebrationOverlay
                 visible={showCelebration}
                 message={celebrationMessage}
+                zodiacSign={celebrationZodiac}
                 onComplete={() => setShowCelebration(false)}
             />
             <ScrollView style={{ flex: 1, paddingTop: 40 }} contentContainerStyle={{ flexGrow: 1 }} bounces={false} scrollEnabled={scrollEnabled}>
@@ -508,16 +524,18 @@ export default function PreviewScreen({ navigation, route }: Props) {
                     <View style={styles.addOnDivider} />
                     <Text style={styles.addOnLabel}>ALSO INCLUDED WITH YOUR +1</Text>
                     <View style={styles.tabRow}>
-                        <TouchableOpacity
-                            style={[styles.tab, { backgroundColor: '#d97706' }]}
-                            onPress={() => {
-                                const resolvedPhoto = params.photoUris?.find(u => u) || params.babies?.[0]?.photoUri || params.photoUri || null;
-                                navigation.navigate('YardSignPreview', { ...params, photoUri: resolvedPhoto });
-                            }}
-                        >
-                            <Text style={styles.tabIcon}>🏡</Text>
-                            <Text style={styles.tabText}>Yard Signs</Text>
-                        </TouchableOpacity>
+                        {params.mode !== 'milestone' && (
+                            <TouchableOpacity
+                                style={[styles.tab, { backgroundColor: '#d97706' }]}
+                                onPress={() => {
+                                    const resolvedPhoto = params.photoUris?.find(u => u) || params.babies?.[0]?.photoUri || params.photoUri || null;
+                                    navigation.navigate('YardSignPreview', { ...params, photoUri: resolvedPhoto });
+                                }}
+                            >
+                                <Text style={styles.tabIcon}>🏡</Text>
+                                <Text style={styles.tabText}>Yard Signs</Text>
+                            </TouchableOpacity>
+                        )}
                         <TouchableOpacity
                             style={[styles.tab, { backgroundColor: '#0ea5e9' }]}
                             onPress={() => {
@@ -528,16 +546,18 @@ export default function PreviewScreen({ navigation, route }: Props) {
                             <Text style={styles.tabIcon}>✉️</Text>
                             <Text style={styles.tabText}>Postcards</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.tab, { backgroundColor: '#dc2626' }]}
-                            onPress={() => {
-                                const resolvedPhoto = params.photoUris?.find(u => u) || params.babies?.[0]?.photoUri || params.photoUri || null;
-                                navigation.navigate('BaseballCardPreview', { ...params, photoUri: resolvedPhoto });
-                            }}
-                        >
-                            <Text style={styles.tabIcon}>⚾</Text>
-                            <Text style={styles.tabText}>Cards</Text>
-                        </TouchableOpacity>
+                        {params.mode !== 'milestone' && (
+                            <TouchableOpacity
+                                style={[styles.tab, { backgroundColor: '#dc2626' }]}
+                                onPress={() => {
+                                    const resolvedPhoto = params.photoUris?.find(u => u) || params.babies?.[0]?.photoUri || params.photoUri || null;
+                                    navigation.navigate('BaseballCardPreview', { ...params, photoUri: resolvedPhoto });
+                                }}
+                            >
+                                <Text style={styles.tabIcon}>⚾</Text>
+                                <Text style={styles.tabText}>Cards</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </LinearGradient>
 
@@ -601,10 +621,10 @@ export default function PreviewScreen({ navigation, route }: Props) {
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.tileButton, { backgroundColor: '#2e8b57' }]}
-                            onPress={handleAddToCart}
+                            onPress={() => navigation.navigate('PrintService', params as any)}
                         >
-                            <Text style={styles.tileEmoji}>🛒</Text>
-                            <Text style={styles.tileLabel}>Add</Text>
+                            <Text style={styles.tileEmoji}>🖨️</Text>
+                            <Text style={styles.tileLabel}>Print</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.tileButton, { backgroundColor: '#d97706' }]}
@@ -615,7 +635,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.tileButton, { backgroundColor: '#dc2626' }]}
-                            onPress={() => navigation.navigate('GiftSuggestions', { occasion: params.mode === 'milestone' ? 'milestone' : 'newborn' })}
+                            onPress={() => navigation.navigate('SendAsGift', params as any)}
                         >
                             <Text style={styles.tileEmoji}>🎁</Text>
                             <Text style={styles.tileLabel}>Gift</Text>
@@ -628,7 +648,13 @@ export default function PreviewScreen({ navigation, route }: Props) {
                     onClose={() => setShowDownloadModal(false)}
                     items={downloadItems}
                     onCapture={handleCapture}
-                    babyName={params.babies?.[0]?.first || params.babyFirst || params.personName || 'Baby'}
+                    babyName={(() => {
+                        const names = (params.babies || []).map((b: any) => (b.first || '').trim()).filter(Boolean);
+                        if (names.length === 0) return params.babyFirst || params.personName || 'Baby';
+                        if (names.length === 1) return names[0];
+                        if (names.length === 2) return `${names[0]} & ${names[1]}`;
+                        return `${names[0]}, ${names[1]} & ${names[2]}`;
+                    })()}
                 />
 
                 <CartModal
@@ -674,14 +700,14 @@ const styles = StyleSheet.create({
         elevation: 6,
     },
     panelTitle: {
-        fontSize: 20,
+        fontSize: 30,
         fontWeight: '800',
         color: '#fff',
         textAlign: 'center',
         marginBottom: 2,
     },
     panelSubtitle: {
-        fontSize: 12,
+        fontSize: 18,
         fontWeight: '600',
         color: 'rgba(255,255,255,0.6)',
         textAlign: 'center',
@@ -709,7 +735,7 @@ const styles = StyleSheet.create({
         borderColor: '#fff',
     },
     tabIcon: {
-        fontSize: 18,
+        fontSize: 27,
         fontWeight: '900',
         color: '#fff',
         marginBottom: 2,
@@ -718,7 +744,7 @@ const styles = StyleSheet.create({
         color: '#fff',
     },
     tabText: {
-        fontSize: 10,
+        fontSize: 15,
         fontWeight: '700',
         color: '#fff',
     },
@@ -732,7 +758,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     addOnLabel: {
-        fontSize: 10,
+        fontSize: 15,
         fontWeight: '800',
         color: 'rgba(255,255,255,0.5)',
         letterSpacing: 1.5,

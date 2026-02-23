@@ -210,6 +210,8 @@ export default function BirthdayFormScreen({ navigation }: Props) {
         try {
             const pop = await getPopulationForCity(hometown.trim());
             setPopulation(pop);
+            // Format date as YYYY-MM-DD (required by historical snapshot lookup)
+            const dobISO = `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`;
 
             navigation.navigate('Preview', {
                 theme: selectedColor,
@@ -217,20 +219,21 @@ export default function BirthdayFormScreen({ navigation }: Props) {
                 motherName: personName.trim(),
                 photoUris: photos.filter(p => p !== null) as string[],
                 hometown: hometown.trim(),
-                dobISO: dobDate.toISOString(),
+                dobISO: dobISO,
                 mode: 'milestone',
                 message: finalMessage,
                 population: pop || undefined,
             });
         } catch (error) {
             console.error('Error fetching population:', error);
+            const dobISO = `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`;
             navigation.navigate('Preview', {
                 theme: selectedColor,
                 personName: personName.trim(),
                 motherName: personName.trim(),
                 photoUris: photos.filter(p => p !== null) as string[],
                 hometown: hometown.trim(),
-                dobISO: dobDate.toISOString(),
+                dobISO: dobISO,
                 mode: 'milestone',
                 message: finalMessage,
             });

@@ -16,8 +16,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Speech from 'expo-speech';
 import React, { useEffect, useRef, useState } from 'react';
 import {
+    Alert,
     Animated,
     Dimensions,
     Modal,
@@ -99,6 +101,18 @@ export default function LearningScreen({ navigation }: Props) {
             ]);
             if (progressData) setExploredItems(new Set(JSON.parse(progressData)));
             if (milestonesData) setCompletedMilestones(new Set(JSON.parse(milestonesData)));
+
+            // One-time data storage disclaimer
+            const disclaimerKey = '@p1_milestone_disclaimer_seen';
+            const seen = await AsyncStorage.getItem(disclaimerKey);
+            if (!seen) {
+                await AsyncStorage.setItem(disclaimerKey, 'true');
+                Alert.alert(
+                    '📱 Important: Local Data Only',
+                    'Your baby\'s milestone progress is stored only on this device. If you uninstall the app or reset your phone, your milestone data will be permanently lost.\n\nWe recommend taking screenshots of your progress periodically as a backup.',
+                    [{ text: 'I Understand', style: 'default' }]
+                );
+            }
         } catch (e) { /* first load */ }
     };
 
@@ -201,6 +215,7 @@ export default function LearningScreen({ navigation }: Props) {
                             onPress={() => {
                                 setSelectedLetter(letter);
                                 markExplored(`letter_${idx}`);
+                                Speech.speak(letter.uppercase, { rate: 0.8, pitch: 1.1 });
                             }}
                             activeOpacity={0.7}
                         >
@@ -230,6 +245,7 @@ export default function LearningScreen({ navigation }: Props) {
                             onPress={() => {
                                 setSelectedNumber(num);
                                 markExplored(`number_${idx}`);
+                                Speech.speak(num.word, { rate: 0.8, pitch: 1.1 });
                             }}
                             activeOpacity={0.7}
                         >
@@ -259,6 +275,7 @@ export default function LearningScreen({ navigation }: Props) {
                             onPress={() => {
                                 setSelectedShape(shape);
                                 markExplored(`shape_${idx}`);
+                                Speech.speak(shape.name, { rate: 0.8, pitch: 1.1 });
                             }}
                             activeOpacity={0.7}
                         >
@@ -294,6 +311,7 @@ export default function LearningScreen({ navigation }: Props) {
                             onPress={() => {
                                 setSelectedColor(color);
                                 markExplored(`color_${idx}`);
+                                Speech.speak(color.name, { rate: 0.8, pitch: 1.1 });
                             }}
                             activeOpacity={0.7}
                         >
@@ -416,6 +434,12 @@ export default function LearningScreen({ navigation }: Props) {
                             <View style={styles.modalSection}>
                                 <Text style={styles.modalLabel}>🔊 Phonic Sound</Text>
                                 <Text style={styles.modalValue}>{l.phonicSound}</Text>
+                                <TouchableOpacity
+                                    style={styles.hearItBtn}
+                                    onPress={() => Speech.speak(`${l.uppercase}. ${l.phonicSound}. ${l.words[0]}`, { rate: 0.7, pitch: 1.1 })}
+                                >
+                                    <Text style={styles.hearItText}>🔊 Hear It</Text>
+                                </TouchableOpacity>
                             </View>
 
                             <View style={styles.modalSection}>
@@ -474,6 +498,12 @@ export default function LearningScreen({ navigation }: Props) {
                                 <Text style={styles.modalEmoji}>{n.emoji}</Text>
                             </View>
                             <Text style={styles.modalNumberWord}>{n.word}</Text>
+                            <TouchableOpacity
+                                style={styles.hearItBtnGreen}
+                                onPress={() => Speech.speak(n.word, { rate: 0.7, pitch: 1.1 })}
+                            >
+                                <Text style={styles.hearItText}>🔊 Hear It</Text>
+                            </TouchableOpacity>
 
                             <View style={styles.modalSection}>
                                 <Text style={styles.modalLabel}>🖐️ Show on Fingers</Text>
@@ -527,6 +557,12 @@ export default function LearningScreen({ navigation }: Props) {
                             <Text style={styles.modalShapeSides}>
                                 {typeof s.sides === 'number' ? (s.sides === 0 ? 'No straight sides' : `${s.sides} sides`) : s.sides}
                             </Text>
+                            <TouchableOpacity
+                                style={styles.hearItBtnOrange}
+                                onPress={() => Speech.speak(s.name, { rate: 0.7, pitch: 1.1 })}
+                            >
+                                <Text style={styles.hearItText}>🔊 Hear It</Text>
+                            </TouchableOpacity>
 
                             <View style={styles.modalSection}>
                                 <Text style={styles.modalLabel}>✏️ How to Draw</Text>
@@ -571,6 +607,12 @@ export default function LearningScreen({ navigation }: Props) {
                                 <View style={[styles.modalColorSwatch, { backgroundColor: c.hex }]} />
                                 <Text style={styles.modalColorName}>{c.name}</Text>
                             </View>
+                            <TouchableOpacity
+                                style={[styles.hearItBtnColor, { backgroundColor: (c.hex === '#FFFFFF' || c.hex === '#FFFF00') ? '#33333320' : c.hex + '20', borderColor: (c.hex === '#FFFFFF' || c.hex === '#FFFF00') ? '#333' : c.hex }]}
+                                onPress={() => Speech.speak(c.name, { rate: 0.7, pitch: 1.1 })}
+                            >
+                                <Text style={styles.hearItText}>🔊 Hear It</Text>
+                            </TouchableOpacity>
 
                             <View style={styles.modalSection}>
                                 <Text style={styles.modalLabel}>🎨 How to Mix</Text>
@@ -689,6 +731,18 @@ export default function LearningScreen({ navigation }: Props) {
                             onPress={() => navigation.navigate('GrowthTracker')}
                         >
                             <Text style={styles.crossLinkText}>📈 Baby Growth Chart</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.crossLinkBtn}
+                            onPress={() => navigation.navigate('Lullabies')}
+                        >
+                            <Text style={styles.crossLinkText}>🎵 Lullabies</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.crossLinkBtn}
+                            onPress={() => navigation.navigate('BedtimeStories')}
+                        >
+                            <Text style={styles.crossLinkText}>📖 Bedtime Stories</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -947,4 +1001,27 @@ const styles = StyleSheet.create({
     tipModalTitle: { fontSize: 20, fontWeight: '800', color: '#fff', textAlign: 'center' },
     tipModalAge: { fontSize: 13, color: '#64748b', textAlign: 'center', marginBottom: 12 },
     tipModalText: { fontSize: 15, color: '#e2e8f0', lineHeight: 23, textAlign: 'center' },
+
+    // Hear It buttons
+    hearItBtn: {
+        alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center',
+        backgroundColor: '#93c5fd20', paddingVertical: 8, paddingHorizontal: 16,
+        borderRadius: 20, marginTop: 8, borderWidth: 1, borderColor: '#93c5fd',
+    },
+    hearItBtnGreen: {
+        alignSelf: 'center', flexDirection: 'row', alignItems: 'center',
+        backgroundColor: '#4ade8020', paddingVertical: 8, paddingHorizontal: 16,
+        borderRadius: 20, marginTop: 8, borderWidth: 1, borderColor: '#4ade80',
+    },
+    hearItBtnOrange: {
+        alignSelf: 'center', flexDirection: 'row', alignItems: 'center',
+        backgroundColor: '#fb923c20', paddingVertical: 8, paddingHorizontal: 16,
+        borderRadius: 20, marginTop: 8, borderWidth: 1, borderColor: '#fb923c',
+    },
+    hearItBtnColor: {
+        alignSelf: 'center', flexDirection: 'row', alignItems: 'center',
+        paddingVertical: 8, paddingHorizontal: 16,
+        borderRadius: 20, marginTop: 8, borderWidth: 1,
+    },
+    hearItText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });

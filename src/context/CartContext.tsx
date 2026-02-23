@@ -4,11 +4,13 @@ export type CartItem = {
     id: string;
     name: string;
     description: string;
-    price: number; // $0.00 until printing services finalized
+    price: number;
     quantity: number;
     imageUri?: string;
-    productType: 'front' | 'back' | 'natal' | 'natalback' | 'yardsign' | 'postcard' | 'babycard';
-    variant?: string; // e.g., 'classic', 'welcome', 'minimal' for yard signs
+    productType: 'front' | 'back' | 'natal' | 'natalback' | 'yardsign' | 'postcard' | 'babycard' | 'package';
+    variant?: string;
+    material?: string;   // e.g., 'cardstock', 'plastic', 'metal'
+    size?: string;        // e.g., '8.5x11', '11x14'
 };
 
 type CartContextType = {
@@ -89,29 +91,15 @@ export function useCart() {
     return context;
 }
 
-// Product pricing - all $0.00 until printing services finalized
-export const PRODUCT_PRICES = {
-    // Main announcements
+// Product pricing — packages priced dynamically in PrintServiceScreen
+// Individual view prices used by PreviewScreen "Add to Cart" quick-add
+export const PRODUCT_PRICES: Record<string, { name: string; price: number }> = {
+    // Single view quick-add (free digital saves, priced at $0)
     front: { name: 'Birth Announcement (Front)', price: 0.00 },
     back: { name: 'Time Capsule (Back)', price: 0.00 },
     natal: { name: 'Natal Chart', price: 0.00 },
     natalback: { name: 'Chart Reading Guide', price: 0.00 },
-
-    // Yard Signs
-    'yardsign-classic': { name: 'Yard Sign - Classic', price: 0.00 },
-    'yardsign-welcome': { name: 'Yard Sign - Welcome', price: 0.00 },
-    'yardsign-minimal': { name: 'Yard Sign - Minimal', price: 0.00 },
-
-    // Postcards
-    'postcard-front': { name: 'Postcard Front', price: 0.00 },
-    'postcard-back': { name: 'Postcard Back', price: 0.00 },
-    'postcard-bundle-25': { name: '25 Mailable Postcards', price: 0.00 },
-
-    // Trading Cards
-    'babycard-front': { name: 'Trading Card Front', price: 0.00 },
-    'babycard-back': { name: 'Trading Card Back', price: 0.00 },
-    'babycard-bundle-10': { name: '10 Trading Cards', price: 0.00 },
-    'babycard-bundle-25': { name: '25 Trading Cards', price: 0.00 },
+    letter: { name: 'Letter to Baby', price: 0.00 },
 };
 
 export default CartContext;

@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     shareButtonText: {
-        fontSize: 16,
+        fontSize: 24,
         fontWeight: '600',
         color: '#ffffff',
     },
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     backSideButtonText: {
-        fontSize: 16,
+        fontSize: 24,
         fontWeight: '600',
         color: '#ffffff',
     },
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     editButtonText: {
-        fontSize: 16,
+        fontSize: 24,
         fontWeight: '600',
         color: '#ffffff',
     },

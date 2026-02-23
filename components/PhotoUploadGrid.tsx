@@ -121,15 +121,15 @@ const styles = StyleSheet.create({
     },
     grid: {
         flexDirection: 'row',
-        gap: 12,
+        justifyContent: 'space-evenly',
     },
     slotContainer: {
-        flex: 1,
+        width: '21%',
         position: 'relative',
     },
     slot: {
         aspectRatio: 1,
-        borderRadius: 12,
+        borderRadius: 0,
         justifyContent: 'center',
         alignItems: 'center',
         overflow: 'hidden',
@@ -139,11 +139,13 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: 'rgba(255, 255, 255, 0.3)',
         borderStyle: 'dashed',
+        borderRadius: 12,
     },
     slotFilled: {
-        backgroundColor: '#e8f5e8',
-        borderWidth: 3,
-        borderColor: '#4CAF50',
+        borderWidth: 2,
+        borderColor: '#FFFFFF',
+        borderRadius: 0,
+        padding: 2,
     },
     emptyContent: {
         alignItems: 'center',

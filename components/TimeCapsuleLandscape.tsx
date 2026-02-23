@@ -35,7 +35,7 @@ export const LANDSCAPE_HEIGHT = 2550;
 
 type Props = {
     theme: ThemeName;
-    babies?: Array<{ first?: string; middle?: string; last?: string; photoUri?: string | null }>;
+    babies?: Array<{ first?: string; middle?: string; last?: string; photoUri?: string | null; photoUris?: (string | null)[] }>;
     babyName?: string;
     dobISO: string;
     motherName: string;
@@ -597,15 +597,18 @@ export default function TimeCapsuleLandscape(props: Props) {
                         </View>
 
                         {/* America 250 Logo - Right Side */}
-                        <View style={{
-                            position: 'absolute',
-                            right: '-22%',
-                            top: 0,
-                            bottom: 0,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            zIndex: 1,
-                        }}>
+                        <Pressable
+                            onPress={() => Linking.openURL('https://america250.org/')}
+                            style={{
+                                position: 'absolute',
+                                right: '-22%',
+                                top: 0,
+                                bottom: 0,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                zIndex: 1,
+                            }}
+                        >
                             <Image
                                 source={getAmerica250Logo(theme)}
                                 style={{
@@ -614,7 +617,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                                     resizeMode: 'contain'
                                 }}
                             />
-                        </View>
+                        </Pressable>
                     </View>
 
                     {/* Body text - First Paragraph */}

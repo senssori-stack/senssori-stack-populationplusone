@@ -427,6 +427,18 @@ export default function GrowthTrackerScreen({ navigation }: Props) {
         setBabySex(sex);
         await AsyncStorage.setItem(GROWTH_SEX_KEY, sex);
         setShowSexPicker(false);
+
+        // Show one-time data storage disclaimer on first use
+        const disclaimerKey = '@p1_growth_disclaimer_seen';
+        const seen = await AsyncStorage.getItem(disclaimerKey);
+        if (!seen) {
+            await AsyncStorage.setItem(disclaimerKey, 'true');
+            Alert.alert(
+                '📱 Important: Local Data Only',
+                'Your baby\'s growth data is stored only on this device. If you uninstall the app or reset your phone, your growth chart data will be permanently lost.\n\nWe recommend taking screenshots of your growth chart periodically as a backup.',
+                [{ text: 'I Understand', style: 'default' }]
+            );
+        }
     };
 
     // ── Add entry ────────────────────────────────────────────────

@@ -1,9 +1,55 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const https = require('https');
+const Stripe = require('stripe').default;
 
 admin.initializeApp();
 const db = admin.firestore();
+
+// Stripe (secret key — set via: firebase functions:config:set stripe.secret="sk_test_...")
+// For local dev, set STRIPE_SECRET_KEY env variable
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || (functions.config().stripe && functions.config().stripe.secret) || '', {
+    apiVersion: '2024-12-18.acacia',
+});
+
+// ==========================================
+// STRIPE PAYMENT INTENT — one-time payments
+// ==========================================
+exports.createPaymentIntent = functions.https.onCall(async (data, context) => {
+    try {
+        const { amount, currency = 'usd', orderId, customerEmail } = data;
+
+        // Validate amount (in cents)
+        if (!amount || amount < 50) {
+            throw new functions.https.HttpsError(
+                'invalid-argument',
+                'Amount must be at least $0.50 (50 cents).'
+            );
+        }
+
+        // Create the PaymentIntent
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: Math.round(amount), // already in cents from client
+            currency,
+            metadata: {
+                orderId: orderId || '',
+                customerEmail: customerEmail || '',
+                app: 'PopulationPlusOne',
+            },
+            automatic_payment_methods: { enabled: true },
+        });
+
+        console.log('✅ PaymentIntent created:', paymentIntent.id, 'amount:', amount);
+
+        return {
+            clientSecret: paymentIntent.client_secret,
+            paymentIntentId: paymentIntent.id,
+        };
+    } catch (error) {
+        console.error('❌ PaymentIntent error:', error);
+        throw new functions.https.HttpsError('internal', error.message);
+    }
+});
 
 // API Keys
 const METAL_PRICE_API_KEY = 'b11a31e0534e4f7d0ce7f52262cfa644';
