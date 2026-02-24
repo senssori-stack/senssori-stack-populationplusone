@@ -15,6 +15,28 @@ type Props = NativeStackScreenProps<RootStackParamList, 'GiftSuggestions'>;
 
 const AMAZON_TAG = 'populationplu-20';
 
+// ─── Target & Walmart Affiliate Tags ─────────────────────────────
+// Sign up at https://app.impact.com/ and search for each brand.
+// Once approved, replace these with your real campaign IDs.
+const TARGET_AFFILIATE_ID = ''; // e.g., '12345' from Impact
+const WALMART_AFFILIATE_ID = ''; // e.g., '67890' from Impact
+
+type RetailerKey = 'amazon' | 'target' | 'walmart';
+
+interface Retailer {
+    key: RetailerKey;
+    name: string;
+    emoji: string;
+    color: string;
+    bgColor: string;
+}
+
+const RETAILERS: Retailer[] = [
+    { key: 'amazon', name: 'Amazon', emoji: '\uD83D\uDCE6', color: '#ff9900', bgColor: '#fff3e0' },
+    { key: 'target', name: 'Target', emoji: '\uD83C\uDFAF', color: '#cc0000', bgColor: '#ffebee' },
+    { key: 'walmart', name: 'Walmart', emoji: '\uD83D\uDED2', color: '#0071dc', bgColor: '#e3f2fd' },
+];
+
 type OccasionKey = 'newborn' | 'birthday' | 'graduation' | 'anniversary' | 'milestone';
 
 interface GiftCategory {
@@ -119,12 +141,33 @@ const OCCASIONS: Occasion[] = [
 export default function GiftSuggestionsScreen({ navigation, route }: Props) {
     const initialOccasion = (route.params?.occasion as OccasionKey) || 'newborn';
     const [selectedOccasion, setSelectedOccasion] = useState<OccasionKey>(initialOccasion);
+    const [selectedRetailer, setSelectedRetailer] = useState<RetailerKey>('amazon');
 
     const currentOccasion = OCCASIONS.find((o) => o.key === selectedOccasion) || OCCASIONS[0];
 
-    const openAmazon = (searchTerm: string) => {
-        const url = `https://www.amazon.com/s?k=${searchTerm}&tag=${AMAZON_TAG}`;
-        Linking.openURL(url).catch(() => {});
+    const openRetailer = (searchTerm: string, retailer: RetailerKey) => {
+        let url: string;
+        switch (retailer) {
+            case 'target':
+                if (TARGET_AFFILIATE_ID) {
+                    url = `https://goto.target.com/c/${TARGET_AFFILIATE_ID}/1/s/search?k=${searchTerm.replace(/\+/g, ' ')}`;
+                } else {
+                    url = `https://www.target.com/s?searchTerm=${searchTerm.replace(/\+/g, '+')}`;
+                }
+                break;
+            case 'walmart':
+                if (WALMART_AFFILIATE_ID) {
+                    url = `https://goto.walmart.com/c/${WALMART_AFFILIATE_ID}/1/s/search?q=${searchTerm.replace(/\+/g, ' ')}`;
+                } else {
+                    url = `https://www.walmart.com/search?q=${searchTerm.replace(/\+/g, '+')}`;
+                }
+                break;
+            case 'amazon':
+            default:
+                url = `https://www.amazon.com/s?k=${searchTerm}&tag=${AMAZON_TAG}`;
+                break;
+        }
+        Linking.openURL(url).catch(() => { });
     };
 
     return (
@@ -138,8 +181,36 @@ export default function GiftSuggestionsScreen({ navigation, route }: Props) {
                     <Text style={styles.title}>Gift Suggestions</Text>
                     <Text style={styles.subtitle}>
                         Find the perfect gift for every occasion.{' '}
-                        Tap any category to browse on Amazon.
+                        Choose your favorite store and tap a category to shop.
                     </Text>
+                </View>
+
+                {/* Retailer Picker */}
+                <View style={styles.retailerRow}>
+                    {RETAILERS.map((retailer) => (
+                        <TouchableOpacity
+                            key={retailer.key}
+                            style={[
+                                styles.retailerChip,
+                                selectedRetailer === retailer.key && {
+                                    backgroundColor: retailer.color,
+                                    borderColor: retailer.color,
+                                },
+                            ]}
+                            onPress={() => setSelectedRetailer(retailer.key)}
+                            activeOpacity={0.8}
+                        >
+                            <Text style={styles.retailerEmoji}>{retailer.emoji}</Text>
+                            <Text
+                                style={[
+                                    styles.retailerLabel,
+                                    selectedRetailer === retailer.key && styles.retailerLabelActive,
+                                ]}
+                            >
+                                {retailer.name}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
                 </View>
 
                 {/* Occasion Tabs */}
@@ -177,22 +248,25 @@ export default function GiftSuggestionsScreen({ navigation, route }: Props) {
 
                 {/* Category Grid */}
                 <View style={styles.categoryGrid}>
-                    {currentOccasion.categories.map((cat) => (
-                        <TouchableOpacity
-                            key={cat.id}
-                            style={styles.categoryCard}
-                            onPress={() => openAmazon(cat.searchTerm)}
-                            activeOpacity={0.85}
-                        >
-                            <View style={[styles.categoryEmojiCircle, { backgroundColor: cat.color + '20' }]}>
-                                <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
-                            </View>
-                            <Text style={styles.categoryName}>{cat.name}</Text>
-                            <View style={[styles.shopButton, { backgroundColor: cat.color }]}>
-                                <Text style={styles.shopButtonText}>Shop</Text>
-                            </View>
-                        </TouchableOpacity>
-                    ))}
+                    {currentOccasion.categories.map((cat) => {
+                        const activeRetailer = RETAILERS.find(r => r.key === selectedRetailer) || RETAILERS[0];
+                        return (
+                            <TouchableOpacity
+                                key={cat.id}
+                                style={styles.categoryCard}
+                                onPress={() => openRetailer(cat.searchTerm, selectedRetailer)}
+                                activeOpacity={0.85}
+                            >
+                                <View style={[styles.categoryEmojiCircle, { backgroundColor: cat.color + '20' }]}>
+                                    <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                                </View>
+                                <Text style={styles.categoryName}>{cat.name}</Text>
+                                <View style={[styles.shopButton, { backgroundColor: activeRetailer.color }]}>
+                                    <Text style={styles.shopButtonText}>{activeRetailer.emoji} Shop {activeRetailer.name}</Text>
+                                </View>
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
 
                 {/* Tips */}
@@ -207,6 +281,7 @@ export default function GiftSuggestionsScreen({ navigation, route }: Props) {
 
                 <Text style={styles.disclosure}>
                     As an Amazon Associate, Population +1 earns from qualifying purchases.{' '}
+                    We may also earn commissions from Target and Walmart through affiliate partnerships.{' '}
                     Prices and availability are subject to change.
                 </Text>
 
@@ -352,6 +427,35 @@ const styles = StyleSheet.create({
         color: 'rgba(255,255,255,0.85)',
         lineHeight: 22,
         marginBottom: 8,
+    },
+    // Retailer Picker
+    retailerRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 10,
+        marginBottom: 16,
+    },
+    retailerChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 25,
+        borderWidth: 2,
+        borderColor: 'rgba(255,255,255,0.3)',
+        backgroundColor: 'rgba(255,255,255,0.1)',
+    },
+    retailerEmoji: {
+        fontSize: 16,
+        marginRight: 6,
+    },
+    retailerLabel: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: 'rgba(255,255,255,0.7)',
+    },
+    retailerLabelActive: {
+        color: '#fff',
     },
     disclosure: {
         fontSize: 11,
