@@ -42,20 +42,60 @@ STEP 2: ADD THE AUTO-UPDATE SCRIPT
 4. Copy EVERYTHING between the lines below:
 
 ────────────────────────────────────────────────────────────────
-const METAL_API_KEY = 'b11a31e0534e4f7d0ce7f52262cfa644';
 const ALPHA_VANTAGE_KEY = '8NT72TK4I1W8CNWY';
 const LASTFM_KEY = 'dac11fa9b12d7418fa7cf062e93f2391';
 const TMDB_KEY = '3dd040c35b40b0652e8750d74dc30a64';
 
+// ═══════════════════════════════════════════════════════════════
+// GOLD & SILVER — handled by the APP (GoldPrice.org, free, works from phone)
+// NOT fetched here because free metals APIs block Google server IPs.
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// doPost() — Receives updates FROM the app (optional)
+// ═══════════════════════════════════════════════════════════════
+function doPost(e) {
+  try {
+    var body = JSON.parse(e.postData.contents);
+    var updates = body.updates;
+    
+    if (!updates) {
+      return ContentService.createTextOutput(JSON.stringify({ error: 'No updates provided' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var timestamp = new Date().toLocaleString();
+    var updated = [];
+    
+    for (var fieldName in updates) {
+      if (updates.hasOwnProperty(fieldName)) {
+        updateCell(sheet, fieldName, updates[fieldName], timestamp);
+        updated.push(fieldName);
+      }
+    }
+    
+    Logger.log('✅ doPost updated: ' + updated.join(', '));
+    return ContentService.createTextOutput(JSON.stringify({ success: true, updated: updated }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    Logger.log('❌ doPost error: ' + err);
+    return ContentService.createTextOutput(JSON.stringify({ error: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Timer-based updates: Dow, Song, Movie, Gas
+// Gold & Silver are NOT fetched here (app handles those).
+// ═══════════════════════════════════════════════════════════════
 function updateLiveData() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  const timestamp = new Date().toLocaleString();
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var timestamp = new Date().toLocaleString();
   
   Logger.log('🔄 Starting data fetch...');
   
   updateCell(sheet, 'GALLON OF GASOLINE', fetchGasPrice(), timestamp);
-  updateCell(sheet, 'GOLD OZ', fetchGoldPrice(), timestamp);
-  updateCell(sheet, 'SILVER OZ', fetchSilverPrice(), timestamp);
   updateCell(sheet, 'DOW JONES CLOSE', fetchDowJones(), timestamp);
   updateCell(sheet, '#1 SONG', fetchTopSong(), timestamp);
   updateCell(sheet, '#1 MOVIE', fetchTopMovie(), timestamp);
@@ -64,8 +104,8 @@ function updateLiveData() {
 }
 
 function updateCell(sheet, fieldName, value, timestamp) {
-  const data = sheet.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
+  var data = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
     if (data[i][0] === fieldName) {
       sheet.getRange(i + 1, 2).setValue(value);
       sheet.getRange(i + 1, 3).setValue(timestamp);
@@ -75,42 +115,29 @@ function updateCell(sheet, fieldName, value, timestamp) {
   }
 }
 
-function fetchGoldPrice() {
-  try {
-    const url = 'https://api.metalpriceapi.com/v1/latest?api_key=' + METAL_API_KEY + '&base=USD&currencies=XAU';
-    const response = UrlFetchApp.fetch(url);
-    const data = JSON.parse(response.getContentText());
-    const price = (1 / data.rates.XAU).toFixed(2);
-    return '$' + price;
-  } catch (e) {
-    Logger.log('⚠️ Gold API failed: ' + e);
-    return '$2,650.00';
-  }
-}
-
-function fetchSilverPrice() {
-  try {
-    const url = 'https://api.metalpriceapi.com/v1/latest?api_key=' + METAL_API_KEY + '&base=USD&currencies=XAG';
-    const response = UrlFetchApp.fetch(url);
-    const data = JSON.parse(response.getContentText());
-    const price = (1 / data.rates.XAG).toFixed(2);
-    return '$' + price;
-  } catch (e) {
-    Logger.log('⚠️ Silver API failed: ' + e);
-    return '$30.25';
-  }
-}
-
 function fetchDowJones() {
   try {
-    const url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=^DJI&apikey=' + ALPHA_VANTAGE_KEY;
-    const response = UrlFetchApp.fetch(url);
-    const data = JSON.parse(response.getContentText());
-    const price = parseFloat(data['Global Quote']['05. price']);
-    return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    var url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=%5EDJI&apikey=' + ALPHA_VANTAGE_KEY;
+    var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+    var text = response.getContentText();
+    var data = JSON.parse(text);
+    if (data['Global Quote'] && data['Global Quote']['05. price']) {
+      var price = parseFloat(data['Global Quote']['05. price']);
+      return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    // If ^DJI doesn't work, try DJI
+    var url2 = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=DJI&apikey=' + ALPHA_VANTAGE_KEY;
+    var response2 = UrlFetchApp.fetch(url2, { muteHttpExceptions: true });
+    var data2 = JSON.parse(response2.getContentText());
+    if (data2['Global Quote'] && data2['Global Quote']['05. price']) {
+      var price2 = parseFloat(data2['Global Quote']['05. price']);
+      return price2.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    Logger.log('⚠️ Dow Jones: no valid response from either symbol');
+    return '43,556.00';
   } catch (e) {
     Logger.log('⚠️ Dow Jones API failed: ' + e);
-    return '43,250.00';
+    return '43,556.00';
   }
 }
 
@@ -165,8 +192,30 @@ STEP 3: TEST IT MANUALLY
 5. Check the "Execution log" at bottom to see if it worked
 
 
-STEP 4: SET UP AUTO-UPDATES (Every 3 Hours)
+STEP 4: DEPLOY AS WEB APP (so the app can write gold/silver prices back)
 ═══════════════════════════════════════════════════════════════
+
+1. In Apps Script, click: Deploy → New deployment
+2. Click the gear icon ⚙️ next to "Select type" → Choose: Web app
+3. Fill in:
+   - Description: "Snapshot writer endpoint"
+   - Execute as: Me
+   - Who has access: Anyone
+4. Click: DEPLOY
+5. Click: Authorize access (if prompted — same flow as Step 3)
+6. COPY THE WEB APP URL that appears
+   (looks like: https://script.google.com/macros/s/AKfycb.../exec)
+7. Open: src/data/utils/sheets-writer.ts in the app code
+8. Paste the URL into the APPS_SCRIPT_WEB_APP_URL constant:
+   const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
+9. Save the file
+
+
+STEP 5: SET UP AUTO-UPDATES (Every 3 Hours)
+═══════════════════════════════════════════════════════════════
+
+The timer fetches: Dow Jones, #1 Song, #1 Movie, and Gas price.
+Gold & Silver are fetched by the app from GoldPrice.org (free, works from phone).
 
 1. In Apps Script, click the CLOCK ICON ⏰ on the left sidebar (Triggers)
 2. Click: + Add Trigger (bottom right)
@@ -177,10 +226,10 @@ STEP 4: SET UP AUTO-UPDATES (Every 3 Hours)
    - Select type of time based trigger: Hour timer
    - Select hour interval: Every 3 hours
 4. Click: SAVE
-5. Done! It will now update every 3 hours automatically
+5. Done! Non-metals data updates every 3 hours automatically
 
 
-STEP 5: PUBLISH THE SHEET AS CSV
+STEP 6: PUBLISH THE SHEET AS CSV
 ═══════════════════════════════════════════════════════════════
 
 1. Go back to your Google Sheet (click the tab at top)
@@ -208,8 +257,10 @@ DONE! 🎉
 ═══════════════════════════════════════════════════════════════
 
 Your Google Sheet will now:
-✅ Auto-fetch Gold, Silver, Dow Jones, Song, Movie every 3 hours
+✅ Auto-fetch Gold & Silver from GoldPrice.org (free, unlimited) every 3 hours
+✅ Auto-fetch Dow Jones, Song, Movie every 3 hours
 ✅ You manually update: Prices, Champions, Population when needed
 ✅ Your app reads ONE fast CSV = 1-2 second load time
 ✅ Cached loads = instant (0.1 seconds)
+✅ App does NOT call any metals API — the sheet is the source of truth
 

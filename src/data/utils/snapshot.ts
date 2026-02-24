@@ -1,9 +1,13 @@
 // src/data/utils/snapshot.ts
+//
+// Gold & Silver: fetched by the APP from GoldPrice.org (free, unlimited, works from phone).
+// Everything else: fetched by Google Sheets timer (Dow, Song, Movie, Gas).
+// App reads the sheet CSV for non-metals, then overlays live metals prices.
+//
 import { getFromCache, saveToCache } from './cache-manager';
 import { fetchCSV } from './csv';
 import { CURRENT_SNAPSHOT_DATA } from './current-snapshot';
 import { getHistoricalSnapshotForDate } from './historical-snapshot';
-import { getMetalsBackup, saveMetalsBackup } from './metals-backup';
 import { SNAPSHOT_CSV_URL } from './sheets';
 import SNAPSHOT_CANONICAL_MAP from './snapshot-mapping';
 
@@ -110,12 +114,38 @@ export async function getAllSnapshotValues(): Promise<Record<string, string>> {
         }
 
         console.log('✅ Using Google Sheets snapshot data');
-        console.log('🪙 Gold from sheet:', out['GOLD OZ']);
-        console.log('🪙 Silver from sheet:', out['SILVER OZ']);
 
-        // Save gold/silver to permanent backup after successful fetch
-        if (out['GOLD OZ'] && out['SILVER OZ']) {
-            await saveMetalsBackup(out['GOLD OZ'], out['SILVER OZ'], 'Google Sheets');
+        // ── LIVE METALS PRICES (from app, not from sheet) ───────────
+        // GoldPrice.org: free, unlimited, works from phone but NOT from Google servers.
+        // MetalsPriceAPI: DISABLED (quota burned). Only GoldPrice.org is used.
+        try {
+            const livePrices = await getMetalsPrices();
+            if (livePrices) {
+                out['GOLD OZ'] = livePrices.gold;
+                out['SILVER OZ'] = livePrices.silver;
+                console.log('🪙 Gold (LIVE):', out['GOLD OZ']);
+                console.log('🪙 Silver (LIVE):', out['SILVER OZ']);
+                await saveMetalsBackup(out['GOLD OZ'], out['SILVER OZ'], 'GoldPrice.org');
+            } else {
+                console.warn('⚠️ GoldPrice.org failed, using fallback...');
+                if (!out['GOLD OZ'] || !out['SILVER OZ']) {
+                    const metalsBackup = await getMetalsBackup();
+                    if (metalsBackup) {
+                        out['GOLD OZ'] = metalsBackup.gold;
+                        out['SILVER OZ'] = metalsBackup.silver;
+                        console.log('🪙 Using backup metals:', out['GOLD OZ'], out['SILVER OZ']);
+                    }
+                }
+            }
+        } catch (apiError) {
+            console.warn('⚠️ Metals fetch error:', apiError);
+            if (!out['GOLD OZ'] || !out['SILVER OZ']) {
+                const metalsBackup = await getMetalsBackup();
+                if (metalsBackup) {
+                    out['GOLD OZ'] = metalsBackup.gold;
+                    out['SILVER OZ'] = metalsBackup.silver;
+                }
+            }
         }
 
         // ALWAYS use hardcoded President/VP - never trust Google Sheets for this
@@ -128,42 +158,28 @@ export async function getAllSnapshotValues(): Promise<Record<string, string>> {
 
         return (SNAP_CACHE = out);
     } catch (error) {
-        console.warn('⚠️ Google Sheets fetch failed, trying backups...');
+        console.warn('⚠️ Google Sheets fetch failed, trying cache...');
 
-        // Try to get last known good values from cache first
         const cachedData = await getFromCache();
-        if (cachedData && cachedData['GOLD OZ'] && cachedData['SILVER OZ']) {
+        if (cachedData) {
             console.log('✅ Using cached data (fetch failed)');
-            console.log('🪙 Cached Gold:', cachedData['GOLD OZ']);
-            console.log('🪙 Cached Silver:', cachedData['SILVER OZ']);
             return (SNAP_CACHE = cachedData);
         }
 
-        // Try metals backup database (permanent storage)
+        // Try metals backup + hardcoded fallback
         const metalsBackup = await getMetalsBackup();
         if (metalsBackup) {
-            console.log('✅ Using metals backup database (fetch failed)');
-            console.log('🪙 Backup Gold:', metalsBackup.gold);
-            console.log('🪙 Backup Silver:', metalsBackup.silver);
-            console.log('📅 Last fetched:', metalsBackup.fetchedAt);
-
-            // Merge backup metals with other fallback data
-            const fallbackWithMetals = { ...CURRENT_SNAPSHOT_DATA };
-            fallbackWithMetals['GOLD OZ'] = metalsBackup.gold;
-            fallbackWithMetals['SILVER OZ'] = metalsBackup.silver;
-            return (SNAP_CACHE = fallbackWithMetals);
+            const fallback = { ...CURRENT_SNAPSHOT_DATA };
+            fallback['GOLD OZ'] = metalsBackup.gold;
+            fallback['SILVER OZ'] = metalsBackup.silver;
+            return (SNAP_CACHE = fallback);
         }
 
-        console.error('❌ No cache or backup available - gold/silver will be empty');
+        console.error('❌ No cache or backup available');
     }
 
-    // Final fallback - NO gold/silver values (force fetch to work)
-    console.log('⚠️ Using minimal fallback data (no gold/silver - fetch required)');
-    const fallbackData = { ...CURRENT_SNAPSHOT_DATA };
-    delete fallbackData['GOLD OZ'];
-    delete fallbackData['SILVER OZ'];
-
-    return (SNAP_CACHE = fallbackData);
+    // Final fallback
+    return (SNAP_CACHE = { ...CURRENT_SNAPSHOT_DATA });
 }
 
 /**

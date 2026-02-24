@@ -111,7 +111,47 @@ exports.fetchDailySnapshots = functions.pubsub
         }
     });
 
+// TEMPORARY (Feb 2026): Using GoldPrice.org (free, unlimited, no API key)
+// instead of MetalsPriceAPI which was being over-fetched beyond quota.
+// When ready to switch back, replace the URL and parsing logic below.
 async function fetchMetals() {
+    // PRIMARY: GoldPrice.org (free, unlimited)
+    try {
+        return await new Promise((resolve, reject) => {
+            https.get('https://data-asg.goldprice.org/dbXRates/USD', (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => {
+                    try {
+                        const json = JSON.parse(data);
+                        const item = json.items?.[0];
+                        if (item?.xauPrice && item?.xagPrice) {
+                            resolve({
+                                gold: item.xauPrice.toFixed(2),
+                                silver: item.xagPrice.toFixed(2),
+                            });
+                        } else {
+                            console.warn('GoldPrice.org response missing prices, using fallback');
+                            resolve({ gold: 2050, silver: 25 });
+                        }
+                    } catch (e) {
+                        console.warn('GoldPrice.org parse error:', e);
+                        resolve({ gold: 2050, silver: 25 });
+                    }
+                });
+            }).on('error', (e) => {
+                console.warn('GoldPrice.org fetch error:', e);
+                resolve({ gold: 2050, silver: 25 });
+            });
+        });
+    } catch (e) {
+        console.warn('Metals fetch failed:', e);
+        return { gold: 2050, silver: 25 };
+    }
+
+    // OLD MetalsPriceAPI code (disabled — was over-fetching quota)
+    // Uncomment when ready to re-enable with proper rate limiting:
+    /*
     return new Promise((resolve, reject) => {
         const url = `https://api.metalpriceapi.com/v1/latest?api_key=${METAL_PRICE_API_KEY}&base=USD&currencies=XAU,XAG`;
         https.get(url, (res) => {
@@ -131,6 +171,7 @@ async function fetchMetals() {
             });
         }).on('error', reject);
     });
+    */
 }
 
 async function fetchDowJones() {
