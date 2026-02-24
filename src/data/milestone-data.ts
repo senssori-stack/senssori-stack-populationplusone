@@ -163,6 +163,44 @@ export const AGE_GROUPS: AgeGroup[] = [
                 emoji: '🔊', parentTip: 'A healthy startle reflex means hearing is developing normally. Don\'t worry — it\'s a good sign!',
                 doctorNote: 'If baby doesn\'t react to loud sounds at all, a hearing screening should be done.',
             },
+            {
+                id: 'nb_calms_when_held', title: 'Calms When Spoken To / Picked Up', description: 'Settles down when hearing your voice or being held',
+                category: 'social', ageRangeMonths: [0, 2], typicalMonth: 0, concernMonth: 3,
+                emoji: '🤱', parentTip: 'Skin-to-skin contact, gentle rocking, and soft talking are the best calming tools. You are baby\'s safe place.',
+                doctorNote: 'If baby cannot be soothed at all by any method by 3 months, discuss with your pediatrician.',
+                funFact: 'A parent\'s heartbeat is one of the most calming sounds for a newborn — they heard it for 9 months!'
+            },
+            {
+                id: 'nb_moves_arms_legs', title: 'Moves Arms & Legs Equally', description: 'Both arms and both legs move symmetrically',
+                category: 'physical', ageRangeMonths: [0, 2], typicalMonth: 0, concernMonth: 2,
+                emoji: '🦵', parentTip: 'Watch baby during tummy time and diaper changes — both sides should move about the same. This is one of the first things pediatricians check.',
+                doctorNote: 'If one arm or leg moves noticeably less than the other, tell your pediatrician immediately. Asymmetry can be an early sign that needs evaluation.',
+            },
+            {
+                id: 'nb_opens_hands', title: 'Opens Hands Briefly', description: 'Hands occasionally unfurl from fists',
+                category: 'fine_motor', ageRangeMonths: [0, 2], typicalMonth: 1, concernMonth: 3,
+                emoji: '🖐️', parentTip: 'Newborns keep hands mostly fisted — that\'s normal! Over the first 2 months, you\'ll see the fingers start to relax and open.',
+                doctorNote: 'If hands are always tightly fisted with thumbs tucked inside at 3 months, mention it to your doctor.',
+            },
+            {
+                id: 'nb_watches_toy', title: 'Looks at a Toy for Several Seconds', description: 'Gazes at a toy held nearby for a few seconds',
+                category: 'cognitive', ageRangeMonths: [0, 2], typicalMonth: 1, concernMonth: 3,
+                emoji: '🧸', parentTip: 'Hold a brightly colored toy or rattle 8-12 inches from baby\'s face. They should gaze at it briefly. High-contrast black-and-white toys work best early on.',
+                doctorNote: 'If baby shows no interest in looking at objects held nearby by 3 months, let your pediatrician know.',
+            },
+            {
+                id: 'nb_turns_to_voice', title: 'Quiets or Turns Toward Voice', description: 'Pauses or turns when hearing a familiar voice',
+                category: 'language', ageRangeMonths: [0, 2], typicalMonth: 1, concernMonth: 3,
+                emoji: '👂', parentTip: 'Talk and sing to baby from different sides. Watch how they pause, turn, or change expression when they hear you. They already know your voice!',
+                doctorNote: 'If baby shows no response to voices at all by 2-3 months, a hearing evaluation should be done.',
+                funFact: 'Babies can recognize their mother\'s voice at birth — they\'ve been listening to it in the womb since the third trimester!'
+            },
+            {
+                id: 'nb_looks_at_face', title: 'Stares at Caregiver\'s Face', description: 'Gazes intently at faces during feeding or holding',
+                category: 'social', ageRangeMonths: [0, 2], typicalMonth: 0, concernMonth: 2,
+                emoji: '👁️', parentTip: 'During feeding, hold baby close and let them study your face. Talk softly. This face-gazing builds deep emotional bonds and wires their brain for social connection.',
+                doctorNote: 'If baby consistently avoids looking at faces by 2 months, bring this up at your next visit.',
+            },
         ]
     },
 
@@ -220,6 +258,50 @@ export const AGE_GROUPS: AgeGroup[] = [
                 emoji: '❤️', parentTip: 'Notice how baby kicks and coos when they see you? That\'s recognition and love forming!',
                 doctorNote: 'If baby shows no difference in response between familiar and unfamiliar people by 5 months, mention it.',
             },
+            {
+                id: '3m_sounds_back', title: 'Makes Sounds Back to You', description: 'Responds to your talking with their own sounds',
+                category: 'language', ageRangeMonths: [3, 5], typicalMonth: 3, concernMonth: 5,
+                emoji: '🔁', parentTip: 'Have a "conversation"! When baby coos, pause and wait. They\'ll often "reply." This back-and-forth is the foundation of all communication.',
+                doctorNote: 'If baby makes no vocalizations in response to your voice by 5 months, mention it to your doctor.',
+                funFact: 'These early "conversations" teach babies about turn-taking — a skill they\'ll use in every social interaction for the rest of their life!'
+            },
+            {
+                id: '3m_turns_to_sound', title: 'Turns Head Toward Sound', description: 'Turns head toward a voice or noise to find the source',
+                category: 'cognitive', ageRangeMonths: [3, 5], typicalMonth: 4, concernMonth: 6,
+                emoji: '🔔', parentTip: 'Shake a rattle or call baby\'s name from the side. Watch them turn to locate the sound. This is their brain connecting hearing with spatial awareness!',
+                doctorNote: 'If baby doesn\'t turn toward sounds or voices by 6 months, a hearing evaluation is recommended.',
+            },
+            {
+                id: '3m_hands_to_mouth', title: 'Brings Hands to Mouth', description: 'Puts hands and fingers in mouth intentionally',
+                category: 'fine_motor', ageRangeMonths: [3, 5], typicalMonth: 3, concernMonth: 5,
+                emoji: '👄', parentTip: 'Mouthing is how babies explore! Their mouth has more nerve endings than their fingers at this age. Just keep hands clean and let them explore.',
+                doctorNote: 'If baby never brings hands to mouth or seems unable to coordinate this by 5 months, let your doctor know.',
+            },
+            {
+                id: '3m_holds_toy', title: 'Holds a Toy When Placed in Hand', description: 'Grasps and briefly holds a rattle or toy',
+                category: 'fine_motor', ageRangeMonths: [3, 5], typicalMonth: 3, concernMonth: 5,
+                emoji: '🎯', parentTip: 'Place a lightweight rattle in baby\'s palm. They\'ll grip it reflexively at first, then intentionally. Celebrate the shaking sounds they make!',
+                doctorNote: 'If baby can\'t hold a toy placed in their hand at all by 5 months, discuss with your doctor.',
+            },
+            {
+                id: '3m_smiles_for_attention', title: 'Smiles to Get Your Attention', description: 'Initiates a smile (not just responding to yours)',
+                category: 'social', ageRangeMonths: [3, 5], typicalMonth: 4, concernMonth: 6,
+                emoji: '😃', parentTip: 'Watch for baby smiling AT you to start an interaction — not just smiling back. This means they\'re learning that their behavior can influence others. Huge cognitive leap!',
+                doctorNote: 'If baby only smiles reflexively and never seems to initiate social smiling by 6 months, mention it.',
+            },
+            {
+                id: '3m_squeals_giggles', title: 'Squeals and Giggles', description: 'Makes high-pitched happy squealing sounds',
+                category: 'language', ageRangeMonths: [3, 5], typicalMonth: 4, concernMonth: 6,
+                emoji: '🎵', parentTip: 'Those delightful squeals are baby experimenting with pitch and volume. Squeal back! It\'s music practice for their vocal cords.',
+                doctorNote: 'If baby makes no varied sounds (only one type of vocalization) by 6 months, discuss with your doctor.',
+            },
+            {
+                id: '3m_looks_at_hands', title: 'Looks at Own Hands', description: 'Discovers and stares at own hands with fascination',
+                category: 'cognitive', ageRangeMonths: [3, 4], typicalMonth: 3, concernMonth: 5,
+                emoji: '🤚', parentTip: 'Baby is making one of their first great discoveries: "These things at the end of my arms are MINE and I can control them!" Let them stare — it\'s brain-building.',
+                doctorNote: 'If baby shows no awareness of their own hands by 5 months, let your pediatrician know.',
+                funFact: 'Hand-watching is a major cognitive milestone — it\'s the first step toward understanding that they are a separate person from their caregivers!'
+            },
         ]
     },
 
@@ -271,6 +353,50 @@ export const AGE_GROUPS: AgeGroup[] = [
                 category: 'cognitive', ageRangeMonths: [5, 8], typicalMonth: 6, concernMonth: 9,
                 emoji: '🎩', parentTip: 'Play peekaboo and hide toys under a blanket. This teaches that things exist even when you can\'t see them!',
                 doctorNote: 'If baby shows no interest in hidden objects by 9 months, bring it up with your doctor.',
+            },
+            {
+                id: '5m_mirror', title: 'Likes Looking in a Mirror', description: 'Smiles at or reaches toward own reflection',
+                category: 'cognitive', ageRangeMonths: [5, 7], typicalMonth: 5, concernMonth: 8,
+                emoji: '🪞', parentTip: 'Place an unbreakable mirror at floor level during tummy time. Baby will be fascinated by "the other baby" — they don\'t know it\'s themselves yet!',
+                doctorNote: 'If baby shows no interest in reflections or faces by 8 months, mention it to your pediatrician.',
+                funFact: 'Babies don\'t recognize themselves in a mirror until about 18 months. Before that, they think it\'s another baby!'
+            },
+            {
+                id: '5m_turn_taking_sounds', title: 'Takes Turns Making Sounds', description: 'Vocalizes back and forth with you in a "conversation"',
+                category: 'language', ageRangeMonths: [5, 7], typicalMonth: 5, concernMonth: 8,
+                emoji: '🗨️', parentTip: 'Pause after you speak and wait for baby to respond. These vocal "conversations" are training their brain for real dialogue. The longer the back-and-forth, the better!',
+                doctorNote: 'If baby doesn\'t engage in any vocal back-and-forth by 8 months, discuss with your doctor.',
+            },
+            {
+                id: '5m_raspberries', title: 'Blows Raspberries', description: 'Makes sputtering/buzzing sounds with lips',
+                category: 'language', ageRangeMonths: [4, 7], typicalMonth: 5, concernMonth: 8,
+                emoji: '😝', parentTip: 'Blow raspberries back! This silly sound is actually serious speech practice — baby is learning to control their lips, tongue, and breath together.',
+                doctorNote: 'If baby makes no lip/tongue sounds (raspberries, clicks, blowing) by 8 months, mention it at your visit.',
+                funFact: 'Blowing raspberries exercises the same muscles babies will later use to say "B," "P," and "M" sounds!'
+            },
+            {
+                id: '5m_mouths_objects', title: 'Puts Things in Mouth to Explore', description: 'Brings toys and objects to mouth for exploration',
+                category: 'cognitive', ageRangeMonths: [4, 7], typicalMonth: 5, concernMonth: 8,
+                emoji: '👶', parentTip: 'Mouthing IS learning! Baby\'s mouth has more sensory receptors than their hands at this age. Provide safe, clean, varied-texture objects to explore.',
+                doctorNote: 'If baby never brings objects to mouth by 8 months, discuss sensory exploration with your doctor.',
+            },
+            {
+                id: '5m_reaches_with_both', title: 'Reaches with Both Hands', description: 'Uses both hands equally to reach for toys',
+                category: 'fine_motor', ageRangeMonths: [4, 7], typicalMonth: 5, concernMonth: 8,
+                emoji: '🤲', parentTip: 'Offer toys at the midline so baby reaches with both hands. At this age, they shouldn\'t have a strong hand preference — both sides should be active.',
+                doctorNote: 'A strong preference for one hand before 12 months can signal an issue. If baby consistently ignores one hand, tell your doctor.',
+            },
+            {
+                id: '5m_closes_lips', title: 'Closes Lips or Turns Away When Full', description: 'Shows they\'re done eating by closing mouth or turning head',
+                category: 'social', ageRangeMonths: [5, 7], typicalMonth: 6, concernMonth: 9,
+                emoji: '🚫', parentTip: 'Respect this signal! When baby turns away or closes their lips, they\'re telling you they\'re full. Honoring hunger cues builds healthy eating habits for life.',
+                doctorNote: 'If baby shows no communication around feeding (no cues for hunger or fullness) by 9 months, mention it.',
+            },
+            {
+                id: '5m_laughs_play', title: 'Laughs During Physical Play', description: 'Giggles when you gently bounce, swing, or tickle',
+                category: 'social', ageRangeMonths: [4, 7], typicalMonth: 5, concernMonth: 8,
+                emoji: '🤣', parentTip: 'Gentle bouncing on your knee, "airplane" lifts, and belly tickles are all excellent bonding AND developmental activities. Follow baby\'s lead — if they laugh, keep going!',
+                doctorNote: 'If baby shows no joyful responses to playful physical interaction by 8 months, discuss with your doctor.',
             },
         ]
     },
@@ -328,6 +454,51 @@ export const AGE_GROUPS: AgeGroup[] = [
                 category: 'social', ageRangeMonths: [7, 12], typicalMonth: 8, concernMonth: 14,
                 emoji: '🥺', parentTip: 'Always say goodbye (even if baby cries). Sneaking out makes anxiety worse. They need to learn you always come back.',
                 doctorNote: 'Separation anxiety is normal and healthy. It usually peaks at 12-18 months and resolves by 3-4 years.',
+            },
+            {
+                id: '7m_varied_babble', title: 'Varied Babbling Sounds', description: 'Makes different sounds like "mamamama," "babababa," "dadadada"',
+                category: 'language', ageRangeMonths: [7, 10], typicalMonth: 8, concernMonth: 11,
+                emoji: '🔤', parentTip: 'When baby says "mamama," respond excitedly: "Yes! Mama! I\'m Mama!" Even though they don\'t mean it yet, your reaction teaches them that sounds have meaning.',
+                doctorNote: 'If baby\'s babbling doesn\'t include varied consonant sounds by 10-11 months (only vowels), request a speech-language evaluation.',
+                funFact: 'Babies babble in the rhythm and intonation of their native language — a Japanese baby\'s babbling already sounds different from an English baby\'s!'
+            },
+            {
+                id: '7m_lifts_arms', title: 'Lifts Arms to Be Picked Up', description: 'Reaches arms up toward you when they want to be held',
+                category: 'social', ageRangeMonths: [7, 10], typicalMonth: 8, concernMonth: 12,
+                emoji: '🙌', parentTip: 'This is intentional communication! When baby reaches up, say "You want UP? I\'ll pick you UP!" before lifting them. You\'re teaching the word for the action.',
+                doctorNote: 'If baby never raises arms to be picked up by 12 months, discuss this with your pediatrician as it\'s an important social communication milestone.',
+            },
+            {
+                id: '7m_bangs_together', title: 'Bangs Two Objects Together', description: 'Holds a toy in each hand and claps them together',
+                category: 'fine_motor', ageRangeMonths: [7, 10], typicalMonth: 8, concernMonth: 11,
+                emoji: '🥁', parentTip: 'Give baby a wooden spoon and a pot lid — instant drum kit! Banging teaches bilateral coordination (using both hands at the same time for different tasks).',
+                doctorNote: 'If baby can\'t hold objects in both hands simultaneously by 11 months, discuss fine motor development with your doctor.',
+                funFact: 'Banging objects together requires the brain to coordinate both sides of the body — the same neural pathway used later for clapping, catching, and tying shoes!'
+            },
+            {
+                id: '7m_gets_to_sitting', title: 'Gets to Sitting Position Alone', description: 'Moves from lying down to sitting up without help',
+                category: 'physical', ageRangeMonths: [7, 10], typicalMonth: 8, concernMonth: 11,
+                emoji: '🧘', parentTip: 'Place interesting toys just out of reach while baby is on their tummy. The motivation to get to them drives them to push up into sitting!',
+                doctorNote: 'If baby can\'t get into a sitting position on their own by 11 months, talk to your doctor about motor development.',
+            },
+            {
+                id: '7m_facial_expressions', title: 'Shows Several Facial Expressions', description: 'Displays happy, sad, surprised, and angry faces',
+                category: 'social', ageRangeMonths: [7, 10], typicalMonth: 8, concernMonth: 11,
+                emoji: '😊', parentTip: 'Name baby\'s emotions as you see them: "You look surprised!" "Oh, you\'re frustrated." This emotional labeling helps them understand their own feelings later.',
+                doctorNote: 'If baby shows a very flat affect (limited facial expressions, no variety in emotional display) by 11 months, mention this at your next visit.',
+            },
+            {
+                id: '7m_peekaboo_laughs', title: 'Laughs During Peek-a-boo', description: 'Anticipates and laughs when you play peek-a-boo',
+                category: 'cognitive', ageRangeMonths: [7, 10], typicalMonth: 8, concernMonth: 11,
+                emoji: '🙈', parentTip: 'Make peek-a-boo more complex: hide behind a blanket, pop out from different sides, vary the timing. Baby is learning anticipation, surprise, and object permanence all at once!',
+                doctorNote: 'If baby shows no interest in simple interactive games like peek-a-boo by 11 months, discuss with your doctor.',
+                funFact: 'Peek-a-boo is one of the most research-backed developmental games in existence — it teaches object permanence, social anticipation, and emotional regulation all at the same time!'
+            },
+            {
+                id: '7m_finger_feeds', title: 'Picks Up Food to Self-Feed', description: 'Uses fingers to pick up small pieces of food and bring to mouth',
+                category: 'fine_motor', ageRangeMonths: [7, 10], typicalMonth: 8, concernMonth: 11,
+                emoji: '🍇', parentTip: 'Soft, small pieces of banana, avocado, or puffs are perfect. Let baby practice — it\'s messy but essential for fine motor development and independence!',
+                doctorNote: 'If baby shows no interest in self-feeding or can\'t pick up small foods by 11 months, discuss with your doctor.',
             },
         ]
     },
@@ -387,6 +558,44 @@ export const AGE_GROUPS: AgeGroup[] = [
                 emoji: '🧱', parentTip: 'Start with big, soft blocks. Stack them up, let baby knock them down. Then encourage them to stack!',
                 doctorNote: 'If baby can\'t stack even 2 objects by 16 months, discuss fine motor skills with your doctor.',
             },
+            {
+                id: '10m_pincer_grasp', title: 'Pincer Grasp', description: 'Picks up small items between thumb and index finger',
+                category: 'fine_motor', ageRangeMonths: [9, 13], typicalMonth: 10, concernMonth: 14,
+                emoji: '🤏', parentTip: 'Cheerios and puffs are perfect practice! The pincer grasp is a huge fine motor leap — it\'s the foundation of writing, buttoning, and using tools.',
+                doctorNote: 'If baby still rakes at small objects with their whole hand by 14 months instead of using thumb and finger, mention it.',
+                funFact: 'The pincer grasp is one of the things that separates humans from most other animals — it\'s essential for tool use!'
+            },
+            {
+                id: '10m_waves_bye', title: 'Waves Bye-Bye', description: 'Waves hand when someone says goodbye',
+                category: 'social', ageRangeMonths: [9, 13], typicalMonth: 10, concernMonth: 14,
+                emoji: '👋', parentTip: 'Wave every time you say hello or goodbye. At first, baby will wave after the person leaves — that\'s totally normal! Timing will improve.',
+                doctorNote: 'If baby doesn\'t wave or use any gestures by 14 months, discuss this milestone with your doctor. Gestures are important precursors to language.',
+            },
+            {
+                id: '10m_pulls_to_stand', title: 'Pulls to Standing', description: 'Uses furniture or your hands to pull up to a standing position',
+                category: 'physical', ageRangeMonths: [8, 12], typicalMonth: 9, concernMonth: 13,
+                emoji: '🧗', parentTip: 'Make sure furniture is stable and anchored! Baby will try to pull up on anything. Couch cushions at the base soften falls.',
+                doctorNote: 'If baby doesn\'t pull to stand by 13 months, discuss motor development with your pediatrician.',
+            },
+            {
+                id: '10m_drinks_from_cup', title: 'Drinks from a Cup', description: 'Takes sips from an open cup or sippy cup with help',
+                category: 'fine_motor', ageRangeMonths: [9, 14], typicalMonth: 11, concernMonth: 15,
+                emoji: '🥤', parentTip: 'Start with a small open cup (even a shot glass works!) with just a tiny bit of water. It\'s messy but teaches important oral motor skills.',
+                doctorNote: 'If baby shows no ability to drink from any cup (even with help) by 15 months, discuss with your doctor.',
+            },
+            {
+                id: '10m_understands_no', title: 'Understands "No"', description: 'Pauses or stops briefly when you say "no"',
+                category: 'language', ageRangeMonths: [9, 13], typicalMonth: 10, concernMonth: 14,
+                emoji: '🚫', parentTip: 'Use "no" sparingly and mean it when you say it. Redirect instead: "Not the outlet — HERE, play with this!" Save "no" for safety.',
+                doctorNote: 'If baby shows no comprehension of "no" or "stop" by 14 months, discuss receptive language with your doctor.',
+            },
+            {
+                id: '10m_drops_things_on_purpose', title: 'Drops Things on Purpose', description: 'Purposely drops food or toys to watch them fall',
+                category: 'cognitive', ageRangeMonths: [9, 13], typicalMonth: 10, concernMonth: 14,
+                emoji: '⬇️', parentTip: 'This is NOT misbehavior — it\'s a science experiment! Baby is learning about gravity, cause & effect, and that objects still exist when they fall. Hand things back cheerfully.',
+                doctorNote: 'This is normal exploratory behavior and a sign of healthy cognitive development.',
+                funFact: 'When baby drops food from the high chair for the 100th time, they\'re essentially running repeated physics experiments!'
+            },
         ]
     },
 
@@ -442,6 +651,31 @@ export const AGE_GROUPS: AgeGroup[] = [
                 category: 'social', ageRangeMonths: [14, 20], typicalMonth: 16, concernMonth: 22,
                 emoji: '🤗', parentTip: 'Model empathy: "Oh no, your friend is sad. Let\'s give them a hug." This builds emotional intelligence.',
                 doctorNote: 'If toddler shows no recognition of others\' emotions by 22 months, discuss at your next visit.',
+            },
+            {
+                id: '13m_copies_chores', title: 'Copies You Doing Chores', description: 'Imitates sweeping, wiping, or stirring',
+                category: 'cognitive', ageRangeMonths: [14, 20], typicalMonth: 16, concernMonth: 22,
+                emoji: '🧹', parentTip: 'Give them a small broom, a wet cloth, or a spoon and bowl. They WANT to be like you — let them "help"! It builds confidence and life skills.',
+                doctorNote: 'If toddler shows no interest in imitating everyday activities by 22 months, discuss with your doctor.',
+            },
+            {
+                id: '13m_shows_you_objects', title: 'Shows You Interesting Things', description: 'Brings you a toy or holds up an object to show you',
+                category: 'social', ageRangeMonths: [12, 18], typicalMonth: 14, concernMonth: 18,
+                emoji: '🎁', parentTip: 'When your toddler brings you a leaf or toy, respond enthusiastically! "Wow, you found a LEAF! It\'s so pretty!" They\'re sharing their world with you.',
+                doctorNote: 'If toddler never brings objects to show you or share attention by 18 months, this is an important social milestone to discuss.',
+            },
+            {
+                id: '13m_helps_dressing', title: 'Helps with Getting Dressed', description: 'Pushes arm through sleeve or steps into shoe',
+                category: 'physical', ageRangeMonths: [14, 20], typicalMonth: 16, concernMonth: 22,
+                emoji: '👚', parentTip: 'Narrate dressing: "Now your ARM goes through... push push push! There it is!" Let them try even if it takes forever.',
+                doctorNote: 'If toddler shows no participation in dressing routines by 22 months, mention it at your visit.',
+            },
+            {
+                id: '13m_looks_at_book', title: 'Looks at Book Pages with You', description: 'Sits and looks at a few pages of a book with you',
+                category: 'cognitive', ageRangeMonths: [12, 18], typicalMonth: 14, concernMonth: 20,
+                emoji: '📚', parentTip: 'Board books with flaps, textures, or photos of real objects are perfect. Let them turn pages even if they skip some — the love of reading is more important than page order!',
+                doctorNote: 'If toddler shows no interest in books at all (won\'t sit for even a few pages) by 20 months, mention it.',
+                funFact: 'Toddlers who are read to for just 15 minutes a day hear 1 million+ more words per year than those who aren\'t!'
             },
         ]
     },
@@ -499,6 +733,31 @@ export const AGE_GROUPS: AgeGroup[] = [
                 category: 'fine_motor', ageRangeMonths: [18, 26], typicalMonth: 22, concernMonth: 28,
                 emoji: '🏗️', parentTip: 'Build towers together, then let them knock it down! Rebuilding practices patience and fine motor skills.',
                 doctorNote: 'If your child can\'t stack 3+ blocks by 28 months, mention fine motor development to your doctor.',
+            },
+            {
+                id: '19m_points_in_book', title: 'Points to Things in a Book', description: 'Points to pictures when you ask "Where\'s the dog?"',
+                category: 'cognitive', ageRangeMonths: [18, 26], typicalMonth: 20, concernMonth: 27,
+                emoji: '📕', parentTip: 'Ask "Where\'s the...?" questions while reading. Celebrate when they point! This shows they connect words to images — a pre-reading skill.',
+                doctorNote: 'If toddler can\'t point to any familiar pictures in a book when asked by 27 months, mention it.',
+            },
+            {
+                id: '19m_points_body_parts', title: 'Points to Body Parts', description: 'Points to nose, eyes, ears, or tummy when asked',
+                category: 'cognitive', ageRangeMonths: [18, 26], typicalMonth: 20, concernMonth: 27,
+                emoji: '👃', parentTip: 'Play "Where\'s your nose?" games! Sing "Head, Shoulders, Knees, and Toes." Touch each body part as you name it.',
+                doctorNote: 'If toddler can\'t point to at least 2 body parts when named by 27 months, discuss with your doctor.',
+            },
+            {
+                id: '19m_gestures_beyond', title: 'Uses Many Gestures', description: 'Blows kisses, nods yes, shakes head no, shrugs',
+                category: 'social', ageRangeMonths: [18, 26], typicalMonth: 20, concernMonth: 27,
+                emoji: '😘', parentTip: 'Model gestures throughout the day: nod when you agree, blow a kiss at bedtime, wave hello. Toddlers learn gestures by watching you!',
+                doctorNote: 'If toddler uses very few gestures (only pointing or none) by 24-27 months, discuss communication development with your doctor.',
+            },
+            {
+                id: '19m_looks_at_face', title: 'Looks at Your Face for Reactions', description: 'Checks your expression in new or uncertain situations',
+                category: 'social', ageRangeMonths: [18, 24], typicalMonth: 20, concernMonth: 27,
+                emoji: '👀', parentTip: 'This is called "social referencing" — your toddler looks at your face to decide if something is safe or scary. Stay calm and smile in new situations to help them feel secure.',
+                doctorNote: 'If toddler never looks to you for emotional cues in new situations by 27 months, mention this at your visit.',
+                funFact: 'Social referencing is why toddlers often look at a parent\'s face right after they fall — if you look calm, they\'re more likely to brush it off!'
             },
         ]
     },
@@ -569,6 +828,37 @@ export const AGE_GROUPS: AgeGroup[] = [
                 emoji: '⭕', parentTip: 'Draw circles together! "Can you draw a sun? A ball?" Celebrate their attempts.',
                 doctorNote: 'If child can\'t make any circular marks by 38 months, discuss fine motor skills with your doctor.',
             },
+            {
+                id: '2y_asks_questions', title: 'Asks Who/What/Where Questions', description: 'Uses question words to learn about the world',
+                category: 'language', ageRangeMonths: [27, 36], typicalMonth: 30, concernMonth: 40,
+                emoji: '❓', parentTip: 'Answer every question patiently, even the 50th "why?" in a row. This curiosity is building their entire understanding of the world.',
+                doctorNote: 'If child asks no questions at all by 40 months, discuss language development with your doctor.',
+                funFact: 'Preschoolers ask an average of 200-300 questions per day. That\'s one question every 2 minutes they\'re awake!'
+            },
+            {
+                id: '2y_says_name', title: 'Says First Name', description: 'Can tell you their first name when asked',
+                category: 'language', ageRangeMonths: [27, 36], typicalMonth: 30, concernMonth: 40,
+                emoji: '🏷️', parentTip: 'Use their name in songs: "Happy birthday, dear [NAME]!" Ask: "What\'s your name?" and celebrate when they say it!',
+                doctorNote: 'If child can\'t say their own first name by 40 months, mention it to your pediatrician.',
+            },
+            {
+                id: '2y_follows_2_steps', title: 'Follows 2-Step Instructions', description: 'Can follow "Pick up the ball AND put it on the table"',
+                category: 'cognitive', ageRangeMonths: [24, 36], typicalMonth: 28, concernMonth: 36,
+                emoji: '📋', parentTip: 'Give two-step commands throughout the day: "Get your shoes AND bring them to me." Keep it fun and praise success!',
+                doctorNote: 'If child can only follow one-step instructions by 36 months and can\'t hold 2 steps, discuss with your doctor.',
+            },
+            {
+                id: '2y_unbuttons', title: 'Unbuttons Some Buttons', description: 'Can undo large buttons on clothing',
+                category: 'fine_motor', ageRangeMonths: [30, 42], typicalMonth: 33, concernMonth: 42,
+                emoji: '🔘', parentTip: 'Practice on a buttoning board or your jacket while they sit on your lap. Large buttons first, then progress to smaller ones.',
+                doctorNote: 'If child shows no ability to manipulate buttons by 42 months, discuss fine motor development.',
+            },
+            {
+                id: '2y_names_friend', title: 'Names a Friend', description: 'Can tell you the name of at least one friend',
+                category: 'social', ageRangeMonths: [30, 42], typicalMonth: 33, concernMonth: 42,
+                emoji: '👧', parentTip: 'Ask about their friends: "Who did you play with today?" "What did you and [friend] do?" This builds social awareness and narrative skills.',
+                doctorNote: 'If child shows no awareness of or attachment to any peers by 42 months, discuss social development.',
+            },
         ]
     },
 
@@ -624,6 +914,37 @@ export const AGE_GROUPS: AgeGroup[] = [
                 category: 'social', ageRangeMonths: [36, 48], typicalMonth: 42, concernMonth: 50,
                 emoji: '❤️‍🩹', parentTip: 'Read books about feelings. Ask: "How do you think that character feels? Why?"',
                 doctorNote: 'If child shows no understanding of others\' emotions by 50 months, bring it up at your visit.',
+            },
+            {
+                id: '3y_draws_person', title: 'Draws a Person (3+ parts)', description: 'Draws a person with at least head, body, and limbs',
+                category: 'fine_motor', ageRangeMonths: [36, 48], typicalMonth: 42, concernMonth: 50,
+                emoji: '🧑‍🎨', parentTip: 'Ask "draw me!" or "draw yourself!" Don\'t correct their art. A head with legs sticking out ("tadpole people") is perfectly normal!',
+                doctorNote: 'If child can\'t draw any recognizable figure by 50 months, discuss visual-motor integration with your doctor.',
+                funFact: 'Nearly all children draw "tadpole people" (a big head with legs) before they draw a full body. It\'s a universal stage of child art development worldwide!'
+            },
+            {
+                id: '3y_sings_nursery', title: 'Sings Songs from Memory', description: 'Sings or says parts of nursery rhymes and songs',
+                category: 'language', ageRangeMonths: [36, 48], typicalMonth: 40, concernMonth: 50,
+                emoji: '🎵', parentTip: 'Sing the same songs repeatedly — repetition is how they learn! Leave out the last word and let them fill it in: "Twinkle twinkle little ___"',
+                doctorNote: 'If child can\'t repeat any parts of familiar songs or rhymes by 50 months, discuss memory and language.',
+            },
+            {
+                id: '3y_serves_self', title: 'Serves Self Food / Pours', description: 'Scoops food onto plate or pours from a small pitcher',
+                category: 'fine_motor', ageRangeMonths: [36, 48], typicalMonth: 42, concernMonth: 50,
+                emoji: '🍽️', parentTip: 'Use a small pitcher with just a little water and let them practice pouring. Montessori-style! Spills are learning experiences.',
+                doctorNote: 'If child can\'t perform any self-serving tasks by 50 months, discuss fine motor and independence skills.',
+            },
+            {
+                id: '3y_buttons', title: 'Buttons Some Buttons', description: 'Can fasten large buttons on clothing',
+                category: 'fine_motor', ageRangeMonths: [36, 50], typicalMonth: 42, concernMonth: 52,
+                emoji: '🔵', parentTip: 'Start with large buttons on a jacket in front of them (easier than on their own body). Then progress to buttoning their own clothes.',
+                doctorNote: 'If child can\'t button any buttons by 52 months, fine motor therapy may be helpful.',
+            },
+            {
+                id: '3y_catches_large_ball', title: 'Catches a Large Ball', description: 'Can catch a large ball thrown from a few feet away',
+                category: 'physical', ageRangeMonths: [36, 48], typicalMonth: 42, concernMonth: 50,
+                emoji: '🏐', parentTip: 'Start with a big, soft ball from close range (2-3 feet). Use an underhand toss. "Ready? Here it comes!" gives them time to prepare.',
+                doctorNote: 'If child can\'t catch a large ball lobbed gently from close range by 50 months, discuss eye-hand coordination.',
             },
         ]
     },
@@ -686,6 +1007,43 @@ export const AGE_GROUPS: AgeGroup[] = [
                 category: 'cognitive', ageRangeMonths: [48, 60], typicalMonth: 52, concernMonth: 66,
                 emoji: '⏰', parentTip: 'Use time words in daily life: "TOMORROW we\'re going to the park. YESTERDAY we went to the store."',
                 doctorNote: 'If child has no concept of time progression by 5.5 years, mention it at your next visit.',
+            },
+            {
+                id: '4y_sings_performs', title: 'Sings, Dances, or Performs', description: 'Puts on little "shows" for you — singing, dancing, or acting',
+                category: 'social', ageRangeMonths: [48, 60], typicalMonth: 50, concernMonth: 62,
+                emoji: '🎤', parentTip: 'Be their biggest fan! Set up a "stage" with a blanket and let them perform. This builds confidence, creativity, and self-expression.',
+                doctorNote: 'If child shows no interest in any creative expression or performance by 5 years, it\'s not necessarily concerning — but mention it if combined with other social delays.',
+            },
+            {
+                id: '4y_does_chores', title: 'Does Simple Chores', description: 'Helps with tasks like setting the table, feeding a pet, or picking up toys',
+                category: 'cognitive', ageRangeMonths: [48, 60], typicalMonth: 50, concernMonth: 62,
+                emoji: '🧽', parentTip: 'Make chores a team activity! "Can you put the forks on the table while I put the plates?" Responsibility builds self-esteem.',
+                doctorNote: 'If child can\'t follow any multi-step household tasks by 62 months, discuss executive function skills.',
+            },
+            {
+                id: '4y_draws_person_6', title: 'Draws a Person (6+ parts)', description: 'Draws a detailed person with head, body, arms, legs, eyes, mouth',
+                category: 'fine_motor', ageRangeMonths: [48, 60], typicalMonth: 54, concernMonth: 66,
+                emoji: '🎨', parentTip: 'Ask them to draw their family! Don\'t correct — just ask them to tell you about their drawing. "Who is this? What are they doing?"',
+                doctorNote: 'If child\'s person drawings have fewer than 3 parts by 66 months (head only, no body/limbs), discuss visual-motor development.',
+            },
+            {
+                id: '4y_follows_game_rules', title: 'Follows Rules in Games', description: 'Takes turns and follows simple game rules',
+                category: 'social', ageRangeMonths: [48, 60], typicalMonth: 50, concernMonth: 62,
+                emoji: '🎲', parentTip: 'Simple board games like Candy Land, Chutes and Ladders, or card games like Go Fish teach turn-taking, winning, and losing gracefully.',
+                doctorNote: 'If child can\'t follow any game rules or take turns by 62 months, discuss social skill development.',
+            },
+            {
+                id: '4y_tells_story_order', title: 'Retells a Story in Order', description: 'Can retell a familiar story with the events in the right order',
+                category: 'language', ageRangeMonths: [48, 60], typicalMonth: 54, concernMonth: 66,
+                emoji: '📖', parentTip: 'After reading a story, ask "What happened first? Then what? How did it end?" Sequencing is a critical pre-reading and pre-math skill.',
+                doctorNote: 'If child can\'t retell any story in sequence by 66 months, discuss narrative language development.',
+                funFact: 'The ability to retell stories in order is one of the strongest predictors of reading success in school!'
+            },
+            {
+                id: '4y_prints_letters', title: 'Prints Some Letters', description: 'Can write several recognizable letters beyond just their name',
+                category: 'fine_motor', ageRangeMonths: [48, 60], typicalMonth: 54, concernMonth: 66,
+                emoji: '✏️', parentTip: 'Letter tracing worksheets, writing in sand or shaving cream, or using a finger on a foggy window — all great practice! Mix it up to keep it fun.',
+                doctorNote: 'If child shows no ability to form any letters by 66 months, discuss fine motor readiness for kindergarten.',
             },
         ]
     },
