@@ -1,7 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo } from 'react';
 import { ActionSheetIOS, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
-import { Circle, G, Line, Path, Svg, Text as SvgText } from 'react-native-svg';
+import { Circle, ClipPath, Defs, Ellipse, G, Line, Path, Svg, Text as SvgText } from 'react-native-svg';
 import { COLOR_SCHEMES } from '../data/utils/colors';
 import { calculateNatalChart } from '../data/utils/natal-chart-calculator';
 import { getAllPDFResources, PDFResourceKey, savePDF, viewPDF } from '../data/utils/pdf-helper';
@@ -316,9 +316,13 @@ export default function NatalChartWithReadingScreen({ navigation, route }: Props
 
     // Render angle labels (ASC/DS)
     const renderAngleLabels = () => {
+        const ascDeg = natalChart.ascendant || 0;
+        const mcDeg = natalChart.houses && natalChart.houses.length >= 10 ? natalChart.houses[9] : (ascDeg + 270) % 360;
         const angleData = [
-            { lon: natalChart.ascendant, label: 'ASC', color: '#FFD700' },
-            { lon: (natalChart.ascendant + 180) % 360, label: 'DS', color: '#FFD700' },
+            { lon: ascDeg, label: 'ASC', color: '#FFD700' },
+            { lon: (ascDeg + 180) % 360, label: 'DSC', color: '#FF6B6B' },
+            { lon: mcDeg, label: 'MC', color: '#4ECDC4' },
+            { lon: (mcDeg + 180) % 360, label: 'IC', color: '#A78BFA' },
         ];
 
         return angleData.map((angle) => {
@@ -490,8 +494,24 @@ export default function NatalChartWithReadingScreen({ navigation, route }: Props
                                         {/* Ascendant marker */}
                                         {renderAscendant()}
 
-                                        {/* Center point */}
-                                        <Circle cx={cx} cy={cy} r={svgSize * 0.01} fill="#000000" />
+                                        {/* Center - Planet Earth */}
+                                        <Defs>
+                                            <ClipPath id="earthClipNR">
+                                                <Circle cx={cx} cy={cy} r={svgSize * 0.04} />
+                                            </ClipPath>
+                                        </Defs>
+                                        {/* Ocean */}
+                                        <Circle cx={cx} cy={cy} r={svgSize * 0.04} fill="#1a6fc4" />
+                                        {/* Continents */}
+                                        <G clipPath="url(#earthClipNR)">
+                                            <Ellipse cx={cx - svgSize * 0.016} cy={cy - svgSize * 0.016} rx={svgSize * 0.016} ry={svgSize * 0.013} fill="#2e8b57" transform={`rotate(-20 ${cx - svgSize * 0.016} ${cy - svgSize * 0.016})`} />
+                                            <Ellipse cx={cx - svgSize * 0.01} cy={cy + svgSize * 0.016} rx={svgSize * 0.01} ry={svgSize * 0.016} fill="#2e8b57" transform={`rotate(10 ${cx - svgSize * 0.01} ${cy + svgSize * 0.016})`} />
+                                            <Ellipse cx={cx + svgSize * 0.016} cy={cy - svgSize * 0.006} rx={svgSize * 0.01} ry={svgSize * 0.013} fill="#2e8b57" transform={`rotate(5 ${cx + svgSize * 0.016} ${cy - svgSize * 0.006})`} />
+                                            <Ellipse cx={cx + svgSize * 0.016} cy={cy + svgSize * 0.016} rx={svgSize * 0.008} ry={svgSize * 0.013} fill="#2e8b57" />
+                                            <Ellipse cx={cx + svgSize * 0.03} cy={cy - svgSize * 0.016} rx={svgSize * 0.013} ry={svgSize * 0.01} fill="#2e8b57" transform={`rotate(-10 ${cx + svgSize * 0.03} ${cy - svgSize * 0.016})`} />
+                                        </G>
+                                        {/* Atmosphere highlight */}
+                                        <Circle cx={cx - svgSize * 0.01} cy={cy - svgSize * 0.01} r={svgSize * 0.033} fill="rgba(255,255,255,0.15)" />
                                     </Svg>
                                 </View>
                             </View>

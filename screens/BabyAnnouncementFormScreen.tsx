@@ -258,8 +258,20 @@ export default function BabyAnnouncementFormScreen() {
             <View style={styles.messageSectionContainer}>
                 <Text style={styles.messageSectionTitle}>💌 Message to {babyDisplayName}</Text>
                 <Text style={styles.messageSectionSubtitle}>
-                    Write a letter for {babyDisplayName} to read someday.
+                    Write a letter for {babyDisplayName} to read someday, or tap a sample below!
                 </Text>
+
+                <View style={styles.sampleBtnRow}>
+                    <TouchableOpacity style={styles.sampleBtn} onPress={() => setMessageToBaby(`Dear ${babyDisplayName},\n\nFrom the moment we first heard your heartbeat, our lives changed forever. You are our greatest blessing, our sweetest dream come true, and the answer to every prayer we ever whispered. We spent so many nights imagining what you would look like, wondering who you would become, and dreaming about the life we would build together.\n\nNow that you're here, every single moment feels like magic. The way you curl your tiny fingers around ours, the soft sounds you make when you sleep, the way the whole room lights up just because you're in it — these are the moments we will treasure for the rest of our lives.\n\nWe promise to love you unconditionally, to protect you fiercely, to cheer you on through every triumph and hold you close through every challenge. We promise to read you stories, to answer your endless questions, to let you make messes and learn from your mistakes. We promise to be the kind of parents who listen, who laugh with you, and who always make sure you know just how extraordinary you are.\n\nWelcome to the world, little one. You are so deeply, completely, and endlessly loved.\n\nWith all our hearts,\nMom & Dad`)}>
+                        <Text style={styles.sampleBtnText}>💑 From Mom & Dad</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.sampleBtn} onPress={() => setMessageToBaby(`Dear ${babyDisplayName},\n\nI carried you beneath my heart for nine months, but I have loved you my whole life. Every flutter, every kick, every hiccup reminded me that the most incredible journey of my life was just beginning.\n\nThe moment they placed you in my arms, the whole world went quiet. Nothing else mattered — just you, your tiny perfect face, your little fingers, and the soft warmth of you against my chest. I cried the happiest tears I have ever cried.\n\nI want you to know that no matter where life takes you, no matter how big you grow, you will always be my baby. I will always be your safe place, your biggest fan, and the one who loves you more than words could ever say. I will sing to you, read to you, hold you when you're scared, and celebrate every little thing you do.\n\nYou have made me a mother, and that is the greatest gift I have ever received.\n\nI love you to the moon and back,\nMom`)}>
+                        <Text style={styles.sampleBtnText}>👩 From Mom</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.sampleBtn} onPress={() => setMessageToBaby(`Dear ${babyDisplayName},\n\nI never knew my heart could feel this full until I held you for the first time. In that moment, everything changed. Every dream I ever had suddenly had a new meaning — because now, everything I do, I do for you.\n\nI promise to be the dad who shows up — for every game, every recital, every scraped knee, and every bedtime story. I promise to teach you how to ride a bike, how to throw a ball, how to be brave, and how to be kind. I promise to make you laugh, to protect you, and to always be honest with you, even when it's hard.\n\nBut most of all, I promise to love you with everything I have. You are my greatest adventure, my proudest accomplishment, and my reason to be the best man I can be.\n\nThe world is a better place because you're in it, and I will spend every day making sure you know how loved you are.\n\nForever and always,\nDad`)}>
+                        <Text style={styles.sampleBtnText}>👨 From Dad</Text>
+                    </TouchableOpacity>
+                </View>
 
                 <TextInput
                     style={styles.messageInput}
@@ -293,7 +305,7 @@ export default function BabyAnnouncementFormScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#1a472a' },
+    container: { flex: 1, backgroundColor: '#000080' },
     content: { padding: 20, paddingBottom: 40 },
     title: { fontSize: 24, fontWeight: '900', marginBottom: 12, color: '#fff', textAlign: 'center' },
     populationHeader: { fontSize: 18, fontWeight: '900', color: '#fff', textAlign: 'center', letterSpacing: 3, marginTop: 8, marginBottom: 2 },
@@ -334,7 +346,7 @@ const styles = StyleSheet.create({
     },
     toggleActive: { backgroundColor: '#fff' },
     toggleText: { fontWeight: '700', color: '#fff', fontSize: 14 },
-    toggleActiveText: { color: '#1a472a' },
+    toggleActiveText: { color: '#000080' },
     dateBtn: {
         backgroundColor: '#fff',
         borderRadius: 8,
@@ -358,7 +370,7 @@ const styles = StyleSheet.create({
         marginTop: 24,
         marginBottom: 40,
     },
-    buildBtnText: { color: '#1a472a', fontWeight: '900', fontSize: 18 },
+    buildBtnText: { color: '#000080', fontWeight: '900', fontSize: 18 },
     // Message to Baby styles
     messageSectionContainer: {
         marginTop: 28,
@@ -382,6 +394,25 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 16,
         lineHeight: 18,
+    },
+    sampleBtnRow: {
+        flexDirection: 'row',
+        gap: 8,
+        marginBottom: 14,
+    },
+    sampleBtn: {
+        flex: 1,
+        paddingVertical: 10,
+        borderRadius: 8,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
+    },
+    sampleBtnText: {
+        fontWeight: '700',
+        color: '#fff',
+        fontSize: 12,
     },
     messageInput: {
         backgroundColor: '#fff',

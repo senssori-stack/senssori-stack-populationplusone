@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
-import { Svg, Circle, Line, Text as SvgText, G, Path, Defs, Stop, LinearGradient, Rect } from 'react-native-svg';
-import type { ThemeName } from '../types';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Circle, ClipPath, Defs, Ellipse, G, Line, Path, Svg, Text as SvgText } from 'react-native-svg';
 import { COLOR_SCHEMES } from '../data/utils/colors';
 import { calculateNatalChart } from '../data/utils/natal-chart-calculator';
+import type { ThemeName } from '../types';
 
 interface NatalChartViewProps {
     birthDate: Date;
@@ -276,8 +276,56 @@ export default function NatalChartView({
                     {/* Ascendant marker */}
                     {renderAscendant()}
 
-                    {/* Center point */}
-                    <Circle cx={cx} cy={cy} r={svgSize * 0.01} fill="#000000" />
+                    {/* Center - Planet Earth */}
+                    <Defs>
+                        <ClipPath id="earthClipNV">
+                            <Circle cx={cx} cy={cy} r={svgSize * 0.04} />
+                        </ClipPath>
+                    </Defs>
+                    {/* Ocean */}
+                    <Circle cx={cx} cy={cy} r={svgSize * 0.04} fill="#1a6fc4" />
+                    {/* Continents */}
+                    <G clipPath="url(#earthClipNV)">
+                        <Ellipse cx={cx - svgSize * 0.016} cy={cy - svgSize * 0.016} rx={svgSize * 0.016} ry={svgSize * 0.013} fill="#2e8b57" transform={`rotate(-20 ${cx - svgSize * 0.016} ${cy - svgSize * 0.016})`} />
+                        <Ellipse cx={cx - svgSize * 0.01} cy={cy + svgSize * 0.016} rx={svgSize * 0.01} ry={svgSize * 0.016} fill="#2e8b57" transform={`rotate(10 ${cx - svgSize * 0.01} ${cy + svgSize * 0.016})`} />
+                        <Ellipse cx={cx + svgSize * 0.016} cy={cy - svgSize * 0.006} rx={svgSize * 0.01} ry={svgSize * 0.013} fill="#2e8b57" transform={`rotate(5 ${cx + svgSize * 0.016} ${cy - svgSize * 0.006})`} />
+                        <Ellipse cx={cx + svgSize * 0.016} cy={cy + svgSize * 0.016} rx={svgSize * 0.008} ry={svgSize * 0.013} fill="#2e8b57" />
+                        <Ellipse cx={cx + svgSize * 0.03} cy={cy - svgSize * 0.016} rx={svgSize * 0.013} ry={svgSize * 0.01} fill="#2e8b57" transform={`rotate(-10 ${cx + svgSize * 0.03} ${cy - svgSize * 0.016})`} />
+                    </G>
+                    {/* Atmosphere highlight */}
+                    <Circle cx={cx - svgSize * 0.01} cy={cy - svgSize * 0.01} r={svgSize * 0.033} fill="rgba(255,255,255,0.15)" />
+
+                    {/* Four Angles: ASC, DSC, MC, IC */}
+                    {(() => {
+                        const ascDeg = natalChart.ascendant || 0;
+                        const dscDeg = (ascDeg + 180) % 360;
+                        const mcDeg = natalChart.houses && natalChart.houses.length >= 10 ? natalChart.houses[9] : (ascDeg + 270) % 360;
+                        const icDeg = (mcDeg + 180) % 360;
+
+                        const angles = [
+                            { label: 'ASC', deg: ascDeg, color: '#FFD700' },
+                            { label: 'DSC', deg: dscDeg, color: '#FF6B6B' },
+                            { label: 'MC', deg: mcDeg, color: '#4ECDC4' },
+                            { label: 'IC', deg: icDeg, color: '#A78BFA' },
+                        ];
+
+                        return angles.map(({ label, deg, color }) => {
+                            const inner = positionOnCircle(deg, r_inner * 0.5);
+                            const outer = positionOnCircle(deg, r_outer);
+                            const labelPos = positionOnCircle(deg, r_outer + svgSize * 0.04);
+                            return (
+                                <G key={label}>
+                                    <Line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
+                                        stroke={color} strokeWidth={1.5} opacity="0.7" />
+                                    <SvgText x={labelPos.x} y={labelPos.y}
+                                        fontSize={svgSize * 0.03} fontWeight="bold"
+                                        fill={color} textAnchor="middle" alignmentBaseline="middle">
+                                        {label}
+                                    </SvgText>
+                                </G>
+                            );
+                        });
+                    })()}
                 </Svg>
             </View>
 

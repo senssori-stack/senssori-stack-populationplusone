@@ -1,21 +1,21 @@
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
-    View,
+    Alert,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
     Text,
     TextInput,
-    ScrollView,
     TouchableOpacity,
-    StyleSheet,
-    StatusBar,
-    Image,
-    Alert,
-    Platform,
-    KeyboardAvoidingView
+    View
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import * as ImagePicker from 'expo-image-picker';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList, MemorialParams } from '../types';
+import type { MemorialParams, RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ObituaryForm'>;
 
@@ -147,8 +147,8 @@ export default function ObituaryFormScreen({ navigation }: Props) {
     );
 
     return (
-        <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
+        <LinearGradient colors={['#000080', '#1a1a9e']} style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#000080" />
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.flex}
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     iconBox: {
         width: 80,
         height: 80,
-        backgroundColor: '#2d3a4f',
+        backgroundColor: '#1a1a9e',
         borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',

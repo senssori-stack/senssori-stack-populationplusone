@@ -308,8 +308,8 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
                 </View>
             </Modal>
 
-            {/* Spouse 1 Name */}
-            <Text style={styles.label}>Spouse 1 Name</Text>
+            {/* Spouse/Partner/GF/BF 1 Name */}
+            <Text style={styles.label}>Spouse/Partner/GF/BF 1 Name</Text>
             <TextInput
                 style={styles.input}
                 value={spouse1Name}
@@ -318,8 +318,8 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
                 placeholderTextColor="#999"
             />
 
-            {/* Spouse 2 Name */}
-            <Text style={styles.label}>Spouse 2 Name</Text>
+            {/* Spouse/Partner/GF/BF 2 Name */}
+            <Text style={styles.label}>Spouse/Partner/GF/BF 2 Name</Text>
             <TextInput
                 style={styles.input}
                 value={spouse2Name}
@@ -435,7 +435,7 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#5c3a1a',
+        backgroundColor: '#000080',
     },
     content: {
         padding: 20,
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     photoButton: {
-        backgroundColor: '#785030',
+        backgroundColor: '#1a1a9e',
         borderRadius: 8,
         padding: 20,
         alignItems: 'center',
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
     },
     messageButton: {
         flex: 1,
-        backgroundColor: '#785030',
+        backgroundColor: '#1a1a9e',
         borderRadius: 8,
         padding: 10,
         alignItems: 'center',
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     messageButtonTextSelected: {
-        color: '#5c3a1a',
+        color: '#000080',
     },
     colorGrid: {
         flexDirection: 'row',
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
         opacity: 0.6,
     },
     previewButtonText: {
-        color: '#5c3a1a',
+        color: '#000080',
         fontSize: 18,
         fontWeight: '900',
     },
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
     },
     modalOptionSelected: {
-        backgroundColor: '#5c3a1a',
+        backgroundColor: '#000080',
     },
     modalOptionText: {
         fontSize: 16,

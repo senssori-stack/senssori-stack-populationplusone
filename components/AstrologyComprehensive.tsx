@@ -1,13 +1,13 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, Modal, Pressable } from 'react-native';
-import { Svg, Circle, Line, Text as SvgText, G, Path } from 'react-native-svg';
-import { getWesternBirthChart, BirthChartData, getDailyHoroscope } from '../src/data/utils/astrology-api';
-import { getChineseZodiac, getChineseElement, getChineseYinYang, getLuckyNumbers, dateToRomanNumerals, getAgeInDogYears } from '../src/data/utils/astrology-utils';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Circle, ClipPath, Defs, Ellipse, G, Line, Svg, Text as SvgText } from 'react-native-svg';
+import { BirthChartData, getDailyHoroscope, getWesternBirthChart } from '../src/data/utils/astrology-api';
+import { dateToRomanNumerals, getAgeInDogYears, getChineseElement, getChineseYinYang, getChineseZodiac, getLuckyNumbers } from '../src/data/utils/astrology-utils';
+import { birthstoneFromISO } from '../src/data/utils/birthstone';
+import { COLOR_SCHEMES } from '../src/data/utils/colors';
 import { calculateLifePath } from '../src/data/utils/life-path-calculator';
 import { calculateNatalChart } from '../src/data/utils/natal-chart-calculator';
 import { getZodiacInfo } from '../src/data/utils/zodiac-database';
-import { birthstoneFromISO } from '../src/data/utils/birthstone';
-import { COLOR_SCHEMES } from '../src/data/utils/colors';
 import type { ThemeName } from '../src/types';
 
 // Landscape 11x8.5 at 300 DPI = 3300x2550 pixels
@@ -240,8 +240,24 @@ export default function AstrologyComprehensive(props: Props) {
                     );
                 })()}
 
-                {/* Center point */}
-                <Circle cx={cx} cy={cy} r={svgSize * 0.008} fill={colors.text} />
+                {/* Center - Planet Earth */}
+                <Defs>
+                    <ClipPath id="earthClipJFF">
+                        <Circle cx={cx} cy={cy} r={svgSize * 0.04} />
+                    </ClipPath>
+                </Defs>
+                {/* Ocean */}
+                <Circle cx={cx} cy={cy} r={svgSize * 0.04} fill="#1a6fc4" />
+                {/* Continents */}
+                <G clipPath="url(#earthClipJFF)">
+                    <Ellipse cx={cx - svgSize * 0.016} cy={cy - svgSize * 0.016} rx={svgSize * 0.016} ry={svgSize * 0.013} fill="#2e8b57" transform={`rotate(-20 ${cx - svgSize * 0.016} ${cy - svgSize * 0.016})`} />
+                    <Ellipse cx={cx - svgSize * 0.01} cy={cy + svgSize * 0.016} rx={svgSize * 0.01} ry={svgSize * 0.016} fill="#2e8b57" transform={`rotate(10 ${cx - svgSize * 0.01} ${cy + svgSize * 0.016})`} />
+                    <Ellipse cx={cx + svgSize * 0.016} cy={cy - svgSize * 0.006} rx={svgSize * 0.01} ry={svgSize * 0.013} fill="#2e8b57" transform={`rotate(5 ${cx + svgSize * 0.016} ${cy - svgSize * 0.006})`} />
+                    <Ellipse cx={cx + svgSize * 0.016} cy={cy + svgSize * 0.016} rx={svgSize * 0.008} ry={svgSize * 0.013} fill="#2e8b57" />
+                    <Ellipse cx={cx + svgSize * 0.03} cy={cy - svgSize * 0.016} rx={svgSize * 0.013} ry={svgSize * 0.01} fill="#2e8b57" transform={`rotate(-10 ${cx + svgSize * 0.03} ${cy - svgSize * 0.016})`} />
+                </G>
+                {/* Atmosphere highlight */}
+                <Circle cx={cx - svgSize * 0.01} cy={cy - svgSize * 0.01} r={svgSize * 0.033} fill="rgba(255,255,255,0.15)" />
             </Svg>
         );
     };

@@ -81,6 +81,7 @@ export type RootStackParamList = {
     GraduationForm: undefined;
     AnniversaryForm: undefined;
     JustForFun: undefined;
+    WrittenInTheStars: undefined;
     Generations: { birthDate: string };
     LifePathNumber: { birthDate: string };
     LuckyNumbers: { birthDate: string };
@@ -122,4 +123,8 @@ export type RootStackParamList = {
     BedtimeStories: undefined;
     AllThingsBaby: undefined;
     JumpstartAmericanDream: undefined;
+    FamilyTreeIntro: undefined;
+    FamilyTreeForm: undefined;
+    DaysAlive: { birthDate: string };
+    PhonicsChallenge: undefined;
 };

@@ -1,15 +1,15 @@
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import {
-    View,
-    Text,
+    Dimensions,
     ScrollView,
-    TouchableOpacity,
-    StyleSheet,
     StatusBar,
-    Dimensions
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ZodiacSign'>;
@@ -343,16 +343,16 @@ export default function ZodiacSignScreen({ navigation, route }: Props) {
 
                 {/* Strengths & Weaknesses */}
                 <View style={styles.strengthsRow}>
-                    <View style={[styles.halfSection, { backgroundColor: 'rgba(76, 175, 80, 0.15)' }]}>
-                        <Text style={[styles.sectionTitle, { color: '#2e7d32' }]}>💪 Strengths</Text>
+                    <View style={[styles.halfSection, { backgroundColor: 'rgba(232, 245, 233, 0.95)' }]}>
+                        <Text style={[styles.sectionTitle, { color: '#1b5e20' }]}>💪 Strengths</Text>
                         {zodiac.strengths.map((s, i) => (
-                            <Text key={i} style={styles.listItem}>• {s}</Text>
+                            <Text key={i} style={[styles.listItem, { color: '#1b5e20' }]}>• {s}</Text>
                         ))}
                     </View>
-                    <View style={[styles.halfSection, { backgroundColor: 'rgba(244, 67, 54, 0.15)' }]}>
-                        <Text style={[styles.sectionTitle, { color: '#c62828' }]}>⚠️ Challenges</Text>
+                    <View style={[styles.halfSection, { backgroundColor: 'rgba(255, 235, 238, 0.95)' }]}>
+                        <Text style={[styles.sectionTitle, { color: '#b71c1c' }]}>⚠️ Challenges</Text>
                         {zodiac.weaknesses.map((w, i) => (
-                            <Text key={i} style={styles.listItem}>• {w}</Text>
+                            <Text key={i} style={[styles.listItem, { color: '#b71c1c' }]}>• {w}</Text>
                         ))}
                     </View>
                 </View>
@@ -507,7 +507,8 @@ const styles = StyleSheet.create({
     },
     listItem: {
         fontSize: 14,
-        color: '#555',
+        color: '#333',
+        fontWeight: '600',
         marginBottom: 4,
     },
     compatRow: {

@@ -622,40 +622,6 @@ export default function JustForFunScreen({ navigation }: Props) {
                 {/* Feature Buttons */}
                 <View style={styles.buttonSection}>
                     <TouchableOpacity
-                        style={[styles.featureButton, selectedFeature === 'lifepath' && styles.featureButtonActive]}
-                        onPress={() => navigation.navigate('LifePathNumber', { birthDate: birthDate.toISOString() })}
-                    >
-                        <Text style={styles.featureEmoji}>🔢</Text>
-                        <Text style={styles.featureTitle}>Find Your Life Path Number</Text>
-                        <Text style={styles.featureDesc}>Discover your numerology destiny</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.featureButton, selectedFeature === 'lucky' && styles.featureButtonActive]}
-                        onPress={() => navigation.navigate('LuckyNumbers', { birthDate: birthDate.toISOString() })}
-                    >
-                        <Text style={styles.featureEmoji}>🔢</Text>
-                        <Text style={styles.featureTitle}>Your Numerology Numbers</Text>
-                        <Text style={styles.featureDesc}>Life Path, Birthday, &amp; Personal Year</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.featureButton}
-                        onPress={() => navigation.navigate('Horoscope', {
-                            birthDate: birthDate.toISOString(),
-                            birthTime: birthDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true }),
-                            birthLocation: birthLocation || undefined,
-                        })}
-                    >
-                        <Text style={styles.featureEmoji}>🔮</Text>
-                        <Text style={styles.featureTitle}>View Your Daily Horoscope</Text>
-                        <Text style={styles.featureDesc}>Real-time planetary transits to your chart</Text>
-                        {!birthLocation && (
-                            <Text style={styles.recommendNotice}>💡 Enter birth time & location above for accurate results</Text>
-                        )}
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
                         style={styles.featureButton}
                         onPress={() => navigation.navigate('TipOfTheDay', { birthDate: birthDate.toISOString() })}
                     >
@@ -671,27 +637,6 @@ export default function JustForFunScreen({ navigation }: Props) {
                         <Text style={styles.featureEmoji}>🏛️</Text>
                         <Text style={styles.featureTitle}>Birthday in Roman Numerals</Text>
                         <Text style={styles.featureDesc}>See your birthday the ancient way</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.featureButton, selectedFeature === 'birthstone' && styles.featureButtonActive]}
-                        onPress={() => navigation.navigate('Birthstone', { birthDate: birthDate.toISOString() })}
-                    >
-                        <Text style={styles.featureEmoji}>💎</Text>
-                        <Text style={styles.featureTitle}>What is Your Birthstone?</Text>
-                        <Text style={styles.featureDesc}>Discover your gem and its meaning</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.featureButton, selectedFeature === 'zodiac' && styles.featureButtonActive]}
-                        onPress={() => navigation.navigate('ZodiacSign', { birthDate: birthDate.toISOString() })}
-                    >
-                        <Text style={styles.featureEmoji}>⭐</Text>
-                        <Text style={styles.featureTitle}>What is Your Zodiac Sign?</Text>
-                        <Text style={styles.featureDesc}>Learn your astrological profile</Text>
-                        {!birthLocation && (
-                            <Text style={styles.recommendNotice}>💡 Enter birth time & location above for Rising sign accuracy</Text>
-                        )}
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -732,27 +677,20 @@ export default function JustForFunScreen({ navigation }: Props) {
 
                     <TouchableOpacity
                         style={styles.featureButton}
-                        onPress={() => navigation.navigate('FullAstrology', {
-                            birthDate: birthDate.toISOString(),
-                            birthTime: birthDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true }),
-                            birthLocation: birthLocation || undefined,
-                        })}
-                    >
-                        <Text style={styles.featureEmoji}>🔮</Text>
-                        <Text style={styles.featureTitle}>Full Natal Chart</Text>
-                        <Text style={styles.featureDesc}>Your complete astrological birth chart</Text>
-                        {!birthLocation && (
-                            <Text style={styles.recommendNotice}>💡 Enter birth time & location above for best results</Text>
-                        )}
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.featureButton}
                         onPress={() => navigation.navigate('Generations', { birthDate: birthDate.toISOString() })}
                     >
                         <Text style={styles.featureEmoji}>👨‍👩‍👧‍👦</Text>
                         <Text style={styles.featureTitle}>What Generation Am I?</Text>
                         <Text style={styles.featureDesc}>Greatest to Alpha - explore all 7 generations!</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.featureButton}
+                        onPress={() => navigation.navigate('DaysAlive', { birthDate: birthDate.toISOString() })}
+                    >
+                        <Text style={styles.featureEmoji}>⏳</Text>
+                        <Text style={styles.featureTitle}>How Many Days Have I Been Alive?</Text>
+                        <Text style={styles.featureDesc}>Your life in days, hours, heartbeats & life expectancy</Text>
                     </TouchableOpacity>
                 </View>
 

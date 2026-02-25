@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Speech from 'expo-speech';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
@@ -33,7 +33,50 @@ export default function StoryReaderScreen() {
     const [selectedStory, setSelectedStory] = useState<Story | null>(null);
     const [currentPage, setCurrentPage] = useState(0);
     const [isReading, setIsReading] = useState(false);
+    const [femaleVoice, setFemaleVoice] = useState<string | undefined>(undefined);
     const fadeAnim = useRef(new Animated.Value(1)).current;
+
+    // ── Find a female English voice on mount ─
+    useEffect(() => {
+        (async () => {
+            try {
+                const voices = await Speech.getAvailableVoicesAsync();
+                const englishVoices = voices.filter((v) =>
+                    v.language.startsWith('en'),
+                );
+
+                // Prefer well-known female voice names across platforms
+                const femaleKeywords = [
+                    'samantha', 'karen', 'moira', 'victoria', 'allison',
+                    'ava', 'susan', 'zira', 'hazel', 'jenny', 'aria',
+                    'siri female', 'google us english', 'female',
+                ];
+
+                const match = englishVoices.find((v) => {
+                    const name = v.name.toLowerCase();
+                    return femaleKeywords.some((kw) => name.includes(kw));
+                });
+
+                if (match) {
+                    setFemaleVoice(match.identifier);
+                } else if (englishVoices.length > 0) {
+                    // Fallback: use first available English voice
+                    setFemaleVoice(englishVoices[0].identifier);
+                }
+            } catch (_e) {
+                // Voice detection unavailable — will use defaults
+            }
+        })();
+    }, []);
+
+    // ── Clean text for TTS (strip emojis & extra whitespace) ──
+    const cleanForSpeech = useCallback((text: string) => {
+        return text
+            .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{200D}]/gu, '')
+            .replace(/\n{2,}/g, '. ')
+            .replace(/\s{2,}/g, ' ')
+            .trim();
+    }, []);
 
     // ── Animate page turns ───────────────────
     const animatePageTurn = useCallback(
@@ -88,14 +131,17 @@ export default function StoryReaderScreen() {
             setIsReading(false);
         } else if (selectedStory) {
             setIsReading(true);
-            Speech.speak(selectedStory.pages[currentPage], {
+            const text = cleanForSpeech(selectedStory.pages[currentPage]);
+            Speech.speak(text, {
+                language: 'en-US',
+                ...(femaleVoice ? { voice: femaleVoice } : {}),
                 rate: 0.85,
-                pitch: 1.05,
+                pitch: 1.1,
                 onDone: () => setIsReading(false),
                 onStopped: () => setIsReading(false),
             });
         }
-    }, [isReading, selectedStory, currentPage]);
+    }, [isReading, selectedStory, currentPage, femaleVoice, cleanForSpeech]);
 
     // ── READING VIEW ─────────────────────────
     if (selectedStory) {

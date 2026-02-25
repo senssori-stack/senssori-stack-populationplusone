@@ -22,7 +22,30 @@ The screen focuses on the most meaningful and accessible chart elements:
 - Explains how others perceive the child
 - Examples include Libra charm, Capricorn maturity, Aquarius uniqueness
 
-### 2. **Educational Context**
+### 2. **Four Cardinal Angles on the Chart Wheel**
+The natal chart wheel displays four key orientation points, each represented by a colored line from center to edge:
+
+#### ASC (Ascendant) — Gold
+- The eastern horizon at the moment of birth
+- Represents the rising sign — how others first perceive you
+- This is the "mask" you wear when meeting new people
+
+#### DSC (Descendant) — Coral
+- The western horizon, directly opposite the Ascendant
+- Governs partnerships, relationships, and what you seek in others
+- Reflects the qualities you are drawn to in close relationships
+
+#### MC (Midheaven) — Teal
+- The highest point in the sky at birth
+- Represents career, public image, reputation, and life goals
+- Shows your aspirations and how the world sees your achievements
+
+#### IC (Imum Coeli) — Purple
+- The lowest point, directly opposite the Midheaven
+- Represents home, family, roots, and inner emotional foundation
+- Reflects your private self and sense of security
+
+### 3. **Educational Context**
 - **Celestial Snapshot introduction**: Explains what a natal chart is and why it matters
 - **Year Ahead Themes**: Discusses growth opportunities as the child matures
 - **Understanding the Chart**: Bullet points explaining each element

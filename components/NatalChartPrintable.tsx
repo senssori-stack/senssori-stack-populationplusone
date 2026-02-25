@@ -289,6 +289,38 @@ export default function NatalChartPrintable(props: Props) {
                                     </G>
                                     {/* Atmosphere highlight */}
                                     <Circle cx={cx - 3} cy={cy - 3} r={10} fill="rgba(255,255,255,0.15)" />
+
+                                    {/* Four Angles: ASC, DSC, MC, IC */}
+                                    {(() => {
+                                        const ascDeg = natalChart.ascendant || 0;
+                                        const dscDeg = (ascDeg + 180) % 360;
+                                        const mcDeg = natalChart.houses && natalChart.houses.length >= 10 ? natalChart.houses[9] : (ascDeg + 270) % 360;
+                                        const icDeg = (mcDeg + 180) % 360;
+
+                                        const angles = [
+                                            { label: 'ASC', deg: ascDeg, color: '#FFD700' },
+                                            { label: 'DSC', deg: dscDeg, color: '#FF6B6B' },
+                                            { label: 'MC', deg: mcDeg, color: '#4ECDC4' },
+                                            { label: 'IC', deg: icDeg, color: '#A78BFA' },
+                                        ];
+
+                                        return angles.map(({ label, deg, color }) => {
+                                            const inner = positionOnCircle(deg, r_sign * 0.15);
+                                            const outer = positionOnCircle(deg, r_outer);
+                                            const labelPos = positionOnCircle(deg, r_outer + svgSize * 0.04);
+                                            return (
+                                                <G key={label}>
+                                                    <Line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
+                                                        stroke={color} strokeWidth={1.5} opacity="0.7" />
+                                                    <SvgText x={labelPos.x} y={labelPos.y}
+                                                        fontSize={svgSize * 0.03} fontWeight="bold"
+                                                        fill={color} textAnchor="middle" alignmentBaseline="middle">
+                                                        {label}
+                                                    </SvgText>
+                                                </G>
+                                            );
+                                        });
+                                    })()}
                                 </Svg>
                             </View>
 

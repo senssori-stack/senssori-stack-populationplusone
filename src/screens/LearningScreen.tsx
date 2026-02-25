@@ -717,6 +717,24 @@ export default function LearningScreen({ navigation }: Props) {
                     {viewMode === 'milestones' && renderMilestones()}
                     {viewMode === 'tips' && renderTips()}
 
+                    {/* Phonics Challenge Banner */}
+                    <TouchableOpacity
+                        style={styles.phonicsBanner}
+                        onPress={() => navigation.navigate('PhonicsChallenge')}
+                        activeOpacity={0.8}
+                    >
+                        <View style={styles.phonicsBannerLeft}>
+                            <Text style={styles.phonicsBannerEmoji}>🔊</Text>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.phonicsBannerTitle}>Phonics Challenge</Text>
+                                <Text style={styles.phonicsBannerDesc}>8 levels of interactive phonics tests — from letter sounds to word families!</Text>
+                            </View>
+                        </View>
+                        <View style={styles.phonicsBannerArrow}>
+                            <Text style={styles.phonicsBannerArrowText}>Play →</Text>
+                        </View>
+                    </TouchableOpacity>
+
                     {/* Cross-links */}
                     <View style={styles.crossLinks}>
                         <Text style={styles.crossLinksTitle}>More Resources</Text>
@@ -913,6 +931,21 @@ const styles = StyleSheet.create({
     tipTitle: { color: '#fff', fontSize: 14, fontWeight: '700' },
     tipAge: { color: '#64748b', fontSize: 11, marginTop: 2 },
     tipArrow: { color: '#475569', fontSize: 20, fontWeight: '300' },
+
+    // Phonics Banner
+    phonicsBanner: {
+        marginHorizontal: 16, marginTop: 24, padding: 16, backgroundColor: '#1a2744',
+        borderRadius: 14, borderWidth: 1.5, borderColor: '#1565C0',
+    },
+    phonicsBannerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    phonicsBannerEmoji: { fontSize: 36 },
+    phonicsBannerTitle: { color: '#fff', fontSize: 17, fontWeight: '800' },
+    phonicsBannerDesc: { color: '#94a3b8', fontSize: 12, marginTop: 2, lineHeight: 17 },
+    phonicsBannerArrow: {
+        alignSelf: 'flex-end', marginTop: 8, backgroundColor: '#1565C0',
+        paddingHorizontal: 16, paddingVertical: 6, borderRadius: 16,
+    },
+    phonicsBannerArrowText: { color: '#fff', fontSize: 13, fontWeight: '800' },
 
     // Cross-links
     crossLinks: { marginHorizontal: 16, marginTop: 24 },

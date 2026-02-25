@@ -6,6 +6,8 @@ import { Text, TouchableOpacity } from 'react-native';
 import SplashScreen from './components/SplashScreen';
 import AnniversaryFormScreen from './screens/AnniversaryFormScreen';
 import BirthdayFormScreen from './screens/BirthdayFormScreen';
+import FamilyTreeFormScreen from './screens/FamilyTreeFormScreen';
+import FamilyTreeIntroScreen from './screens/FamilyTreeIntroScreen';
 import GraduationFormScreen from './screens/GraduationFormScreen';
 import HospitalLoginScreen from './screens/HospitalLoginScreen';
 import LifeMilestonesFormScreen from './screens/LifeMilestonesFormScreen';
@@ -18,6 +20,7 @@ import AllThingsBabyScreen from './src/screens/AllThingsBabyScreen';
 import BaseballCardPreviewScreen from './src/screens/BaseballCardPreviewScreen';
 import BirthstoneScreen from './src/screens/BirthstoneScreen';
 import CheckoutScreen from './src/screens/CheckoutScreen';
+import DaysAliveScreen from './src/screens/DaysAliveScreen';
 import FamousBirthdaysScreen from './src/screens/FamousBirthdaysScreen';
 import FormScreen from './src/screens/FormScreen';
 import FullAstrologyScreen from './src/screens/FullAstrologyScreen';
@@ -40,6 +43,7 @@ import NatalChartWithReadingScreen from './src/screens/NatalChartWithReadingScre
 import ObituaryFormScreen from './src/screens/ObituaryFormScreen';
 import OnThisDayScreen from './src/screens/OnThisDayScreen';
 import OrderConfirmationScreen from './src/screens/OrderConfirmationScreen';
+import PhonicsScreen from './src/screens/PhonicsScreen';
 import PostcardPreviewScreen from './src/screens/PostcardPreviewScreen';
 import PreviewScreen from './src/screens/PreviewScreen';
 import PrintServiceScreen from './src/screens/PrintServiceScreen';
@@ -52,6 +56,7 @@ import StoryReaderScreen from './src/screens/StoryReaderScreen';
 import SurnameSearchScreen from './src/screens/SurnameSearchScreen';
 import ThenAndNowScreen from './src/screens/ThenAndNowScreen';
 import TipOfTheDayScreen from './src/screens/TipOfTheDayScreen';
+import WrittenInTheStarsScreen from './src/screens/WrittenInTheStarsScreen';
 import YardSignPreviewScreen from './src/screens/YardSignPreviewScreen';
 import ZodiacSignScreen from './src/screens/ZodiacSignScreen';
 import type { RootStackParamList } from './src/types';
@@ -133,6 +138,15 @@ export default function App() {
                                     }}
                                 />
                                 <Stack.Screen
+                                    name="PhonicsChallenge"
+                                    component={PhonicsScreen}
+                                    options={{
+                                        headerStyle: { backgroundColor: '#0f172a' },
+                                        headerTintColor: '#fff',
+                                        title: 'Phonics Challenge',
+                                    }}
+                                />
+                                <Stack.Screen
                                     name="BedtimeStories"
                                     component={StoryReaderScreen}
                                     options={{
@@ -160,6 +174,24 @@ export default function App() {
                                     }}
                                 />
                                 <Stack.Screen
+                                    name="FamilyTreeIntro"
+                                    component={FamilyTreeIntroScreen}
+                                    options={{
+                                        headerStyle: { backgroundColor: '#000080' },
+                                        headerTintColor: '#fff',
+                                        title: 'Family Tree',
+                                    }}
+                                />
+                                <Stack.Screen
+                                    name="FamilyTreeForm"
+                                    component={FamilyTreeFormScreen}
+                                    options={{
+                                        headerStyle: { backgroundColor: '#000080' },
+                                        headerTintColor: '#fff',
+                                        title: 'Build Your Family Tree',
+                                    }}
+                                />
+                                <Stack.Screen
                                     name="HospitalLogin"
                                     component={HospitalLoginScreen}
                                     options={{
@@ -179,7 +211,7 @@ export default function App() {
                                     name="ObituaryForm"
                                     component={ObituaryFormScreen}
                                     options={{
-                                        headerStyle: { backgroundColor: '#1a1a2e' },
+                                        headerStyle: { backgroundColor: '#000080' },
                                         headerTintColor: '#fff',
                                     }}
                                 />
@@ -203,7 +235,7 @@ export default function App() {
                                     name="LifeMilestones"
                                     component={LifeMilestonesFormScreen}
                                     options={{
-                                        headerStyle: { backgroundColor: '#2d5016' },
+                                        headerStyle: { backgroundColor: '#000080' },
                                         headerTintColor: '#fff',
                                     }}
                                 />
@@ -219,7 +251,7 @@ export default function App() {
                                     name="GraduationForm"
                                     component={GraduationFormScreen}
                                     options={{
-                                        headerStyle: { backgroundColor: '#1a3a5c' },
+                                        headerStyle: { backgroundColor: '#000080' },
                                         headerTintColor: '#fff',
                                     }}
                                 />
@@ -227,7 +259,7 @@ export default function App() {
                                     name="AnniversaryForm"
                                     component={AnniversaryFormScreen}
                                     options={{
-                                        headerStyle: { backgroundColor: '#5c3a1a' },
+                                        headerStyle: { backgroundColor: '#000080' },
                                         headerTintColor: '#fff',
                                     }}
                                 />
@@ -267,6 +299,15 @@ export default function App() {
                                     }}
                                 />
                                 <Stack.Screen
+                                    name="WrittenInTheStars"
+                                    component={WrittenInTheStarsScreen}
+                                    options={{
+                                        headerTitle: 'Written in the Stars',
+                                        headerStyle: { backgroundColor: '#0d1b2a' },
+                                        headerTintColor: '#fff',
+                                    }}
+                                />
+                                <Stack.Screen
                                     name="JustForFun"
                                     component={JustForFunScreen}
                                     options={{
@@ -280,6 +321,15 @@ export default function App() {
                                     options={{
                                         headerStyle: { backgroundColor: '#4a5568' },
                                         headerTintColor: '#fff',
+                                    }}
+                                />
+                                <Stack.Screen
+                                    name="DaysAlive"
+                                    component={DaysAliveScreen}
+                                    options={{
+                                        headerStyle: { backgroundColor: '#000080' },
+                                        headerTintColor: '#fff',
+                                        title: 'Days Alive',
                                     }}
                                 />
                                 <Stack.Screen

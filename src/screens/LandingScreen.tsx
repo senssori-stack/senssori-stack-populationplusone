@@ -186,6 +186,22 @@ export default function LandingScreen({ navigation }: Props) {
                     {/* Divider Gap */}
                     <View style={styles.sectionGap} />
 
+                    {/* Written In The Stars */}
+                    <TouchableOpacity
+                        style={styles.cardButton}
+                        onPress={() => navigation.navigate('WrittenInTheStars')}
+                        activeOpacity={0.85}
+                    >
+                        <View style={styles.cardContent}>
+                            <View style={[styles.cardIconBox, { backgroundColor: '#0d1b2a' }]}>
+                                <Text style={styles.cardEmoji}>✨</Text>
+                            </View>
+                            <View style={styles.cardTextContainer}>
+                                <Text style={styles.cardTitle}>Written in the Stars</Text>
+                            </View>
+                        </View>
+                    </TouchableOpacity>
+
                     {/* Card 4: Just For Fun */}
                     <TouchableOpacity
                         style={styles.cardButton}
@@ -246,6 +262,22 @@ export default function LandingScreen({ navigation }: Props) {
                             </View>
                             <View style={styles.cardTextContainer}>
                                 <Text style={styles.cardTitle}>Jumpstart the American Dream  <Text style={{ fontSize: 24, fontWeight: '900', color: '#000000', letterSpacing: 1 }}>CRITICAL STEPS</Text></Text>
+                            </View>
+                        </View>
+                    </TouchableOpacity>
+
+                    {/* Build Your Family Tree */}
+                    <TouchableOpacity
+                        style={styles.cardButton}
+                        onPress={() => navigation.navigate('FamilyTreeIntro')}
+                        activeOpacity={0.85}
+                    >
+                        <View style={styles.cardContent}>
+                            <View style={styles.cardIconBox}>
+                                <Text style={styles.cardEmoji}>🌳</Text>
+                            </View>
+                            <View style={styles.cardTextContainer}>
+                                <Text style={styles.cardTitle}>Build Your Family Tree</Text>
                             </View>
                         </View>
                     </TouchableOpacity>

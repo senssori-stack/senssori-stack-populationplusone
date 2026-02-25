@@ -176,16 +176,8 @@ export default function FormScreen({ navigation, route }: Props) {
             photoUris: [null, null, null],
             gender: 'girl'
         },
-        {
-            first: 'Jimmy',
-            middle: 'Bobby',
-            last: 'Sample',
-            photoUri: null,
-            photoUris: [null, null, null],
-            gender: 'boy'
-        },
     ]);
-    const [babyCount, setBabyCount] = useState<number>(2); // Twins
+    const [babyCount, setBabyCount] = useState<number>(1); // Single
     const [motherName, setMotherName] = useState("Sarah Sample");
     const [fatherName, setFatherName] = useState("Jack Sample");
     const [email, setEmail] = useState(""); // For marketing
@@ -738,9 +730,17 @@ export default function FormScreen({ navigation, route }: Props) {
                         Write a heartfelt letter for {babyDisplayName} to read someday. Tap a sample below or write your own!
                     </Text>
 
-                    <TouchableOpacity style={[styles.sampleBtn, { marginBottom: 14 }]} onPress={() => setLetterToBaby(`Dear ${babyDisplayName},\n\nFrom the moment we first heard your heartbeat, our lives changed forever. You are our greatest blessing, our sweetest dream come true, and the answer to every prayer we ever whispered. We spent so many nights imagining what you would look like, wondering who you would become, and dreaming about the life we would build together.\n\nNow that you're here, every single moment feels like magic. The way you curl your tiny fingers around ours, the soft sounds you make when you sleep, the way the whole room lights up just because you're in it — these are the moments we will treasure for the rest of our lives.\n\nWe promise to love you unconditionally, to protect you fiercely, to cheer you on through every triumph and hold you close through every challenge. We promise to read you stories, to answer your endless questions, to let you make messes and learn from your mistakes. We promise to be the kind of parents who listen, who laugh with you, and who always make sure you know just how extraordinary you are.\n\nWelcome to the world, little one. You are so deeply, completely, and endlessly loved.\n\nWith all our hearts,\nMom & Dad`)}>
-                        <Text style={styles.sampleBtnText}>✨ Use Sample Letter</Text>
-                    </TouchableOpacity>
+                    <View style={styles.sampleBtnRow}>
+                        <TouchableOpacity style={styles.sampleBtn} onPress={() => setLetterToBaby(`Dear ${babyDisplayName},\n\nFrom the moment we first heard your heartbeat, our lives changed forever. You are our greatest blessing, our sweetest dream come true, and the answer to every prayer we ever whispered. We spent so many nights imagining what you would look like, wondering who you would become, and dreaming about the life we would build together.\n\nNow that you're here, every single moment feels like magic. The way you curl your tiny fingers around ours, the soft sounds you make when you sleep, the way the whole room lights up just because you're in it — these are the moments we will treasure for the rest of our lives.\n\nWe promise to love you unconditionally, to protect you fiercely, to cheer you on through every triumph and hold you close through every challenge. We promise to read you stories, to answer your endless questions, to let you make messes and learn from your mistakes. We promise to be the kind of parents who listen, who laugh with you, and who always make sure you know just how extraordinary you are.\n\nWelcome to the world, little one. You are so deeply, completely, and endlessly loved.\n\nWith all our hearts,\nMom & Dad`)}>
+                            <Text style={styles.sampleBtnText}>💑 From Mom & Dad</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.sampleBtn} onPress={() => setLetterToBaby(`Dear ${babyDisplayName},\n\nI carried you beneath my heart for nine months, but I have loved you my whole life. Every flutter, every kick, every hiccup reminded me that the most incredible journey of my life was just beginning.\n\nThe moment they placed you in my arms, the whole world went quiet. Nothing else mattered — just you, your tiny perfect face, your little fingers, and the soft warmth of you against my chest. I cried the happiest tears I have ever cried.\n\nI want you to know that no matter where life takes you, no matter how big you grow, you will always be my baby. I will always be your safe place, your biggest fan, and the one who loves you more than words could ever say. I will sing to you, read to you, hold you when you're scared, and celebrate every little thing you do.\n\nYou have made me a mother, and that is the greatest gift I have ever received.\n\nI love you to the moon and back,\nMom`)}>
+                            <Text style={styles.sampleBtnText}>👩 From Mom</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.sampleBtn} onPress={() => setLetterToBaby(`Dear ${babyDisplayName},\n\nI never knew my heart could feel this full until I held you for the first time. In that moment, everything changed. Every dream I ever had suddenly had a new meaning — because now, everything I do, I do for you.\n\nI promise to be the dad who shows up — for every game, every recital, every scraped knee, and every bedtime story. I promise to teach you how to ride a bike, how to throw a ball, how to be brave, and how to be kind. I promise to make you laugh, to protect you, and to always be honest with you, even when it's hard.\n\nBut most of all, I promise to love you with everything I have. You are my greatest adventure, my proudest accomplishment, and my reason to be the best man I can be.\n\nThe world is a better place because you're in it, and I will spend every day making sure you know how loved you are.\n\nForever and always,\nDad`)}>
+                            <Text style={styles.sampleBtnText}>👨 From Dad</Text>
+                        </TouchableOpacity>
+                    </View>
 
                     <TextInput
                         style={styles.messageInput}
@@ -868,7 +868,7 @@ export default function FormScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
     },
     content: {
         padding: 20,
@@ -1029,7 +1029,7 @@ const styles = StyleSheet.create({
         opacity: 0.6,
     },
     previewButtonText: {
-        color: '#1a472a',
+        color: '#000080',
         fontSize: 18,
         fontWeight: '900',
     },
@@ -1131,7 +1131,7 @@ const styles = StyleSheet.create({
         fontSize: 13,
     },
     sampleBtnTextActive: {
-        color: '#1a472a',
+        color: '#000080',
     },
     messageInput: {
         backgroundColor: '#fff',

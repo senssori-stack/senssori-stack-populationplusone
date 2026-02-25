@@ -1075,7 +1075,7 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#2d5016' },
+    container: { flex: 1, backgroundColor: '#000080' },
     content: { padding: 20, paddingBottom: 40 },
     title: { fontSize: 24, fontWeight: '900', marginBottom: 12, color: '#fff', textAlign: 'center' },
     label: { fontSize: 16, fontWeight: '700', color: '#fff', marginTop: 16, marginBottom: 8 },
@@ -1098,7 +1098,7 @@ const styles = StyleSheet.create({
     },
     toggleActive: { backgroundColor: '#fff' },
     toggleText: { fontWeight: '700', color: '#fff', fontSize: 14 },
-    toggleActiveText: { color: '#2d5016' },
+    toggleActiveText: { color: '#000080' },
     photoGrid: { flexDirection: 'row', gap: 12, marginBottom: 16 },
     photoSlot: {
         flex: 1,
@@ -1173,7 +1173,7 @@ const styles = StyleSheet.create({
         marginBottom: 40,
         backgroundColor: '#fff',
     },
-    buildBtnText: { color: '#2d5016', fontWeight: '900', fontSize: 18 },
+    buildBtnText: { color: '#000080', fontWeight: '900', fontSize: 18 },
     dropdownButton: {
         backgroundColor: '#fff',
         borderRadius: 8,
@@ -1229,7 +1229,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     milestoneOptionSelected: {
-        backgroundColor: '#2d5016',
+        backgroundColor: '#000080',
     },
     milestoneOptionText: {
         fontSize: 16,

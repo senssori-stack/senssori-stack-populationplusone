@@ -28,6 +28,11 @@ const GRADUATION_OPTIONS = [
     { id: 'doctorate', label: '🎓 Doctorate/PhD', emoji: '🎓' },
     { id: 'medical', label: '⚕️ Medical School Graduation', emoji: '⚕️' },
     { id: 'law', label: '⚖️ Law School Graduation', emoji: '⚖️' },
+    { id: 'fireacademy', label: '🚒 Fire Academy Graduation', emoji: '🚒' },
+    { id: 'policeacademy', label: '🚔 Police Academy Graduation', emoji: '🚔' },
+    { id: 'dental', label: '🦷 Dental School Graduation', emoji: '🦷' },
+    { id: 'nursing', label: '🩺 Nursing School Graduation', emoji: '🩺' },
+    { id: 'cosmetology', label: '💇 Cosmetology School Graduation', emoji: '💇' },
 ];
 
 const MESSAGES: Record<string, { classic: string; celebration: string; heartfelt: string }> = {
@@ -65,6 +70,31 @@ const MESSAGES: Record<string, { classic: string; celebration: string; heartfelt
         classic: 'Congratulations on graduating from {schoolName}, {fullName}! Your dedication to justice and the law will serve you well as you embark on your legal career.',
         celebration: '{fullName} passed the bar... well, {schoolName} at least! Time to celebrate this major milestone on the path to becoming a legal professional!',
         heartfelt: '{schoolName} demands excellence and {fullName} delivered. Your commitment to understanding and upholding the law is admirable. We couldn\'t be more proud!',
+    },
+    fireacademy: {
+        classic: 'Congratulations on graduating from {schoolName}, {fullName}! You answered the call to serve and protect your community. Your bravery and dedication are truly admirable.',
+        celebration: '{fullName} is officially a firefighter! All those grueling hours of training at {schoolName} have paid off. Time to celebrate this hometown hero!',
+        heartfelt: 'Running toward danger when everyone else runs away — that takes a special kind of courage. {fullName}, your graduation from {schoolName} is a testament to your bravery, selflessness, and heart. We are so incredibly proud!',
+    },
+    policeacademy: {
+        classic: 'Congratulations on graduating from {schoolName}, {fullName}! Your commitment to serving and protecting your community is honorable. You\'ve earned this badge with hard work and dedication.',
+        celebration: '{fullName} has completed {schoolName} and is ready to serve! All that discipline, training, and determination have led to this proud moment. Let\'s celebrate!',
+        heartfelt: 'To protect and serve — {fullName} has answered the call. Graduating from {schoolName} takes discipline, courage, and heart, and {firstName} has shown all three. We couldn\'t be more proud of this achievement!',
+    },
+    dental: {
+        classic: 'Congratulations, Dr. {fullName}! Your journey through {schoolName} has prepared you to create healthy, beautiful smiles. Your dedication and skill will change lives one patient at a time.',
+        celebration: 'The doctor is in — Dr. {fullName} has conquered {schoolName}! Years of studying, practicing, and perfecting have led to this incredible moment. Time to smile and celebrate!',
+        heartfelt: 'Dental school at {schoolName} is one of the most demanding paths in healthcare, and {fullName} rose to the challenge. Your commitment to excellence and patient care is inspiring. We are so proud!',
+    },
+    nursing: {
+        classic: 'Congratulations on graduating from {schoolName}, {fullName}! Nurses are the heart of healthcare, and your compassion and skill will make a real difference in the lives of your patients.',
+        celebration: '{fullName} did it! {schoolName} is complete and a career of healing and caring awaits. The world needs more nurses like {firstName} — time to celebrate this amazing achievement!',
+        heartfelt: 'Nursing is a calling, not just a career, and {fullName} has answered that call with flying colors. The dedication it took to get through {schoolName} is truly remarkable. You will touch so many lives. We are beyond proud!',
+    },
+    cosmetology: {
+        classic: 'Congratulations on graduating from {schoolName}, {fullName}! Your creativity, talent, and passion for beauty are about to take the world by storm. Get ready to make people look and feel amazing!',
+        celebration: '{fullName} is a certified beauty pro! All those hours of training and perfecting the craft at {schoolName} have paid off. Time to celebrate {firstName}\'s incredible achievement!',
+        heartfelt: 'Cosmetology is an art, and {fullName} has mastered it at {schoolName}. The ability to make people feel confident and beautiful is a true gift. We are so proud of your hard work and dedication!',
     },
 };
 
@@ -297,7 +327,7 @@ export default function GraduationFormScreen({ navigation }: Props) {
                                         setShowGraduationModal(false);
                                     }}
                                 >
-                                    <Text style={styles.modalOptionText}>{option.label}</Text>
+                                    <Text style={[styles.modalOptionText, selectedGraduation === option.id && { color: '#fff' }]}>{option.label}</Text>
                                 </TouchableOpacity>
                             ))}
                         </ScrollView>
@@ -456,7 +486,7 @@ export default function GraduationFormScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1a3a5c',
+        backgroundColor: '#000080',
     },
     content: {
         padding: 20,
@@ -513,7 +543,7 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     photoButton: {
-        backgroundColor: '#2d5078',
+        backgroundColor: '#1a1a9e',
         borderRadius: 8,
         padding: 20,
         alignItems: 'center',
@@ -538,7 +568,7 @@ const styles = StyleSheet.create({
     },
     messageButton: {
         flex: 1,
-        backgroundColor: '#2d5078',
+        backgroundColor: '#1a1a9e',
         borderRadius: 8,
         padding: 10,
         alignItems: 'center',
@@ -551,7 +581,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     messageButtonTextSelected: {
-        color: '#1a3a5c',
+        color: '#000080',
     },
     colorGrid: {
         flexDirection: 'row',
@@ -570,7 +600,7 @@ const styles = StyleSheet.create({
         opacity: 0.6,
     },
     previewButtonText: {
-        color: '#1a3a5c',
+        color: '#000080',
         fontSize: 18,
         fontWeight: '900',
     },
@@ -604,7 +634,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
     },
     modalOptionSelected: {
-        backgroundColor: '#1a3a5c',
+        backgroundColor: '#000080',
     },
     modalOptionText: {
         fontSize: 16,

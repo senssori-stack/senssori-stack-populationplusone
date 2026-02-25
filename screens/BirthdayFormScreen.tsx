@@ -56,6 +56,46 @@ const MESSAGES: Record<string, { classic: string; celebration: string; heartfelt
         celebration: 'Over the hill but still killing it! {fullName} is proof that age is just a number (and this number is getting pretty big!). Let\'s celebrate!',
         heartfelt: '{fullName} has reached a beautiful milestone. With age comes wisdom, and {firstName} has plenty of both! Here\'s to many more years of love and laughter.',
     },
+    '30th': {
+        classic: 'Dirty thirty looks amazing on {fullName}! The twenties were just the warm-up — the real adventure starts now. Welcome to the best decade yet!',
+        celebration: '{fullName} is 30! Three decades of being awesome, and {firstName} is just getting started. Time to celebrate this milestone in style!',
+        heartfelt: 'Thirty years of {fullName} making the world brighter, kinder, and more fun. We\'re so proud of everything {firstName} has accomplished and can\'t wait to see what the next chapter brings.',
+    },
+    '40th': {
+        classic: '{fullName} is 40 and absolutely fabulous! They say life begins at 40, and if that\'s true, {firstName} is about to have the time of their life!',
+        celebration: 'Four decades of being incredible! {fullName} is proof that 40 is the new 30 — only better, wiser, and with way more confidence. Let\'s celebrate {firstName}!',
+        heartfelt: 'At 40, {fullName} has built a life filled with love, laughter, and meaning. We admire {firstName}\'s strength, kindness, and the way they make everyone around them feel special. Happy 40th!',
+    },
+    '50th': {
+        classic: 'Half a century of {fullName} being absolutely legendary! Fifty years young and still showing the rest of us how it\'s done. Cheers to the golden birthday!',
+        celebration: '{fullName} hits the big 5-0! Fifty years of love, laughter, and memories — and {firstName} makes it all look effortless. This milestone calls for a legendary celebration!',
+        heartfelt: 'Fifty years of {fullName} lighting up this world with their warmth, humor, and grace. {firstName} has touched so many lives in beautiful ways. We\'re honored to celebrate this incredible milestone with you.',
+    },
+    '60th': {
+        classic: '{fullName} is 60 and still the life of the party! Six decades of wisdom, wit, and wonderful memories. The best is yet to come for {firstName}!',
+        celebration: 'Sixty and sensational! {fullName} proves that age is just a number — and this number looks fantastic. Here\'s to celebrating 60 amazing years of {firstName}!',
+        heartfelt: 'Sixty years of {fullName}\'s love, laughter, and legacy. The lives {firstName} has touched, the memories they\'ve created, and the love they\'ve shared — it all adds up to an extraordinary life. Happy 60th!',
+    },
+    '70th': {
+        classic: '{fullName} is 70 and still going strong! Seven decades of amazing stories, incredible experiences, and a life well lived. We\'re so lucky to celebrate with {firstName}!',
+        celebration: 'Seventy years young! {fullName} has lived, loved, and laughed through seven incredible decades. {firstName} is living proof that the best things really do get better with time!',
+        heartfelt: 'Seventy years of {fullName}\'s beautiful spirit, unwavering love, and quiet strength. {firstName} has been a guiding light for so many of us. This milestone is a testament to a life filled with meaning and purpose. We love you!',
+    },
+    '80th': {
+        classic: '{fullName} is 80 and still the most interesting person in every room! Eight decades of stories, wisdom, and a sparkle that never fades. Happy 80th, {firstName}!',
+        celebration: 'Eighty years of being absolutely wonderful! {fullName} has seen the world change in incredible ways and has made it better just by being in it. Let\'s give {firstName} the celebration they deserve!',
+        heartfelt: 'Eighty years of {fullName}\'s love, sacrifice, and devotion have shaped our family and our lives in ways words can\'t fully express. {firstName}, you are our treasure. Happy 80th birthday with all our love.',
+    },
+    '90th': {
+        classic: '{fullName} is 90! Nine decades of living life to the fullest and still showing us all how it\'s done. {firstName} is a living legend and we are so blessed to celebrate this day!',
+        celebration: 'Ninety years of {fullName}! Most people can only dream of reaching this incredible milestone, and {firstName} has done it with grace, humor, and style. What an achievement!',
+        heartfelt: 'Ninety years of {fullName}\'s gentle wisdom, endless love, and the kind of strength that inspires everyone around them. {firstName}, you are a gift to this world and to all of us who love you. Happy 90th!',
+    },
+    '100th': {
+        classic: '{fullName} is 100 years young! A whole century of life, love, and unforgettable memories. {firstName} has seen it all and done it all — and is still going strong. What an absolute legend!',
+        celebration: 'ONE HUNDRED! {fullName} has reached the ultimate milestone! A century of incredible stories, historic moments, and a life that has inspired everyone who knows {firstName}. This calls for the celebration of a lifetime!',
+        heartfelt: 'One hundred years of {fullName}\'s love, laughter, and legacy. {firstName}, you have lived through history, raised generations, and touched more hearts than you will ever know. You are a once-in-a-lifetime treasure. Happy 100th birthday with all our love and admiration.',
+    },
 };
 
 // Animated Color Box
@@ -413,7 +453,7 @@ export default function BirthdayFormScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
     },
     content: {
         padding: 20,
@@ -470,7 +510,7 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     photoButton: {
-        backgroundColor: '#2d6a3f',
+        backgroundColor: '#1a1a9e',
         borderRadius: 8,
         padding: 20,
         alignItems: 'center',
@@ -495,7 +535,7 @@ const styles = StyleSheet.create({
     },
     messageButton: {
         flex: 1,
-        backgroundColor: '#2d6a3f',
+        backgroundColor: '#1a1a9e',
         borderRadius: 8,
         padding: 10,
         alignItems: 'center',
@@ -508,7 +548,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     messageButtonTextSelected: {
-        color: '#1a472a',
+        color: '#000080',
     },
     colorGrid: {
         flexDirection: 'row',
@@ -527,7 +567,7 @@ const styles = StyleSheet.create({
         opacity: 0.6,
     },
     previewButtonText: {
-        color: '#1a472a',
+        color: '#000080',
         fontSize: 18,
         fontWeight: '900',
     },
@@ -561,7 +601,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
     },
     modalOptionSelected: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
     },
     modalOptionText: {
         fontSize: 16,
