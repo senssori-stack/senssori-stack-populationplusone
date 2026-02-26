@@ -1,14 +1,20 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Population +1™ | The Perfect Birth Announcement</title>
+    <title>Population +1™ | Birth Announcements, Time Capsules & Keepsakes</title>
     <meta name="description"
-        content="Create beautiful population sign birth announcements with historical time capsule data. Gas prices, #1 songs, who was president, and more from the day they were born.">
+        content="Create beautiful birth announcements, time capsules, natal charts, and milestone keepsakes. Capture gas prices, #1 songs, world events and more from any special date. Zero ads, no subscriptions.">
     <meta name="keywords"
-        content="population plus one, population +1, +1, birth announcement app, digital birth announcement, baby time capsule, newborn keepsake, personalized baby announcement, baby milestone app, new baby gift, family history app, baby memory book, birth stats sign, custom baby sign, baby announcement ideas, unique birth announcement, baby arrival announcement, baby photo announcement">
+        content="population plus one, population +1, birth announcement app, digital birth announcement, baby time capsule, newborn keepsake, personalized baby announcement, baby milestone app, new baby gift, natal chart baby, birthday announcement, graduation announcement, anniversary announcement, baby lullabies, bedtime stories, family tree builder">
+    <meta property="og:title" content="Population +1™ | The +1 Announcement Keepsake Creator Studio">
+    <meta property="og:description"
+        content="Every new life IS A +1 that counts. Create beautiful announcements and time capsules families will treasure forever.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.populationplusone.com">
+    <link rel="canonical" href="https://www.populationplusone.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
@@ -17,20 +23,20 @@
         * {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            box-sizing: border-box
         }
 
         @keyframes gradientShift {
             0% {
-                background-position: 0% 50%;
+                background-position: 0% 50%
             }
 
             50% {
-                background-position: 100% 50%;
+                background-position: 100% 50%
             }
 
             100% {
-                background-position: 0% 50%;
+                background-position: 0% 50%
             }
         }
 
@@ -38,11 +44,11 @@
 
             0%,
             100% {
-                transform: translateY(0) rotate(0deg);
+                transform: translateY(0) rotate(0deg)
             }
 
             50% {
-                transform: translateY(-20px) rotate(5deg);
+                transform: translateY(-20px) rotate(5deg)
             }
         }
 
@@ -51,35 +57,49 @@
             0%,
             100% {
                 transform: scale(1);
-                opacity: 0.8;
+                opacity: .8
             }
 
             50% {
                 transform: scale(1.05);
-                opacity: 1;
+                opacity: 1
             }
         }
 
         @keyframes slideUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(30px)
             }
 
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0)
             }
         }
 
         @keyframes shimmer {
             0% {
-                background-position: -200% 0;
+                background-position: -200% 0
             }
 
             100% {
-                background-position: 200% 0;
+                background-position: 200% 0
             }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        html {
+            scroll-behavior: smooth
         }
 
         body {
@@ -92,7 +112,6 @@
             overflow-x: hidden;
         }
 
-        /* Floating background elements */
         .bg-shapes {
             position: fixed;
             top: 0;
@@ -101,14 +120,14 @@
             height: 100%;
             pointer-events: none;
             overflow: hidden;
-            z-index: 0;
+            z-index: 0
         }
 
         .bg-shape {
             position: absolute;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.03);
-            animation: float 8s ease-in-out infinite;
+            background: rgba(255, 255, 255, .03);
+            animation: float 8s ease-in-out infinite
         }
 
         .bg-shape:nth-child(1) {
@@ -116,7 +135,7 @@
             height: 300px;
             top: -100px;
             left: -100px;
-            animation-delay: 0s;
+            animation-delay: 0s
         }
 
         .bg-shape:nth-child(2) {
@@ -124,7 +143,7 @@
             height: 200px;
             top: 50%;
             right: -50px;
-            animation-delay: -2s;
+            animation-delay: -2s
         }
 
         .bg-shape:nth-child(3) {
@@ -132,7 +151,7 @@
             height: 150px;
             bottom: 20%;
             left: 10%;
-            animation-delay: -4s;
+            animation-delay: -4s
         }
 
         .bg-shape:nth-child(4) {
@@ -140,26 +159,35 @@
             height: 250px;
             bottom: -100px;
             right: 20%;
-            animation-delay: -6s;
+            animation-delay: -6s
+        }
+
+        .bg-shape:nth-child(5) {
+            width: 180px;
+            height: 180px;
+            top: 30%;
+            left: 60%;
+            animation-delay: -3s
         }
 
         .container {
-            max-width: 560px;
+            max-width: 680px;
             margin: 0 auto;
             padding: 40px 20px;
             position: relative;
-            z-index: 1;
+            z-index: 1
         }
 
+        /* ── HERO ── */
         .hero-section {
-            min-height: 60vh;
+            min-height: 70vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 60px 20px;
             text-align: center;
-            animation: slideUp 1s ease-out;
+            animation: slideUp 1s ease-out
         }
 
         .icon-box {
@@ -170,17 +198,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 4px solid rgba(255, 255, 255, 0.9);
+            border: 4px solid rgba(255, 255, 255, .9);
             margin-bottom: 32px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 40px rgba(74, 124, 44, 0.4);
-            animation: pulse 3s ease-in-out infinite;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .3), 0 0 40px rgba(74, 124, 44, .4);
+            animation: pulse 3s ease-in-out infinite
         }
 
         .icon-text {
             font-size: 64px;
             font-weight: 900;
             color: #fff;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, .2)
         }
 
         .main-title {
@@ -188,64 +216,92 @@
             font-weight: 900;
             color: #fff;
             margin-bottom: 16px;
-            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            letter-spacing: -1px;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, .3);
+            letter-spacing: -1px
         }
 
         .tagline {
             font-size: 18px;
-            color: rgba(255, 255, 255, 0.95);
+            color: rgba(255, 255, 255, .95);
             margin-bottom: 8px;
             font-weight: 600;
-            margin-top: 16px;
+            margin-top: 16px
         }
 
         .tagline-second {
             font-size: 14px;
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, .8);
             font-weight: 500;
             margin-top: 12px;
             letter-spacing: 2px;
-            text-transform: uppercase;
+            text-transform: uppercase
         }
 
-        .content-section {
-            padding: 40px 0;
-            animation: slideUp 1s ease-out 0.2s both;
+        .hero-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 24px
         }
 
+        .hero-badge {
+            background: rgba(255, 255, 255, .15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, .2);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, .9)
+        }
+
+        /* ── SECTION TITLES ── */
         .section-title {
             font-size: 26px;
             font-weight: 800;
             color: #fff;
             text-align: center;
             margin-bottom: 28px;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, .2)
         }
 
-        /* Glassmorphism cards */
+        .section-subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, .8);
+            font-size: 14px;
+            margin-top: -20px;
+            margin-bottom: 28px
+        }
+
+        /* ── CARD BUTTONS ── */
+        .content-section {
+            padding: 40px 0;
+            animation: slideUp 1s ease-out .2s both
+        }
+
         .card-button {
             margin-bottom: 16px;
             border-radius: 20px;
             overflow: hidden;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, .95);
             backdrop-filter: blur(20px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .15), inset 0 1px 0 rgba(255, 255, 255, .5);
             text-decoration: none;
             display: block;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all .3s cubic-bezier(.4, 0, .2, 1);
+            border: 1px solid rgba(255, 255, 255, .2)
         }
 
         .card-button:hover {
             transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, .25)
         }
 
         .card-content {
             display: flex;
             align-items: center;
-            padding: 16px 18px;
+            padding: 16px 18px
         }
 
         .card-icon-box {
@@ -258,28 +314,28 @@
             justify-content: center;
             margin-right: 14px;
             flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .08)
         }
 
         .card-emoji {
-            font-size: 26px;
+            font-size: 26px
         }
 
         .card-text-container {
-            flex: 1;
+            flex: 1
         }
 
         .card-title {
             font-size: 15px;
             font-weight: 700;
             color: #2d5016;
-            margin-bottom: 4px;
+            margin-bottom: 4px
         }
 
         .card-description {
             font-size: 12px;
             color: #666;
-            line-height: 1.4;
+            line-height: 1.4
         }
 
         .card-arrow {
@@ -287,389 +343,330 @@
             color: #2d5016;
             font-weight: 700;
             margin-left: 8px;
-            transition: transform 0.3s ease;
+            transition: transform .3s ease
         }
 
         .card-button:hover .card-arrow {
-            transform: translateX(4px);
+            transform: translateX(4px)
         }
 
+        /* ── FEATURES GRID ── */
         .features-section {
             padding: 40px 0;
-            animation: slideUp 1s ease-out 0.4s both;
+            animation: slideUp 1s ease-out .4s both
         }
 
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 14px;
-            margin-top: 28px;
+            margin-top: 28px
         }
 
         .feature-item {
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, .12);
             backdrop-filter: blur(10px);
             border-radius: 16px;
-            padding: 20px 12px;
+            padding: 20px 10px;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, .1);
+            transition: all .3s ease
         }
 
         .feature-item:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-4px);
+            background: rgba(255, 255, 255, .2);
+            transform: translateY(-4px)
         }
 
         .feature-icon {
             font-size: 28px;
-            margin-bottom: 10px;
+            margin-bottom: 10px
         }
 
         .feature-title {
             font-size: 11px;
             font-weight: 600;
-            color: #fff;
+            color: #fff
         }
 
-        .cta-section {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            border-radius: 28px;
-            padding: 40px 28px;
-            margin: 40px 0;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-        }
-
-        .cta-section h2 {
-            font-size: 24px;
-            margin-bottom: 24px;
-            color: #fff;
-            font-weight: 800;
-        }
-
-        .store-buttons {
-            display: flex;
-            gap: 14px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .store-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background: linear-gradient(145deg, #ffffff, #f0f0f0);
-            color: #2d5016;
-            padding: 14px 28px;
-            border-radius: 14px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 15px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .store-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .store-btn svg {
-            width: 22px;
-            height: 22px;
-        }
-
-        .store-btn.disabled {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        .how-section {
+        /* ── ANNOUNCEMENT TYPES ── */
+        .announce-section {
             padding: 40px 0;
-            animation: slideUp 1s ease-out 0.6s both;
+            animation: slideUp 1s ease-out .35s both
         }
 
-        .steps {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-            margin-top: 28px;
-        }
-
-        .step {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 16px;
-        }
-
-        .step-number {
-            width: 32px;
-            height: 32px;
-            background: #fff;
-            color: #2d5016;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .step-content h3 {
-            font-size: 14px;
-            margin-bottom: 4px;
-            color: #fff;
-        }
-
-        .step-content p {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 12px;
-            line-height: 1.4;
-        }
-
-        .footer-section {
-            text-align: center;
-            padding: 24px 0;
-        }
-
-        .footer-text {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.5);
-            font-weight: 500;
-        }
-
-        .footer-links {
-            margin-top: 12px;
-            font-size: 12px;
-        }
-
-        .footer-links a {
-            color: rgba(255, 255, 255, 0.7);
-            text-decoration: none;
-            margin: 0 8px;
-        }
-
-        .footer-links a:hover {
-            color: #fff;
-            text-decoration: underline;
-        }
-
-        .step {
-            display: flex;
-            align-items: flex-start;
+        .announce-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 16px;
-            background: rgba(255, 255, 255, 0.12);
+            margin-top: 28px
+        }
+
+        .announce-card {
+            background: rgba(255, 255, 255, .1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 24px 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, .15);
+            transition: all .3s ease
+        }
+
+        .announce-card:hover {
+            background: rgba(255, 255, 255, .18);
+            transform: translateY(-4px)
+        }
+
+        .announce-icon {
+            font-size: 40px;
+            margin-bottom: 12px
+        }
+
+        .announce-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 6px
+        }
+
+        .announce-desc {
+            font-size: 12px;
+            color: rgba(255, 255, 255, .75);
+            line-height: 1.4
+        }
+
+        /* ── OUTPUT FORMATS ── */
+        .formats-section {
+            padding: 40px 0
+        }
+
+        .formats-scroll {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding: 10px 0 20px;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch
+        }
+
+        .formats-scroll::-webkit-scrollbar {
+            height: 4px
+        }
+
+        .formats-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .3);
+            border-radius: 4px
+        }
+
+        .format-card {
+            min-width: 160px;
+            background: rgba(255, 255, 255, .12);
             backdrop-filter: blur(10px);
             border-radius: 16px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .step:hover {
-            background: rgba(255, 255, 255, 0.18);
-            transform: translateX(8px);
-        }
-
-        .step-number {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(145deg, #ffffff, #f0f0f0);
-            color: #2d5016;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 16px;
-            flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .step-content h3 {
-            font-size: 16px;
-            margin-bottom: 6px;
-            color: #fff;
-            font-weight: 700;
-        }
-
-        .step-content p {
-            color: rgba(255, 255, 255, 0.85);
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-        .footer-section {
+            padding: 20px 14px;
             text-align: center;
-            padding: 32px 0;
-            animation: slideUp 1s ease-out 0.8s both;
+            border: 1px solid rgba(255, 255, 255, .1);
+            flex-shrink: 0;
+            scroll-snap-align: start
         }
 
-        .footer-text {
-            font-size: 15px;
-            color: rgba(255, 255, 255, 0.6);
-            font-weight: 600;
-            letter-spacing: 1px;
+        .format-icon {
+            font-size: 36px;
+            margin-bottom: 10px
         }
 
-        .footer-links {
-            margin-top: 16px;
+        .format-title {
             font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 4px
         }
 
-        .footer-links a {
-            color: rgba(255, 255, 255, 0.7);
-            text-decoration: none;
-            margin: 0 12px;
-            transition: color 0.3s ease;
+        .format-desc {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .7);
+            line-height: 1.4
         }
 
-        .footer-links a:hover {
-            color: #fff;
-        }
-
-        /* Just For Fun Interactive Section */
-        .fun-section {
-            background: linear-gradient(145deg, rgba(74, 20, 140, 0.3), rgba(123, 31, 162, 0.3));
+        /* ── ASTROLOGY SECTION ── */
+        .astrology-section {
+            background: linear-gradient(145deg, rgba(74, 20, 140, .35), rgba(123, 31, 162, .35));
             backdrop-filter: blur(20px);
             border-radius: 28px;
             padding: 40px 24px;
             margin: 40px 0;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-            animation: slideUp 1s ease-out 0.5s both;
+            border: 1px solid rgba(255, 255, 255, .15);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+            animation: slideUp 1s ease-out .5s both
+        }
+
+        .astro-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 24px
+        }
+
+        .astro-item {
+            background: rgba(255, 255, 255, .1);
+            border-radius: 14px;
+            padding: 14px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            transition: all .3s ease
+        }
+
+        .astro-item:hover {
+            background: rgba(255, 255, 255, .18);
+            transform: scale(1.02)
+        }
+
+        .astro-emoji {
+            font-size: 24px;
+            flex-shrink: 0
+        }
+
+        .astro-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff
+        }
+
+        /* ── JUST FOR FUN INTERACTIVE ── */
+        .fun-section {
+            background: linear-gradient(145deg, rgba(74, 20, 140, .3), rgba(123, 31, 162, .3));
+            backdrop-filter: blur(20px);
+            border-radius: 28px;
+            padding: 40px 24px;
+            margin: 40px 0;
+            border: 1px solid rgba(255, 255, 255, .15);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+            animation: slideUp 1s ease-out .5s both
         }
 
         .fun-section h2 {
             font-size: 28px;
             text-align: center;
             margin-bottom: 8px;
-            font-weight: 800;
+            font-weight: 800
         }
 
         .fun-subtitle {
             text-align: center;
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, .8);
             margin-bottom: 28px;
-            font-size: 14px;
+            font-size: 14px
         }
 
         .date-input-container {
             display: flex;
             justify-content: center;
-            margin-bottom: 24px;
+            margin-bottom: 24px
         }
 
         .date-input {
             padding: 14px 24px;
             font-size: 16px;
             border-radius: 14px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, .3);
+            background: rgba(255, 255, 255, .15);
             color: #fff;
             font-family: 'Inter', sans-serif;
             font-weight: 600;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all .3s ease
         }
 
         .date-input:focus {
             outline: none;
-            border-color: rgba(255, 255, 255, 0.6);
-            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, .6);
+            background: rgba(255, 255, 255, .25)
         }
 
         .date-input::-webkit-calendar-picker-indicator {
             filter: invert(1);
-            cursor: pointer;
+            cursor: pointer
         }
 
         .fun-results {
             display: none;
             flex-direction: column;
             gap: 16px;
-            margin-top: 24px;
+            margin-top: 24px
         }
 
         .fun-results.active {
-            display: flex;
+            display: flex
         }
 
         .fun-card {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, .95);
             border-radius: 16px;
             padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-            animation: slideUp 0.5s ease-out both;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .15);
+            animation: slideUp .5s ease-out both
         }
 
         .fun-card:nth-child(1) {
-            animation-delay: 0.1s;
+            animation-delay: .1s
         }
 
         .fun-card:nth-child(2) {
-            animation-delay: 0.2s;
+            animation-delay: .2s
         }
 
         .fun-card:nth-child(3) {
-            animation-delay: 0.3s;
+            animation-delay: .3s
         }
 
         .fun-card:nth-child(4) {
-            animation-delay: 0.4s;
+            animation-delay: .4s
         }
 
         .fun-card:nth-child(5) {
-            animation-delay: 0.5s;
+            animation-delay: .5s
         }
 
         .fun-card:nth-child(6) {
-            animation-delay: 0.6s;
+            animation-delay: .6s
         }
 
         .fun-card-header {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 12px;
+            margin-bottom: 12px
         }
 
         .fun-card-icon {
-            font-size: 28px;
+            font-size: 28px
         }
 
         .fun-card-title {
             font-size: 16px;
             font-weight: 700;
-            color: #4a148c;
+            color: #4a148c
         }
 
         .fun-card-content {
             color: #333;
             font-size: 14px;
-            line-height: 1.5;
+            line-height: 1.5
         }
 
         .fun-card-big {
             font-size: 32px;
             font-weight: 800;
             color: #4a148c;
-            margin-bottom: 8px;
+            margin-bottom: 8px
         }
 
         .lucky-numbers {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-            margin-top: 8px;
+            margin-top: 8px
         }
 
         .lucky-ball {
@@ -683,7 +680,7 @@
             color: #fff;
             font-weight: 700;
             font-size: 16px;
-            box-shadow: 0 4px 12px rgba(74, 20, 140, 0.4);
+            box-shadow: 0 4px 12px rgba(74, 20, 140, .4)
         }
 
         .roman-display {
@@ -696,12 +693,12 @@
             padding: 16px;
             background: linear-gradient(145deg, #f8f9fa, #e9ecef);
             border-radius: 12px;
-            margin-top: 8px;
+            margin-top: 8px
         }
 
         .zodiac-symbol {
             font-size: 48px;
-            margin-right: 16px;
+            margin-right: 16px
         }
 
         .birthstone-gem {
@@ -713,26 +710,390 @@
             justify-content: center;
             font-size: 24px;
             margin-right: 16px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .2)
         }
 
-        @media (max-width: 500px) {
+        /* ── BABY TOOLS ── */
+        .baby-section {
+            padding: 40px 0;
+            animation: slideUp 1s ease-out .6s both
+        }
+
+        .baby-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-top: 28px
+        }
+
+        .baby-card {
+            background: rgba(255, 255, 255, .12);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px 14px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, .1);
+            transition: all .3s ease
+        }
+
+        .baby-card:hover {
+            background: rgba(255, 255, 255, .2);
+            transform: translateY(-4px)
+        }
+
+        .baby-icon {
+            font-size: 32px;
+            margin-bottom: 8px
+        }
+
+        .baby-title {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 4px
+        }
+
+        .baby-desc {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .7);
+            line-height: 1.4
+        }
+
+        /* ── GIFT SECTION ── */
+        .gift-section {
+            background: linear-gradient(145deg, rgba(183, 28, 28, .2), rgba(211, 47, 47, .2));
+            backdrop-filter: blur(20px);
+            border-radius: 28px;
+            padding: 40px 24px;
+            margin: 40px 0;
+            border: 1px solid rgba(255, 255, 255, .15);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .2)
+        }
+
+        .gift-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px
+        }
+
+        .gift-tag {
+            background: rgba(255, 255, 255, .15);
+            border: 1px solid rgba(255, 255, 255, .2);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all .3s ease
+        }
+
+        .gift-tag:hover {
+            background: rgba(255, 255, 255, .25);
+            transform: scale(1.05)
+        }
+
+        /* ── HOW IT WORKS ── */
+        .how-section {
+            padding: 40px 0;
+            animation: slideUp 1s ease-out .6s both
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            margin-top: 28px
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            background: rgba(255, 255, 255, .12);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            transition: all .3s ease
+        }
+
+        .step:hover {
+            background: rgba(255, 255, 255, .18);
+            transform: translateX(8px)
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(145deg, #fff, #f0f0f0);
+            color: #2d5016;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 16px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .15)
+        }
+
+        .step-content h3 {
+            font-size: 16px;
+            margin-bottom: 6px;
+            color: #fff;
+            font-weight: 700
+        }
+
+        .step-content p {
+            color: rgba(255, 255, 255, .85);
+            font-size: 13px;
+            line-height: 1.5
+        }
+
+        /* ── CTA / DOWNLOAD ── */
+        .cta-section {
+            background: rgba(255, 255, 255, .15);
+            backdrop-filter: blur(20px);
+            border-radius: 28px;
+            padding: 40px 28px;
+            margin: 40px 0;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, .2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .2)
+        }
+
+        .cta-section h2 {
+            font-size: 24px;
+            margin-bottom: 24px;
+            color: #fff;
+            font-weight: 800
+        }
+
+        .store-buttons {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap
+        }
+
+        .store-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(145deg, #fff, #f0f0f0);
+            color: #2d5016;
+            padding: 14px 28px;
+            border-radius: 14px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 15px;
+            transition: all .3s cubic-bezier(.4, 0, .2, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, .1)
+        }
+
+        .store-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .2)
+        }
+
+        .store-btn svg {
+            width: 22px;
+            height: 22px
+        }
+
+        .store-btn.disabled {
+            opacity: .6;
+            pointer-events: none
+        }
+
+        /* ── TRUST BADGES ── */
+        .trust-section {
+            padding: 40px 0
+        }
+
+        .trust-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-top: 24px
+        }
+
+        .trust-item {
+            text-align: center;
+            background: rgba(255, 255, 255, .08);
+            border-radius: 14px;
+            padding: 16px 8px;
+            border: 1px solid rgba(255, 255, 255, .08)
+        }
+
+        .trust-icon {
+            font-size: 24px;
+            margin-bottom: 6px
+        }
+
+        .trust-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, .8)
+        }
+
+        /* ── TESTIMONIAL ── */
+        .testimonial-section {
+            padding: 40px 0
+        }
+
+        .testimonial {
+            background: rgba(255, 255, 255, .1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 28px 24px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            text-align: center;
+            font-style: italic;
+            font-size: 15px;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, .9)
+        }
+
+        .testimonial-author {
+            margin-top: 16px;
+            font-style: normal;
+            font-weight: 700;
+            font-size: 13px;
+            color: rgba(255, 255, 255, .6)
+        }
+
+        /* ── ABOUT ── */
+        .about-section {
+            background: rgba(255, 255, 255, .1);
+            backdrop-filter: blur(20px);
+            border-radius: 28px;
+            padding: 40px 28px;
+            margin: 40px 0;
+            border: 1px solid rgba(255, 255, 255, .15)
+        }
+
+        .about-section h2 {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 800
+        }
+
+        .about-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, .9);
+            text-align: center
+        }
+
+        .about-sources {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, .15)
+        }
+
+        .about-sources h3 {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-align: center
+        }
+
+        .source-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center
+        }
+
+        .source-tag {
+            background: rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 4px 10px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, .7)
+        }
+
+        /* ── FOOTER ── */
+        .footer-section {
+            text-align: center;
+            padding: 32px 0;
+            animation: slideUp 1s ease-out .8s both
+        }
+
+        .footer-text {
+            font-size: 15px;
+            color: rgba(255, 255, 255, .6);
+            font-weight: 600;
+            letter-spacing: 1px
+        }
+
+        .footer-links {
+            margin-top: 16px;
+            font-size: 13px
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, .7);
+            text-decoration: none;
+            margin: 0 12px;
+            transition: color .3s ease
+        }
+
+        .footer-links a:hover {
+            color: #fff
+        }
+
+        /* ── RESPONSIVE ── */
+        @media(max-width:600px) {
             .main-title {
-                font-size: 36px;
+                font-size: 36px
             }
 
             .features-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr)
+            }
+
+            .announce-grid {
+                grid-template-columns: 1fr
+            }
+
+            .astro-grid {
+                grid-template-columns: 1fr
+            }
+
+            .baby-grid {
+                grid-template-columns: 1fr
+            }
+
+            .trust-grid {
+                grid-template-columns: repeat(2, 1fr)
             }
 
             .fun-section {
-                padding: 28px 16px;
+                padding: 28px 16px
             }
 
             .lucky-ball {
                 width: 36px;
                 height: 36px;
-                font-size: 14px;
+                font-size: 14px
+            }
+        }
+
+        @media(max-width:400px) {
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            .hero-badges {
+                gap: 6px
+            }
+
+            .hero-badge {
+                font-size: 10px;
+                padding: 4px 10px
             }
         }
     </style>
@@ -745,75 +1106,148 @@
         <div class="bg-shape"></div>
         <div class="bg-shape"></div>
         <div class="bg-shape"></div>
+        <div class="bg-shape"></div>
     </div>
 
     <div class="container">
+
+        <!-- ═══════════════ HERO ═══════════════ -->
         <div class="hero-section">
             <div class="icon-box"><span class="icon-text">+1</span></div>
             <h1 class="main-title">Population +1™</h1>
-            <p class="tagline">Welcome to The +1 Announcement App Creator Studio!</p>
-            <p class="tagline-second">CREATE • EDUCATE • GIFT • REMINISCE</p>
-            <p class="tagline-second">ENCAPSULATE MAJOR LIFE MILESTONES THAT WILL ENDURE THE TEST OF TIME!</p>
+            <p class="tagline">The +1 Announcement Keepsake Creator Studio</p>
+            <p class="tagline-second">ANNOUNCE • CELEBRATE • CAPTURE • CHERISH</p>
+            <p class="tagline-second" style="margin-top:8px;">Every new life IS A +1 that counts. ❤️</p>
+            <div class="hero-badges">
+                <span class="hero-badge">✓ Zero Ads</span>
+                <span class="hero-badge">✓ No Subscriptions</span>
+                <span class="hero-badge">✓ No Login Required</span>
+                <span class="hero-badge">✓ Works Offline</span>
+                <span class="hero-badge">✓ 300 DPI Print Quality</span>
+            </div>
         </div>
 
+        <!-- ═══════════════ MAIN MENU ═══════════════ -->
         <div class="content-section">
             <h2 class="section-title">What would you like to create?</h2>
-            <a href="#download" class="card-button">
+
+            <a href="#samples" class="card-button">
                 <div class="card-content">
-                    <div class="card-icon-box"><span class="card-emoji">👀</span></div>
+                    <div class="card-icon-box"><span class="card-emoji">👁️</span></div>
                     <div class="card-text-container">
-                        <div class="card-title">Sample Signs</div>
-                        <div class="card-description">Browse our gallery of sample announcements and time capsules!
-                        </div>
+                        <div class="card-title">Sample Gallery</div>
+                        <div class="card-description">Preview sample signs &amp; time capsules in 25+ color themes
+                            before you create!</div>
                     </div>
                     <span class="card-arrow">→</span>
                 </div>
             </a>
-            <a href="#download" class="card-button">
+
+            <a href="#announcements" class="card-button">
                 <div class="card-content">
                     <div class="card-icon-box"><span class="card-emoji">👶</span></div>
                     <div class="card-text-container">
                         <div class="card-title">+1 New Baby Announcement</div>
-                        <div class="card-description">Welcome your +1 to friends and family with a custom announcement!
+                        <div class="card-description">Welcome your +1 to friends and family with a custom announcement
+                            &amp; time capsule!</div>
+                    </div>
+                    <span class="card-arrow">→</span>
+                </div>
+            </a>
+
+            <a href="#announcements" class="card-button">
+                <div class="card-content">
+                    <div class="card-icon-box"><span class="card-emoji">🎉</span></div>
+                    <div class="card-text-container">
+                        <div class="card-title">Life Milestones</div>
+                        <div class="card-description">Birthday, Sweet 16, Graduation, Anniversary, Mother's Day,
+                            Father's Day &amp; more!</div>
+                    </div>
+                    <span class="card-arrow">→</span>
+                </div>
+            </a>
+
+            <a href="#astrology" class="card-button" style="background:linear-gradient(145deg,#f3e5f5,#e1bee7);">
+                <div class="card-content">
+                    <div class="card-icon-box" style="background:linear-gradient(145deg,#ce93d8,#ab47bc);"><span
+                            class="card-emoji">✨</span></div>
+                    <div class="card-text-container">
+                        <div class="card-title" style="color:#4a148c;">Written in the Stars</div>
+                        <div class="card-description">Natal Charts, Horoscopes, Life Path Numbers, Zodiac &amp; more!
+                        </div>
+                    </div>
+                    <span class="card-arrow" style="color:#4a148c;">→</span>
+                </div>
+            </a>
+
+            <a href="#fun-section" class="card-button" style="background:linear-gradient(145deg,#ede7f6,#d1c4e9);">
+                <div class="card-content">
+                    <div class="card-icon-box" style="background:linear-gradient(145deg,#9575cd,#7e57c2);"><span
+                            class="card-emoji">🎲</span></div>
+                    <div class="card-text-container">
+                        <div class="card-title" style="color:#4a148c;">Just For Fun</div>
+                        <div class="card-description">Roman Numerals, Famous Birthdays, On This Day, Then &amp; Now
+                            &amp; more!</div>
+                    </div>
+                    <span class="card-arrow" style="color:#4a148c;">→</span>
+                </div>
+            </a>
+
+            <a href="#gifts" class="card-button" style="background:linear-gradient(145deg,#fce4ec,#f8bbd0);">
+                <div class="card-content">
+                    <div class="card-icon-box" style="background:linear-gradient(145deg,#ef9a9a,#e57373);"><span
+                            class="card-emoji">🎁</span></div>
+                    <div class="card-text-container">
+                        <div class="card-title" style="color:#b71c1c;">Gift Suggestions</div>
+                        <div class="card-description">Shop curated gifts from Amazon, Target &amp; Walmart for every
+                            occasion!</div>
+                    </div>
+                    <span class="card-arrow" style="color:#b71c1c;">→</span>
+                </div>
+            </a>
+
+            <a href="#baby-tools" class="card-button" style="background:linear-gradient(145deg,#e8f5e9,#c8e6c9);">
+                <div class="card-content">
+                    <div class="card-icon-box" style="background:linear-gradient(145deg,#81c784,#66bb6a);"><span
+                            class="card-emoji">👶</span></div>
+                    <div class="card-text-container">
+                        <div class="card-title" style="color:#1b5e20;">All Things Baby</div>
+                        <div class="card-description">Lullabies, Bedtime Stories, Learning Center, Growth Charts &amp;
+                            Milestones!</div>
+                    </div>
+                    <span class="card-arrow" style="color:#1b5e20;">→</span>
+                </div>
+            </a>
+
+            <a href="#family-tree" class="card-button">
+                <div class="card-content">
+                    <div class="card-icon-box"><span class="card-emoji">🌳</span></div>
+                    <div class="card-text-container">
+                        <div class="card-title">Build Your Family Tree</div>
+                        <div class="card-description">Create an interactive family tree to preserve your family history!
                         </div>
                     </div>
                     <span class="card-arrow">→</span>
                 </div>
             </a>
-            <a href="#download" class="card-button">
-                <div class="card-content">
-                    <div class="card-icon-box"><span class="card-emoji">🎉</span></div>
-                    <div class="card-text-container">
-                        <div class="card-title">Life Milestones</div>
-                        <div class="card-description">Birthday, Sweet 16, Graduation, Anniversary and more!</div>
-                    </div>
-                    <span class="card-arrow">→</span>
-                </div>
-            </a>
-            <a href="#fun-section" class="card-button" style="background: linear-gradient(145deg, #f3e5f5, #e1bee7);">
-                <div class="card-content">
-                    <div class="card-icon-box" style="background: linear-gradient(145deg, #ce93d8, #ab47bc);"><span
-                            class="card-emoji">🎲</span></div>
-                    <div class="card-text-container">
-                        <div class="card-title" style="color: #4a148c;">Just For Fun!</div>
-                        <div class="card-description">Life Path Numbers, Lucky Numbers, Zodiac, Birthstone & more!</div>
-                    </div>
-                    <span class="card-arrow" style="color: #4a148c;">→</span>
-                </div>
-            </a>
+
             <a href="#about" class="card-button">
                 <div class="card-content">
                     <div class="card-icon-box"><span class="card-emoji">ℹ️</span></div>
                     <div class="card-text-container">
                         <div class="card-title">About Us</div>
-                        <div class="card-description">Learn more about Population +1™ and our mission</div>
+                        <div class="card-description">Learn more about Population +1™, our mission &amp; data sources
+                        </div>
                     </div>
                     <span class="card-arrow">→</span>
                 </div>
             </a>
         </div>
+
+        <!-- ═══════════════ WHAT'S INCLUDED (Time Capsule Data) ═══════════════ -->
         <div class="features-section">
-            <h2 class="section-title">What's Included</h2>
+            <h2 class="section-title">What's Inside Every Time Capsule</h2>
+            <p class="section-subtitle">Automatically captured from the birth or event date</p>
             <div class="features-grid">
                 <div class="feature-item">
                     <div class="feature-icon">⛽</div>
@@ -821,7 +1255,7 @@
                 </div>
                 <div class="feature-item">
                     <div class="feature-icon">🏛️</div>
-                    <div class="feature-title">President</div>
+                    <div class="feature-title">President &amp; VP</div>
                 </div>
                 <div class="feature-item">
                     <div class="feature-icon">🎵</div>
@@ -863,10 +1297,132 @@
                     <div class="feature-icon">🍀</div>
                     <div class="feature-title">Lucky Numbers</div>
                 </div>
+                <div class="feature-item">
+                    <div class="feature-icon">💰</div>
+                    <div class="feature-title">Gold &amp; Silver</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📈</div>
+                    <div class="feature-title">Dow Jones</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🌍</div>
+                    <div class="feature-title">World Pop.</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">💵</div>
+                    <div class="feature-title">Min. Wage</div>
+                </div>
             </div>
         </div>
 
-        <!-- Interactive Just For Fun Section -->
+        <!-- ═══════════════ ANNOUNCEMENT TYPES ═══════════════ -->
+        <div id="announcements" class="announce-section">
+            <h2 class="section-title">Create Any Announcement</h2>
+            <p class="section-subtitle">All with matching time capsule data from that special date</p>
+            <div class="announce-grid">
+                <div class="announce-card">
+                    <div class="announce-icon">👶</div>
+                    <div class="announce-title">Newborn Baby</div>
+                    <div class="announce-desc">Name, date, time, weight, length, hospital &amp; hometown. Twins &amp;
+                        triplets supported!</div>
+                </div>
+                <div class="announce-card">
+                    <div class="announce-icon">🎂</div>
+                    <div class="announce-title">Birthday</div>
+                    <div class="announce-desc">1st through 100th. Sweet 16, 18th, 21st, 30th, 40th, 50th &amp; every
+                        milestone!</div>
+                </div>
+                <div class="announce-card">
+                    <div class="announce-icon">🎓</div>
+                    <div class="announce-title">Graduation</div>
+                    <div class="announce-desc">Preschool, Kindergarten, High School, College, Master's, PhD, Medical
+                        &amp; Law School</div>
+                </div>
+                <div class="announce-card">
+                    <div class="announce-icon">💍</div>
+                    <div class="announce-title">Anniversary</div>
+                    <div class="announce-desc">Paper 1st, Wood 5th, Tin 10th, Silver 25th, Golden 50th &amp; Diamond
+                        60th!</div>
+                </div>
+                <div class="announce-card">
+                    <div class="announce-icon">🎉</div>
+                    <div class="announce-title">Life Milestones</div>
+                    <div class="announce-desc">Mother's Day, Father's Day, retirements, promotions &amp; more
+                        celebrations!</div>
+                </div>
+                <div class="announce-card">
+                    <div class="announce-icon">🕊️</div>
+                    <div class="announce-title">Memorial</div>
+                    <div class="announce-desc">Dignified Celebration of Life tributes honoring loved ones with grace
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ OUTPUT FORMATS ═══════════════ -->
+        <div id="samples" class="formats-section">
+            <h2 class="section-title">Beautiful Output Formats</h2>
+            <p class="section-subtitle">25+ color themes • 300 DPI professional print quality</p>
+            <div class="formats-scroll">
+                <div class="format-card">
+                    <div class="format-icon">🪧</div>
+                    <div class="format-title">+1 Signs</div>
+                    <div class="format-desc">Front landscape announcements, 11"×8.5" print-ready</div>
+                </div>
+                <div class="format-card">
+                    <div class="format-icon">⏳</div>
+                    <div class="format-title">Time Capsules</div>
+                    <div class="format-desc">Back side with historical snapshot data</div>
+                </div>
+                <div class="format-card">
+                    <div class="format-icon">🏡</div>
+                    <div class="format-title">Yard Signs</div>
+                    <div class="format-desc">It's a Boy, It's a Girl, Welcome Home Baby!</div>
+                </div>
+                <div class="format-card">
+                    <div class="format-icon">💌</div>
+                    <div class="format-title">Postcards</div>
+                    <div class="format-desc">Custom announcement &amp; invitation postcards</div>
+                </div>
+                <div class="format-card">
+                    <div class="format-icon">⚾</div>
+                    <div class="format-title">Trading Cards</div>
+                    <div class="format-desc">Rookie-style baby cards with birth stats</div>
+                </div>
+                <div class="format-card">
+                    <div class="format-icon">🔮</div>
+                    <div class="format-title">Natal Charts</div>
+                    <div class="format-desc">Print-ready natal chart art for nursery walls</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ WRITTEN IN THE STARS ═══════════════ -->
+        <div id="astrology" class="astrology-section">
+            <h2 style="font-size:28px;text-align:center;margin-bottom:8px;font-weight:800">✨ Written in the Stars</h2>
+            <p class="fun-subtitle">Full astrology &amp; numerology suite built right in</p>
+            <div class="astro-grid">
+                <div class="astro-item"><span class="astro-emoji">🌌</span><span class="astro-label">Full Interactive
+                        Natal Chart</span></div>
+                <div class="astro-item"><span class="astro-emoji">☀️</span><span class="astro-label">Sun, Moon &amp;
+                        Rising Signs</span></div>
+                <div class="astro-item"><span class="astro-emoji">🔮</span><span class="astro-label">Daily
+                        Horoscope</span></div>
+                <div class="astro-item"><span class="astro-emoji">🔢</span><span class="astro-label">Life Path
+                        Number</span></div>
+                <div class="astro-item"><span class="astro-emoji">🍀</span><span class="astro-label">Lucky
+                        Numbers</span></div>
+                <div class="astro-item"><span class="astro-emoji">♈</span><span class="astro-label">Zodiac Sign
+                        Profile</span></div>
+                <div class="astro-item"><span class="astro-emoji">💎</span><span class="astro-label">Birthstone
+                        Lookup</span></div>
+                <div class="astro-item"><span class="astro-emoji">💡</span><span class="astro-label">Tip of the
+                        Day</span></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ JUST FOR FUN INTERACTIVE ═══════════════ -->
         <div id="fun-section" class="fun-section">
             <h2>🎲 Just For Fun!</h2>
             <p class="fun-subtitle">Enter your birthday to discover fun facts about YOU</p>
@@ -882,32 +1438,34 @@
                         <span class="fun-card-icon">🔢</span>
                         <span class="fun-card-title">Life Path Number</span>
                     </div>
-                    <div class="fun-card-big" id="lifePathNumber">1</div>
-                    <div class="fun-card-content" id="lifePathMeaning">Loading...</div>
+                    <div class="fun-card-big" id="lifePathNumber">4</div>
+                    <div class="fun-card-content" id="lifePathMeaning">The Builder - Practical, organized, and
+                        hardworking. You create lasting foundations.</div>
                 </div>
 
                 <!-- Zodiac Sign -->
                 <div class="fun-card">
                     <div class="fun-card-header">
-                        <span class="zodiac-symbol" id="zodiacSymbol">♈</span>
+                        <span class="zodiac-symbol" id="zodiacSymbol">♑</span>
                         <div>
-                            <div class="fun-card-title" id="zodiacSign">Aries</div>
-                            <div style="color: #666; font-size: 12px;" id="zodiacElement">Fire Sign</div>
+                            <div class="fun-card-title" id="zodiacSign">Capricorn</div>
+                            <div style="color:#666;font-size:12px;" id="zodiacElement">Earth Sign</div>
                         </div>
                     </div>
-                    <div class="fun-card-content" id="zodiacTraits">Loading...</div>
+                    <div class="fun-card-content" id="zodiacTraits">Ambitious, disciplined, patient, and practical</div>
                 </div>
 
                 <!-- Birthstone -->
                 <div class="fun-card">
                     <div class="fun-card-header">
-                        <div class="birthstone-gem" id="birthstoneGem" style="background: #8B0000;">💎</div>
+                        <div class="birthstone-gem" id="birthstoneGem" style="background:#8B0000;">❤️</div>
                         <div>
                             <div class="fun-card-title" id="birthstoneName">Garnet</div>
-                            <div style="color: #666; font-size: 12px;">Your birthstone</div>
+                            <div style="color:#666;font-size:12px;">Your birthstone</div>
                         </div>
                     </div>
-                    <div class="fun-card-content" id="birthstoneMeaning">Loading...</div>
+                    <div class="fun-card-content" id="birthstoneMeaning">Protection, friendship, and trust. Garnets
+                        inspire love and devotion.</div>
                 </div>
 
                 <!-- Lucky Numbers -->
@@ -917,15 +1475,15 @@
                         <span class="fun-card-title">Your Lucky Numbers</span>
                     </div>
                     <div class="lucky-numbers" id="luckyNumbers">
-                        <div class="lucky-ball">7</div>
-                        <div class="lucky-ball">14</div>
-                        <div class="lucky-ball">21</div>
-                        <div class="lucky-ball">28</div>
-                        <div class="lucky-ball">35</div>
-                        <div class="lucky-ball">42</div>
+                        <div class="lucky-ball">13</div>
+                        <div class="lucky-ball">17</div>
+                        <div class="lucky-ball">20</div>
+                        <div class="lucky-ball">23</div>
+                        <div class="lucky-ball">29</div>
+                        <div class="lucky-ball">43</div>
                     </div>
-                    <p style="color: #888; font-size: 11px; margin-top: 12px; font-style: italic;">*For entertainment
-                        purposes only</p>
+                    <p style="color:#888;font-size:11px;margin-top:12px;font-style:italic;">*For entertainment purposes
+                        only</p>
                 </div>
 
                 <!-- Roman Numerals -->
@@ -944,17 +1502,177 @@
                         <span class="fun-card-title">Day You Were Born</span>
                     </div>
                     <div class="fun-card-big" id="dayOfWeek">Saturday</div>
-                    <div class="fun-card-content" id="dayMeaning">Loading...</div>
+                    <div class="fun-card-content" id="dayMeaning">Saturday's child works hard for a living.</div>
                 </div>
             </div>
 
-            <p style="text-align: center; margin-top: 24px; color: rgba(255,255,255,0.7); font-size: 13px;">
-                ✨ Download the app for Natal Charts, Famous Birthdays, Then & Now comparisons, and more!
+            <p style="text-align:center;margin-top:24px;color:rgba(255,255,255,.7);font-size:13px;">
+                ✨ Download the app for Natal Charts, Famous Birthdays, On This Day, Then &amp; Now comparisons, and
+                more!
             </p>
         </div>
 
+        <!-- ═══════════════ ALL THINGS BABY ═══════════════ -->
+        <div id="baby-tools" class="baby-section">
+            <h2 class="section-title">👶 All Things Baby</h2>
+            <p class="section-subtitle">Essential tools and content for new parents</p>
+            <div class="baby-grid">
+                <div class="baby-card">
+                    <div class="baby-icon">🎵</div>
+                    <div class="baby-title">25 Lullabies</div>
+                    <div class="baby-desc">Built-in music-box lullabies: Twinkle Twinkle, Brahms', Rock-a-Bye Baby &amp;
+                        more</div>
+                </div>
+                <div class="baby-card">
+                    <div class="baby-icon">📖</div>
+                    <div class="baby-title">25 Bedtime Stories</div>
+                    <div class="baby-desc">Classic tales with text-to-speech read-aloud, page-by-page navigation</div>
+                </div>
+                <div class="baby-card">
+                    <div class="baby-icon">🔤</div>
+                    <div class="baby-title">Learning Center</div>
+                    <div class="baby-desc">Letters A-Z, Numbers 0-20, Shapes &amp; Colors with text-to-speech</div>
+                </div>
+                <div class="baby-card">
+                    <div class="baby-icon">📊</div>
+                    <div class="baby-title">Growth Tracker</div>
+                    <div class="baby-desc">WHO growth percentile charts for weight, height &amp; head circumference
+                    </div>
+                </div>
+                <div class="baby-card">
+                    <div class="baby-icon">🏅</div>
+                    <div class="baby-title">Milestone Tracker</div>
+                    <div class="baby-desc">CDC &amp; AAP-backed developmental milestones, newborn to 36 months</div>
+                </div>
+                <div class="baby-card">
+                    <div class="baby-icon">🇺🇸</div>
+                    <div class="baby-title">American Dream</div>
+                    <div class="baby-desc">529 Plans, Savings Bonds, UGMA/UTMA accounts &amp; financial planning</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ GIFT SUGGESTIONS ═══════════════ -->
+        <div id="gifts" class="gift-section">
+            <h2 style="font-size:24px;text-align:center;font-weight:800;margin-bottom:8px;">🎁 Gift Suggestions</h2>
+            <p style="text-align:center;color:rgba(255,255,255,.8);font-size:14px;margin-bottom:8px;">Shop curated gifts
+                from top retailers for every occasion</p>
+            <p style="text-align:center;font-size:12px;color:rgba(255,255,255,.6);margin-bottom:16px;">Amazon • Target •
+                Walmart</p>
+            <div class="gift-tags">
+                <span class="gift-tag">👶 Newborn Baby</span>
+                <span class="gift-tag">🎂 Birthday</span>
+                <span class="gift-tag">🎓 Graduation</span>
+                <span class="gift-tag">💍 Anniversary</span>
+                <span class="gift-tag">🎉 Life Milestones</span>
+                <span class="gift-tag">🎗️ Memorial</span>
+            </div>
+        </div>
+
+        <!-- ═══════════════ FAMILY TREE ═══════════════ -->
+        <div id="family-tree" class="cta-section"
+            style="background:linear-gradient(145deg,rgba(46,125,50,.2),rgba(76,175,80,.2));border:1px solid rgba(255,255,255,.15);">
+            <h2>🌳 Build Your Family Tree</h2>
+            <p style="font-size:14px;line-height:1.6;color:rgba(255,255,255,.9);margin-bottom:16px;">
+                Create a beautiful interactive family tree to preserve your family history for generations. Add family
+                members, dates, photos, and stories.
+            </p>
+            <a href="#download" class="store-btn" style="display:inline-flex;margin-top:8px;">Get Started in the App
+                →</a>
+        </div>
+
+        <!-- ═══════════════ HOW IT WORKS ═══════════════ -->
+        <div class="how-section">
+            <h2 class="section-title">How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Enter the Details</h3>
+                        <p>Baby's name, birth date, time, weight, length, hospital, and hometown — or any milestone
+                            event details</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>We Find the History</h3>
+                        <p>Our database pulls accurate data from that exact date — gas prices, president, #1 song &amp;
+                            movie, champions, and more</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Customize &amp; Preview</h3>
+                        <p>Choose from 25+ color themes, add photos, and preview your beautiful announcement &amp; time
+                            capsule</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Save, Share &amp; Print</h3>
+                        <p>Download, share digitally, or order professional prints on cardstock, PVC, or aluminum. Send
+                            as a gift!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ TRUST BADGES ═══════════════ -->
+        <div class="trust-section">
+            <h2 class="section-title">Built With Care</h2>
+            <div class="trust-grid">
+                <div class="trust-item">
+                    <div class="trust-icon">🚫</div>
+                    <div class="trust-label">Zero Ads</div>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon">🔒</div>
+                    <div class="trust-label">No Data Collection</div>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon">📴</div>
+                    <div class="trust-label">Works Offline</div>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon">🖨️</div>
+                    <div class="trust-label">300 DPI Print</div>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon">👯</div>
+                    <div class="trust-label">Twins &amp; Triplets</div>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon">📱</div>
+                    <div class="trust-label">Phone &amp; Tablet</div>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon">💳</div>
+                    <div class="trust-label">No Subscription</div>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon">🔑</div>
+                    <div class="trust-label">No Login Required</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ TESTIMONIAL ═══════════════ -->
+        <div class="testimonial-section">
+            <div class="testimonial">
+                "Imagine your child at 18 opening their time capsule, reading their birth chart, and seeing the world
+                the day they arrived. These keepsakes become priceless."
+                <div class="testimonial-author">— Population +1™ Team</div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ DOWNLOAD ═══════════════ -->
         <div id="download" class="cta-section">
             <h2>Download the App</h2>
+            <p style="font-size:13px;color:rgba(255,255,255,.8);margin-bottom:20px;">Available now on Android • iOS
+                coming soon</p>
             <div class="store-buttons">
                 <a href="#" class="store-btn">
                     <svg viewBox="0 0 24 24" fill="currentColor">
@@ -972,48 +1690,70 @@
                 </a>
             </div>
         </div>
-        <div class="how-section">
-            <h2 class="section-title">How It Works</h2>
-            <div class="steps">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h3>Enter the Details</h3>
-                        <p>Baby's name, birth date, time, weight, length, and hometown</p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h3>We Find the History</h3>
-                        <p>Our database pulls accurate data from that exact date - gas prices, president, top songs, and
-                            more</p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h3>Save and Share</h3>
-                        <p>Download your beautiful announcement and time capsule. Print it, frame it, share it!</p>
-                    </div>
-                </div>
+
+        <!-- ═══════════════ PRINT SERVICE ═══════════════ -->
+        <div class="cta-section"
+            style="background:linear-gradient(145deg,rgba(33,33,33,.3),rgba(66,66,66,.3));border:1px solid rgba(255,255,255,.15);">
+            <h2>🖨️ Professional Print Service</h2>
+            <p style="font-size:14px;line-height:1.6;color:rgba(255,255,255,.9);margin-bottom:16px;">
+                Order professional prints directly from the app. Choose your material and size:
+            </p>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:16px;">
+                <span class="hero-badge">📄 Premium Cardstock</span>
+                <span class="hero-badge">🪪 Rigid PVC Plastic</span>
+                <span class="hero-badge">🔩 Aluminum Metal</span>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+                <span class="hero-badge">11"×8.5"</span>
+                <span class="hero-badge">14"×11" Popular!</span>
+                <span class="hero-badge">24"×18" Poster</span>
+                <span class="hero-badge">36"×24" Jumbo</span>
             </div>
         </div>
-        <div id="about" class="cta-section" style="background: rgba(255,255,255,0.1);">
+
+        <!-- ═══════════════ ABOUT ═══════════════ -->
+        <div id="about" class="about-section">
             <h2>About Population +1™</h2>
-            <p style="font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.9); margin-bottom: 16px;">
+            <p class="about-text">
                 We believe every birth is a moment worth celebrating. Population +1 captures the world as it was on that
-                special day - creating a beautiful time capsule that families will treasure forever.
+                special day — creating a beautiful time capsule that families will treasure forever.
             </p>
-            <p style="font-size: 12px; color: rgba(255,255,255,0.7);">
-                Contact us: info@populationplusone.com
+            <p class="about-text" style="margin-top:12px;font-size:13px;color:rgba(255,255,255,.7);">
+                Whether it's a newborn announcement, a birthday milestone, a graduation celebration, or a memorial
+                tribute — every +1 counts.
+            </p>
+            <div class="about-sources">
+                <h3>Verified Data Sources</h3>
+                <div class="source-tags">
+                    <span class="source-tag">AAA (Gas Prices)</span>
+                    <span class="source-tag">Bureau of Labor Statistics</span>
+                    <span class="source-tag">U.S. Census Bureau</span>
+                    <span class="source-tag">USA.gov</span>
+                    <span class="source-tag">Billboard Hot 100</span>
+                    <span class="source-tag">TMDb (Movies)</span>
+                    <span class="source-tag">ESPN</span>
+                    <span class="source-tag">Kitco (Metals)</span>
+                    <span class="source-tag">MarketWatch</span>
+                    <span class="source-tag">CDC &amp; AAP</span>
+                    <span class="source-tag">WHO (Growth Charts)</span>
+                </div>
+            </div>
+            <p style="font-size:12px;color:rgba(255,255,255,.6);margin-top:20px;text-align:center;">
+                Contact us: <a href="mailto:info@populationplusone.com"
+                    style="color:rgba(255,255,255,.8);text-decoration:underline;">info@populationplusone.com</a>
             </p>
         </div>
+
+        <!-- ═══════════════ FOOTER ═══════════════ -->
         <div class="footer-section">
             <p class="footer-text">WWW.POPULATIONPLUSONE.COM</p>
-            <div class="footer-links"><a href="privacy.html">Privacy Policy</a><a
-                    href="mailto:hello@populationplusone.com">Contact</a></div>
-            <p class="footer-text" style="margin-top: 16px;">© 2026 Population +1™</p>
+            <div class="footer-links">
+                <a href="privacy-policy.html">Privacy Policy</a>
+                <a href="terms-of-service.html">Terms of Service</a>
+                <a href="mailto:info@populationplusone.com">Contact</a>
+            </div>
+            <p class="footer-text" style="margin-top:16px;">© 2026 Population +1™ — Every new life IS A +1 that counts.
+            </p>
         </div>
     </div>
 
@@ -1023,19 +1763,16 @@
             const month = date.getMonth() + 1;
             const day = date.getDate();
             const year = date.getFullYear();
-
             const reduceToSingle = (num) => {
                 while (num > 9 && num !== 11 && num !== 22 && num !== 33) {
                     num = num.toString().split('').reduce((a, b) => a + parseInt(b), 0);
                 }
                 return num;
             };
-
             const monthNum = reduceToSingle(month);
             const dayNum = reduceToSingle(day);
             const yearNum = reduceToSingle(year);
             let lifePathNum = reduceToSingle(monthNum + dayNum + yearNum);
-
             const meanings = {
                 1: "The Leader - Independent, ambitious, and driven. You're a natural pioneer who forges new paths.",
                 2: "The Peacemaker - Diplomatic, intuitive, and cooperative. You bring harmony to relationships.",
@@ -1050,7 +1787,6 @@
                 22: "The Master Builder - Capable of turning dreams into reality on a grand scale.",
                 33: "The Master Teacher - A rare soul devoted to uplifting humanity through love and service."
             };
-
             return { number: lifePathNum, meaning: meanings[lifePathNum] || "A unique and special soul!" };
         }
 
@@ -1058,7 +1794,6 @@
         function getZodiacSign(date) {
             const month = date.getMonth() + 1;
             const day = date.getDate();
-
             const zodiacSigns = [
                 { sign: 'Capricorn', symbol: '♑', element: 'Earth', traits: 'Ambitious, disciplined, patient, and practical' },
                 { sign: 'Aquarius', symbol: '♒', element: 'Air', traits: 'Independent, original, humanitarian, and inventive' },
@@ -1073,7 +1808,6 @@
                 { sign: 'Scorpio', symbol: '♏', element: 'Water', traits: 'Resourceful, brave, passionate, and stubborn' },
                 { sign: 'Sagittarius', symbol: '♐', element: 'Fire', traits: 'Generous, idealistic, great humor, and adventurous' }
             ];
-
             if ((month === 1 && day <= 19) || (month === 12 && day >= 22)) return zodiacSigns[0];
             if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return zodiacSigns[1];
             if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) return zodiacSigns[2];
@@ -1115,21 +1849,17 @@
             const year = date.getFullYear();
             const today = new Date();
             const todayNum = today.getDate() + today.getMonth() + 1;
-
             const seed = (month * day * year + todayNum) % 100000;
             const numbers = [];
             let current = seed;
-
             for (let i = 0; i < 6; i++) {
                 current = (current * 9301 + 49297) % 233280;
                 numbers.push((current % 49) + 1);
             }
-
             const unique = [...new Set(numbers)];
             while (unique.length < 6) {
                 unique.push((unique[unique.length - 1] * 7 % 49) + 1);
             }
-
             return unique.slice(0, 6).sort((a, b) => a - b);
         }
 
@@ -1141,7 +1871,6 @@
                     [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
                     [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
                 ];
-
                 let result = '';
                 for (const [value, symbol] of romanNumerals) {
                     while (num >= value) {
@@ -1151,11 +1880,9 @@
                 }
                 return result;
             };
-
             const month = romanize(date.getMonth() + 1);
             const day = romanize(date.getDate());
             const year = romanize(date.getFullYear());
-
             return `${month}•${day}•${year}`;
         }
 
@@ -1179,45 +1906,37 @@
         function updateFunFacts() {
             const dateInput = document.getElementById('funDate');
             const date = new Date(dateInput.value + 'T12:00:00');
-
-            // Show results
             document.getElementById('funResults').classList.add('active');
 
-            // Life Path
             const lifePath = calculateLifePathNumber(date);
             document.getElementById('lifePathNumber').textContent = lifePath.number;
             document.getElementById('lifePathMeaning').textContent = lifePath.meaning;
 
-            // Zodiac
             const zodiac = getZodiacSign(date);
             document.getElementById('zodiacSymbol').textContent = zodiac.symbol;
             document.getElementById('zodiacSign').textContent = zodiac.sign;
             document.getElementById('zodiacElement').textContent = zodiac.element + ' Sign';
             document.getElementById('zodiacTraits').textContent = zodiac.traits;
 
-            // Birthstone
             const birthstone = getBirthstone(date);
             document.getElementById('birthstoneGem').style.background = birthstone.color;
             document.getElementById('birthstoneGem').textContent = birthstone.emoji;
             document.getElementById('birthstoneName').textContent = birthstone.name;
             document.getElementById('birthstoneMeaning').textContent = birthstone.meaning;
 
-            // Lucky Numbers
             const luckyNumbers = getLuckyNumbers(date);
             document.getElementById('luckyNumbers').innerHTML = luckyNumbers.map(n =>
                 `<div class="lucky-ball">${n}</div>`
             ).join('');
 
-            // Roman Numerals
             document.getElementById('romanNumerals').textContent = toRomanNumerals(date);
 
-            // Day of Week
             const dayInfo = getDayOfWeek(date);
             document.getElementById('dayOfWeek').textContent = dayInfo.day;
             document.getElementById('dayMeaning').textContent = dayInfo.meaning;
         }
 
-        // Initialize on page load and on date change
+        // Initialize
         document.addEventListener('DOMContentLoaded', function () {
             const dateInput = document.getElementById('funDate');
             dateInput.addEventListener('change', updateFunFacts);
