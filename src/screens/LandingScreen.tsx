@@ -193,7 +193,7 @@ export default function LandingScreen({ navigation }: Props) {
                         activeOpacity={0.85}
                     >
                         <View style={styles.cardContent}>
-                            <View style={[styles.cardIconBox, { backgroundColor: '#0d1b2a' }]}>
+                            <View style={[styles.cardIconBox, { backgroundColor: '#000060' }]}>
                                 <Text style={styles.cardEmoji}>✨</Text>
                             </View>
                             <View style={styles.cardTextContainer}>
@@ -261,7 +261,7 @@ export default function LandingScreen({ navigation }: Props) {
                                 <Text style={styles.cardEmoji}>🇺🇸</Text>
                             </View>
                             <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Jumpstart the American Dream  <Text style={{ fontSize: 24, fontWeight: '900', color: '#000000', letterSpacing: 1 }}>CRITICAL STEPS</Text></Text>
+                                <Text style={styles.cardTitle}>Jumpstart the American Dream</Text>
                             </View>
                         </View>
                     </TouchableOpacity>

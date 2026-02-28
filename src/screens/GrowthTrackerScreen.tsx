@@ -589,8 +589,8 @@ export default function GrowthTrackerScreen({ navigation }: Props) {
     // ═══════════════════════════════════════════════════════════════
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#0d1b2a' }}>
-            <StatusBar barStyle="light-content" backgroundColor="#0d1b2a" />
+        <View style={{ flex: 1, backgroundColor: '#000060' }}>
+            <StatusBar barStyle="light-content" backgroundColor="#000060" />
 
             <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
 

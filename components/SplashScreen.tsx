@@ -7,7 +7,7 @@ export default function SplashScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: isDark ? '#000000' : '#ffffff' }]}>
-            <Text style={[styles.populationText, { color: isDark ? '#ffffff' : '#4a8c5c' }]}>
+            <Text style={[styles.populationText, { color: isDark ? '#ffffff' : '#000080' }]}>
                 POPULATION<Text style={{ fontSize: 14, fontWeight: '400' }}>™</Text>
             </Text>
             <Image

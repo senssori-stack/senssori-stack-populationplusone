@@ -18,9 +18,13 @@ import { HospitalProvider } from './src/context/HospitalContext';
 import AboutUsScreen from './src/screens/AboutUsScreen';
 import AllThingsBabyScreen from './src/screens/AllThingsBabyScreen';
 import BaseballCardPreviewScreen from './src/screens/BaseballCardPreviewScreen';
+import BirthMoonPhaseScreen from './src/screens/BirthMoonPhaseScreen';
 import BirthstoneScreen from './src/screens/BirthstoneScreen';
+import ChakraScreen from './src/screens/ChakraScreen';
 import CheckoutScreen from './src/screens/CheckoutScreen';
+import ChineseZodiacScreen from './src/screens/ChineseZodiacScreen';
 import DaysAliveScreen from './src/screens/DaysAliveScreen';
+import ElementScreen from './src/screens/ElementScreen';
 import FamousBirthdaysScreen from './src/screens/FamousBirthdaysScreen';
 import FormScreen from './src/screens/FormScreen';
 import FullAstrologyScreen from './src/screens/FullAstrologyScreen';
@@ -48,16 +52,20 @@ import PostcardPreviewScreen from './src/screens/PostcardPreviewScreen';
 import PreviewScreen from './src/screens/PreviewScreen';
 import PrintServiceScreen from './src/screens/PrintServiceScreen';
 import RabbitHoleScreen from './src/screens/RabbitHoleScreen';
+import RetrogradeTrackerScreen from './src/screens/RetrogradeTrackerScreen';
 import RomanNumeralsScreen from './src/screens/RomanNumeralsScreen';
 import SampleGallery from './src/screens/SampleGallery';
 import SendAsGiftScreen from './src/screens/SendAsGiftScreen';
 import SourcesScreen from './src/screens/SourcesScreen';
+import SpiritAnimalScreen from './src/screens/SpiritAnimalScreen';
 import StoryReaderScreen from './src/screens/StoryReaderScreen';
 import SurnameSearchScreen from './src/screens/SurnameSearchScreen';
+import TarotBirthCardScreen from './src/screens/TarotBirthCardScreen';
 import ThenAndNowScreen from './src/screens/ThenAndNowScreen';
 import TipOfTheDayScreen from './src/screens/TipOfTheDayScreen';
 import WrittenInTheStarsScreen from './src/screens/WrittenInTheStarsScreen';
 import YardSignPreviewScreen from './src/screens/YardSignPreviewScreen';
+import ZodiacCompatibilityScreen from './src/screens/ZodiacCompatibilityScreen';
 import ZodiacSignScreen from './src/screens/ZodiacSignScreen';
 import type { RootStackParamList } from './src/types';
 
@@ -108,7 +116,7 @@ export default function App() {
                                     name="MilestoneTracker"
                                     component={MilestoneTrackerScreen}
                                     options={{
-                                        headerStyle: { backgroundColor: '#0d1b2a' },
+                                        headerStyle: { backgroundColor: '#000060' },
                                         headerTintColor: '#fff',
                                     }}
                                 />
@@ -116,7 +124,7 @@ export default function App() {
                                     name="GrowthTracker"
                                     component={GrowthTrackerScreen}
                                     options={{
-                                        headerStyle: { backgroundColor: '#0d1b2a' },
+                                        headerStyle: { backgroundColor: '#000060' },
                                         headerTintColor: '#fff',
                                     }}
                                 />
@@ -141,7 +149,7 @@ export default function App() {
                                     name="PhonicsChallenge"
                                     component={PhonicsScreen}
                                     options={{
-                                        headerStyle: { backgroundColor: '#0f172a' },
+                                        headerStyle: { backgroundColor: '#000060' },
                                         headerTintColor: '#fff',
                                         title: 'Phonics Challenge',
                                     }}
@@ -150,7 +158,7 @@ export default function App() {
                                     name="BedtimeStories"
                                     component={StoryReaderScreen}
                                     options={{
-                                        headerStyle: { backgroundColor: '#0f172a' },
+                                        headerStyle: { backgroundColor: '#000060' },
                                         headerTintColor: '#fff',
                                         title: 'Bedtime Stories',
                                     }}
@@ -268,7 +276,7 @@ export default function App() {
                                     name="ChartReading"
                                     component={NatalChartWithReadingScreen}
                                     options={{
-                                        headerStyle: { backgroundColor: '#2d5016' },
+                                        headerStyle: { backgroundColor: '#000080' },
                                         headerTintColor: '#fff',
                                     }}
                                 />
@@ -302,8 +310,8 @@ export default function App() {
                                     name="WrittenInTheStars"
                                     component={WrittenInTheStarsScreen}
                                     options={{
-                                        headerTitle: 'Written in the Stars',
-                                        headerStyle: { backgroundColor: '#0d1b2a' },
+                                        headerTitle: '',
+                                        headerStyle: { backgroundColor: '#000060' },
                                         headerTintColor: '#fff',
                                     }}
                                 />
@@ -432,7 +440,7 @@ export default function App() {
                                     name="AboutUs"
                                     component={AboutUsScreen}
                                     options={{
-                                        headerStyle: { backgroundColor: '#2d5016' },
+                                        headerStyle: { backgroundColor: '#000080' },
                                         headerTintColor: '#fff',
                                     }}
                                 />
@@ -440,7 +448,7 @@ export default function App() {
                                     name="Sources"
                                     component={SourcesScreen}
                                     options={{
-                                        headerStyle: { backgroundColor: '#2d5016' },
+                                        headerStyle: { backgroundColor: '#000080' },
                                         headerTintColor: '#fff',
                                     }}
                                 />
@@ -465,6 +473,78 @@ export default function App() {
                                     options={{
                                         headerStyle: { backgroundColor: '#302b63' },
                                         headerTintColor: '#fff',
+                                    }}
+                                />
+                                <Stack.Screen
+                                    name="ChineseZodiac"
+                                    component={ChineseZodiacScreen}
+                                    options={{
+                                        headerStyle: { backgroundColor: '#000060' },
+                                        headerTintColor: '#fff',
+                                        title: 'Chinese Zodiac',
+                                    }}
+                                />
+                                <Stack.Screen
+                                    name="ZodiacCompatibility"
+                                    component={ZodiacCompatibilityScreen}
+                                    options={{
+                                        headerStyle: { backgroundColor: '#000060' },
+                                        headerTintColor: '#fff',
+                                        title: 'Zodiac Compatibility',
+                                    }}
+                                />
+                                <Stack.Screen
+                                    name="BirthMoonPhase"
+                                    component={BirthMoonPhaseScreen}
+                                    options={{
+                                        headerStyle: { backgroundColor: '#000060' },
+                                        headerTintColor: '#fff',
+                                        title: 'Birth Moon Phase',
+                                    }}
+                                />
+                                <Stack.Screen
+                                    name="SpiritAnimal"
+                                    component={SpiritAnimalScreen}
+                                    options={{
+                                        headerStyle: { backgroundColor: '#000060' },
+                                        headerTintColor: '#fff',
+                                        title: 'Spirit Animal',
+                                    }}
+                                />
+                                <Stack.Screen
+                                    name="Chakra"
+                                    component={ChakraScreen}
+                                    options={{
+                                        headerStyle: { backgroundColor: '#000060' },
+                                        headerTintColor: '#fff',
+                                        title: 'Chakra Profile',
+                                    }}
+                                />
+                                <Stack.Screen
+                                    name="Element"
+                                    component={ElementScreen}
+                                    options={{
+                                        headerStyle: { backgroundColor: '#000060' },
+                                        headerTintColor: '#fff',
+                                        title: 'Your Element',
+                                    }}
+                                />
+                                <Stack.Screen
+                                    name="TarotBirthCard"
+                                    component={TarotBirthCardScreen}
+                                    options={{
+                                        headerStyle: { backgroundColor: '#000060' },
+                                        headerTintColor: '#fff',
+                                        title: 'Tarot Birth Card',
+                                    }}
+                                />
+                                <Stack.Screen
+                                    name="RetrogradeTracker"
+                                    component={RetrogradeTrackerScreen}
+                                    options={{
+                                        headerStyle: { backgroundColor: '#000060' },
+                                        headerTintColor: '#fff',
+                                        title: 'Retrograde Tracker',
                                     }}
                                 />
                             </Stack.Navigator>

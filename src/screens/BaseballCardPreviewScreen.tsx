@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 26,
         fontWeight: 'bold',
-        color: '#1a472a',
+        color: '#000080',
         marginBottom: 8,
     },
     subtitle: {
@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
         color: '#999',
     },
     downloadButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         paddingVertical: 14,
         paddingHorizontal: 24,
         borderRadius: 12,
@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     addToCartButton: {
-        backgroundColor: '#2e8b57',
+        backgroundColor: '#0000b3',
         paddingVertical: 14,
         paddingHorizontal: 24,
         borderRadius: 12,
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
     orderButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         paddingVertical: 14,
         paddingHorizontal: 24,
         borderRadius: 12,
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
     orderButtonSecondary: {
         backgroundColor: 'transparent',
         borderWidth: 2,
-        borderColor: '#1a472a',
+        borderColor: '#000080',
     },
     orderButtonText: {
         color: '#ffffff',
@@ -667,7 +667,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     orderButtonTextSecondary: {
-        color: '#1a472a',
+        color: '#000080',
         fontSize: 16,
         fontWeight: '600',
         textAlign: 'center',

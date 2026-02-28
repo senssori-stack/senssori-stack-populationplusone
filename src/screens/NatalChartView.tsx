@@ -61,14 +61,14 @@ export default function NatalChartView({
             return (
                 <G key={`sign-${i}`}>
                     {/* Sign background */}
-                    <Circle cx={pos.x} cy={pos.y} r={svgSize * 0.025} fill="#1a1a1a" opacity="0.8" />
+                    <Circle cx={pos.x} cy={pos.y} r={svgSize * 0.025} fill="#D4AF37" opacity="0.2" />
                     {/* Sign text */}
                     <SvgText
                         x={pos.x}
                         y={pos.y}
                         fontSize={String(svgSize * 0.045)}
                         fontWeight="800"
-                        fill="#000000"
+                        fill="#B8860B"
                         textAnchor="middle"
                     >
                         {signSymbols[i]}
@@ -91,9 +91,9 @@ export default function NatalChartView({
                     y1={outer.y}
                     x2={inner.x}
                     y2={inner.y}
-                    stroke="#000000"
+                    stroke="#555555"
                     strokeWidth={String(svgSize * 0.004)}
-                    opacity="0.6"
+                    opacity="0.9"
                 />
             );
         }
@@ -114,9 +114,9 @@ export default function NatalChartView({
                     y1={outer.y}
                     x2={inner.x}
                     y2={inner.y}
-                    stroke="#4ECDC4"
+                    stroke="#3DC7BD"
                     strokeWidth={String(svgSize * 0.005)}
-                    opacity="0.5"
+                    opacity="0.9"
                 />
             );
         }
@@ -128,16 +128,16 @@ export default function NatalChartView({
         return natalChart.planets.slice(0, 10).map((planet) => {
             const pos = positionOnCircle(planet.longitude, r_planet);
             const planetColors: any = {
-                'Sun': '#FF6B35', 'Moon': '#C0C5CE', 'Mercury': '#4ECDC4', 'Venus': '#FF6B9D',
-                'Mars': '#C44569', 'Jupiter': '#6C5CE7', 'Saturn': '#4A4E69', 'Uranus': '#00BFA5',
-                'Neptune': '#3F51B5', 'Pluto': '#2C2E3E'
+                'Sun': '#FF8C42', 'Moon': '#D4D9E6', 'Mercury': '#5EEEDE', 'Venus': '#FF85B1',
+                'Mars': '#E05580', 'Jupiter': '#8B7CF7', 'Saturn': '#9494C4', 'Uranus': '#00E5C7',
+                'Neptune': '#5C6FD6', 'Pluto': '#8E7CC3'
             };
             const planetColor = planetColors[planet.name] || colors.accent;
 
             return (
                 <G key={`planet-${planet.name}`}>
                     {/* Planet circle background */}
-                    <Circle cx={pos.x} cy={pos.y} r={svgSize * 0.035} fill={planetColor} opacity="0.2" stroke={planetColor} strokeWidth={String(svgSize * 0.004)} />
+                    <Circle cx={pos.x} cy={pos.y} r={svgSize * 0.035} fill={planetColor} opacity="0.35" stroke={planetColor} strokeWidth={String(svgSize * 0.005)} />
                     {/* Planet glyph - LARGE */}
                     <SvgText
                         x={pos.x}
@@ -227,7 +227,7 @@ export default function NatalChartView({
                     y2={pos2.y}
                     stroke={color}
                     strokeWidth={String(svgSize * 0.003)}
-                    opacity="0.4"
+                    opacity="0.7"
                 />
             );
         });
@@ -242,21 +242,24 @@ export default function NatalChartView({
                 </Text>
             </View>
 
-            <View style={[styles.chartContainer, { width: svgSize + 20, height: svgSize + 20 }]}>
+            <View style={[styles.chartContainer, { width: svgSize + 20 }]}>
                 <Svg width={String(svgSize)} height={String(svgSize)} viewBox={`0 0 ${svgSize} ${svgSize}`}>
                     {/* Outer circle */}
-                    <Circle cx={cx} cy={cy} r={r_outer} fill="none" stroke="#000000" strokeWidth={String(svgSize * 0.004)} opacity="0.8" />
+                    <Circle cx={cx} cy={cy} r={r_outer} fill="none" stroke="#444444" strokeWidth={String(svgSize * 0.005)} opacity="1" />
 
                     {/* Zodiac band */}
-                    <Circle cx={cx} cy={cy} r={r_sign_outer} fill="none" stroke="#000000" strokeWidth={String(svgSize * 0.003)} opacity="0.6" />
-                    <Circle cx={cx} cy={cy} r={r_sign_inner} fill="none" stroke="#000000" strokeWidth={String(svgSize * 0.003)} opacity="0.6" />
+                    <Circle cx={cx} cy={cy} r={r_sign_outer} fill="none" stroke="#555555" strokeWidth={String(svgSize * 0.004)} opacity="0.9" />
+                    <Circle cx={cx} cy={cy} r={r_sign_inner} fill="none" stroke="#555555" strokeWidth={String(svgSize * 0.004)} opacity="0.9" />
+
+                    {/* Golden Ecliptic Line — the Sun's path through the zodiac */}
+                    <Circle cx={cx} cy={cy} r={(r_sign_outer + r_sign_inner) / 2} fill="none" stroke="#FFD700" strokeWidth={String(svgSize * 0.003)} opacity="0.5" strokeDasharray={`${svgSize * 0.015},${svgSize * 0.01}`} />
 
                     {/* House circles */}
-                    <Circle cx={cx} cy={cy} r={r_house_out} fill="none" stroke="#4ECDC4" strokeWidth={String(svgSize * 0.002)} opacity="0.4" />
-                    <Circle cx={cx} cy={cy} r={r_house_in} fill="none" stroke="#4ECDC4" strokeWidth={String(svgSize * 0.002)} opacity="0.4" />
+                    <Circle cx={cx} cy={cy} r={r_house_out} fill="none" stroke="#3DC7BD" strokeWidth={String(svgSize * 0.003)} opacity="0.85" />
+                    <Circle cx={cx} cy={cy} r={r_house_in} fill="none" stroke="#3DC7BD" strokeWidth={String(svgSize * 0.003)} opacity="0.85" />
 
                     {/* Inner circle */}
-                    <Circle cx={cx} cy={cy} r={r_inner} fill="none" stroke="#000000" strokeWidth={String(svgSize * 0.003)} opacity="0.5" />
+                    <Circle cx={cx} cy={cy} r={r_inner} fill="none" stroke="#444444" strokeWidth={String(svgSize * 0.004)} opacity="0.9" />
 
                     {/* Zodiac boundaries */}
                     {renderZodiacBoundaries()}
@@ -286,11 +289,11 @@ export default function NatalChartView({
                     <Circle cx={cx} cy={cy} r={svgSize * 0.04} fill="#1a6fc4" />
                     {/* Continents */}
                     <G clipPath="url(#earthClipNV)">
-                        <Ellipse cx={cx - svgSize * 0.016} cy={cy - svgSize * 0.016} rx={svgSize * 0.016} ry={svgSize * 0.013} fill="#2e8b57" transform={`rotate(-20 ${cx - svgSize * 0.016} ${cy - svgSize * 0.016})`} />
-                        <Ellipse cx={cx - svgSize * 0.01} cy={cy + svgSize * 0.016} rx={svgSize * 0.01} ry={svgSize * 0.016} fill="#2e8b57" transform={`rotate(10 ${cx - svgSize * 0.01} ${cy + svgSize * 0.016})`} />
-                        <Ellipse cx={cx + svgSize * 0.016} cy={cy - svgSize * 0.006} rx={svgSize * 0.01} ry={svgSize * 0.013} fill="#2e8b57" transform={`rotate(5 ${cx + svgSize * 0.016} ${cy - svgSize * 0.006})`} />
-                        <Ellipse cx={cx + svgSize * 0.016} cy={cy + svgSize * 0.016} rx={svgSize * 0.008} ry={svgSize * 0.013} fill="#2e8b57" />
-                        <Ellipse cx={cx + svgSize * 0.03} cy={cy - svgSize * 0.016} rx={svgSize * 0.013} ry={svgSize * 0.01} fill="#2e8b57" transform={`rotate(-10 ${cx + svgSize * 0.03} ${cy - svgSize * 0.016})`} />
+                        <Ellipse cx={cx - svgSize * 0.016} cy={cy - svgSize * 0.016} rx={svgSize * 0.016} ry={svgSize * 0.013} fill="#0000b3" transform={`rotate(-20 ${cx - svgSize * 0.016} ${cy - svgSize * 0.016})`} />
+                        <Ellipse cx={cx - svgSize * 0.01} cy={cy + svgSize * 0.016} rx={svgSize * 0.01} ry={svgSize * 0.016} fill="#0000b3" transform={`rotate(10 ${cx - svgSize * 0.01} ${cy + svgSize * 0.016})`} />
+                        <Ellipse cx={cx + svgSize * 0.016} cy={cy - svgSize * 0.006} rx={svgSize * 0.01} ry={svgSize * 0.013} fill="#0000b3" transform={`rotate(5 ${cx + svgSize * 0.016} ${cy - svgSize * 0.006})`} />
+                        <Ellipse cx={cx + svgSize * 0.016} cy={cy + svgSize * 0.016} rx={svgSize * 0.008} ry={svgSize * 0.013} fill="#0000b3" />
+                        <Ellipse cx={cx + svgSize * 0.03} cy={cy - svgSize * 0.016} rx={svgSize * 0.013} ry={svgSize * 0.01} fill="#0000b3" transform={`rotate(-10 ${cx + svgSize * 0.03} ${cy - svgSize * 0.016})`} />
                     </G>
                     {/* Atmosphere highlight */}
                     <Circle cx={cx - svgSize * 0.01} cy={cy - svgSize * 0.01} r={svgSize * 0.033} fill="rgba(255,255,255,0.15)" />
@@ -316,7 +319,7 @@ export default function NatalChartView({
                             return (
                                 <G key={label}>
                                     <Line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
-                                        stroke={color} strokeWidth={1.5} opacity="0.7" />
+                                        stroke={color} strokeWidth={2} opacity="0.95" />
                                     <SvgText x={labelPos.x} y={labelPos.y}
                                         fontSize={svgSize * 0.03} fontWeight="bold"
                                         fill={color} textAnchor="middle" alignmentBaseline="middle">
@@ -327,35 +330,39 @@ export default function NatalChartView({
                         });
                     })()}
                 </Svg>
-            </View>
 
-            <View style={styles.infoPanelTop}>
-                <View style={styles.infoRow}>
-                    <Text style={[styles.infoLabel, { color: colors.text }]}>☉ Sun</Text>
-                    <Text style={[styles.infoValue, { color: colors.accent }]}>{natalChart.planets[0]?.zodiac}</Text>
+                <View style={styles.infoPanelTop}>
+                    <View style={styles.infoRow}>
+                        <Text style={[styles.infoLabel, { color: colors.text }]}>☉ Sun</Text>
+                        <Text style={[styles.infoValue, { color: colors.accent }]}>{natalChart.planets[0]?.zodiac}</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                        <Text style={[styles.infoLabel, { color: colors.text }]}>☽ Moon</Text>
+                        <Text style={[styles.infoValue, { color: colors.accent }]}>{natalChart.planets[1]?.zodiac}</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                        <Text style={[styles.infoLabel, { color: colors.text }]}>↑ ASC</Text>
+                        <Text style={[styles.infoValue, { color: colors.accent }]}>{natalChart.ascendantZodiac}</Text>
+                    </View>
                 </View>
-                <View style={styles.infoRow}>
-                    <Text style={[styles.infoLabel, { color: colors.text }]}>☽ Moon</Text>
-                    <Text style={[styles.infoValue, { color: colors.accent }]}>{natalChart.planets[1]?.zodiac}</Text>
-                </View>
-                <View style={styles.infoRow}>
-                    <Text style={[styles.infoLabel, { color: colors.text }]}>↑ ASC</Text>
-                    <Text style={[styles.infoValue, { color: colors.accent }]}>{natalChart.ascendantZodiac}</Text>
-                </View>
-            </View>
 
-            <View style={styles.legend}>
-                <View style={styles.legendItem}>
-                    <View style={[styles.colorDot, { backgroundColor: '#FFD700' }]} />
-                    <Text style={[styles.legendText, { color: colors.text }]}>Ascendant</Text>
-                </View>
-                <View style={styles.legendItem}>
-                    <View style={[styles.colorDot, { backgroundColor: '#4ECDC4' }]} />
-                    <Text style={[styles.legendText, { color: colors.text }]}>Houses</Text>
-                </View>
-                <View style={styles.legendItem}>
-                    <View style={[styles.colorDot, { backgroundColor: '#95E1D3' }]} />
-                    <Text style={[styles.legendText, { color: colors.text }]}>Aspects</Text>
+                <View style={styles.legend}>
+                    <View style={styles.legendItem}>
+                        <View style={[styles.colorDot, { backgroundColor: '#FFD700' }]} />
+                        <Text style={[styles.legendText, { color: colors.text }]}>Ascendant</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                        <View style={[styles.colorDot, { backgroundColor: '#4ECDC4' }]} />
+                        <Text style={[styles.legendText, { color: colors.text }]}>Houses</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                        <View style={[styles.colorDot, { backgroundColor: '#95E1D3' }]} />
+                        <Text style={[styles.legendText, { color: colors.text }]}>Aspects</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                        <View style={[styles.colorDot, { backgroundColor: '#FFD700' }]} />
+                        <Text style={[styles.legendText, { color: colors.text }]}>Ecliptic</Text>
+                    </View>
                 </View>
             </View>
         </View>
@@ -388,12 +395,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 12,
-        overflow: 'hidden',
+        paddingBottom: 12,
     },
     infoPanelTop: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        marginVertical: 16,
+        marginTop: 10,
         paddingHorizontal: 16,
         width: '100%',
     },

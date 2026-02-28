@@ -250,11 +250,11 @@ export default function AstrologyComprehensive(props: Props) {
                 <Circle cx={cx} cy={cy} r={svgSize * 0.04} fill="#1a6fc4" />
                 {/* Continents */}
                 <G clipPath="url(#earthClipJFF)">
-                    <Ellipse cx={cx - svgSize * 0.016} cy={cy - svgSize * 0.016} rx={svgSize * 0.016} ry={svgSize * 0.013} fill="#2e8b57" transform={`rotate(-20 ${cx - svgSize * 0.016} ${cy - svgSize * 0.016})`} />
-                    <Ellipse cx={cx - svgSize * 0.01} cy={cy + svgSize * 0.016} rx={svgSize * 0.01} ry={svgSize * 0.016} fill="#2e8b57" transform={`rotate(10 ${cx - svgSize * 0.01} ${cy + svgSize * 0.016})`} />
-                    <Ellipse cx={cx + svgSize * 0.016} cy={cy - svgSize * 0.006} rx={svgSize * 0.01} ry={svgSize * 0.013} fill="#2e8b57" transform={`rotate(5 ${cx + svgSize * 0.016} ${cy - svgSize * 0.006})`} />
-                    <Ellipse cx={cx + svgSize * 0.016} cy={cy + svgSize * 0.016} rx={svgSize * 0.008} ry={svgSize * 0.013} fill="#2e8b57" />
-                    <Ellipse cx={cx + svgSize * 0.03} cy={cy - svgSize * 0.016} rx={svgSize * 0.013} ry={svgSize * 0.01} fill="#2e8b57" transform={`rotate(-10 ${cx + svgSize * 0.03} ${cy - svgSize * 0.016})`} />
+                    <Ellipse cx={cx - svgSize * 0.016} cy={cy - svgSize * 0.016} rx={svgSize * 0.016} ry={svgSize * 0.013} fill="#0000b3" transform={`rotate(-20 ${cx - svgSize * 0.016} ${cy - svgSize * 0.016})`} />
+                    <Ellipse cx={cx - svgSize * 0.01} cy={cy + svgSize * 0.016} rx={svgSize * 0.01} ry={svgSize * 0.016} fill="#0000b3" transform={`rotate(10 ${cx - svgSize * 0.01} ${cy + svgSize * 0.016})`} />
+                    <Ellipse cx={cx + svgSize * 0.016} cy={cy - svgSize * 0.006} rx={svgSize * 0.01} ry={svgSize * 0.013} fill="#0000b3" transform={`rotate(5 ${cx + svgSize * 0.016} ${cy - svgSize * 0.006})`} />
+                    <Ellipse cx={cx + svgSize * 0.016} cy={cy + svgSize * 0.016} rx={svgSize * 0.008} ry={svgSize * 0.013} fill="#0000b3" />
+                    <Ellipse cx={cx + svgSize * 0.03} cy={cy - svgSize * 0.016} rx={svgSize * 0.013} ry={svgSize * 0.01} fill="#0000b3" transform={`rotate(-10 ${cx + svgSize * 0.03} ${cy - svgSize * 0.016})`} />
                 </G>
                 {/* Atmosphere highlight */}
                 <Circle cx={cx - svgSize * 0.01} cy={cy - svgSize * 0.01} r={svgSize * 0.033} fill="rgba(255,255,255,0.15)" />

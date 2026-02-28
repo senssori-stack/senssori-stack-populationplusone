@@ -61,8 +61,8 @@ export default function SourcesScreen({ navigation }: Props) {
     const categories = [...new Set(DATA_SOURCES.map(s => s.category))];
 
     return (
-        <LinearGradient colors={['#2d5016', '#3d6b1f']} style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#2d5016" />
+        <LinearGradient colors={['#000080', '#1a1a9e']} style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#000080" />
 
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 {/* Header */}
@@ -141,7 +141,7 @@ export default function SourcesScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#2d5016',
+        backgroundColor: '#000080',
     },
     scrollView: {
         flex: 1,
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     iconBox: {
         width: 70,
         height: 70,
-        backgroundColor: '#4a7c2c',
+        backgroundColor: '#1a1a9e',
         borderRadius: 18,
         justifyContent: 'center',
         alignItems: 'center',
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     backButton: {
-        backgroundColor: '#4a7c2c',
+        backgroundColor: '#1a1a9e',
         paddingHorizontal: 30,
         paddingVertical: 14,
         borderRadius: 10,

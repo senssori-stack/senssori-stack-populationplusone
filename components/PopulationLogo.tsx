@@ -16,7 +16,7 @@ type Props = {
  * Use `scale` prop to resize for different contexts (affiliate banners, headers, footers, etc.)
  */
 export default function PopulationLogo({ scale = 1, showWebsite = true, darkMode = false }: Props) {
-    const textColor = darkMode ? '#ffffff' : '#4a8c5c';
+    const textColor = darkMode ? '#ffffff' : '#000080';
     const subColor = darkMode ? '#cccccc' : '#666666';
 
     return (

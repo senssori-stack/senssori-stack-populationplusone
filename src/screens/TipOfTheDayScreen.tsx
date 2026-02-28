@@ -39,11 +39,11 @@ const ZODIAC_EMOJIS: Record<string, string> = {
 
 const ZODIAC_GRADIENTS: Record<string, [string, string, string]> = {
     Aries: ['#e53935', '#c62828', '#b71c1c'],
-    Taurus: ['#43a047', '#2e7d32', '#1b5e20'],
+    Taurus: ['#43a047', '#2e7d32', '#000080'],
     Gemini: ['#fdd835', '#f9a825', '#f57f17'],
     Cancer: ['#90caf9', '#42a5f5', '#1565c0'],
     Leo: ['#ff8f00', '#ff6f00', '#e65100'],
-    Virgo: ['#66bb6a', '#388e3c', '#1b5e20'],
+    Virgo: ['#66bb6a', '#388e3c', '#000080'],
     Libra: ['#ec407a', '#c2185b', '#880e4f'],
     Scorpio: ['#5c6bc0', '#283593', '#1a237e'],
     Sagittarius: ['#7e57c2', '#4527a0', '#311b92'],

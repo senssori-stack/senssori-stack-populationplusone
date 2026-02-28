@@ -33,7 +33,7 @@ export default function BaseballCard({
     birthstone = '',
     lifePathNumber = '',
     photoUri,
-    backgroundColor = '#1a472a',
+    backgroundColor = '#000080',
 }: BaseballCardProps) {
     const { width } = useWindowDimensions();
 
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
         letterSpacing: 1,
     },
     statValue: {
-        color: '#1a472a',
+        color: '#000080',
         fontWeight: '800',
     },
     hometownSection: {
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
         letterSpacing: 1,
     },
     hometownValue: {
-        color: '#1a472a',
+        color: '#000080',
         fontWeight: '800',
     },
     footer: {

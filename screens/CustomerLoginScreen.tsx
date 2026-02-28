@@ -102,7 +102,7 @@ export default function CustomerLoginScreen({ navigation }: Props) {
 
     if (isLoggedIn && user) {
         return (
-            <LinearGradient colors={['#1a472a', '#2d6a3f', '#3d8b4f']} style={styles.container}>
+            <LinearGradient colors={['#000080', '#1a1a9e', '#1a1a9e']} style={styles.container}>
                 <ScrollView contentContainerStyle={styles.scrollContent}>
                     <View style={styles.header}>
                         <Text style={styles.emoji}>👤</Text>
@@ -155,7 +155,7 @@ export default function CustomerLoginScreen({ navigation }: Props) {
     // ─── Login / Sign Up / Reset Forms ───────────────────────────
 
     return (
-        <LinearGradient colors={['#1a472a', '#2d6a3f', '#3d8b4f']} style={styles.container}>
+        <LinearGradient colors={['#000080', '#1a1a9e', '#1a1a9e']} style={styles.container}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardView}
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     },
 
     // Inputs
-    inputLabel: { fontSize: 14, fontWeight: '700', color: '#1a472a', marginBottom: 6, marginTop: 12 },
+    inputLabel: { fontSize: 14, fontWeight: '700', color: '#000080', marginBottom: 6, marginTop: 12 },
     input: {
         backgroundColor: '#f5f5f5',
         borderRadius: 12,
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
 
     // Buttons
     submitButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         borderRadius: 12,
         padding: 16,
         marginTop: 20,
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
 
     toggleButton: { alignItems: 'center', marginTop: 16 },
     toggleText: { fontSize: 14, color: '#666' },
-    toggleBold: { fontWeight: '700', color: '#1a472a' },
+    toggleBold: { fontWeight: '700', color: '#000080' },
 
     forgotButton: { alignItems: 'center', marginTop: 8 },
     forgotText: { fontSize: 13, color: '#999' },
@@ -392,12 +392,12 @@ const styles = StyleSheet.create({
     },
     connectedEmoji: { fontSize: 48, marginBottom: 12 },
     connectedTitle: { fontSize: 24, fontWeight: '800', color: '#27ae60', marginBottom: 16 },
-    userName: { fontSize: 22, fontWeight: '700', color: '#1a472a', textAlign: 'center' },
+    userName: { fontSize: 22, fontWeight: '700', color: '#000080', textAlign: 'center' },
     userEmail: { fontSize: 14, color: '#666', marginTop: 4 },
 
     statsRow: { flexDirection: 'row', gap: 24, marginTop: 20, marginBottom: 20 },
     statBox: { alignItems: 'center', backgroundColor: '#e8f5e9', borderRadius: 12, padding: 16, minWidth: 100 },
-    statNumber: { fontSize: 28, fontWeight: '900', color: '#1a472a' },
+    statNumber: { fontSize: 28, fontWeight: '900', color: '#000080' },
     statLabel: { fontSize: 12, fontWeight: '600', color: '#666', marginTop: 4 },
 
     comingSoonSection: {
@@ -407,11 +407,11 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         width: '100%',
     },
-    comingSoonTitle: { fontSize: 16, fontWeight: '800', color: '#1a472a', marginBottom: 10, textAlign: 'center' },
+    comingSoonTitle: { fontSize: 16, fontWeight: '800', color: '#000080', marginBottom: 10, textAlign: 'center' },
     comingSoonItem: { fontSize: 13, color: '#555', lineHeight: 22 },
 
     createButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         borderRadius: 12,
         paddingVertical: 14,
         paddingHorizontal: 32,

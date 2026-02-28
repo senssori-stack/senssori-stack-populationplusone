@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
     summaryItemPrice: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#1a472a',
+        color: '#000080',
     },
     row: {
         flexDirection: 'row',
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
     totalValue: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#1a472a',
+        color: '#000080',
     },
 
     bottomAction: {
@@ -593,7 +593,7 @@ const styles = StyleSheet.create({
         borderTopColor: '#eee',
     },
     placeOrderButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: 'center',
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     continueShoppingButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         paddingVertical: 14,
         paddingHorizontal: 32,
         borderRadius: 12,
@@ -663,8 +663,8 @@ const styles = StyleSheet.create({
         marginTop: 1,
     },
     checkboxChecked: {
-        backgroundColor: '#1a472a',
-        borderColor: '#1a472a',
+        backgroundColor: '#000080',
+        borderColor: '#000080',
     },
     checkmark: {
         color: '#fff',
@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
         lineHeight: 20,
     },
     termsLink: {
-        color: '#1a472a',
+        color: '#000080',
         fontWeight: '600',
         textDecorationLine: 'underline',
     },

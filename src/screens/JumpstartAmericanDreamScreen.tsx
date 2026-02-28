@@ -34,7 +34,7 @@ const RESOURCES = [
         subtitle: 'UGMA/UTMA accounts for minors',
         emoji: '📈',
         url: 'https://www.investor.gov/introduction-investing',
-        color: '#1b5e20',
+        color: '#000080',
     },
     {
         title: 'Savings Bonds for Baby',

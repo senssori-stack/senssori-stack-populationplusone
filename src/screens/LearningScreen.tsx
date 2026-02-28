@@ -830,7 +830,7 @@ const styles = StyleSheet.create({
     viewToggle: { flexDirection: 'row', marginHorizontal: 16, marginBottom: 12, gap: 6 },
     viewBtn: {
         flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center',
-        backgroundColor: '#0f172a', borderWidth: 1, borderColor: '#334155',
+        backgroundColor: '#000060', borderWidth: 1, borderColor: '#334155',
     },
     viewBtnActive: { backgroundColor: '#1e40af', borderColor: '#3b82f6' },
     viewBtnText: { fontSize: 13, color: '#94a3b8', fontWeight: '600' },
@@ -957,7 +957,7 @@ const styles = StyleSheet.create({
     crossLinkText: { color: '#93c5fd', fontSize: 14, fontWeight: '600' },
 
     // Footer
-    footer: { marginHorizontal: 16, marginTop: 20, padding: 16, backgroundColor: '#0f172a', borderRadius: 12, borderWidth: 1, borderColor: '#1e293b' },
+    footer: { marginHorizontal: 16, marginTop: 20, padding: 16, backgroundColor: '#000060', borderRadius: 12, borderWidth: 1, borderColor: '#1e293b' },
     footerText: { color: '#475569', fontSize: 11, textAlign: 'center', lineHeight: 17 },
 
     // ─── MODALS ─────────────
@@ -1004,7 +1004,7 @@ const styles = StyleSheet.create({
     wordChipTextColor: { fontSize: 14, fontWeight: '600' },
 
     activityBox: {
-        backgroundColor: '#0f172a', borderRadius: 12, padding: 14,
+        backgroundColor: '#000060', borderRadius: 12, padding: 14,
         borderWidth: 1, borderColor: '#334155', borderLeftWidth: 4, borderLeftColor: '#22c55e',
     },
     activityText: { color: '#e2e8f0', fontSize: 14, lineHeight: 21 },

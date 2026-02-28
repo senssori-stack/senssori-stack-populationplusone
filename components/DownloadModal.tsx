@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: '#1a472a',
+        color: '#000080',
     },
     closeButton: {
         padding: 8,
@@ -455,14 +455,14 @@ const styles = StyleSheet.create({
     },
     activeTab: {
         borderBottomWidth: 3,
-        borderBottomColor: '#1a472a',
+        borderBottomColor: '#000080',
     },
     tabText: {
         fontSize: 16,
         color: '#888',
     },
     activeTabText: {
-        color: '#1a472a',
+        color: '#000080',
         fontWeight: '600',
     },
     selectAll: {
@@ -509,8 +509,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     checkboxChecked: {
-        backgroundColor: '#1a472a',
-        borderColor: '#1a472a',
+        backgroundColor: '#000080',
+        borderColor: '#000080',
     },
     checkmark: {
         color: '#fff',
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     downloadButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         marginHorizontal: 16,
         marginTop: 16,
         paddingVertical: 16,
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
     },
     printPrice: {
         fontSize: 13,
-        color: '#1a472a',
+        color: '#000080',
         fontWeight: '500',
         marginTop: 4,
     },
@@ -604,7 +604,7 @@ const styles = StyleSheet.create({
     comingSoonTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#1a472a',
+        color: '#000080',
         marginBottom: 8,
     },
     comingSoonText: {

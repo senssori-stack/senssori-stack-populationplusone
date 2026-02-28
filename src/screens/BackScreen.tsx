@@ -42,6 +42,6 @@ export default function BackScreen({ route }: Props) {
 }
 
 const S = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#224c39' },
+    container: { flex: 1, backgroundColor: '#000080' },
     scroll: { padding: 16, alignItems: 'center' },
 });

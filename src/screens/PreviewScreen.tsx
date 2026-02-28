@@ -16,6 +16,7 @@ import TimeCapsuleLandscape from '../../components/TimeCapsuleLandscape';
 import { PRODUCT_PRICES, useCart } from '../context/CartContext';
 import { birthstoneFromISO } from '../data/utils/birthstone';
 import { calculateLifePath } from '../data/utils/life-path-calculator';
+import { getPopulationForCity } from '../data/utils/populations';
 import { getZodiacFromISO } from '../data/utils/zodiac';
 import type { RootStackParamList } from '../types';
 
@@ -26,6 +27,28 @@ export default function PreviewScreen({ navigation, route }: Props) {
     const insets = useSafeAreaInsets();
     const [viewMode, setViewMode] = useState<'front' | 'back' | 'natal' | 'guide' | 'letter'>('front');
     const [showCelebration, setShowCelebration] = useState(true);
+
+    // ⚠️ POPULATION SAFETY NET: If upstream form didn't pass population, fetch it here
+    const [fetchedPopulation, setFetchedPopulation] = useState<number | null>(null);
+    useEffect(() => {
+        if (params.population != null) {
+            // Population was provided by the form — use it directly
+            setFetchedPopulation(typeof params.population === 'number' ? params.population : null);
+            return;
+        }
+        // Population missing — try to fetch it from hometown + DOB
+        if (params.hometown && params.dobISO) {
+            console.log('⚠️ PreviewScreen: population missing from params, fetching for', params.hometown);
+            getPopulationForCity(params.hometown, params.dobISO)
+                .then(pop => {
+                    if (pop !== null) {
+                        console.log('✅ PreviewScreen: fetched population fallback:', pop);
+                        setFetchedPopulation(pop);
+                    }
+                })
+                .catch(err => console.warn('PreviewScreen: population fallback fetch failed:', err));
+        }
+    }, [params.population, params.hometown, params.dobISO]);
 
     // Compute zodiac sign for celebration overlay
     const celebrationZodiac = (() => {
@@ -297,7 +320,11 @@ export default function PreviewScreen({ navigation, route }: Props) {
         // Handle photo from babies array or individual photoUri
         photoUri: params.babies?.[0]?.photoUri || params.photoUri || null,
         snapshot: params.snapshot || {},
-        population: params.population || null,
+        population: (() => {
+            const pop = fetchedPopulation ?? params.population ?? null;
+            console.log('📊 PreviewScreen formData.population:', pop, '| fetchedPopulation:', fetchedPopulation, '| params.population:', params.population);
+            return pop;
+        })(),
         mode: params.mode || 'baby',
         message: params.message || '',
         // Keep the original babies array if it exists
@@ -342,7 +369,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
                             photoUris={allPhotoUris}
                             previewScale={finalScale}
                             hometown={formData.hometown}
-                            population={formData.population ?? undefined}
+                            population={formData.population != null ? formData.population : undefined}
                             personName={params.personName || ''}
                             babyCount={params.babyCount || 1}
                             dobISO={dobISO}
@@ -358,6 +385,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
                         <TimeCapsuleLandscape
                             theme={formData.theme}
                             babies={babies}
+                            babyName={params.personName || ''}
                             dobISO={dobISO}
                             motherName={formData.motherName}
                             fatherName={formData.fatherName}
@@ -470,7 +498,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
             />
             <ScrollView style={{ flex: 1, paddingTop: 40 }} contentContainerStyle={{ flexGrow: 1 }} bounces={false} scrollEnabled={scrollEnabled}>
                 {/* ═══ PREMIUM CONTROL PANEL ═══ */}
-                <LinearGradient colors={['#1a472a', '#2d6b3f']} style={styles.controlPanel}>
+                <LinearGradient colors={['#000080', '#1a1a9e']} style={styles.controlPanel}>
                     {/* Dynamic Title */}
                     <Text style={styles.panelTitle}>
                         {viewMode === 'front' ? labels.front : viewMode === 'back' ? labels.capsule : viewMode === 'letter' ? labels.letter : viewMode === 'natal' ? labels.chart : labels.guide}
@@ -482,7 +510,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
                     {/* View toggle tabs */}
                     <View style={styles.tabRow}>
                         <TouchableOpacity
-                            style={[styles.tab, { backgroundColor: '#2e8b57' }, viewMode === 'front' && styles.tabActive]}
+                            style={[styles.tab, { backgroundColor: '#0000b3' }, viewMode === 'front' && styles.tabActive]}
                             onPress={() => { setViewMode('front'); resetView(); }}
                         >
                             <Text style={styles.tabIcon}>+1</Text>
@@ -620,7 +648,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
                             <Text style={styles.tileLabel}>Save</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[styles.tileButton, { backgroundColor: '#2e8b57' }]}
+                            style={[styles.tileButton, { backgroundColor: '#0000b3' }]}
                             onPress={() => navigation.navigate('PrintService', params as any)}
                         >
                             <Text style={styles.tileEmoji}>🖨️</Text>
@@ -789,7 +817,7 @@ const styles = StyleSheet.create({
         paddingVertical: 20,
     },
     downloadButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         paddingHorizontal: 24,
         paddingVertical: 14,
         marginHorizontal: 20,
@@ -803,7 +831,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     backButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         paddingHorizontal: 24,
         paddingVertical: 14,
         margin: 20,
@@ -868,7 +896,7 @@ const styles = StyleSheet.create({
         paddingBottom: 8,
     },
     productButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         paddingVertical: 8,
         paddingHorizontal: 14,
         borderRadius: 20,

@@ -28,7 +28,7 @@ export default function PostcardSign({
     length = '',
     parents = '',
     photoUri,
-    backgroundColor = '#1a472a',
+    backgroundColor = '#000080',
     message = '',
 }: PostcardSignProps) {
     const { width } = useWindowDimensions();

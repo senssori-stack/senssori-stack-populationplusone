@@ -113,7 +113,7 @@ const COLOR_HEX: { [key: string]: string } = {
     'White': '#f5f5f5',
     'Maroon': '#800000',
     'Gray': '#808080',
-    'Sea Green': '#2E8B57',
+    'Sea Green': '#0000b3',
     'Lavender': '#E6E6FA',
     'Coral': '#FF7F50',
     'Navy': '#000080',

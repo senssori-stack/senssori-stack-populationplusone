@@ -25,7 +25,7 @@ export default function TimeCapsule({
     birthstone = 'Garnet',
     message,
     dataPoints,
-    backgroundColor = '#1a472a',
+    backgroundColor = '#000080',
 }: TimeCapsuleProps) {
     const { width, height } = useWindowDimensions();
 

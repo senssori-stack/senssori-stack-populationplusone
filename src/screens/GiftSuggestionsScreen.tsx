@@ -130,7 +130,7 @@ const OCCASIONS: Occasion[] = [
             { id: 'lm2', name: 'Achievement Awards', emoji: '\uD83C\uDFC6', searchTerm: 'achievement+award+trophy+plaque', color: '#43a047' },
             { id: 'lm3', name: 'Retirement Gifts', emoji: '\uD83C\uDF34', searchTerm: 'retirement+gift', color: '#388e3c' },
             { id: 'lm4', name: 'New Home Gifts', emoji: '\uD83C\uDFE1', searchTerm: 'housewarming+gift+basket', color: '#2e7d32' },
-            { id: 'lm5', name: 'Promotion Gifts', emoji: '\uD83D\uDCBC', searchTerm: 'job+promotion+congratulations+gift', color: '#1b5e20' },
+            { id: 'lm5', name: 'Promotion Gifts', emoji: '\uD83D\uDCBC', searchTerm: 'job+promotion+congratulations+gift', color: '#000080' },
             { id: 'lm6', name: 'Thank You Gifts', emoji: '\uD83D\uDE4F', searchTerm: 'thank+you+gift+basket', color: '#66bb6a' },
             { id: 'lm7', name: 'Memorial & Sympathy', emoji: '\uD83D\uDD4A\uFE0F', searchTerm: 'sympathy+memorial+gift', color: '#81c784' },
             { id: 'lm8', name: 'Religious Milestones', emoji: '\u271D\uFE0F', searchTerm: 'baptism+communion+confirmation+gift', color: '#a5d6a7' },
@@ -171,7 +171,7 @@ export default function GiftSuggestionsScreen({ navigation, route }: Props) {
     };
 
     return (
-        <LinearGradient colors={['#1a472a', '#2d6a3f', '#1a472a']} style={styles.container}>
+        <LinearGradient colors={['#000080', '#1a1a9e', '#000080']} style={styles.container}>
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}

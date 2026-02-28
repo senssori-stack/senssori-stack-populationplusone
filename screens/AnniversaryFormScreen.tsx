@@ -215,10 +215,11 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
         setLoading(true);
         const finalMessage = editableMessage + ' Here is some interesting information surrounding your anniversary.';
         try {
-            const pop = await getPopulationForCity(hometown.trim());
-            setPopulation(pop);
             // Format date as YYYY-MM-DD (required by historical snapshot lookup)
+            // ⚠️ CRITICAL: Must pass DOB - routes to HISTORICAL CSV (before 2020) or CURRENT CSV (after 2020)
             const dobISO = `${anniversaryDate.getFullYear()}-${String(anniversaryDate.getMonth() + 1).padStart(2, '0')}-${String(anniversaryDate.getDate()).padStart(2, '0')}`;
+            const pop = await getPopulationForCity(hometown.trim(), dobISO);
+            setPopulation(pop);
 
             navigation.navigate('Preview', {
                 theme: selectedColor,

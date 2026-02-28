@@ -43,7 +43,7 @@ const FUNERAL_HOME_DATABASE = [
         code: 'PEACEFUL',
         city: 'Chicago',
         state: 'IL',
-        primaryColor: '#1a472a',
+        primaryColor: '#000080',
         tagline: 'A Place of Peace and Remembrance',
         isActive: true,
     },

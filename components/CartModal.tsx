@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: '#1a472a',
+        color: '#000080',
     },
     closeButton: {
         padding: 8,
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     },
     itemPrice: {
         fontSize: 14,
-        color: '#1a472a',
+        color: '#000080',
         fontWeight: '500',
         marginTop: 4,
     },
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     totalValue: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#1a472a',
+        color: '#000080',
     },
     notice: {
         padding: 12,
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
         flex: 2,
         paddingVertical: 14,
         borderRadius: 25,
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         alignItems: 'center',
     },
     checkoutButtonText: {

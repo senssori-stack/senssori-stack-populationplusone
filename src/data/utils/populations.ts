@@ -344,8 +344,95 @@ async function ensureLoaded(): Promise<void> {
  * @param hometown - The city, state string (e.g., "Las Vegas, NV" or "Las Vegas, Nevada")
  * @param dobISO - Date of birth in ISO format (YYYY-MM-DD). Routes to appropriate CSV.
  */
+/**
+ * Map well-known boroughs, neighborhoods, and sub-city areas to their parent city.
+ * Census data only lists incorporated cities, not boroughs or neighborhoods.
+ * e.g., "Queens, NY" → "New York, NY" (Queens is a borough of NYC, not a separate census city)
+ */
+const BOROUGH_TO_CITY: Record<string, string> = {
+    // New York City boroughs
+    'queens': 'New York',
+    'brooklyn': 'New York',
+    'manhattan': 'New York',
+    'the bronx': 'New York',
+    'bronx': 'New York',
+    'staten island': 'New York',
+    'harlem': 'New York',
+    'astoria': 'New York',
+    'flushing': 'New York',
+    'williamsburg': 'New York',
+    'bushwick': 'New York',
+    'bed-stuy': 'New York',
+    'bedford-stuyvesant': 'New York',
+    'soho': 'New York',
+    'tribeca': 'New York',
+    'chelsea': 'New York',
+    'greenpoint': 'New York',
+    'long island city': 'New York',
+    'east village': 'New York',
+    'west village': 'New York',
+    'upper east side': 'New York',
+    'upper west side': 'New York',
+    'lower east side': 'New York',
+    'hell\'s kitchen': 'New York',
+    'washington heights': 'New York',
+    'inwood': 'New York',
+    'jamaica': 'New York',
+    'bayside': 'New York',
+    'forest hills': 'New York',
+    'bay ridge': 'New York',
+    'bensonhurst': 'New York',
+    'flatbush': 'New York',
+    'coney island': 'New York',
+    'brighton beach': 'New York',
+    'park slope': 'New York',
+    'crown heights': 'New York',
+    'east new york': 'New York',
+    'brownsville': 'New York',
+    'south bronx': 'New York',
+    'mott haven': 'New York',
+    'riverdale': 'New York',
+    'pelham bay': 'New York',
+    'tottenville': 'New York',
+    'st. george': 'New York',
+    // Chicago neighborhoods
+    'south side': 'Chicago',
+    'north side': 'Chicago',
+    'west side': 'Chicago',
+    'hyde park': 'Chicago',
+    'wicker park': 'Chicago',
+    'lincoln park': 'Chicago',
+    'logan square': 'Chicago',
+    // Los Angeles neighborhoods
+    'hollywood': 'Los Angeles',
+    'venice': 'Los Angeles',
+    'silver lake': 'Los Angeles',
+    'echo park': 'Los Angeles',
+    'koreatown': 'Los Angeles',
+    'westwood': 'Los Angeles',
+    'bel air': 'Los Angeles',
+    'brentwood': 'Los Angeles',
+    'san pedro': 'Los Angeles',
+    'watts': 'Los Angeles',
+    'boyle heights': 'Los Angeles',
+};
+
 export async function getPopulationForCity(hometown: string, dobISO?: string): Promise<number | null> {
     console.log('📍 getPopulationForCity called with:', hometown, 'DOB:', dobISO || 'not provided');
+
+    // ── BOROUGH/NEIGHBORHOOD RESOLUTION ──
+    // Census data only lists incorporated cities. Map boroughs & neighborhoods to parent city.
+    const parts = hometown.split(',');
+    if (parts.length >= 2) {
+        const inputCity = parts[0].trim().toLowerCase();
+        const parentCity = BOROUGH_TO_CITY[inputCity];
+        if (parentCity) {
+            const stateRaw = parts.slice(1).join(',').trim();
+            const resolved = `${parentCity}, ${stateRaw}`;
+            console.log(`🏙️ Borough/neighborhood resolved: "${hometown}" → "${resolved}"`);
+            hometown = resolved;
+        }
+    }
 
     const CUTOFF_DATE = new Date('2020-01-01');
     const dobDate = dobISO ? new Date(dobISO) : null;
@@ -406,20 +493,31 @@ export async function getPopulationForCity(hometown: string, dobISO?: string): P
         }
 
         // ── PASS 3: Flexible search - normalize & check includes ──
+        // Collect ALL matches and pick closest city name length to prevent
+        // "St. Louis" from matching "Lake St. Louis" before "St. Louis"
         const normalizeCity = (str: string) => str.toLowerCase().replace(/\s+/g, ' ').replace(/[^\w\s,]/g, '').trim();
         const normalizedInput = normalizeCity(`${city}, ${stateFull}`);
         const normalizedCityOnly = normalizeCity(city);
         const normalizedStateOnly = normalizeCity(stateFull);
 
-        const flexibleMatch = POP_ROWS!.find(r => {
+        const flexibleMatches = POP_ROWS!.filter(r => {
             const normalizedRecord = normalizeCity(r.area);
             return normalizedRecord === normalizedInput ||
                 (normalizedRecord.includes(normalizedCityOnly) && normalizedRecord.includes(normalizedStateOnly));
         });
 
-        if (flexibleMatch && Number.isFinite(flexibleMatch.pop)) {
-            console.log('✅ Flexible match found:', flexibleMatch);
-            return flexibleMatch.pop;
+        if (flexibleMatches.length > 0) {
+            // Sort by closest city name length to prefer exact over partial
+            flexibleMatches.sort((a, b) => {
+                const aCityLen = normalizeCity(a.area.split(',')[0]).length;
+                const bCityLen = normalizeCity(b.area.split(',')[0]).length;
+                return Math.abs(aCityLen - normalizedCityOnly.length) - Math.abs(bCityLen - normalizedCityOnly.length);
+            });
+            const bestFlex = flexibleMatches[0];
+            if (Number.isFinite(bestFlex.pop)) {
+                console.log('✅ Flexible match found (best of', flexibleMatches.length, '):', bestFlex);
+                return bestFlex.pop;
+            }
         }
 
         // ── PASS 4: City starts with + state includes ──
@@ -436,31 +534,51 @@ export async function getPopulationForCity(hometown: string, dobISO?: string): P
         }
 
         // ── PASS 5: Partial city name contains + state contains ──
-        const partialMatch = POP_ROWS!.find(r => {
+        // Collect ALL matches, then pick the one whose city name is closest in length
+        // to the user input. Prevents "St. Louis" from matching "Lake St. Louis".
+        const partialMatches = POP_ROWS!.filter(r => {
             const recordCity = r.area.split(',')[0].toLowerCase().trim();
             const recordState = r.area.split(',').slice(1).join(',').toLowerCase().trim();
             return (recordCity.includes(cityLower) || cityLower.includes(recordCity)) &&
                 recordState.includes(stateFull.toLowerCase());
         });
 
-        if (partialMatch && Number.isFinite(partialMatch.pop)) {
-            console.log('✅ Partial match found:', partialMatch);
-            return partialMatch.pop;
+        if (partialMatches.length > 0) {
+            // Sort by closest city name length to prefer exact over partial
+            partialMatches.sort((a, b) => {
+                const aCityLen = a.area.split(',')[0].trim().length;
+                const bCityLen = b.area.split(',')[0].trim().length;
+                return Math.abs(aCityLen - city.length) - Math.abs(bCityLen - city.length);
+            });
+            const bestPartial = partialMatches[0];
+            if (Number.isFinite(bestPartial.pop)) {
+                console.log('✅ Partial match found (best of', partialMatches.length, '):', bestPartial);
+                return bestPartial.pop;
+            }
         }
 
         // ── PASS 6: Try with state abbreviation in CSV records ──
         const stateAbbr = Object.entries(STATE_MAP).find(([, v]) => v.toLowerCase() === stateFull.toLowerCase())?.[0] || '';
         if (stateAbbr) {
-            const abbrMatch = POP_ROWS!.find(r => {
+            const abbrMatches = POP_ROWS!.filter(r => {
                 const rLower = r.area.toLowerCase();
                 return rLower.includes(cityLower) && (
                     rLower.includes(stateAbbr.toLowerCase()) ||
                     rLower.includes(stateFull.toLowerCase())
                 );
             });
-            if (abbrMatch && Number.isFinite(abbrMatch.pop)) {
-                console.log('✅ Abbreviation match found:', abbrMatch);
-                return abbrMatch.pop;
+            if (abbrMatches.length > 0) {
+                // Sort by closest city name length to prefer exact over partial
+                abbrMatches.sort((a, b) => {
+                    const aCityLen = a.area.split(',')[0].trim().length;
+                    const bCityLen = b.area.split(',')[0].trim().length;
+                    return Math.abs(aCityLen - city.length) - Math.abs(bCityLen - city.length);
+                });
+                const bestAbbr = abbrMatches[0];
+                if (Number.isFinite(bestAbbr.pop)) {
+                    console.log('✅ Abbreviation match found (best of', abbrMatches.length, '):', bestAbbr);
+                    return bestAbbr.pop;
+                }
             }
         }
 
@@ -534,20 +652,30 @@ export async function getCurrentPopulationForCity(hometown: string): Promise<num
         }
 
         // Flexible matching
+        // Collect ALL matches and pick closest city name length to prevent
+        // "St. Louis" from matching "Lake St. Louis" before "St. Louis"
         const normalizeCity = (str: string) => str.toLowerCase().replace(/\s+/g, ' ').replace(/[^\w\s,]/g, '').trim();
         const normalizedInput = normalizeCity(`${city}, ${stateFull}`);
         const normalizedCityOnly = normalizeCity(city);
         const normalizedStateOnly = normalizeCity(stateFull);
 
-        const flexibleMatch = POP_ROWS!.find(r => {
+        const flexibleMatches = POP_ROWS!.filter(r => {
             const normalizedRecord = normalizeCity(r.area);
             return normalizedRecord === normalizedInput ||
                 (normalizedRecord.includes(normalizedCityOnly) && normalizedRecord.includes(normalizedStateOnly));
         });
 
-        if (flexibleMatch && Number.isFinite(flexibleMatch.pop)) {
-            console.log('✅ NOW flexible match found:', flexibleMatch);
-            return flexibleMatch.pop;
+        if (flexibleMatches.length > 0) {
+            flexibleMatches.sort((a, b) => {
+                const aCityLen = normalizeCity(a.area.split(',')[0]).length;
+                const bCityLen = normalizeCity(b.area.split(',')[0]).length;
+                return Math.abs(aCityLen - normalizedCityOnly.length) - Math.abs(bCityLen - normalizedCityOnly.length);
+            });
+            const bestFlex = flexibleMatches[0];
+            if (Number.isFinite(bestFlex.pop)) {
+                console.log('✅ NOW flexible match found (best of', flexibleMatches.length, '):', bestFlex);
+                return bestFlex.pop;
+            }
         }
 
         // Fuzzy search - city starts with + state includes
@@ -563,15 +691,25 @@ export async function getCurrentPopulationForCity(hometown: string): Promise<num
         }
 
         // Partial match - city contains + state contains
-        const partialMatch = POP_ROWS!.find(r => {
+        // Collect ALL matches, then pick closest city name length to prevent
+        // "St. Louis" from matching "Lake St. Louis" instead of "St. Louis"
+        const partialMatches = POP_ROWS!.filter(r => {
             const recordCity = r.area.split(',')[0].toLowerCase().trim();
             const recordState = r.area.split(',').slice(1).join(',').toLowerCase().trim();
             return (recordCity.includes(cityLower) || cityLower.includes(recordCity)) &&
                 recordState.includes(stateFull.toLowerCase());
         });
-        if (partialMatch && Number.isFinite(partialMatch.pop)) {
-            console.log('✅ NOW partial match found:', partialMatch);
-            return partialMatch.pop;
+        if (partialMatches.length > 0) {
+            partialMatches.sort((a, b) => {
+                const aCityLen = a.area.split(',')[0].trim().length;
+                const bCityLen = b.area.split(',')[0].trim().length;
+                return Math.abs(aCityLen - city.length) - Math.abs(bCityLen - city.length);
+            });
+            const bestPartial = partialMatches[0];
+            if (Number.isFinite(bestPartial.pop)) {
+                console.log('✅ NOW partial match found (best of', partialMatches.length, '):', bestPartial);
+                return bestPartial.pop;
+            }
         }
 
         console.log('❌ City not found in CURRENT CSV for NOW section:', hometown);

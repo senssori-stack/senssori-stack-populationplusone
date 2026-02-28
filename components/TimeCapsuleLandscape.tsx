@@ -237,21 +237,36 @@ export default function TimeCapsuleLandscape(props: Props) {
                     const { getCurrentPopulationForCity } = await import('../src/data/utils/populations');
 
                     // Get birth year from dobISO
-                    const birthYear = new Date(dobISO).getFullYear();
+                    const dobDateObj = new Date(dobISO);
+                    const birthYear = dobDateObj.getFullYear();
+                    const CUTOFF_DATE = new Date('2020-01-01');
+                    const isBefore2020 = dobDateObj < CUTOFF_DATE;
 
                     console.log(`📍 Fetching city population for ${hometown}`);
-                    console.log(`   Birth year: ${birthYear}`);
+                    console.log(`   Birth year: ${birthYear}, Before 2020: ${isBefore2020}`);
 
                     /**
-                     * ⚠️ CRITICAL POPULATION FETCH RULES:
-                     * THEN section → HISTORICAL CSV (getHistoricalPopulationForCity)
-                     * NOW section → CURRENT CSV (getCurrentPopulationForCity)
+                     * ⚠️ CRITICAL POPULATION FETCH RULES (must match front sign logic):
+                     * DOB BEFORE 01-01-2020:
+                     *   THEN section → HISTORICAL CSV (getHistoricalPopulationForCity)
+                     *   NOW section  → CURRENT CSV (getCurrentPopulationForCity)
+                     * DOB ON/AFTER 01-01-2020:
+                     *   THEN section → CURRENT CSV (getCurrentPopulationForCity) — same source as front sign
+                     *   NOW section  → CURRENT CSV (getCurrentPopulationForCity)
                      */
 
-                    // Fetch historical (THEN) city population - HISTORICAL CSV
-                    const popThen = await getHistoricalPopulationForCity(hometown, birthYear);
+                    let popThen: number | null;
+                    if (isBefore2020) {
+                        // DOB before 2020 → THEN uses HISTORICAL CSV
+                        console.log('🟡 DOB before 2020 - THEN uses HISTORICAL CSV');
+                        popThen = await getHistoricalPopulationForCity(hometown, birthYear);
+                    } else {
+                        // DOB on/after 2020 → THEN uses CURRENT CSV (matches front sign)
+                        console.log('🔵 DOB on/after 2020 - THEN uses CURRENT CSV (same as front sign)');
+                        popThen = await getCurrentPopulationForCity(hometown);
+                    }
 
-                    // Fetch current (NOW) city population - CURRENT CSV  
+                    // NOW always uses CURRENT CSV
                     const popNow = await getCurrentPopulationForCity(hometown);
 
                     console.log(`📊 Population results - THEN: ${popThen}, NOW: ${popNow}`);
@@ -307,7 +322,9 @@ export default function TimeCapsuleLandscape(props: Props) {
     // Build baby names with smart middle initial logic - for twins, no last name on first baby
     const babyNames: string[] = [];
     const babyFullNames: string[] = []; // Full names for milestone mode (no middle initial)
-    if (babies && babies.length > 0) {
+    // Only use babies array if it has at least one baby with actual name data
+    const hasRealBabyNames = babies && babies.length > 0 && babies.some(b => (b.first || '').trim() || (b.last || '').trim());
+    if (hasRealBabyNames) {
         for (let i = 0; i < babies.length; i++) {
             const b = babies[i];
             const first = b.first || '';
@@ -620,7 +637,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                         </Pressable>
                     </View>
 
-                    {/* Body text - First Paragraph */}
+                    {/* Body text - Combined intro + message as one paragraph */}
                     <Text style={[styles.body, {
                         fontSize: bodySize,
                         color: colors.text,
@@ -629,22 +646,10 @@ export default function TimeCapsuleLandscape(props: Props) {
                         textAlign: 'center',
                         lineHeight: bodySize * 1.1
                     }]}>
-                        {intro || 'Welcome to the world!'}
+                        {isMilestoneMode && milestoneMessage
+                            ? `${intro || 'Welcome to the world!'}. ${milestoneMessage}`
+                            : (intro || 'Welcome to the world!')}
                     </Text>
-
-                    {/* Second Paragraph - Prewritten Message (milestone mode only) */}
-                    {isMilestoneMode && milestoneMessage ? (
-                        <Text style={[styles.body, {
-                            fontSize: bodySize,
-                            color: colors.text,
-                            marginTop: padding * 0.15,
-                            fontWeight: 'bold',
-                            textAlign: 'center',
-                            lineHeight: bodySize * 1.1
-                        }]}>
-                            {milestoneMessage}
-                        </Text>
-                    ) : null}
 
                     {/* Zodiac, Birthstone, and Life Path Info with Clickable Emojis - BABY MODE ONLY */}
                     {!isMilestoneMode && (
@@ -720,7 +725,10 @@ export default function TimeCapsuleLandscape(props: Props) {
                                             style={{
                                                 width: labelSize * 3.75,
                                                 height: labelSize * 2.55,
-                                                resizeMode: 'contain'
+                                                resizeMode: 'contain',
+                                                borderWidth: 0.5,
+                                                borderColor: '#FFFFFF',
+                                                borderRadius: 1,
                                             }}
                                         />
                                     </Pressable>

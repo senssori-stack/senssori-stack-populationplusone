@@ -127,4 +127,12 @@ export type RootStackParamList = {
     FamilyTreeForm: undefined;
     DaysAlive: { birthDate: string };
     PhonicsChallenge: undefined;
+    ChineseZodiac: { birthDate: string; birthTime?: string; birthLocation?: string };
+    ZodiacCompatibility: { birthDate: string; birthTime?: string; birthLocation?: string };
+    BirthMoonPhase: { birthDate: string; birthTime?: string; birthLocation?: string };
+    SpiritAnimal: { birthDate: string; birthTime?: string; birthLocation?: string };
+    Chakra: { birthDate: string; birthTime?: string; birthLocation?: string };
+    Element: { birthDate: string; birthTime?: string; birthLocation?: string };
+    TarotBirthCard: { birthDate: string; birthTime?: string; birthLocation?: string };
+    RetrogradeTracker: { birthDate: string; birthTime?: string; birthLocation?: string };
 };

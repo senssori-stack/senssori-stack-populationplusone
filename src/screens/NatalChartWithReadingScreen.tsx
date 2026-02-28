@@ -106,14 +106,14 @@ export default function NatalChartWithReadingScreen({ navigation, route }: Props
             return (
                 <G key={`sign-${i}`}>
                     {/* Sign background */}
-                    <Circle cx={symbolPos.x} cy={symbolPos.y} r={svgSize * 0.025} fill="#1a1a1a" opacity="0.8" />
+                    <Circle cx={symbolPos.x} cy={symbolPos.y} r={svgSize * 0.025} fill="#D4AF37" opacity="0.2" />
                     {/* Sign symbol */}
                     <SvgText
                         x={symbolPos.x}
                         y={symbolPos.y}
                         fontSize={String(svgSize * 0.045)}
                         fontWeight="800"
-                        fill="#000000"
+                        fill="#B8860B"
                         textAnchor="middle"
                     >
                         {signSymbols[i]}
@@ -124,7 +124,7 @@ export default function NatalChartWithReadingScreen({ navigation, route }: Props
                         y={labelPos.y}
                         fontSize={String(svgSize * 0.028)}
                         fontWeight="600"
-                        fill="#000000"
+                        fill="#8B6914"
                         textAnchor="middle"
                     >
                         {sign.substring(0, 3)}
@@ -147,9 +147,9 @@ export default function NatalChartWithReadingScreen({ navigation, route }: Props
                     y1={outer.y}
                     x2={inner.x}
                     y2={inner.y}
-                    stroke="#000000"
+                    stroke="#555555"
                     strokeWidth={String(svgSize * 0.004)}
-                    opacity="0.6"
+                    opacity="0.9"
                 />
             );
         }
@@ -170,9 +170,9 @@ export default function NatalChartWithReadingScreen({ navigation, route }: Props
                     y1={outer.y}
                     x2={inner.x}
                     y2={inner.y}
-                    stroke="#4ECDC4"
+                    stroke="#3DC7BD"
                     strokeWidth={String(svgSize * 0.005)}
-                    opacity="0.6"
+                    opacity="0.9"
                 />
             );
         }
@@ -186,9 +186,9 @@ export default function NatalChartWithReadingScreen({ navigation, route }: Props
         return natalChart.planets.slice(0, 10).map((planet) => {
             const pos = positionOnCircle(planet.longitude, r_planet);
             const planetColors: any = {
-                'Sun': '#FF6B35', 'Moon': '#C0C5CE', 'Mercury': '#4ECDC4', 'Venus': '#FF6B9D',
-                'Mars': '#C44569', 'Jupiter': '#6C5CE7', 'Saturn': '#4A4E69', 'Uranus': '#00BFA5',
-                'Neptune': '#3F51B5', 'Pluto': '#2C2E3E'
+                'Sun': '#FF8C42', 'Moon': '#D4D9E6', 'Mercury': '#5EEEDE', 'Venus': '#FF85B1',
+                'Mars': '#E05580', 'Jupiter': '#8B7CF7', 'Saturn': '#9494C4', 'Uranus': '#00E5C7',
+                'Neptune': '#5C6FD6', 'Pluto': '#8E7CC3'
             };
             const planetColor = planetColors[planet.name] || colors.accent;
 
@@ -221,9 +221,9 @@ export default function NatalChartWithReadingScreen({ navigation, route }: Props
                         cy={pos.y}
                         r={svgSize * 0.035}
                         fill={planetColor}
-                        opacity="0.15"
+                        opacity="0.35"
                         stroke={planetColor}
-                        strokeWidth={String(svgSize * 0.004)}
+                        strokeWidth={String(svgSize * 0.005)}
                     />
                     {/* Planet glyph - LARGE and bold */}
                     <SvgText
@@ -242,8 +242,8 @@ export default function NatalChartWithReadingScreen({ navigation, route }: Props
                         x={labelPos.x}
                         y={labelPos.y}
                         fontSize={String(svgSize * 0.024)}
-                        fontWeight="600"
-                        fill="#2C3E50"
+                        fontWeight="700"
+                        fill="#4A6FA5"
                         textAnchor="middle"
                     >
                         {degreeText}
@@ -255,7 +255,7 @@ export default function NatalChartWithReadingScreen({ navigation, route }: Props
                             y={pos.y + svgSize * 0.035}
                             fontSize={String(svgSize * 0.03)}
                             fontWeight="bold"
-                            fill="#000000"
+                            fill={planetColor}
                             textAnchor="middle"
                         >
                             R
@@ -302,9 +302,9 @@ export default function NatalChartWithReadingScreen({ navigation, route }: Props
                     key={`house-num-${i}`}
                     x={pos.x}
                     y={pos.y}
-                    fontSize={String(svgSize * 0.022)}
-                    fontWeight="600"
-                    fill="#4ECDC4"
+                    fontSize={String(svgSize * 0.024)}
+                    fontWeight="700"
+                    fill="#3DC7BD"
                     textAnchor="middle"
                 >
                     {houseNum}
@@ -460,18 +460,21 @@ export default function NatalChartWithReadingScreen({ navigation, route }: Props
                                 <View style={styles.chartContainer}>
                                     <Svg width={String(svgSize)} height={String(svgSize)} viewBox={`0 0 ${svgSize} ${svgSize}`}>
                                         {/* Outer circle */}
-                                        <Circle cx={cx} cy={cy} r={r_outer} fill="none" stroke="#000000" strokeWidth={String(svgSize * 0.004)} opacity="0.8" />
+                                        <Circle cx={cx} cy={cy} r={r_outer} fill="none" stroke="#444444" strokeWidth={String(svgSize * 0.005)} opacity="1" />
 
                                         {/* Zodiac band */}
-                                        <Circle cx={cx} cy={cy} r={r_sign_outer} fill="none" stroke="#000000" strokeWidth={String(svgSize * 0.003)} opacity="0.6" />
-                                        <Circle cx={cx} cy={cy} r={r_sign_inner} fill="none" stroke="#000000" strokeWidth={String(svgSize * 0.003)} opacity="0.6" />
+                                        <Circle cx={cx} cy={cy} r={r_sign_outer} fill="none" stroke="#555555" strokeWidth={String(svgSize * 0.004)} opacity="0.9" />
+                                        <Circle cx={cx} cy={cy} r={r_sign_inner} fill="none" stroke="#555555" strokeWidth={String(svgSize * 0.004)} opacity="0.9" />
+
+                                        {/* Golden Ecliptic Line — the Sun's path through the zodiac */}
+                                        <Circle cx={cx} cy={cy} r={(r_sign_outer + r_sign_inner) / 2} fill="none" stroke="#FFD700" strokeWidth={String(svgSize * 0.003)} opacity="0.5" strokeDasharray={`${svgSize * 0.015},${svgSize * 0.01}`} />
 
                                         {/* House circles */}
-                                        <Circle cx={cx} cy={cy} r={r_house_out} fill="none" stroke="#4ECDC4" strokeWidth={String(svgSize * 0.002)} opacity="0.4" />
-                                        <Circle cx={cx} cy={cy} r={r_house_in} fill="none" stroke="#4ECDC4" strokeWidth={String(svgSize * 0.002)} opacity="0.4" />
+                                        <Circle cx={cx} cy={cy} r={r_house_out} fill="none" stroke="#3DC7BD" strokeWidth={String(svgSize * 0.003)} opacity="0.85" />
+                                        <Circle cx={cx} cy={cy} r={r_house_in} fill="none" stroke="#3DC7BD" strokeWidth={String(svgSize * 0.003)} opacity="0.85" />
 
                                         {/* Inner circle */}
-                                        <Circle cx={cx} cy={cy} r={r_inner} fill="none" stroke="#000000" strokeWidth={String(svgSize * 0.003)} opacity="0.5" />
+                                        <Circle cx={cx} cy={cy} r={r_inner} fill="none" stroke="#444444" strokeWidth={String(svgSize * 0.004)} opacity="0.9" />
 
                                         {/* Zodiac boundaries */}
                                         {renderZodiacBoundaries()}
@@ -504,11 +507,11 @@ export default function NatalChartWithReadingScreen({ navigation, route }: Props
                                         <Circle cx={cx} cy={cy} r={svgSize * 0.04} fill="#1a6fc4" />
                                         {/* Continents */}
                                         <G clipPath="url(#earthClipNR)">
-                                            <Ellipse cx={cx - svgSize * 0.016} cy={cy - svgSize * 0.016} rx={svgSize * 0.016} ry={svgSize * 0.013} fill="#2e8b57" transform={`rotate(-20 ${cx - svgSize * 0.016} ${cy - svgSize * 0.016})`} />
-                                            <Ellipse cx={cx - svgSize * 0.01} cy={cy + svgSize * 0.016} rx={svgSize * 0.01} ry={svgSize * 0.016} fill="#2e8b57" transform={`rotate(10 ${cx - svgSize * 0.01} ${cy + svgSize * 0.016})`} />
-                                            <Ellipse cx={cx + svgSize * 0.016} cy={cy - svgSize * 0.006} rx={svgSize * 0.01} ry={svgSize * 0.013} fill="#2e8b57" transform={`rotate(5 ${cx + svgSize * 0.016} ${cy - svgSize * 0.006})`} />
-                                            <Ellipse cx={cx + svgSize * 0.016} cy={cy + svgSize * 0.016} rx={svgSize * 0.008} ry={svgSize * 0.013} fill="#2e8b57" />
-                                            <Ellipse cx={cx + svgSize * 0.03} cy={cy - svgSize * 0.016} rx={svgSize * 0.013} ry={svgSize * 0.01} fill="#2e8b57" transform={`rotate(-10 ${cx + svgSize * 0.03} ${cy - svgSize * 0.016})`} />
+                                            <Ellipse cx={cx - svgSize * 0.016} cy={cy - svgSize * 0.016} rx={svgSize * 0.016} ry={svgSize * 0.013} fill="#0000b3" transform={`rotate(-20 ${cx - svgSize * 0.016} ${cy - svgSize * 0.016})`} />
+                                            <Ellipse cx={cx - svgSize * 0.01} cy={cy + svgSize * 0.016} rx={svgSize * 0.01} ry={svgSize * 0.016} fill="#0000b3" transform={`rotate(10 ${cx - svgSize * 0.01} ${cy + svgSize * 0.016})`} />
+                                            <Ellipse cx={cx + svgSize * 0.016} cy={cy - svgSize * 0.006} rx={svgSize * 0.01} ry={svgSize * 0.013} fill="#0000b3" transform={`rotate(5 ${cx + svgSize * 0.016} ${cy - svgSize * 0.006})`} />
+                                            <Ellipse cx={cx + svgSize * 0.016} cy={cy + svgSize * 0.016} rx={svgSize * 0.008} ry={svgSize * 0.013} fill="#0000b3" />
+                                            <Ellipse cx={cx + svgSize * 0.03} cy={cy - svgSize * 0.016} rx={svgSize * 0.013} ry={svgSize * 0.01} fill="#0000b3" transform={`rotate(-10 ${cx + svgSize * 0.03} ${cy - svgSize * 0.016})`} />
                                         </G>
                                         {/* Atmosphere highlight */}
                                         <Circle cx={cx - svgSize * 0.01} cy={cy - svgSize * 0.01} r={svgSize * 0.033} fill="rgba(255,255,255,0.15)" />

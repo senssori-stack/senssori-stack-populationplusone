@@ -27,7 +27,7 @@ export default function YardSign({
     length = '',
     population = '0',
     photoUri,
-    backgroundColor = '#1a472a',
+    backgroundColor = '#000080',
 }: YardSignProps) {
     const { width } = useWindowDimensions();
 

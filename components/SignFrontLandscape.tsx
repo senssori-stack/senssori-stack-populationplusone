@@ -24,11 +24,17 @@ export default function SignFrontLandscape(props: Props) {
         previewScale = 0.2,
         photoUris = [],
         hometown = '',
-        population,
+        population: rawPopulation,
         personName = '',
         babyCount = 1,
         dobISO,
     } = props;
+
+    // ⚠️ DEFENSIVE: Coerce population to number — handles string, number, or undefined
+    const population = (rawPopulation != null && !isNaN(Number(rawPopulation)))
+        ? Number(rawPopulation)
+        : undefined;
+    console.log('🏠 SignFrontLandscape population prop:', rawPopulation, '→ coerced:', population);
 
     // Determine if date is before Jan 1, 2020 for EST./year labels
     const isPreYear2020 = (() => {
@@ -163,6 +169,7 @@ export default function SignFrontLandscape(props: Props) {
                             letterSpacing: 2,
                             textAlign: 'left',
                             zIndex: 10,
+                            transform: [{ rotate: '-15deg' }],
                         }]}>
                             EST.
                         </Text>
@@ -180,6 +187,7 @@ export default function SignFrontLandscape(props: Props) {
                             letterSpacing: 2,
                             textAlign: 'right',
                             zIndex: 10,
+                            transform: [{ rotate: '15deg' }],
                         }]}>
                             {displayYear}
                         </Text>
@@ -215,22 +223,22 @@ export default function SignFrontLandscape(props: Props) {
                     </Text>
 
                     {/* STABLE - LOCKED CENTER - PRIMARY RULE - ABSOLUTE POSITION */}
-                    {population !== undefined && (
-                        <View style={{
-                            position: 'absolute',
-                            top: stableTopPosition,
-                            left: 0,
-                            right: 0,
-                            alignItems: 'center',
-                            transform: [{ translateY: -welcomeToFontSize * 0.69 }]
-                        }}>
-                            <Text style={[styles.text, {
-                                fontSize: Math.round(welcomeToFontSize * 0.69),
-                                color: '#FFFFFF',
-                                transform: [{ scaleX: 1.3 }]
-                            }]}>
-                                POPULATION
-                            </Text>
+                    <View style={{
+                        position: 'absolute',
+                        top: stableTopPosition,
+                        left: 0,
+                        right: 0,
+                        alignItems: 'center',
+                        transform: [{ translateY: -welcomeToFontSize * 0.69 }]
+                    }}>
+                        <Text style={[styles.text, {
+                            fontSize: Math.round(welcomeToFontSize * 0.69),
+                            color: '#FFFFFF',
+                            transform: [{ scaleX: 1.3 }]
+                        }]}>
+                            POPULATION
+                        </Text>
+                        {population !== undefined && population !== null && (
                             <Text style={[styles.text, {
                                 fontSize: Math.round(welcomeToFontSize * 0.72),
                                 color: '#FFFFFF',
@@ -238,15 +246,15 @@ export default function SignFrontLandscape(props: Props) {
                             }]}>
                                 {population.toLocaleString()}
                             </Text>
-                            <Text style={[styles.text, {
-                                fontSize: Math.round(welcomeToFontSize * 0.75),
-                                color: '#FFFFFF',
-                                marginTop: Math.round(welcomeToFontSize * -0.14)
-                            }]}>
-                                {plusLabel}
-                            </Text>
-                        </View>
-                    )}
+                        )}
+                        <Text style={[styles.text, {
+                            fontSize: Math.round(welcomeToFontSize * 0.75),
+                            color: '#FFFFFF',
+                            marginTop: Math.round(welcomeToFontSize * -0.14)
+                        }]}>
+                            {plusLabel}
+                        </Text>
+                    </View>
 
                     {/* PERSON NAME - SECONDARY RULE: Centers between +1 bottom and photo top */}
                     <Text style={[styles.text, {

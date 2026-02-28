@@ -16,7 +16,7 @@ export default function SignFront({
     state,
     population = '0',
     photoUri,
-    backgroundColor = '#1a472a',
+    backgroundColor = '#000080',
 }: SignFrontProps) {
     const { width } = useWindowDimensions();
 

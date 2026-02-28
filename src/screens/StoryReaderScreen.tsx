@@ -152,7 +152,7 @@ export default function StoryReaderScreen() {
 
         return (
             <LinearGradient
-                colors={['#0f172a', '#1e1b4b', '#0f172a']}
+                colors={['#000060', '#1e1b4b', '#000060']}
                 style={styles.container}
             >
                 {/* Header bar */}
@@ -202,7 +202,7 @@ export default function StoryReaderScreen() {
                         <Ionicons
                             name={isReading ? 'stop-circle' : 'volume-high'}
                             size={20}
-                            color={isReading ? '#0f172a' : '#93c5fd'}
+                            color={isReading ? '#000060' : '#93c5fd'}
                         />
                         <Text
                             style={[
@@ -242,7 +242,7 @@ export default function StoryReaderScreen() {
                             onPress={goBack}
                             style={styles.finishBtn}
                         >
-                            <Ionicons name="book" size={20} color="#0f172a" />
+                            <Ionicons name="book" size={20} color="#000060" />
                             <Text style={styles.finishBtnText}>
                                 More Stories
                             </Text>
@@ -297,7 +297,7 @@ export default function StoryReaderScreen() {
 
     return (
         <LinearGradient
-            colors={['#0f172a', '#1e1b4b', '#0f172a']}
+            colors={['#000060', '#1e1b4b', '#000060']}
             style={styles.container}
         >
             {/* Header */}
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
         borderRadius: 24,
     },
     finishBtnText: {
-        color: '#0f172a',
+        color: '#000060',
         fontSize: 15,
         fontWeight: '700',
         marginLeft: 8,
@@ -499,6 +499,6 @@ const styles = StyleSheet.create({
         marginLeft: 8,
     },
     readAloudTextActive: {
-        color: '#0f172a',
+        color: '#000060',
     },
 });

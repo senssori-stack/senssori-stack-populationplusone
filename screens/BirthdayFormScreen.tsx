@@ -247,11 +247,26 @@ export default function BirthdayFormScreen({ navigation }: Props) {
 
         setLoading(true);
         const finalMessage = editableMessage + ' Here is some interesting information surrounding your birthday.';
+        const dobISO = `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`;
         try {
-            const pop = await getPopulationForCity(hometown.trim());
-            setPopulation(pop);
             // Format date as YYYY-MM-DD (required by historical snapshot lookup)
-            const dobISO = `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`;
+            // ⚠️ CRITICAL: Must pass DOB - routes to HISTORICAL CSV (before 2020) or CURRENT CSV (after 2020)
+            const pop = await getPopulationForCity(hometown.trim(), dobISO);
+            setPopulation(pop);
+
+            /**
+             * ⚠️ CRITICAL: CITY NOT FOUND - SHOW ERROR POPUP
+             * Do NOT navigate without population - user must correct the city
+             */
+            if (pop === null) {
+                Alert.alert(
+                    'City Not Found',
+                    'OUR RECORDS INDICATE THAT THIS CITY, ST DOES NOT EXIST, WAS NOT INCORPORATED AT THE DATE OF BIRTH OR THE SPELLING OF CITY, ST IS INCORRECT.',
+                    [{ text: 'OK' }]
+                );
+                setLoading(false);
+                return;
+            }
 
             navigation.navigate('Preview', {
                 theme: selectedColor,
@@ -262,21 +277,19 @@ export default function BirthdayFormScreen({ navigation }: Props) {
                 dobISO: dobISO,
                 mode: 'milestone',
                 message: finalMessage,
-                population: pop || undefined,
+                population: pop,
             });
         } catch (error) {
             console.error('Error fetching population:', error);
-            const dobISO = `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`;
-            navigation.navigate('Preview', {
-                theme: selectedColor,
-                personName: personName.trim(),
-                motherName: personName.trim(),
-                photoUris: photos.filter(p => p !== null) as string[],
-                hometown: hometown.trim(),
-                dobISO: dobISO,
-                mode: 'milestone',
-                message: finalMessage,
-            });
+            const err = error as Error;
+            const isNetworkError = err.message?.includes('fetch') || err.message?.includes('Network') || err.message?.includes('timeout');
+            Alert.alert(
+                isNetworkError ? 'Network Error' : 'City Not Found',
+                isNetworkError
+                    ? 'Unable to connect to population database. Please check your internet connection and try again.'
+                    : 'OUR RECORDS INDICATE THAT THIS CITY, ST DOES NOT EXIST, WAS NOT INCORPORATED AT THE DATE OF BIRTH OR THE SPELLING OF CITY, ST IS INCORRECT.',
+                [{ text: 'OK' }]
+            );
         } finally {
             setLoading(false);
         }

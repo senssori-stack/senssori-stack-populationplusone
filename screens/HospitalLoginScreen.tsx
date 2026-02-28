@@ -74,7 +74,7 @@ export default function HospitalLoginScreen({ navigation }: Props) {
     };
 
     return (
-        <LinearGradient colors={['#1a472a', '#2d6a3f', '#3d8b4f']} style={styles.container}>
+        <LinearGradient colors={['#000080', '#1a1a9e', '#1a1a9e']} style={styles.container}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardView}
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     cardTitle: {
         fontSize: 20,
         fontWeight: '800',
-        color: '#1a472a',
+        color: '#000080',
         marginBottom: 8,
         textAlign: 'center',
     },
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
     submitButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         borderRadius: 12,
         padding: 16,
         marginTop: 20,
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     hospitalName: {
         fontSize: 22,
         fontWeight: '700',
-        color: '#1a472a',
+        color: '#000080',
         textAlign: 'center',
     },
     hospitalLocation: {
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     createButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         borderRadius: 12,
         paddingVertical: 14,
         paddingHorizontal: 32,

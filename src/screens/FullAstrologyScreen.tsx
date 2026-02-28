@@ -424,149 +424,246 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                                 </Text>
                             </View>
                         )}
-                        <Svg width={svgSize} height={svgSize} viewBox="16 16 290 290">
-                            {/* Outer circle & sign ring */}
-                            <Circle cx={cx} cy={cy} r={r_outer} stroke="#fff" strokeWidth={2} fill="#000000" />
-                            <Circle cx={cx} cy={cy} r={r_sign} stroke="rgba(255,255,255,0.5)" strokeWidth={1} fill="none" />
-                            {/* Inner house ring */}
-                            <Circle cx={cx} cy={cy} r={r_house} stroke="rgba(255,255,255,0.2)" strokeWidth={1} fill="none" />
+                        <View style={styles.wheelRow}>
+                            {/* Zodiac signs sidebar — two stacks left of wheel */}
+                            <View style={styles.zodiacSidebar}>
+                                <Text style={styles.sidebarHeader}>Signs</Text>
+                                <View style={styles.zodiacSidebarCols}>
+                                    <View style={styles.zodiacSidebarCol}>
+                                        {[
+                                            { sym: '♈', label: 'ARI' },
+                                            { sym: '♉', label: 'TAU' },
+                                            { sym: '♊', label: 'GEM' },
+                                            { sym: '♋', label: 'CAN' },
+                                            { sym: '♌', label: 'LEO' },
+                                            { sym: '♍', label: 'VIR' },
+                                        ].map(item => (
+                                            <View key={item.label} style={styles.sidebarZodiacItem}>
+                                                <Text style={styles.sidebarSym}>{item.sym}</Text>
+                                                <Text style={styles.sidebarMiniLabel}>{item.label}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                    <View style={styles.zodiacSidebarCol}>
+                                        {[
+                                            { sym: '♎', label: 'LIB' },
+                                            { sym: '♏', label: 'SCO' },
+                                            { sym: '♐', label: 'SAG' },
+                                            { sym: '♑', label: 'CAP' },
+                                            { sym: '♒', label: 'AQU' },
+                                            { sym: '♓', label: 'PIS' },
+                                        ].map(item => (
+                                            <View key={item.label} style={styles.sidebarZodiacItem}>
+                                                <Text style={styles.sidebarSym}>{item.sym}</Text>
+                                                <Text style={styles.sidebarMiniLabel}>{item.label}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                </View>
+                            </View>
+                            <Svg width={svgSize} height={svgSize} viewBox="16 16 290 290">
+                                {/* Outer circle & sign ring */}
+                                <Circle cx={cx} cy={cy} r={r_outer} stroke="#fff" strokeWidth={2} fill="#000000" />
+                                <Circle cx={cx} cy={cy} r={r_sign} stroke="rgba(255,255,255,0.5)" strokeWidth={1} fill="none" />
+                                {/* Inner house ring */}
+                                <Circle cx={cx} cy={cy} r={r_house} stroke="rgba(255,255,255,0.2)" strokeWidth={1} fill="none" />
 
-                            {/* Zodiac sign dividers and symbols — ROTATED by chartRotation */}
-                            {zodiacSigns.map((sign, i) => {
-                                const eclipticAngle = i * 30; // 0°=Aries, 30°=Taurus...
-                                const chartAngle = eclipticAngle + chartRotation; // rotated
-                                const p1 = positionOnCircle(chartAngle, r_sign);
-                                const p2 = positionOnCircle(chartAngle, r_outer);
-                                const midAngle = chartAngle + 15;
-                                const labelPos = positionOnCircle(midAngle, (r_sign + r_outer) / 2);
+                                {/* Zodiac sign dividers and symbols — ROTATED by chartRotation */}
+                                {zodiacSigns.map((sign, i) => {
+                                    const eclipticAngle = i * 30; // 0°=Aries, 30°=Taurus...
+                                    const chartAngle = eclipticAngle + chartRotation; // rotated
+                                    const p1 = positionOnCircle(chartAngle, r_sign);
+                                    const p2 = positionOnCircle(chartAngle, r_outer);
+                                    const midAngle = chartAngle + 15;
+                                    const labelPos = positionOnCircle(midAngle, (r_sign + r_outer) / 2);
 
-                                return (
-                                    <G key={sign}>
-                                        <Line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
-                                        <Circle cx={labelPos.x} cy={labelPos.y} r={12} fill="#6A0DAD" opacity="0.85" />
-                                        <SvgText
-                                            x={labelPos.x}
-                                            y={labelPos.y}
-                                            fill={sign === sunSign ? '#ffff00' : '#ffffff'}
-                                            fontSize={20}
-                                            fontWeight="900"
-                                            textAnchor="middle"
-                                            alignmentBaseline="middle"
-                                            opacity="1"
-                                            stroke="#000"
-                                            strokeWidth={0.5}
-                                        >
-                                            {signSymbols[i]}
-                                        </SvgText>
-                                    </G>
-                                );
-                            })}
-
-                            {/* House cusp lines — from inner ring to sign ring */}
-                            {natalChart.houses && natalChart.houses.length >= 12 && natalChart.houses.map((cusp, i) => {
-                                const chartAngle = cusp + chartRotation;
-                                const inner = positionOnCircle(chartAngle, r_house);
-                                const outer = positionOnCircle(chartAngle, r_sign);
-                                // House number label between this cusp and next cusp
-                                const nextCusp = natalChart.houses[(i + 1) % 12];
-                                const midDeg = cusp + ((((nextCusp - cusp) % 360) + 360) % 360) / 2;
-                                const numPos = positionOnCircle(midDeg + chartRotation, (r_house + r_sign) / 2);
-                                const isAngularHouse = i === 0 || i === 3 || i === 6 || i === 9;
-                                return (
-                                    <G key={`house-${i}`}>
-                                        <Line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
-                                            stroke={isAngularHouse ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.2)'}
-                                            strokeWidth={isAngularHouse ? 1.5 : 0.8}
-                                            strokeDasharray={isAngularHouse ? undefined : '3,3'}
-                                        />
-                                        <SvgText
-                                            x={numPos.x} y={numPos.y}
-                                            fill="rgba(255,255,255,0.6)"
-                                            fontSize={10}
-                                            fontWeight="900"
-                                            textAnchor="middle"
-                                            alignmentBaseline="middle"
-                                            stroke="rgba(0,0,0,0.3)"
-                                            strokeWidth={0.3}
-                                        >
-                                            {i + 1}
-                                        </SvgText>
-                                    </G>
-                                );
-                            })}
-
-                            {/* Planet positions — ROTATED by chartRotation */}
-                            {natalChart.planets.slice(0, 10).map((planet, i) => {
-                                const pos = positionOnCircle(planet.longitude + chartRotation, r_planet);
-                                const symbol = planetSymbols[planet.name] || '●';
-                                return (
-                                    <SvgText
-                                        key={planet.name}
-                                        x={pos.x}
-                                        y={pos.y}
-                                        fill={planet.name === 'Sun' ? '#ffd54f' : planet.name === 'Moon' ? '#b0bec5' : '#fff'}
-                                        fontSize={18}
-                                        fontWeight="900"
-                                        textAnchor="middle"
-                                        alignmentBaseline="middle"
-                                        stroke="#000"
-                                        strokeWidth={0.5}
-                                    >
-                                        {symbol}
-                                    </SvgText>
-                                );
-                            })}
-
-                            {/* Center - Planet Earth */}
-                            <Defs>
-                                <ClipPath id="earthClipFA">
-                                    <Circle cx={cx} cy={cy} r={12} />
-                                </ClipPath>
-                            </Defs>
-                            <Circle cx={cx} cy={cy} r={12} fill="#1a6fc4" />
-                            <G clipPath="url(#earthClipFA)">
-                                <Ellipse cx={cx - 5} cy={cy - 5} rx={5} ry={4} fill="#2e8b57" transform={`rotate(-20 ${cx - 5} ${cy - 5})`} />
-                                <Ellipse cx={cx - 3} cy={cy + 5} rx={3} ry={5} fill="#2e8b57" transform={`rotate(10 ${cx - 3} ${cy + 5})`} />
-                                <Ellipse cx={cx + 5} cy={cy - 2} rx={3} ry={4} fill="#2e8b57" transform={`rotate(5 ${cx + 5} ${cy - 2})`} />
-                                <Ellipse cx={cx + 5} cy={cy + 5} rx={2.5} ry={4} fill="#2e8b57" />
-                                <Ellipse cx={cx + 9} cy={cy - 5} rx={4} ry={3} fill="#2e8b57" transform={`rotate(-10 ${cx + 9} ${cy - 5})`} />
-                            </G>
-                            <Circle cx={cx - 3} cy={cy - 3} r={10} fill="rgba(255,255,255,0.15)" />
-
-                            {/* Four Angles: ASC, DSC, MC, IC — ROTATED */}
-                            {(() => {
-                                const ascDeg = natalChart.ascendant || 0;
-                                const dscDeg = (ascDeg + 180) % 360;
-                                const mcDeg = natalChart.houses && natalChart.houses.length >= 10 ? natalChart.houses[9] : (ascDeg + 270) % 360;
-                                const icDeg = (mcDeg + 180) % 360;
-
-                                const angles = [
-                                    { label: 'ASC', deg: ascDeg, color: '#FFD700' },
-                                    { label: 'DSC', deg: dscDeg, color: '#FF6B6B' },
-                                    { label: 'MC', deg: mcDeg, color: '#4ECDC4' },
-                                    { label: 'IC', deg: icDeg, color: '#A78BFA' },
-                                ];
-
-                                return angles.map(({ label, deg, color }) => {
-                                    const rotatedDeg = deg + chartRotation;
-                                    const inner = positionOnCircle(rotatedDeg, r_house * 0.4);
-                                    const outer = positionOnCircle(rotatedDeg, r_outer);
-                                    const labelPos = positionOnCircle(rotatedDeg, r_outer + 14);
                                     return (
-                                        <G key={label}>
-                                            <Line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
-                                                stroke={color} strokeWidth={2} opacity="0.85" />
-                                            <SvgText x={labelPos.x} y={labelPos.y}
-                                                fontSize={11} fontWeight="900"
-                                                fill={color} textAnchor="middle" alignmentBaseline="middle"
-                                                stroke="#000" strokeWidth={0.4}>
-                                                {label}
+                                        <G key={sign}>
+                                            <Line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
+                                            <Circle cx={labelPos.x} cy={labelPos.y} r={12} fill="#6A0DAD" opacity="0.85" />
+                                            <SvgText
+                                                x={labelPos.x}
+                                                y={labelPos.y}
+                                                fill={sign === sunSign ? '#ffff00' : '#ffffff'}
+                                                fontSize={20}
+                                                fontWeight="900"
+                                                textAnchor="middle"
+                                                alignmentBaseline="middle"
+                                                opacity="1"
+                                                stroke="#000"
+                                                strokeWidth={0.5}
+                                            >
+                                                {signSymbols[i]}
                                             </SvgText>
                                         </G>
                                     );
-                                });
-                            })()}
-                        </Svg>
+                                })}
+
+                                {/* House cusp lines — from inner ring to sign ring */}
+                                {natalChart.houses && natalChart.houses.length >= 12 && natalChart.houses.map((cusp, i) => {
+                                    const chartAngle = cusp + chartRotation;
+                                    const inner = positionOnCircle(chartAngle, r_house);
+                                    const outer = positionOnCircle(chartAngle, r_sign);
+                                    // House number label between this cusp and next cusp
+                                    const nextCusp = natalChart.houses[(i + 1) % 12];
+                                    const midDeg = cusp + ((((nextCusp - cusp) % 360) + 360) % 360) / 2;
+                                    const numPos = positionOnCircle(midDeg + chartRotation, (r_house + r_sign) / 2);
+                                    const isAngularHouse = i === 0 || i === 3 || i === 6 || i === 9;
+                                    return (
+                                        <G key={`house-${i}`}>
+                                            <Line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
+                                                stroke={isAngularHouse ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.2)'}
+                                                strokeWidth={isAngularHouse ? 1.5 : 0.8}
+                                                strokeDasharray={isAngularHouse ? undefined : '3,3'}
+                                            />
+                                            <SvgText
+                                                x={numPos.x} y={numPos.y}
+                                                fill="rgba(255,255,255,0.6)"
+                                                fontSize={10}
+                                                fontWeight="900"
+                                                textAnchor="middle"
+                                                alignmentBaseline="middle"
+                                                stroke="rgba(0,0,0,0.3)"
+                                                strokeWidth={0.3}
+                                            >
+                                                {i + 1}
+                                            </SvgText>
+                                        </G>
+                                    );
+                                })}
+
+                                {/* Planet positions — ROTATED by chartRotation */}
+                                {natalChart.planets.slice(0, 10).map((planet, i) => {
+                                    const pos = positionOnCircle(planet.longitude + chartRotation, r_planet);
+                                    const symbol = planetSymbols[planet.name] || '●';
+                                    return (
+                                        <SvgText
+                                            key={planet.name}
+                                            x={pos.x}
+                                            y={pos.y}
+                                            fill={planet.name === 'Sun' ? '#ffd54f' : planet.name === 'Moon' ? '#b0bec5' : '#fff'}
+                                            fontSize={18}
+                                            fontWeight="900"
+                                            textAnchor="middle"
+                                            alignmentBaseline="middle"
+                                            stroke="#000"
+                                            strokeWidth={0.5}
+                                        >
+                                            {symbol}
+                                        </SvgText>
+                                    );
+                                })}
+
+                                {/* Center - Planet Earth */}
+                                <Defs>
+                                    <ClipPath id="earthClipFA">
+                                        <Circle cx={cx} cy={cy} r={12} />
+                                    </ClipPath>
+                                </Defs>
+                                <Circle cx={cx} cy={cy} r={12} fill="#1a6fc4" />
+                                <G clipPath="url(#earthClipFA)">
+                                    <Ellipse cx={cx - 5} cy={cy - 5} rx={5} ry={4} fill="#0000b3" transform={`rotate(-20 ${cx - 5} ${cy - 5})`} />
+                                    <Ellipse cx={cx - 3} cy={cy + 5} rx={3} ry={5} fill="#0000b3" transform={`rotate(10 ${cx - 3} ${cy + 5})`} />
+                                    <Ellipse cx={cx + 5} cy={cy - 2} rx={3} ry={4} fill="#0000b3" transform={`rotate(5 ${cx + 5} ${cy - 2})`} />
+                                    <Ellipse cx={cx + 5} cy={cy + 5} rx={2.5} ry={4} fill="#0000b3" />
+                                    <Ellipse cx={cx + 9} cy={cy - 5} rx={4} ry={3} fill="#0000b3" transform={`rotate(-10 ${cx + 9} ${cy - 5})`} />
+                                </G>
+                                <Circle cx={cx - 3} cy={cy - 3} r={10} fill="rgba(255,255,255,0.15)" />
+
+                                {/* Four Angles: ASC, DSC, MC, IC — ROTATED */}
+                                {(() => {
+                                    const ascDeg = natalChart.ascendant || 0;
+                                    const dscDeg = (ascDeg + 180) % 360;
+                                    const mcDeg = natalChart.houses && natalChart.houses.length >= 10 ? natalChart.houses[9] : (ascDeg + 270) % 360;
+                                    const icDeg = (mcDeg + 180) % 360;
+
+                                    const angles = [
+                                        { label: 'ASC', deg: ascDeg, color: '#FFD700' },
+                                        { label: 'DSC', deg: dscDeg, color: '#FF6B6B' },
+                                        { label: 'MC', deg: mcDeg, color: '#4ECDC4' },
+                                        { label: 'IC', deg: icDeg, color: '#A78BFA' },
+                                    ];
+
+                                    return angles.map(({ label, deg, color }) => {
+                                        const rotatedDeg = deg + chartRotation;
+                                        const inner = positionOnCircle(rotatedDeg, r_house * 0.4);
+                                        const outer = positionOnCircle(rotatedDeg, r_outer);
+                                        const labelPos = positionOnCircle(rotatedDeg, r_outer + 14);
+                                        return (
+                                            <G key={label}>
+                                                <Line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
+                                                    stroke={color} strokeWidth={2} opacity="0.85" />
+                                                <SvgText x={labelPos.x} y={labelPos.y}
+                                                    fontSize={11} fontWeight="900"
+                                                    fill={color} textAnchor="middle" alignmentBaseline="middle"
+                                                    stroke="#000" strokeWidth={0.4}>
+                                                    {label}
+                                                </SvgText>
+                                            </G>
+                                        );
+                                    });
+                                })()}
+                            </Svg>
+                            {/* Planets & points sidebar — right of wheel */}
+                            <View style={styles.planetSidebar}>
+                                <Text style={styles.sidebarHeader}>Planets</Text>
+                                <View style={styles.zodiacSidebarCols}>
+                                    <View style={styles.zodiacSidebarCol}>
+                                        {[
+                                            { sym: '☉', label: 'SUN' },
+                                            { sym: '☽', label: 'MON' },
+                                            { sym: '☿', label: 'MER' },
+                                            { sym: '♀', label: 'VEN' },
+                                            { sym: '♂', label: 'MAR' },
+                                        ].map(item => (
+                                            <View key={item.label} style={styles.sidebarPlanetItem}>
+                                                <Text style={styles.sidebarSym}>{item.sym}</Text>
+                                                <Text style={styles.sidebarMiniLabel}>{item.label}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                    <View style={styles.zodiacSidebarCol}>
+                                        {[
+                                            { sym: '♃', label: 'JUP' },
+                                            { sym: '♄', label: 'SAT' },
+                                            { sym: '♅', label: 'URA' },
+                                            { sym: '♆', label: 'NEP' },
+                                            { sym: '♇', label: 'PLU' },
+                                        ].map(item => (
+                                            <View key={item.label} style={styles.sidebarPlanetItem}>
+                                                <Text style={styles.sidebarSym}>{item.sym}</Text>
+                                                <Text style={styles.sidebarMiniLabel}>{item.label}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                </View>
+                                <Text style={[styles.sidebarHeader, { marginTop: 2 }]}>Points</Text>
+                                <View style={styles.zodiacSidebarCols}>
+                                    <View style={styles.zodiacSidebarCol}>
+                                        {[
+                                            { sym: '◉', label: 'ASC', color: '#FFD700' },
+                                            { sym: '◉', label: 'DSC', color: '#FF6B6B' },
+                                        ].map(item => (
+                                            <View key={item.label} style={styles.sidebarPlanetItem}>
+                                                <Text style={[styles.sidebarSym, { color: item.color }]}>{item.sym}</Text>
+                                                <Text style={styles.sidebarMiniLabel}>{item.label}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                    <View style={styles.zodiacSidebarCol}>
+                                        {[
+                                            { sym: '◉', label: 'MC', color: '#4ECDC4' },
+                                            { sym: '◉', label: 'IC', color: '#A78BFA' },
+                                        ].map(item => (
+                                            <View key={item.label} style={styles.sidebarPlanetItem}>
+                                                <Text style={[styles.sidebarSym, { color: item.color }]}>{item.sym}</Text>
+                                                <Text style={styles.sidebarMiniLabel}>{item.label}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
                     </View>
 
                     {/* Reset button — only show when date has been spun away */}
@@ -597,86 +694,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                         </Text>
                     </View>
 
-                    {/* Symbol Legend — Two-column layout */}
-                    <View style={styles.legendContainer}>
-                        <Text style={styles.legendTitle}>📖 Chart Symbol Guide</Text>
 
-                        <View style={styles.legendTwoColumn}>
-                            {/* LEFT COLUMN — Zodiac Signs */}
-                            <View style={styles.legendLeftCol}>
-                                <Text style={styles.legendSectionHeader}>Zodiac Signs</Text>
-                                {[
-                                    { sym: '♈', label: 'Aries' },
-                                    { sym: '♉', label: 'Taurus' },
-                                    { sym: '♊', label: 'Gemini' },
-                                    { sym: '♋', label: 'Cancer' },
-                                    { sym: '♌', label: 'Leo' },
-                                    { sym: '♍', label: 'Virgo' },
-                                    { sym: '♎', label: 'Libra' },
-                                    { sym: '♏', label: 'Scorpio' },
-                                    { sym: '♐', label: 'Sagittarius' },
-                                    { sym: '♑', label: 'Capricorn' },
-                                    { sym: '♒', label: 'Aquarius' },
-                                    { sym: '♓', label: 'Pisces' },
-                                ].map(item => (
-                                    <View key={item.label} style={styles.legendZodiacRow}>
-                                        <Text style={styles.legendZodiacSym}>{item.sym}</Text>
-                                        <Text style={styles.legendZodiacLabel}>{item.label}</Text>
-                                    </View>
-                                ))}
-                            </View>
-
-                            {/* RIGHT COLUMN — Planets, Cardinal Points, Other */}
-                            <View style={styles.legendRightCol}>
-                                <Text style={styles.legendSectionHeader}>Planets</Text>
-                                {[
-                                    { sym: '☉', label: 'Sun', desc: 'Core identity' },
-                                    { sym: '☽', label: 'Moon', desc: 'Emotions' },
-                                    { sym: '☿', label: 'Mercury', desc: 'Communication' },
-                                    { sym: '♀', label: 'Venus', desc: 'Love & beauty' },
-                                    { sym: '♂', label: 'Mars', desc: 'Drive & action' },
-                                    { sym: '♃', label: 'Jupiter', desc: 'Growth & luck' },
-                                    { sym: '♄', label: 'Saturn', desc: 'Discipline' },
-                                    { sym: '♅', label: 'Uranus', desc: 'Innovation' },
-                                    { sym: '♆', label: 'Neptune', desc: 'Dreams' },
-                                    { sym: '♇', label: 'Pluto', desc: 'Transformation' },
-                                ].map(item => (
-                                    <View key={item.label} style={styles.legendPlanetRow}>
-                                        <Text style={styles.legendSymbol}>{item.sym}</Text>
-                                        <View style={styles.legendTextWrap}>
-                                            <Text style={styles.legendLabel}>{item.label}</Text>
-                                            <Text style={styles.legendDesc}>{item.desc}</Text>
-                                        </View>
-                                    </View>
-                                ))}
-
-                                <Text style={[styles.legendSectionHeader, { marginTop: 10 }]}>Cardinal Points</Text>
-                                {[
-                                    { abbr: 'ASC', full: 'Ascendant', desc: 'Rising sign', color: '#FFD700' },
-                                    { abbr: 'DSC', full: 'Descendant', desc: 'Partnerships', color: '#FF6B6B' },
-                                    { abbr: 'MC', full: 'Midheaven', desc: 'Career & goals', color: '#4ECDC4' },
-                                    { abbr: 'IC', full: 'Imum Coeli', desc: 'Home & roots', color: '#A78BFA' },
-                                ].map(item => (
-                                    <View key={item.abbr} style={styles.legendCardinalRow}>
-                                        <View style={[styles.legendColorDot, { backgroundColor: item.color }]} />
-                                        <View style={styles.legendTextWrap}>
-                                            <Text style={styles.legendLabel}>{item.abbr} — {item.full}</Text>
-                                            <Text style={styles.legendDesc}>{item.desc}</Text>
-                                        </View>
-                                    </View>
-                                ))}
-
-                                <Text style={[styles.legendSectionHeader, { marginTop: 10 }]}>Other</Text>
-                                <View style={styles.legendPlanetRow}>
-                                    <Text style={styles.legendSymbol}>🌍</Text>
-                                    <View style={styles.legendTextWrap}>
-                                        <Text style={styles.legendLabel}>Earth (center)</Text>
-                                        <Text style={styles.legendDesc}>You — center of your chart</Text>
-                                    </View>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
                 </View>
 
                 {/* What is a Natal Chart - Educational Intro */}
@@ -748,7 +766,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
 
                     {/* Spin hint for solar system */}
                     <View style={styles.spinHint}>
-                        <Text style={styles.spinHintText}>👆 Spin this wheel too! Both wheels control the same date.</Text>
+                        <Text style={styles.spinHintText}>👆 Spin the wheel or use the slider below to travel through time!</Text>
                         <Text style={styles.spinHintDetail}>
                             Watch Mercury zip around while Neptune barely moves — that's real orbital mechanics!
                         </Text>
@@ -936,18 +954,18 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                                     ))}
 
                                     {/* Sun at center */}
-                                    <Circle cx={ssCx} cy={ssCy} r={14} fill="#FFA000" />
-                                    <Circle cx={ssCx} cy={ssCy} r={11} fill="#FFD54F" />
-                                    <Circle cx={ssCx} cy={ssCy} r={7} fill="#FFECB3" />
+                                    <Circle cx={ssCx} cy={ssCy} r={17.5} fill="#FFA000" />
+                                    <Circle cx={ssCx} cy={ssCy} r={14} fill="#FFD54F" />
+                                    <Circle cx={ssCx} cy={ssCy} r={9} fill="#FFECB3" />
                                     {/* Sun glow */}
-                                    <Circle cx={ssCx} cy={ssCy} r={20} fill="none" stroke="rgba(255,213,79,0.25)" strokeWidth={4} />
+                                    <Circle cx={ssCx} cy={ssCy} r={25} fill="none" stroke="rgba(255,213,79,0.25)" strokeWidth={5} />
 
                                     {/* Planets at their real positions */}
                                     {solarPlanets.map((p) => {
                                         const meanLong = ((p.L0 + p.rate * daysSinceJ2000) % 360 + 360) % 360;
                                         const orbitR = scaleR(p.au);
                                         const pos = ssPosOnCircle(meanLong, orbitR);
-                                        const dotR = p.name === 'Earth' ? 7 : (p.au < 2 ? 5 : (p.au < 10 ? 6 : 5));
+                                        const dotR = p.name === 'Earth' ? 9 : (p.au < 2 ? 6 : (p.au < 10 ? 8 : 6));
 
                                         return (
                                             <G key={`planet-${p.name}`}>
@@ -956,9 +974,9 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                                                 {/* Planet symbol */}
                                                 <SvgText
                                                     x={pos.x}
-                                                    y={pos.y + (dotR + 12)}
+                                                    y={pos.y + (dotR + 14)}
                                                     fill={p.color}
-                                                    fontSize={10}
+                                                    fontSize={13}
                                                     fontWeight="bold"
                                                     textAnchor="middle"
                                                     alignmentBaseline="middle"
@@ -976,9 +994,9 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                                         const dpPos = ssPosOnCircle(dpLong, dpR);
                                         return (
                                             <G key={`dwarf-${dp.name}`}>
-                                                <Circle cx={dpPos.x} cy={dpPos.y} r={3.5} fill={dp.color} opacity={0.85} />
-                                                <SvgText x={dpPos.x} y={dpPos.y + 11}
-                                                    fill={dp.color} fontSize={7} fontWeight="bold"
+                                                <Circle cx={dpPos.x} cy={dpPos.y} r={4.5} fill={dp.color} opacity={0.85} />
+                                                <SvgText x={dpPos.x} y={dpPos.y + 13}
+                                                    fill={dp.color} fontSize={9} fontWeight="bold"
                                                     textAnchor="middle" alignmentBaseline="middle" opacity={0.9}>
                                                     {dp.name}
                                                 </SvgText>
@@ -1068,7 +1086,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                                         const earthR = scaleR(1.0);
                                         const earthPos = ssPosOnCircle(earthLong, earthR);
                                         return (
-                                            <Circle cx={earthPos.x} cy={earthPos.y} r={9} fill="none" stroke="#4FC3F7" strokeWidth={1.5} />
+                                            <Circle cx={earthPos.x} cy={earthPos.y} r={11} fill="none" stroke="#4FC3F7" strokeWidth={1.5} />
                                         );
                                     })()}
                                 </Svg>
@@ -1082,6 +1100,106 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                             </View>
                         );
                     })()}
+
+                    {/* Time Travel Slider */}
+                    <View style={styles.timeSliderContainer}>
+                        <Text style={styles.timeSliderTitle}>⏳ Time Travel</Text>
+                        <View style={styles.timeSliderRow}>
+                            <TouchableOpacity
+                                style={styles.timeSliderBtn}
+                                onPress={() => {
+                                    const newOffset = dayOffset - 365;
+                                    setDayOffset(newOffset);
+                                    dayOffsetRef.current = newOffset;
+                                    const newDate = new Date(originalBirthDate);
+                                    newDate.setDate(newDate.getDate() + newOffset);
+                                    setBirthDate(newDate);
+                                }}
+                            >
+                                <Text style={styles.timeSliderBtnText}>−1Y</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.timeSliderBtn}
+                                onPress={() => {
+                                    const newOffset = dayOffset - 30;
+                                    setDayOffset(newOffset);
+                                    dayOffsetRef.current = newOffset;
+                                    const newDate = new Date(originalBirthDate);
+                                    newDate.setDate(newDate.getDate() + newOffset);
+                                    setBirthDate(newDate);
+                                }}
+                            >
+                                <Text style={styles.timeSliderBtnText}>−1M</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.timeSliderBtn}
+                                onPress={() => {
+                                    const newOffset = dayOffset - 1;
+                                    setDayOffset(newOffset);
+                                    dayOffsetRef.current = newOffset;
+                                    const newDate = new Date(originalBirthDate);
+                                    newDate.setDate(newDate.getDate() + newOffset);
+                                    setBirthDate(newDate);
+                                }}
+                            >
+                                <Text style={styles.timeSliderBtnText}>◀ Day</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.timeSliderBtn, styles.timeSliderResetBtn]}
+                                onPress={() => {
+                                    setDayOffset(0);
+                                    dayOffsetRef.current = 0;
+                                    setBirthDate(new Date(originalBirthDate));
+                                }}
+                            >
+                                <Text style={[styles.timeSliderBtnText, { color: '#FFD54F' }]}>⟲</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.timeSliderBtn}
+                                onPress={() => {
+                                    const newOffset = dayOffset + 1;
+                                    setDayOffset(newOffset);
+                                    dayOffsetRef.current = newOffset;
+                                    const newDate = new Date(originalBirthDate);
+                                    newDate.setDate(newDate.getDate() + newOffset);
+                                    setBirthDate(newDate);
+                                }}
+                            >
+                                <Text style={styles.timeSliderBtnText}>Day ▶</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.timeSliderBtn}
+                                onPress={() => {
+                                    const newOffset = dayOffset + 30;
+                                    setDayOffset(newOffset);
+                                    dayOffsetRef.current = newOffset;
+                                    const newDate = new Date(originalBirthDate);
+                                    newDate.setDate(newDate.getDate() + newOffset);
+                                    setBirthDate(newDate);
+                                }}
+                            >
+                                <Text style={styles.timeSliderBtnText}>+1M</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.timeSliderBtn}
+                                onPress={() => {
+                                    const newOffset = dayOffset + 365;
+                                    setDayOffset(newOffset);
+                                    dayOffsetRef.current = newOffset;
+                                    const newDate = new Date(originalBirthDate);
+                                    newDate.setDate(newDate.getDate() + newOffset);
+                                    setBirthDate(newDate);
+                                }}
+                            >
+                                <Text style={styles.timeSliderBtnText}>+1Y</Text>
+                            </TouchableOpacity>
+                        </View>
+                        {dayOffset !== 0 && (
+                            <Text style={styles.timeSliderOffset}>
+                                {dayOffset > 0 ? '+' : ''}{dayOffset} day{Math.abs(dayOffset) !== 1 ? 's' : ''} from birth
+                            </Text>
+                        )}
+                    </View>
 
                     {/* Solar System Key — Planets */}
                     <Text style={styles.solarKeySectionHeader}>🪐 Planets</Text>
@@ -1834,11 +1952,91 @@ const styles = StyleSheet.create({
     chartWrapper: {
         backgroundColor: '#1a237e',
         borderRadius: 16,
-        padding: 16,
+        paddingHorizontal: 10,
+        paddingVertical: 24,
         alignItems: 'center',
         borderWidth: 4,
         borderColor: '#FFFFFF',
         position: 'relative',
+    },
+    wheelRow: {
+        flexDirection: 'row',
+        alignItems: 'stretch',
+    },
+    zodiacSidebar: {
+        flex: 1,
+        marginRight: 2,
+        overflow: 'visible',
+    },
+    planetSidebar: {
+        flex: 1,
+        marginLeft: 2,
+        overflow: 'visible',
+    },
+    planetSidebarRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 1,
+        paddingHorizontal: 3,
+        backgroundColor: 'rgba(255,255,255,0.08)',
+        borderRadius: 4,
+        marginBottom: 1.5,
+    },
+    zodiacSidebarCols: {
+        flexDirection: 'row',
+        flex: 1,
+        gap: 1,
+        overflow: 'visible',
+    },
+    zodiacSidebarCol: {
+        flex: 1,
+        justifyContent: 'space-evenly',
+        alignItems: 'center',
+        overflow: 'visible',
+    },
+    sidebarHeader: {
+        fontSize: 10,
+        fontWeight: '700',
+        color: '#ffd54f',
+        textAlign: 'center',
+        textTransform: 'uppercase',
+        letterSpacing: 0.4,
+        marginBottom: 2,
+    },
+    sidebarZodiacItem: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 1,
+        backgroundColor: 'rgba(106,13,173,0.35)',
+        borderRadius: 4,
+        overflow: 'visible',
+    },
+    sidebarPlanetItem: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 1,
+        backgroundColor: 'rgba(255,255,255,0.08)',
+        borderRadius: 4,
+        overflow: 'visible',
+    },
+    sidebarSym: {
+        fontSize: 14,
+        color: '#fff',
+        textAlign: 'center',
+        includeFontPadding: false,
+    },
+    sidebarMiniLabel: {
+        fontSize: 7,
+        fontWeight: '700',
+        color: 'rgba(255,255,255,0.85)',
+        textAlign: 'center',
+        includeFontPadding: false,
+    },
+    sidebarMiniLabel: {
+        fontSize: 8,
+        fontWeight: '700',
+        color: 'rgba(255,255,255,0.85)',
+        textAlign: 'center',
     },
     spinHint: {
         backgroundColor: 'rgba(255,255,255,0.12)',
@@ -2060,6 +2258,53 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '600' as const,
         color: '#FFD54F',
+    },
+    timeSliderContainer: {
+        marginTop: 12,
+        marginBottom: 8,
+        paddingHorizontal: 8,
+        paddingVertical: 10,
+        backgroundColor: 'rgba(255,255,255,0.06)',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+    },
+    timeSliderTitle: {
+        fontSize: 14,
+        fontWeight: '700' as const,
+        color: '#FFD54F',
+        textAlign: 'center' as const,
+        marginBottom: 8,
+    },
+    timeSliderRow: {
+        flexDirection: 'row' as const,
+        justifyContent: 'center' as const,
+        alignItems: 'center' as const,
+        gap: 6,
+    },
+    timeSliderBtn: {
+        backgroundColor: 'rgba(255,255,255,0.12)',
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        minWidth: 38,
+        alignItems: 'center' as const,
+    },
+    timeSliderResetBtn: {
+        backgroundColor: 'rgba(255,213,79,0.2)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,213,79,0.4)',
+    },
+    timeSliderBtnText: {
+        fontSize: 12,
+        fontWeight: '700' as const,
+        color: '#fff',
+    },
+    timeSliderOffset: {
+        fontSize: 12,
+        color: 'rgba(255,255,255,0.6)',
+        textAlign: 'center' as const,
+        marginTop: 6,
     },
     solarKeyGrid: {
         flexDirection: 'row' as const,

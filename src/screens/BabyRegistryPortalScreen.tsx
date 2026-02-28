@@ -122,7 +122,7 @@ export default function BabyRegistryPortalScreen({ navigation }: Props) {
     };
 
     return (
-        <LinearGradient colors={['#1a472a', '#2d6a3f', '#1a472a']} style={styles.container}>
+        <LinearGradient colors={['#000080', '#1a1a9e', '#000080']} style={styles.container}>
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}

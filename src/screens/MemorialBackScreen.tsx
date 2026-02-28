@@ -33,7 +33,7 @@ const THEMES = {
         border: '#bdc3c7',
     },
     nature: {
-        gradient: ['#1e3a29', '#2d5016', '#1e3a29'],
+        gradient: ['#1e3a29', '#000080', '#1e3a29'],
         accent: '#8fbc8f',
         text: '#ffffff',
         border: '#8fbc8f',

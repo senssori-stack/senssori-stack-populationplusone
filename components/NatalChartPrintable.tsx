@@ -218,8 +218,11 @@ export default function NatalChartPrintable(props: Props) {
                             <View style={[styles.chartWrapper, { backgroundColor: 'transparent', borderRadius: svgSize * 0.05, marginTop: -displayHeight * 0.03 }]}>
                                 <Svg width={svgSize} height={svgSize}>
                                     {/* Outer circle */}
-                                    <Circle cx={cx} cy={cy} r={r_outer} stroke="#fff" strokeWidth={2} fill="#000000" />
-                                    <Circle cx={cx} cy={cy} r={r_sign} stroke="rgba(255,255,255,0.3)" strokeWidth={1} fill="#000000" />
+                                    <Circle cx={cx} cy={cy} r={r_outer} stroke="#fff" strokeWidth={3} fill="#000000" />
+                                    <Circle cx={cx} cy={cy} r={r_sign} stroke="rgba(255,255,255,0.7)" strokeWidth={2} fill="#000000" />
+
+                                    {/* Golden Ecliptic Line — the Sun's path through the zodiac */}
+                                    <Circle cx={cx} cy={cy} r={(r_sign + r_outer) / 2} fill="none" stroke="#FFD700" strokeWidth={2} opacity="0.45" strokeDasharray="8,6" />
 
                                     {/* Zodiac sign dividers and symbols */}
                                     {zodiacSigns.map((sign, i) => {
@@ -231,12 +234,12 @@ export default function NatalChartPrintable(props: Props) {
 
                                         return (
                                             <G key={sign}>
-                                                <Line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
+                                                <Line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="rgba(255,255,255,0.7)" strokeWidth={1.5} />
                                                 <SvgText
                                                     x={labelPos.x}
                                                     y={labelPos.y}
-                                                    fill={sign === sunSign ? '#ffea00' : '#00ffff'}
-                                                    fontSize={svgSize * 0.055}
+                                                    fill={sign === sunSign ? '#FFEE58' : '#40E0D0'}
+                                                    fontSize={svgSize * 0.06}
                                                     fontWeight="bold"
                                                     textAnchor="middle"
                                                     alignmentBaseline="middle"
@@ -256,8 +259,8 @@ export default function NatalChartPrintable(props: Props) {
                                                 key={planet.name}
                                                 x={pos.x}
                                                 y={pos.y}
-                                                fill={planet.name === 'Sun' ? '#ffd54f' : planet.name === 'Moon' ? '#b0bec5' : '#fff'}
-                                                fontSize={svgSize * 0.055}
+                                                fill={planet.name === 'Sun' ? '#FFE082' : planet.name === 'Moon' ? '#E0E5F0' : '#FFFFFF'}
+                                                fontSize={svgSize * 0.06}
                                                 fontWeight="bold"
                                                 textAnchor="middle"
                                                 alignmentBaseline="middle"
@@ -278,14 +281,14 @@ export default function NatalChartPrintable(props: Props) {
                                     {/* Continents - simplified landmasses */}
                                     <G clipPath="url(#earthClip)">
                                         {/* North America */}
-                                        <Ellipse cx={cx - 5} cy={cy - 5} rx={5} ry={4} fill="#2e8b57" transform={`rotate(-20 ${cx - 5} ${cy - 5})`} />
+                                        <Ellipse cx={cx - 5} cy={cy - 5} rx={5} ry={4} fill="#0000b3" transform={`rotate(-20 ${cx - 5} ${cy - 5})`} />
                                         {/* South America */}
-                                        <Ellipse cx={cx - 3} cy={cy + 5} rx={3} ry={5} fill="#2e8b57" transform={`rotate(10 ${cx - 3} ${cy + 5})`} />
+                                        <Ellipse cx={cx - 3} cy={cy + 5} rx={3} ry={5} fill="#0000b3" transform={`rotate(10 ${cx - 3} ${cy + 5})`} />
                                         {/* Europe/Africa */}
-                                        <Ellipse cx={cx + 5} cy={cy - 2} rx={3} ry={4} fill="#2e8b57" transform={`rotate(5 ${cx + 5} ${cy - 2})`} />
-                                        <Ellipse cx={cx + 5} cy={cy + 5} rx={2.5} ry={4} fill="#2e8b57" />
+                                        <Ellipse cx={cx + 5} cy={cy - 2} rx={3} ry={4} fill="#0000b3" transform={`rotate(5 ${cx + 5} ${cy - 2})`} />
+                                        <Ellipse cx={cx + 5} cy={cy + 5} rx={2.5} ry={4} fill="#0000b3" />
                                         {/* Asia */}
-                                        <Ellipse cx={cx + 9} cy={cy - 5} rx={4} ry={3} fill="#2e8b57" transform={`rotate(-10 ${cx + 9} ${cy - 5})`} />
+                                        <Ellipse cx={cx + 9} cy={cy - 5} rx={4} ry={3} fill="#0000b3" transform={`rotate(-10 ${cx + 9} ${cy - 5})`} />
                                     </G>
                                     {/* Atmosphere highlight */}
                                     <Circle cx={cx - 3} cy={cy - 3} r={10} fill="rgba(255,255,255,0.15)" />
@@ -311,7 +314,7 @@ export default function NatalChartPrintable(props: Props) {
                                             return (
                                                 <G key={label}>
                                                     <Line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
-                                                        stroke={color} strokeWidth={1.5} opacity="0.7" />
+                                                        stroke={color} strokeWidth={2.5} opacity="0.95" />
                                                     <SvgText x={labelPos.x} y={labelPos.y}
                                                         fontSize={svgSize * 0.03} fontWeight="bold"
                                                         fill={color} textAnchor="middle" alignmentBaseline="middle">

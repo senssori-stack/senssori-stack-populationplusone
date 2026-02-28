@@ -27,7 +27,7 @@ const FEATURES = [
         subtitle: 'Track developmental milestones by age',
         emoji: '📊',
         route: 'MilestoneTracker' as const,
-        color: '#0d1b2a',
+        color: '#000060',
     },
     {
         title: 'Baby Growth Chart',
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 16,
         marginTop: 24,
         padding: 16,
-        backgroundColor: '#0f172a',
+        backgroundColor: '#000060',
         borderRadius: 12,
         borderWidth: 1,
         borderColor: '#1e293b',

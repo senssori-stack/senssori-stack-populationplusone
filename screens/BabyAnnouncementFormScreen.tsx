@@ -14,7 +14,7 @@ import {
 
 const COLORS = [
     '#0066CC', '#0080FF', '#0099FF', '#00CCFF', '#00FFFF',
-    '#1a472a', '#2d5a3d', '#3d7a4f', '#4CAF50', '#90EE90',
+    '#000080', '#2d5a3d', '#3d7a4f', '#4CAF50', '#90EE90',
     '#FF1493', '#FF69B4', '#FFB6C1', '#DDA0DD', '#EE82EE',
     '#FF6B6B', '#FF0000', '#8B0000', '#FFA500', '#FFD700',
     '#2F4F4F', '#404040', '#696969', '#808080', '#A9A9A9',
@@ -41,7 +41,7 @@ export default function BabyAnnouncementFormScreen() {
     const [weightLb, setWeightLb] = useState('7');
     const [weightOz, setWeightOz] = useState('4');
     const [lengthIn, setLengthIn] = useState('20');
-    const [selectedColor, setSelectedColor] = useState('#1a472a');
+    const [selectedColor, setSelectedColor] = useState('#000080');
     const frontOrientation = 'landscape'; // Only landscape supported
     const [loading, setLoading] = useState(false);
 

@@ -301,10 +301,10 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
                                                         <View style={styles.signBorder}>
                                                             {/* EST./Year labels for pre-2020 */}
                                                             {isPreYear2020 && (
-                                                                <Text style={{ position: 'absolute', top: 6, left: 8, color: '#fff', fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1 }}>EST.</Text>
+                                                                <Text style={{ position: 'absolute', top: 6, left: 8, color: '#fff', fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1, transform: [{ rotate: '-15deg' }] }}>EST.</Text>
                                                             )}
                                                             {isPreYear2020 && displayYear && (
-                                                                <Text style={{ position: 'absolute', top: 6, right: 8, color: '#fff', fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1 }}>{displayYear}</Text>
+                                                                <Text style={{ position: 'absolute', top: 6, right: 8, color: '#fff', fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1, transform: [{ rotate: '15deg' }] }}>{displayYear}</Text>
                                                             )}
                                                             <View style={{ marginTop: -15, alignItems: 'center' }}>
                                                                 <Text style={[styles.plusOne, { fontSize: signWidth * 0.28, marginBottom: -10, textAlign: 'center' }]}>
@@ -339,10 +339,10 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
                                                         <View style={styles.signBorder}>
                                                             {/* EST./Year labels for pre-2020 */}
                                                             {isPreYear2020 && (
-                                                                <Text style={{ position: 'absolute', top: 6, left: 8, color: '#fff', fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1 }}>EST.</Text>
+                                                                <Text style={{ position: 'absolute', top: 6, left: 8, color: '#fff', fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1, transform: [{ rotate: '-15deg' }] }}>EST.</Text>
                                                             )}
                                                             {isPreYear2020 && displayYear && (
-                                                                <Text style={{ position: 'absolute', top: 6, right: 8, color: '#fff', fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1 }}>{displayYear}</Text>
+                                                                <Text style={{ position: 'absolute', top: 6, right: 8, color: '#fff', fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1, transform: [{ rotate: '15deg' }] }}>{displayYear}</Text>
                                                             )}
                                                             <Text style={[styles.plusOne, { fontSize: signWidth * 0.28, marginBottom: 4 }]}>
                                                                 {plusLabel}
@@ -380,10 +380,10 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
                                                         <View style={[styles.signBorder, { borderColor: colors.bg }]}>
                                                             {/* EST./Year labels for pre-2020 */}
                                                             {isPreYear2020 && (
-                                                                <Text style={{ position: 'absolute', top: 6, left: 8, color: colors.bg, fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1 }}>EST.</Text>
+                                                                <Text style={{ position: 'absolute', top: 6, left: 8, color: colors.bg, fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1, transform: [{ rotate: '-15deg' }] }}>EST.</Text>
                                                             )}
                                                             {isPreYear2020 && displayYear && (
-                                                                <Text style={{ position: 'absolute', top: 6, right: 8, color: colors.bg, fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1 }}>{displayYear}</Text>
+                                                                <Text style={{ position: 'absolute', top: 6, right: 8, color: colors.bg, fontWeight: '900', fontSize: signWidth * 0.045, letterSpacing: 1, transform: [{ rotate: '15deg' }] }}>{displayYear}</Text>
                                                             )}
                                                             <Text style={[styles.plusOneOutline, { fontSize: signWidth * 0.28, color: colors.bg, marginBottom: 4 }]}>
                                                                 {plusLabel}
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#1a472a',
+        color: '#000080',
         marginBottom: 8,
     },
     subtitle: {
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     downloadButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         paddingVertical: 14,
         paddingHorizontal: 24,
         borderRadius: 12,
@@ -675,7 +675,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     addToCartButton: {
-        backgroundColor: '#2e8b57',
+        backgroundColor: '#0000b3',
         paddingVertical: 14,
         paddingHorizontal: 24,
         borderRadius: 12,
@@ -684,7 +684,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     addToCartButtonHalf: {
-        backgroundColor: '#2e8b57',
+        backgroundColor: '#0000b3',
         paddingVertical: 12,
         paddingHorizontal: 16,
         borderRadius: 10,
@@ -723,7 +723,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     orderButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         paddingVertical: 14,
         paddingHorizontal: 24,
         borderRadius: 12,

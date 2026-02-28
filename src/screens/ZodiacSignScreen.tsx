@@ -344,9 +344,9 @@ export default function ZodiacSignScreen({ navigation, route }: Props) {
                 {/* Strengths & Weaknesses */}
                 <View style={styles.strengthsRow}>
                     <View style={[styles.halfSection, { backgroundColor: 'rgba(232, 245, 233, 0.95)' }]}>
-                        <Text style={[styles.sectionTitle, { color: '#1b5e20' }]}>💪 Strengths</Text>
+                        <Text style={[styles.sectionTitle, { color: '#000080' }]}>💪 Strengths</Text>
                         {zodiac.strengths.map((s, i) => (
-                            <Text key={i} style={[styles.listItem, { color: '#1b5e20' }]}>• {s}</Text>
+                            <Text key={i} style={[styles.listItem, { color: '#000080' }]}>• {s}</Text>
                         ))}
                     </View>
                     <View style={[styles.halfSection, { backgroundColor: 'rgba(255, 235, 238, 0.95)' }]}>

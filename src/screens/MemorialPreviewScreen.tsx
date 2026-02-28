@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     shareButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         borderRadius: 12,
         paddingVertical: 14,
         paddingHorizontal: 24,
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
         color: '#ffffff',
     },
     editButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         borderRadius: 12,
         paddingVertical: 14,
         paddingHorizontal: 24,

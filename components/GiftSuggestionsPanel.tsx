@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     giftPrice: {
         fontSize: 13,
         fontWeight: '700',
-        color: '#1a472a',
+        color: '#000080',
     },
     giftArrow: {
         fontSize: 24,
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     },
     compactPrice: {
         fontSize: 10,
-        color: '#1a472a',
+        color: '#000080',
         fontWeight: '700',
         marginTop: 4,
     },

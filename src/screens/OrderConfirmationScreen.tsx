@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 20,
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 28,
         fontWeight: '700',
-        color: '#1a472a',
+        color: '#000080',
         marginBottom: 8,
     },
     subtitle: {
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     totalValue: {
-        color: '#1a472a',
+        color: '#000080',
         fontSize: 16,
     },
     emailValue: {
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
         height: 28,
         borderRadius: 14,
         backgroundColor: '#e8f5e9',
-        color: '#1a472a',
+        color: '#000080',
         fontSize: 14,
         fontWeight: '700',
         textAlign: 'center',
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     primaryButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: 'center',
@@ -311,10 +311,10 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         alignItems: 'center',
         borderWidth: 2,
-        borderColor: '#1a472a',
+        borderColor: '#000080',
     },
     secondaryButtonText: {
-        color: '#1a472a',
+        color: '#000080',
         fontSize: 16,
         fontWeight: '600',
     },

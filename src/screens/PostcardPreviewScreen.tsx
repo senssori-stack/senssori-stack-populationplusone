@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 26,
         fontWeight: 'bold',
-        color: '#1a472a',
+        color: '#000080',
         marginBottom: 8,
     },
     subtitle: {
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
         color: '#bbb',
     },
     downloadButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         paddingVertical: 14,
         paddingHorizontal: 24,
         borderRadius: 12,
@@ -571,7 +571,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     addToCartButton: {
-        backgroundColor: '#2e8b57',
+        backgroundColor: '#0000b3',
         paddingVertical: 14,
         paddingHorizontal: 24,
         borderRadius: 12,
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
     orderButton: {
-        backgroundColor: '#1a472a',
+        backgroundColor: '#000080',
         paddingVertical: 14,
         paddingHorizontal: 24,
         borderRadius: 12,

@@ -254,9 +254,10 @@ export default function GraduationFormScreen({ navigation }: Props) {
         setLoading(true);
         const finalMessage = editableMessage + ' Here is some interesting information surrounding your graduation.';
         // Format DOB as YYYY-MM-DD — THEN data is based on date of birth
+        // ⚠️ CRITICAL: Must pass DOB - routes to HISTORICAL CSV (before 2020) or CURRENT CSV (after 2020)
         const dobISO = `${birthDate.getFullYear()}-${String(birthDate.getMonth() + 1).padStart(2, '0')}-${String(birthDate.getDate()).padStart(2, '0')}`;
         try {
-            const pop = await getPopulationForCity(hometown.trim());
+            const pop = await getPopulationForCity(hometown.trim(), dobISO);
             setPopulation(pop);
 
             navigation.navigate('Preview', {

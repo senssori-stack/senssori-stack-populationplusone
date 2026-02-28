@@ -368,7 +368,7 @@ export default function PhonicsScreen() {
                         'Let\'s try again — you\'ll get it!';
 
         return (
-            <LinearGradient colors={['#0f172a', '#1e1b4b', '#0f172a']} style={styles.container}>
+            <LinearGradient colors={['#000060', '#1e1b4b', '#000060']} style={styles.container}>
                 <View style={styles.completeContainer}>
                     <Text style={styles.completeEmoji}>
                         {stars >= 3 ? '🏆' : stars >= 2 ? '⭐' : stars >= 1 ? '👏' : '💪'}
@@ -426,7 +426,7 @@ export default function PhonicsScreen() {
         const progress = (questionIndex + 1) / currentLevel.questions.length;
 
         return (
-            <LinearGradient colors={['#0f172a', '#1e1b4b', '#0f172a']} style={styles.container}>
+            <LinearGradient colors={['#000060', '#1e1b4b', '#000060']} style={styles.container}>
                 {/* Header */}
                 <View style={styles.quizHeader}>
                     <TouchableOpacity onPress={goBack} style={styles.quizBackBtn}>
@@ -542,7 +542,7 @@ export default function PhonicsScreen() {
     }, 0);
 
     return (
-        <LinearGradient colors={['#0f172a', '#1e1b4b', '#0f172a']} style={styles.container}>
+        <LinearGradient colors={['#000060', '#1e1b4b', '#000060']} style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 {/* Header */}
                 <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
 
     // ── Footer ──
     footerNote: {
-        margin: 16, padding: 16, backgroundColor: '#0f172a', borderRadius: 12,
+        margin: 16, padding: 16, backgroundColor: '#000060', borderRadius: 12,
         borderWidth: 1, borderColor: '#1e293b',
     },
     footerNoteTitle: { color: '#fbbf24', fontSize: 14, fontWeight: '700', marginBottom: 6 },
@@ -746,7 +746,7 @@ const styles = StyleSheet.create({
 
     // ── Explanation ──
     explanationBox: {
-        flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#0f172a',
+        flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#000060',
         borderRadius: 12, padding: 14, marginTop: 4, marginBottom: 8,
         borderWidth: 1, borderColor: '#334155', borderLeftWidth: 4,
     },
