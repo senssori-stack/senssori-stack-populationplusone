@@ -313,7 +313,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
         motherName: params.motherName || '',
         fatherName: params.fatherName || '',
         hometown: params.hometown || '',
-        dobDate: params.dobISO ? new Date(params.dobISO) : new Date(),
+        dobDate: params.dobISO ? new Date(params.dobISO + 'T00:00:00') : new Date(),
         weightLb: params.weightLb || '',
         weightOz: params.weightOz || '',
         lengthIn: params.lengthIn || '',

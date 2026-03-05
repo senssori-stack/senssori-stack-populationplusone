@@ -103,7 +103,7 @@ export default function NatalChartPrintable(props: Props) {
     const displayHeight = LANDSCAPE_HEIGHT * previewScale;
 
     // Parse birth date
-    const birthDate = new Date(dobISO);
+    const birthDate = new Date(dobISO + 'T00:00:00');
     const formattedDate = birthDate.toLocaleDateString(undefined, {
         weekday: 'long',
         year: 'numeric',

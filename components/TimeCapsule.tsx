@@ -95,7 +95,10 @@ export default function TimeCapsule({
                         {/* Footer */}
                         <Text style={[styles.footer, { fontSize: messageSize * 0.8 }]}>
                             *City population reflects current estimate; historical Census data not available for this year.
-                            SOURCES: bls.gov, eia.gov, fred.stlouisfed.org, census.gov, archives.gov, billboard.com, wikipedia.org
+                            SOURCES: bls.gov, eia.gov, metalpriceapi.com, alphavantage.co, census.gov, last.fm, boxofficemojo.com, espn.com, usa.gov
+                        </Text>
+                        <Text style={[styles.footer, { fontSize: messageSize * 0.8, textAlign: 'center' }]}>
+                            www.populationplusone.com
                         </Text>
                     </ScrollView>
                 </View>

@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, useWindowDimensions } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../types';
-import { calculateNatalChart } from '../data/utils/natal-chart-calculator';
+import React, { useMemo } from 'react';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { COLOR_SCHEMES } from '../data/utils/colors';
+import { calculateNatalChart } from '../data/utils/natal-chart-calculator';
+import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ChartReading'>;
 
@@ -59,7 +59,7 @@ export default function ChartReadingScreen({ navigation, route }: Props) {
     const params = route.params || {};
 
     // Parse date from ISO string if provided
-    const birthDate = params.dobISO ? new Date(params.dobISO) : new Date();
+    const birthDate = params.dobISO ? new Date(params.dobISO + 'T00:00:00') : new Date();
     const babyName = params.babyFirst ? `${params.babyFirst}${params.babyMiddle ? ' ' + params.babyMiddle : ''}` : 'Baby';
     const hometown = params.hometown || 'their birthplace';
     const theme = params.theme || 'green';

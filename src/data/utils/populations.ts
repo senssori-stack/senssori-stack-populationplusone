@@ -434,8 +434,8 @@ export async function getPopulationForCity(hometown: string, dobISO?: string): P
         }
     }
 
-    const CUTOFF_DATE = new Date('2020-01-01');
-    const dobDate = dobISO ? new Date(dobISO) : null;
+    const CUTOFF_DATE = new Date('2020-01-01T00:00:00');
+    const dobDate = dobISO ? new Date(dobISO + 'T00:00:00') : null;
     const isBefore2020 = dobDate ? dobDate < CUTOFF_DATE : false;
 
     /**

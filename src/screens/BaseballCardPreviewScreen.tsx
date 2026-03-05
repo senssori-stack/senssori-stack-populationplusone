@@ -44,7 +44,7 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
     // Resolve photo from all possible sources (photoUris array from 3-slot picker, babies array, or direct photoUri)
     const photoUri = params.photoUri || params.photoUris?.find((u: string | null) => u) || params.babies?.[0]?.photoUris?.find((u: string | null | undefined) => u) || params.babies?.[0]?.photoUri || null;
     const hometown = params.hometown || 'Hometown, USA';
-    const dobDate = params.dobISO ? new Date(params.dobISO) : new Date();
+    const dobDate = params.dobISO ? new Date(params.dobISO + 'T00:00:00') : new Date();
     const birthDateStr = dobDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const dobISO = dobDate.toISOString().split('T')[0];
     const weightLb = params.weightLb || '7';

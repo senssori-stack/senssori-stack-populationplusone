@@ -145,7 +145,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
     const dayOffsetRef = useRef(0);
     const spinAccum = useRef(0);
     const lastAngle = useRef<number | null>(null);
-    const originalBirthDate = useRef(new Date(route.params.birthDate)).current;
+    const originalBirthDateRef = useRef(new Date(route.params.birthDate));
     const scrollRef = useRef<ScrollView>(null);
 
     const toggleEdu = (key: string) => setExpandedEdu(prev => prev === key ? null : key);
@@ -165,7 +165,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                 Math.abs(gs.dx) > 5 || Math.abs(gs.dy) > 5,
             onPanResponderGrant: (evt) => {
                 lastAngle.current = null;
-                spinAccum.current = 0;
+                spinAccum.current = dayOffsetRef.current * 15;
                 setIsSpinning(true);
                 // Disable parent scroll while spinning
                 scrollRef.current?.setNativeProps?.({ scrollEnabled: false });
@@ -190,7 +190,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                         dayOffsetRef.current = newDayOffset;
                         setDayOffset(newDayOffset);
                         // Update the displayed birth date
-                        const newDate = new Date(originalBirthDate);
+                        const newDate = new Date(originalBirthDateRef.current);
                         newDate.setDate(newDate.getDate() + newDayOffset);
                         setBirthDate(newDate);
                     }
@@ -220,7 +220,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                 Math.abs(gs.dx) > 5 || Math.abs(gs.dy) > 5,
             onPanResponderGrant: () => {
                 solarLastAngle.current = null;
-                solarSpinAccum.current = 0;
+                solarSpinAccum.current = dayOffsetRef.current * 15;
                 setIsSpinning(true);
                 scrollRef.current?.setNativeProps?.({ scrollEnabled: false });
             },
@@ -241,7 +241,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                     if (newDayOffset !== dayOffsetRef.current) {
                         dayOffsetRef.current = newDayOffset;
                         setDayOffset(newDayOffset);
-                        const newDate = new Date(originalBirthDate);
+                        const newDate = new Date(originalBirthDateRef.current);
                         newDate.setDate(newDate.getDate() + newDayOffset);
                         setBirthDate(newDate);
                     }
@@ -672,8 +672,10 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                             style={styles.resetButton}
                             onPress={() => {
                                 setDayOffset(0);
+                                dayOffsetRef.current = 0;
                                 spinAccum.current = 0;
-                                setBirthDate(new Date(originalBirthDate));
+                                solarSpinAccum.current = 0;
+                                setBirthDate(new Date(originalBirthDateRef.current));
                             }}
                             activeOpacity={0.7}
                         >
@@ -1111,7 +1113,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                                     const newOffset = dayOffset - 365;
                                     setDayOffset(newOffset);
                                     dayOffsetRef.current = newOffset;
-                                    const newDate = new Date(originalBirthDate);
+                                    const newDate = new Date(originalBirthDateRef.current);
                                     newDate.setDate(newDate.getDate() + newOffset);
                                     setBirthDate(newDate);
                                 }}
@@ -1124,7 +1126,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                                     const newOffset = dayOffset - 30;
                                     setDayOffset(newOffset);
                                     dayOffsetRef.current = newOffset;
-                                    const newDate = new Date(originalBirthDate);
+                                    const newDate = new Date(originalBirthDateRef.current);
                                     newDate.setDate(newDate.getDate() + newOffset);
                                     setBirthDate(newDate);
                                 }}
@@ -1137,7 +1139,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                                     const newOffset = dayOffset - 1;
                                     setDayOffset(newOffset);
                                     dayOffsetRef.current = newOffset;
-                                    const newDate = new Date(originalBirthDate);
+                                    const newDate = new Date(originalBirthDateRef.current);
                                     newDate.setDate(newDate.getDate() + newOffset);
                                     setBirthDate(newDate);
                                 }}
@@ -1149,7 +1151,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                                 onPress={() => {
                                     setDayOffset(0);
                                     dayOffsetRef.current = 0;
-                                    setBirthDate(new Date(originalBirthDate));
+                                    setBirthDate(new Date(originalBirthDateRef.current));
                                 }}
                             >
                                 <Text style={[styles.timeSliderBtnText, { color: '#FFD54F' }]}>⟲</Text>
@@ -1160,7 +1162,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                                     const newOffset = dayOffset + 1;
                                     setDayOffset(newOffset);
                                     dayOffsetRef.current = newOffset;
-                                    const newDate = new Date(originalBirthDate);
+                                    const newDate = new Date(originalBirthDateRef.current);
                                     newDate.setDate(newDate.getDate() + newOffset);
                                     setBirthDate(newDate);
                                 }}
@@ -1173,7 +1175,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                                     const newOffset = dayOffset + 30;
                                     setDayOffset(newOffset);
                                     dayOffsetRef.current = newOffset;
-                                    const newDate = new Date(originalBirthDate);
+                                    const newDate = new Date(originalBirthDateRef.current);
                                     newDate.setDate(newDate.getDate() + newOffset);
                                     setBirthDate(newDate);
                                 }}
@@ -1186,7 +1188,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                                     const newOffset = dayOffset + 365;
                                     setDayOffset(newOffset);
                                     dayOffsetRef.current = newOffset;
-                                    const newDate = new Date(originalBirthDate);
+                                    const newDate = new Date(originalBirthDateRef.current);
                                     newDate.setDate(newDate.getDate() + newOffset);
                                     setBirthDate(newDate);
                                 }}
@@ -1665,7 +1667,14 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
             <ScrollableDatePicker
                 visible={showDateModal}
                 date={birthDate}
-                onDateChange={(newDate) => setBirthDate(newDate)}
+                onDateChange={(newDate) => {
+                    setBirthDate(newDate);
+                    originalBirthDateRef.current = newDate;
+                    dayOffsetRef.current = 0;
+                    setDayOffset(0);
+                    spinAccum.current = 0;
+                    solarSpinAccum.current = 0;
+                }}
                 onClose={() => setShowDateModal(false)}
                 title="Select Birth Date"
                 minimumDate={new Date(1900, 0, 1)}

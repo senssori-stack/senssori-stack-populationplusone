@@ -320,6 +320,7 @@ export default function WrittenInTheStarsScreen({ navigation }: Props) {
             <ScrollableDatePicker
                 visible={showTimePicker}
                 date={birthDate}
+                mode="time"
                 onDateChange={(d) => {
                     const updated = new Date(birthDate);
                     updated.setHours(d.getHours(), d.getMinutes());

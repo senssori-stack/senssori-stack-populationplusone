@@ -13,7 +13,7 @@ export const CURRENT_SNAPSHOT_DATA: Record<string, string> = {
 
     // Entertainment
     '#1 SONG': 'Thats So True by Gracie Abrams',
-    '#1 MOVIE': 'Mufasa The Lion King',
+    '#1 MOVIE': 'Scream 7',
 
     // Sports
     'WON LAST SUPERBOWL': 'Philadelphia Eagles',

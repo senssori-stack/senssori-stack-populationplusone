@@ -141,6 +141,7 @@ interface ScrollableDatePickerProps {
     title?: string;
     minimumDate?: Date;
     maximumDate?: Date;
+    mode?: 'date' | 'time';
 }
 
 export default function ScrollableDatePicker({
@@ -151,10 +152,16 @@ export default function ScrollableDatePicker({
     title = 'Select Date',
     minimumDate,
     maximumDate,
+    mode = 'date',
 }: ScrollableDatePickerProps) {
     const [selectedMonth, setSelectedMonth] = useState(date.getMonth());
     const [selectedDay, setSelectedDay] = useState(date.getDate());
     const [selectedYear, setSelectedYear] = useState(date.getFullYear());
+    // Time mode state
+    const initHour12 = date.getHours() % 12 || 12;
+    const [selectedHour, setSelectedHour] = useState(initHour12);
+    const [selectedMinute, setSelectedMinute] = useState(date.getMinutes());
+    const [selectedAmPm, setSelectedAmPm] = useState<'AM' | 'PM'>(date.getHours() >= 12 ? 'PM' : 'AM');
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(300)).current;
 
@@ -171,6 +178,10 @@ export default function ScrollableDatePicker({
         setSelectedMonth(date.getMonth());
         setSelectedDay(date.getDate());
         setSelectedYear(date.getFullYear());
+        const h12 = date.getHours() % 12 || 12;
+        setSelectedHour(h12);
+        setSelectedMinute(date.getMinutes());
+        setSelectedAmPm(date.getHours() >= 12 ? 'PM' : 'AM');
     }, [date]);
 
     // Animate in/out
@@ -218,6 +229,15 @@ export default function ScrollableDatePicker({
     const clampedDay = Math.min(selectedDay, daysInMonth);
 
     const handleConfirm = () => {
+        if (mode === 'time') {
+            const newDate = new Date(date);
+            let hour24 = selectedHour % 12;
+            if (selectedAmPm === 'PM') hour24 += 12;
+            newDate.setHours(hour24, selectedMinute, 0, 0);
+            onDateChange(newDate);
+            handleClose();
+            return;
+        }
         const newDate = new Date(selectedYear, selectedMonth, clampedDay);
         onDateChange(newDate);
         handleClose();
@@ -246,6 +266,11 @@ export default function ScrollableDatePicker({
 
     const yearIndex = years.indexOf(selectedYear);
 
+    // Generate time arrays
+    const hours = Array.from({ length: 12 }, (_, i) => i + 1); // 1-12
+    const minutes = Array.from({ length: 60 }, (_, i) => i); // 0-59
+    const ampmOptions = ['AM', 'PM'];
+
     return (
         <Modal transparent visible={visible} animationType="none">
             <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
@@ -263,34 +288,63 @@ export default function ScrollableDatePicker({
                     </View>
 
                     {/* Scroll Wheels */}
-                    <View style={styles.wheelsContainer}>
-                        {/* Month */}
-                        <ScrollWheel
-                            items={MONTHS}
-                            selectedIndex={selectedMonth}
-                            onSelect={handleMonthChange}
-                            width="40%"
-                        />
-                        {/* Day */}
-                        <ScrollWheel
-                            items={days.map(d => String(d))}
-                            selectedIndex={clampedDay - 1}
-                            onSelect={(index) => setSelectedDay(index + 1)}
-                            width="20%"
-                        />
-                        {/* Year */}
-                        <ScrollWheel
-                            items={years.map(y => String(y))}
-                            selectedIndex={yearIndex >= 0 ? yearIndex : 0}
-                            onSelect={handleYearChange}
-                            width="30%"
-                        />
-                    </View>
+                    {mode === 'time' ? (
+                        <View style={styles.wheelsContainer}>
+                            {/* Hour (1-12) */}
+                            <ScrollWheel
+                                items={hours.map(h => String(h))}
+                                selectedIndex={selectedHour - 1}
+                                onSelect={(index) => setSelectedHour(index + 1)}
+                                width="30%"
+                            />
+                            {/* Minute (00-59) */}
+                            <ScrollWheel
+                                items={minutes.map(m => String(m).padStart(2, '0'))}
+                                selectedIndex={selectedMinute}
+                                onSelect={(index) => setSelectedMinute(index)}
+                                width="30%"
+                            />
+                            {/* AM/PM */}
+                            <ScrollWheel
+                                items={ampmOptions}
+                                selectedIndex={selectedAmPm === 'AM' ? 0 : 1}
+                                onSelect={(index) => setSelectedAmPm(index === 0 ? 'AM' : 'PM')}
+                                width="30%"
+                            />
+                        </View>
+                    ) : (
+                        <View style={styles.wheelsContainer}>
+                            {/* Month */}
+                            <ScrollWheel
+                                items={MONTHS}
+                                selectedIndex={selectedMonth}
+                                onSelect={handleMonthChange}
+                                width="40%"
+                            />
+                            {/* Day */}
+                            <ScrollWheel
+                                items={days.map(d => String(d))}
+                                selectedIndex={clampedDay - 1}
+                                onSelect={(index) => setSelectedDay(index + 1)}
+                                width="20%"
+                            />
+                            {/* Year */}
+                            <ScrollWheel
+                                items={years.map(y => String(y))}
+                                selectedIndex={yearIndex >= 0 ? yearIndex : 0}
+                                onSelect={handleYearChange}
+                                width="30%"
+                            />
+                        </View>
+                    )}
 
                     {/* Preview */}
                     <View style={styles.previewRow}>
                         <Text style={styles.previewText}>
-                            {MONTHS[selectedMonth]} {clampedDay}, {selectedYear}
+                            {mode === 'time'
+                                ? `${selectedHour}:${String(selectedMinute).padStart(2, '0')} ${selectedAmPm}`
+                                : `${MONTHS[selectedMonth]} ${clampedDay}, ${selectedYear}`
+                            }
                         </Text>
                     </View>
                 </Animated.View>

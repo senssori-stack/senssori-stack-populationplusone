@@ -44,7 +44,7 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
     const parents = [motherName, fatherName].filter(Boolean).join(' & ');
     const hometown = params.hometown || '';
     const population = params.population;
-    const dobDate = params.dobISO ? new Date(params.dobISO) : new Date();
+    const dobDate = params.dobISO ? new Date(params.dobISO + 'T00:00:00') : new Date();
     const birthDateStr = dobDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     const weightLb = params.weightLb || '';
     const weightOz = params.weightOz || '';

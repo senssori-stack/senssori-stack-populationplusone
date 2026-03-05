@@ -70,7 +70,7 @@ function AutoFitName({ text, style }: { text: string; style?: any }) {
 }
 
 function formatDate(iso: string): string {
-    const d = new Date(iso);
+    const d = new Date(iso + 'T00:00:00');
     if (Number.isNaN(d.getTime())) return iso;
     return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 }
@@ -190,7 +190,8 @@ export default function TimeCapsuleBack(props: Props) {
                         <Text style={S.tdValue}>{value}</Text>
                     </View>
                 ))}
-                <Text style={S.sources}>SOURCES: bls.gov, eia.gov, fred.stlouisfed.org, census.gov, archives.gov, billboard.com, wikipedia.org</Text>
+                <Text style={S.sources}>SOURCES: bls.gov, eia.gov, metalpriceapi.com, alphavantage.co, census.gov, last.fm, boxofficemojo.com, espn.com, usa.gov</Text>
+                <Text style={S.sources}>www.populationplusone.com</Text>
             </View>
         </View>
     );

@@ -7,7 +7,9 @@
 import { getFromCache, saveToCache } from './cache-manager';
 import { fetchCSV } from './csv';
 import { CURRENT_SNAPSHOT_DATA } from './current-snapshot';
+import { getMetalsPrices } from './external-apis';
 import { getHistoricalSnapshotForDate } from './historical-snapshot';
+import { getMetalsBackup, saveMetalsBackup } from './metals-backup';
 import { SNAPSHOT_CSV_URL } from './sheets';
 import SNAPSHOT_CANONICAL_MAP from './snapshot-mapping';
 
@@ -115,9 +117,9 @@ export async function getAllSnapshotValues(): Promise<Record<string, string>> {
 
         console.log('✅ Using Google Sheets snapshot data');
 
-        // ── LIVE METALS PRICES (from app, not from sheet) ───────────
-        // GoldPrice.org: free, unlimited, works from phone but NOT from Google servers.
-        // MetalsPriceAPI: DISABLED (quota burned). Only GoldPrice.org is used.
+        // ── LIVE METALS PRICES (max 3 fetches/day, 8h apart) ────────
+        // Between fetches, the stored backup is used.
+        // Each successful fetch saves to backup + date-stamped historical record.
         try {
             const livePrices = await getMetalsPrices();
             if (livePrices) {
@@ -125,26 +127,24 @@ export async function getAllSnapshotValues(): Promise<Record<string, string>> {
                 out['SILVER OZ'] = livePrices.silver;
                 console.log('🪙 Gold (LIVE):', out['GOLD OZ']);
                 console.log('🪙 Silver (LIVE):', out['SILVER OZ']);
-                await saveMetalsBackup(out['GOLD OZ'], out['SILVER OZ'], 'GoldPrice.org');
+                // Save as latest backup AND as historical record for today
+                await saveMetalsBackup(out['GOLD OZ'], out['SILVER OZ'], livePrices.source || 'API');
             } else {
-                console.warn('⚠️ GoldPrice.org failed, using fallback...');
-                if (!out['GOLD OZ'] || !out['SILVER OZ']) {
-                    const metalsBackup = await getMetalsBackup();
-                    if (metalsBackup) {
-                        out['GOLD OZ'] = metalsBackup.gold;
-                        out['SILVER OZ'] = metalsBackup.silver;
-                        console.log('🪙 Using backup metals:', out['GOLD OZ'], out['SILVER OZ']);
-                    }
-                }
-            }
-        } catch (apiError) {
-            console.warn('⚠️ Metals fetch error:', apiError);
-            if (!out['GOLD OZ'] || !out['SILVER OZ']) {
+                // Rate-limited or API failed — use last stored price
+                console.log('⏳ Metals fetch skipped (rate-limited or unavailable), using stored price...');
                 const metalsBackup = await getMetalsBackup();
                 if (metalsBackup) {
                     out['GOLD OZ'] = metalsBackup.gold;
                     out['SILVER OZ'] = metalsBackup.silver;
+                    console.log('🪙 Using stored metals:', out['GOLD OZ'], out['SILVER OZ'], `(from ${metalsBackup.fetchedAt})`);
                 }
+            }
+        } catch (apiError) {
+            console.warn('⚠️ Metals fetch error:', apiError);
+            const metalsBackup = await getMetalsBackup();
+            if (metalsBackup) {
+                out['GOLD OZ'] = metalsBackup.gold;
+                out['SILVER OZ'] = metalsBackup.silver;
             }
         }
 

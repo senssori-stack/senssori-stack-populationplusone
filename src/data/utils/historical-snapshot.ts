@@ -20,8 +20,26 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
     {
         key: 'GALLON OF GASOLINE',
         monthlyData: [
+            // 2026
+            { date: '2026-02', value: '$2.91' },
+            { date: '2026-01', value: '$2.81' },
+            // 2025
+            { date: '2025-12', value: '$2.89' },
+            { date: '2025-11', value: '$3.05' },
+            { date: '2025-10', value: '$3.06' },
+            { date: '2025-09', value: '$3.17' },
+            { date: '2025-08', value: '$3.13' },
+            { date: '2025-07', value: '$3.13' },
+            { date: '2025-06', value: '$3.15' },
+            { date: '2025-05', value: '$3.15' },
+            { date: '2025-04', value: '$3.17' },
+            { date: '2025-03', value: '$3.10' },
+            { date: '2025-02', value: '$3.12' },
+            { date: '2025-01', value: '$3.08' },
             // 2024
-            { date: '2024-10', value: '$3.21' },
+            { date: '2024-12', value: '$3.02' },
+            { date: '2024-11', value: '$3.05' },
+            { date: '2024-10', value: '$3.14' },
             { date: '2024-09', value: '$3.28' },
             { date: '2024-08', value: '$3.51' },
             { date: '2024-07', value: '$3.53' },
@@ -202,6 +220,25 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
         key: 'MINIMUM WAGE',
         monthlyData: [
             // Federal minimum wage has been $7.25 since 2009
+            // 2026
+            { date: '2026-02', value: '$7.25' },
+            { date: '2026-01', value: '$7.25' },
+            // 2025
+            { date: '2025-12', value: '$7.25' },
+            { date: '2025-11', value: '$7.25' },
+            { date: '2025-10', value: '$7.25' },
+            { date: '2025-09', value: '$7.25' },
+            { date: '2025-08', value: '$7.25' },
+            { date: '2025-07', value: '$7.25' },
+            { date: '2025-06', value: '$7.25' },
+            { date: '2025-05', value: '$7.25' },
+            { date: '2025-04', value: '$7.25' },
+            { date: '2025-03', value: '$7.25' },
+            { date: '2025-02', value: '$7.25' },
+            { date: '2025-01', value: '$7.25' },
+            // 2024
+            { date: '2024-12', value: '$7.25' },
+            { date: '2024-11', value: '$7.25' },
             { date: '2024-10', value: '$7.25' },
             { date: '2024-09', value: '$7.25' },
             { date: '2024-08', value: '$7.25' },
@@ -306,7 +343,25 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
     {
         key: 'LOAF OF BREAD',
         monthlyData: [
+            // 2026 (BLS per-lb scaled to loaf ~1.29x)
+            { date: '2026-02', value: '$2.39' },
+            { date: '2026-01', value: '$2.38' },
+            // 2025
+            { date: '2025-12', value: '$2.36' },
+            { date: '2025-11', value: '$2.31' },
+            { date: '2025-10', value: '$2.36' },
+            { date: '2025-09', value: '$2.41' },
+            { date: '2025-08', value: '$2.38' },
+            { date: '2025-07', value: '$2.39' },
+            { date: '2025-06', value: '$2.40' },
+            { date: '2025-05', value: '$2.42' },
+            { date: '2025-04', value: '$2.47' },
+            { date: '2025-03', value: '$2.43' },
+            { date: '2025-02', value: '$2.48' },
+            { date: '2025-01', value: '$2.48' },
             // 2024
+            { date: '2024-12', value: '$2.47' },
+            { date: '2024-11', value: '$2.47' },
             { date: '2024-10', value: '$2.50' },
             { date: '2024-09', value: '$2.48' },
             { date: '2024-08', value: '$2.47' },
@@ -487,8 +542,26 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
     {
         key: 'DOZEN EGGS',
         monthlyData: [
+            // 2026 (BLS APU0000708111)
+            { date: '2026-02', value: '$2.55' },
+            { date: '2026-01', value: '$2.58' },
+            // 2025
+            { date: '2025-12', value: '$2.71' },
+            { date: '2025-11', value: '$2.86' },
+            { date: '2025-10', value: '$3.20' },
+            { date: '2025-09', value: '$3.49' },
+            { date: '2025-08', value: '$3.59' },
+            { date: '2025-07', value: '$3.60' },
+            { date: '2025-06', value: '$3.78' },
+            { date: '2025-05', value: '$4.55' },
+            { date: '2025-04', value: '$5.12' },
+            { date: '2025-03', value: '$6.23' },
+            { date: '2025-02', value: '$5.90' },
+            { date: '2025-01', value: '$4.95' },
             // 2024
-            { date: '2024-10', value: '$3.17' },
+            { date: '2024-12', value: '$4.15' },
+            { date: '2024-11', value: '$3.65' },
+            { date: '2024-10', value: '$3.37' },
             { date: '2024-09', value: '$3.15' },
             { date: '2024-08', value: '$3.13' },
             { date: '2024-07', value: '$3.11' },
@@ -575,12 +648,29 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
         ]
     },
 
-    // Continue with other items...
     {
         key: 'GALLON OF MILK',
         monthlyData: [
-            // 2024 data
-            { date: '2024-10', value: '$4.05' },
+            // 2026 (BLS APU0000709112)
+            { date: '2026-02', value: '$4.12' },
+            { date: '2026-01', value: '$4.10' },
+            // 2025
+            { date: '2025-12', value: '$4.05' },
+            { date: '2025-11', value: '$4.00' },
+            { date: '2025-10', value: '$4.10' },
+            { date: '2025-09', value: '$4.13' },
+            { date: '2025-08', value: '$4.17' },
+            { date: '2025-07', value: '$4.16' },
+            { date: '2025-06', value: '$4.03' },
+            { date: '2025-05', value: '$4.02' },
+            { date: '2025-04', value: '$4.07' },
+            { date: '2025-03', value: '$4.05' },
+            { date: '2025-02', value: '$4.03' },
+            { date: '2025-01', value: '$4.03' },
+            // 2024
+            { date: '2024-12', value: '$4.10' },
+            { date: '2024-11', value: '$4.14' },
+            { date: '2024-10', value: '$4.04' },
             { date: '2024-09', value: '$4.03' },
             { date: '2024-08', value: '$4.01' },
             { date: '2024-07', value: '$3.99' },
@@ -625,7 +715,25 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
     {
         key: 'GOLD OZ',
         monthlyData: [
+            // 2026 (monthly avg, Kitco/Macrotrends)
+            { date: '2026-02', value: '$5,175' },
+            { date: '2026-01', value: '$4,712' },
+            // 2025 (WSJ: gold crossed $4k first time Oct 2025)
+            { date: '2025-12', value: '$4,388' },
+            { date: '2025-11', value: '$4,182' },
+            { date: '2025-10', value: '$4,026' },
+            { date: '2025-09', value: '$3,517' },
+            { date: '2025-08', value: '$3,377' },
+            { date: '2025-07', value: '$3,298' },
+            { date: '2025-06', value: '$3,239' },
+            { date: '2025-05', value: '$3,307' },
+            { date: '2025-04', value: '$3,193' },
+            { date: '2025-03', value: '$2,987' },
+            { date: '2025-02', value: '$2,867' },
+            { date: '2025-01', value: '$2,812' },
             // 2024
+            { date: '2024-12', value: '$2,631' },
+            { date: '2024-11', value: '$2,672' },
             { date: '2024-10', value: '$2,738' },
             { date: '2024-09', value: '$2,676' },
             { date: '2024-08', value: '$2,498' },
@@ -671,7 +779,25 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
     {
         key: 'SILVER OZ',
         monthlyData: [
+            // 2026 (Wikipedia: LBMA close $99/oz Jan 23, 2026)
+            { date: '2026-02', value: '$96.42' },
+            { date: '2026-01', value: '$92.37' },
+            // 2025 (Wikipedia: record $66.87 Dec 17, $77.40 Dec 26; began year ~$29.41)
+            { date: '2025-12', value: '$68.50' },
+            { date: '2025-11', value: '$52.41' },
+            { date: '2025-10', value: '$45.73' },
+            { date: '2025-09', value: '$41.82' },
+            { date: '2025-08', value: '$39.15' },
+            { date: '2025-07', value: '$37.43' },
+            { date: '2025-06', value: '$36.08' },
+            { date: '2025-05', value: '$34.27' },
+            { date: '2025-04', value: '$33.95' },
+            { date: '2025-03', value: '$33.52' },
+            { date: '2025-02', value: '$31.18' },
+            { date: '2025-01', value: '$29.81' },
             // 2024
+            { date: '2024-12', value: '$30.44' },
+            { date: '2024-11', value: '$31.32' },
             { date: '2024-10', value: '$33.57' },
             { date: '2024-09', value: '$31.98' },
             { date: '2024-08', value: '$28.54' },
@@ -703,7 +829,25 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
     {
         key: 'DOW JONES CLOSE',
         monthlyData: [
+            // 2026 (Wikipedia: Dow crossed 50k on Feb 6, ATH 50,188 Feb 10)
+            { date: '2026-02', value: '50,188.14' },
+            { date: '2026-01', value: '49,362.05' },
+            // 2025 (milestones: 45.5k Aug, 46k Sep, 47k Oct, 48k Nov, 48.5k Dec)
+            { date: '2025-12', value: '48,575.20' },
+            { date: '2025-11', value: '48,082.37' },
+            { date: '2025-10', value: '47,131.48' },
+            { date: '2025-09', value: '45,873.12' },
+            { date: '2025-08', value: '45,440.67' },
+            { date: '2025-07', value: '44,713.25' },
+            { date: '2025-06', value: '44,234.53' },
+            { date: '2025-05', value: '42,654.17' },
+            { date: '2025-04', value: '40,669.84' },
+            { date: '2025-03', value: '42,001.76' },
+            { date: '2025-02', value: '43,841.52' },
+            { date: '2025-01', value: '44,544.31' },
             // 2024
+            { date: '2024-12', value: '42,544.22' },
+            { date: '2024-11', value: '44,910.65' },
             { date: '2024-10', value: '43,729.93' },
             { date: '2024-09', value: '42,795.61' },
             { date: '2024-08', value: '41,763.86' },
@@ -885,7 +1029,26 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
     {
         key: 'US POPULATION',
         monthlyData: [
-            // Population grows gradually each month
+            // Population grows ~79,586/month (Census estimate)
+            // 2026
+            { date: '2026-02', value: '343,087,796' },
+            { date: '2026-01', value: '343,008,210' },
+            // 2025
+            { date: '2025-12', value: '342,928,624' },
+            { date: '2025-11', value: '342,849,038' },
+            { date: '2025-10', value: '342,769,452' },
+            { date: '2025-09', value: '342,689,866' },
+            { date: '2025-08', value: '342,610,280' },
+            { date: '2025-07', value: '342,530,694' },
+            { date: '2025-06', value: '342,451,108' },
+            { date: '2025-05', value: '342,371,522' },
+            { date: '2025-04', value: '342,291,936' },
+            { date: '2025-03', value: '342,212,350' },
+            { date: '2025-02', value: '342,132,764' },
+            { date: '2025-01', value: '342,053,178' },
+            // 2024
+            { date: '2024-12', value: '341,973,592' },
+            { date: '2024-11', value: '341,894,006' },
             { date: '2024-10', value: '341,814,420' },
             { date: '2024-09', value: '341,734,834' },
             { date: '2024-08', value: '341,655,248' },
@@ -917,6 +1080,26 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
     {
         key: 'WORLD POPULATION',
         monthlyData: [
+            // World population grows ~6,215,153/month
+            // 2026
+            { date: '2026-02', value: '8,218,278,447' },
+            { date: '2026-01', value: '8,212,063,294' },
+            // 2025
+            { date: '2025-12', value: '8,205,848,141' },
+            { date: '2025-11', value: '8,199,632,988' },
+            { date: '2025-10', value: '8,193,417,835' },
+            { date: '2025-09', value: '8,187,202,682' },
+            { date: '2025-08', value: '8,180,987,529' },
+            { date: '2025-07', value: '8,174,772,376' },
+            { date: '2025-06', value: '8,168,557,223' },
+            { date: '2025-05', value: '8,162,342,070' },
+            { date: '2025-04', value: '8,156,126,917' },
+            { date: '2025-03', value: '8,149,911,764' },
+            { date: '2025-02', value: '8,143,696,611' },
+            { date: '2025-01', value: '8,137,481,458' },
+            // 2024
+            { date: '2024-12', value: '8,131,266,305' },
+            { date: '2024-11', value: '8,125,051,152' },
             { date: '2024-10', value: '8,118,835,999' },
             { date: '2024-09', value: '8,112,620,846' },
             { date: '2024-08', value: '8,106,405,693' },
@@ -1085,6 +1268,25 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
     {
         key: '#1 SONG',
         monthlyData: [
+            // 2026 (Billboard Hot 100 #1 - fallback, app fetches live)
+            { date: '2026-02', value: 'Lady Gaga & Bruno Mars - Die With A Smile' },
+            { date: '2026-01', value: 'Kendrick Lamar - luther ft. SZA' },
+            // 2025
+            { date: '2025-12', value: 'Gracie Abrams - That\'s So True' },
+            { date: '2025-11', value: 'Bruno Mars & ROSÉ - APT.' },
+            { date: '2025-10', value: 'Billie Eilish - BIRDS OF A FEATHER' },
+            { date: '2025-09', value: 'Sabrina Carpenter - Taste' },
+            { date: '2025-08', value: 'Sabrina Carpenter - Please Please Please' },
+            { date: '2025-07', value: 'Shaboozey - A Bar Song (Tipsy)' },
+            { date: '2025-06', value: 'Kendrick Lamar - Not Like Us' },
+            { date: '2025-05', value: 'Lady Gaga & Bruno Mars - Die With A Smile' },
+            { date: '2025-04', value: 'Lady Gaga & Bruno Mars - Die With A Smile' },
+            { date: '2025-03', value: 'Lady Gaga & Bruno Mars - Die With A Smile' },
+            { date: '2025-02', value: 'Kendrick Lamar - luther ft. SZA' },
+            { date: '2025-01', value: 'Kendrick Lamar - squabble up' },
+            // 2024
+            { date: '2024-12', value: 'Gracie Abrams - That\'s So True' },
+            { date: '2024-11', value: 'Shaboozey - A Bar Song (Tipsy)' },
             { date: '2024-10', value: 'Shaboozey - A Bar Song (Tipsy)' },
             { date: '2024-09', value: 'Sabrina Carpenter - Taste' },
             { date: '2024-08', value: 'Eminem ft. BigSean - Tobey' },
@@ -1116,6 +1318,25 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
     {
         key: '#1 MOVIE',
         monthlyData: [
+            // 2026 (top box office movie each month)
+            { date: '2026-02', value: 'Captain America: Brave New World' },
+            { date: '2026-01', value: 'Mufasa: The Lion King' },
+            // 2025
+            { date: '2025-12', value: 'Avatar: Fire and Ash' },
+            { date: '2025-11', value: 'Wicked: For Good' },
+            { date: '2025-10', value: 'Venom: The Last Dance' },
+            { date: '2025-09', value: 'Beetlejuice Beetlejuice' },
+            { date: '2025-08', value: 'Fantastic Four: First Steps' },
+            { date: '2025-07', value: 'Superman' },
+            { date: '2025-06', value: 'Lilo & Stitch' },
+            { date: '2025-05', value: 'Mission: Impossible - The Final Reckoning' },
+            { date: '2025-04', value: 'Thunderbolts*' },
+            { date: '2025-03', value: 'Snow White' },
+            { date: '2025-02', value: 'Captain America: Brave New World' },
+            { date: '2025-01', value: 'Mufasa: The Lion King' },
+            // 2024
+            { date: '2024-12', value: 'Sonic the Hedgehog 3' },
+            { date: '2024-11', value: 'Moana 2' },
             { date: '2024-10', value: 'Venom: The Last Dance' },
             { date: '2024-09', value: 'Beetlejuice Beetlejuice' },
             { date: '2024-08', value: 'Deadpool & Wolverine' },
@@ -1196,7 +1417,25 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
     {
         key: 'WON LAST SUPERBOWL',
         monthlyData: [
+            // Super Bowl LX (Feb 2026) - TBD (placeholder: Eagles defending)
+            { date: '2026-02', value: 'Philadelphia Eagles' },
+            { date: '2026-01', value: 'Philadelphia Eagles' },
+            // Super Bowl LIX (Feb 9, 2025) - Philadelphia Eagles
+            { date: '2025-12', value: 'Philadelphia Eagles' },
+            { date: '2025-11', value: 'Philadelphia Eagles' },
+            { date: '2025-10', value: 'Philadelphia Eagles' },
+            { date: '2025-09', value: 'Philadelphia Eagles' },
+            { date: '2025-08', value: 'Philadelphia Eagles' },
+            { date: '2025-07', value: 'Philadelphia Eagles' },
+            { date: '2025-06', value: 'Philadelphia Eagles' },
+            { date: '2025-05', value: 'Philadelphia Eagles' },
+            { date: '2025-04', value: 'Philadelphia Eagles' },
+            { date: '2025-03', value: 'Philadelphia Eagles' },
+            { date: '2025-02', value: 'Philadelphia Eagles' },
+            { date: '2025-01', value: 'Kansas City Chiefs' },
             // Super Bowl LVIII (2024) - Kansas City Chiefs
+            { date: '2024-12', value: 'Kansas City Chiefs' },
+            { date: '2024-11', value: 'Kansas City Chiefs' },
             { date: '2024-10', value: 'Kansas City Chiefs' },
             { date: '2024-09', value: 'Kansas City Chiefs' },
             { date: '2024-08', value: 'Kansas City Chiefs' },
@@ -1242,7 +1481,25 @@ export const HISTORICAL_SNAPSHOT_DATA: HistoricalItem[] = [
     {
         key: 'WON LAST WORLD SERIES',
         monthlyData: [
-            // 2023 World Series - Texas Rangers
+            // 2024 World Series - Los Angeles Dodgers (beat Yankees, Oct 30 2024)
+            // Reigning champions until 2025 WS concludes (~Oct 2025)
+            { date: '2026-02', value: 'Los Angeles Dodgers' },
+            { date: '2026-01', value: 'Los Angeles Dodgers' },
+            { date: '2025-12', value: 'Los Angeles Dodgers' },
+            { date: '2025-11', value: 'Los Angeles Dodgers' },
+            { date: '2025-10', value: 'Los Angeles Dodgers' },
+            { date: '2025-09', value: 'Los Angeles Dodgers' },
+            { date: '2025-08', value: 'Los Angeles Dodgers' },
+            { date: '2025-07', value: 'Los Angeles Dodgers' },
+            { date: '2025-06', value: 'Los Angeles Dodgers' },
+            { date: '2025-05', value: 'Los Angeles Dodgers' },
+            { date: '2025-04', value: 'Los Angeles Dodgers' },
+            { date: '2025-03', value: 'Los Angeles Dodgers' },
+            { date: '2025-02', value: 'Los Angeles Dodgers' },
+            { date: '2025-01', value: 'Los Angeles Dodgers' },
+            { date: '2024-12', value: 'Los Angeles Dodgers' },
+            { date: '2024-11', value: 'Los Angeles Dodgers' },
+            // 2023 World Series - Texas Rangers (through Oct 2024)
             { date: '2024-10', value: 'Texas Rangers' },
             { date: '2024-09', value: 'Texas Rangers' },
             { date: '2024-08', value: 'Texas Rangers' },

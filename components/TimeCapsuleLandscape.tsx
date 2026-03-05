@@ -237,9 +237,9 @@ export default function TimeCapsuleLandscape(props: Props) {
                     const { getCurrentPopulationForCity } = await import('../src/data/utils/populations');
 
                     // Get birth year from dobISO
-                    const dobDateObj = new Date(dobISO);
+                    const dobDateObj = new Date(dobISO + 'T00:00:00');
                     const birthYear = dobDateObj.getFullYear();
-                    const CUTOFF_DATE = new Date('2020-01-01');
+                    const CUTOFF_DATE = new Date('2020-01-01T00:00:00');
                     const isBefore2020 = dobDateObj < CUTOFF_DATE;
 
                     console.log(`📍 Fetching city population for ${hometown}`);
@@ -835,7 +835,14 @@ export default function TimeCapsuleLandscape(props: Props) {
                         color: colors.text,
                         marginTop: padding * 0.2
                     }]}>
-                        SOURCES: gasprices.aaa.com, bls.gov, kitco.com, marketwatch.com, census.gov, espn.com, billboard.com, themoviedb.org, usa.gov
+                        SOURCES: bls.gov, eia.gov, metalpriceapi.com, alphavantage.co, census.gov, last.fm, boxofficemojo.com, espn.com, usa.gov
+                    </Text>
+                    <Text style={[styles.sources, {
+                        fontSize: sourcesSize,
+                        color: colors.text,
+                        marginTop: 0
+                    }]}>
+                        www.populationplusone.com
                     </Text>
                 </View>
             </View>

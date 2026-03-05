@@ -1,19 +1,27 @@
 // src/data/utils/external-apis.ts
 // Fetch real-time data from external APIs (metals, stocks, etc)
 //
-// TEMPORARY (Feb 2026): MetalsPriceAPI disabled — was being fetched way over
-// the quota limit because rate-limiting was never wired up. Using GoldPrice.org
-// (free, unlimited, no API key) as the sole source until MetalsPriceAPI is
-// re-enabled with proper rate limiting.
+// Gold/Silver: max 3 fetches per day, spaced 8 hours apart.
+// Between fetches the app uses stored prices from AsyncStorage.
+// PRIMARY: GoldPrice.org (free, unlimited, no API key)
+// FALLBACK: MetalsPriceAPI (paid, monthly quota)
 
 import { API_KEYS } from './api-keys';
+import { canFetchMetalsToday, recordMetalsFetch } from './sheets-writer';
 
 /**
- * Fetch gold and silver prices.
- * PRIMARY: GoldPrice.org — free, no API key, no rate limits, returns both metals in one call.
- * FALLBACK: MetalsPriceAPI — has monthly quota limits, used only if GoldPrice.org fails.
+ * Fetch gold and silver prices (max 3 times/day, 8h apart).
+ * Returns null if rate-limited — caller should use stored backup.
+ * On success, returns { gold, silver, source } so caller can save with source info.
  */
-export async function getMetalsPrices(): Promise<{ gold: string; silver: string } | null> {
+export async function getMetalsPrices(): Promise<{ gold: string; silver: string; source: string } | null> {
+    // ── CHECK RATE LIMIT (applies to ALL sources) ──────────────
+    const canFetch = await canFetchMetalsToday();
+    if (!canFetch) {
+        // Rate-limited — caller will use stored/cached price
+        return null;
+    }
+
     // ── PRIMARY: GoldPrice.org (free, unlimited) ───────────────
     try {
         console.log('💰 Fetching metal prices from GoldPrice.org (primary)...');
@@ -28,8 +36,9 @@ export async function getMetalsPrices(): Promise<{ gold: string; silver: string 
         if (item?.xauPrice && item?.xagPrice) {
             const goldPrice = `$${item.xauPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             const silverPrice = `$${item.xagPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            await recordMetalsFetch();
             console.log('✅ Metal prices from GoldPrice.org:', { goldPrice, silverPrice });
-            return { gold: goldPrice, silver: silverPrice };
+            return { gold: goldPrice, silver: silverPrice, source: 'GoldPrice.org' };
         }
 
         throw new Error('GoldPrice.org response missing xauPrice/xagPrice');
@@ -38,21 +47,7 @@ export async function getMetalsPrices(): Promise<{ gold: string; silver: string 
     }
 
     // ── FALLBACK: MetalsPriceAPI (quota-limited) ──────────────
-    // TEMPORARILY DISABLED (Feb 2026): Was over-fetching and burning through
-    // the monthly quota. GoldPrice.org is free & unlimited so we rely on it.
-    // When ready to re-enable, uncomment the block below — rate limiting is
-    // now wired up via canFetchMetalsToday() / recordMetalsFetch().
-    //
-    // To re-enable, uncomment the block below:
-    /*
     try {
-        // Check rate limit BEFORE calling the paid API
-        const canFetch = await canFetchMetalsToday();
-        if (!canFetch) {
-            console.log('⚠️ MetalsPriceAPI daily limit reached, skipping fallback');
-            return null;
-        }
-
         console.log('💰 Trying MetalsPriceAPI (fallback)...');
         const url = `${API_KEYS.METALS_API.baseUrl}/latest?api_key=${API_KEYS.METALS_API.key}&base=USD&currencies=XAU,XAG`;
 
@@ -67,14 +62,17 @@ export async function getMetalsPrices(): Promise<{ gold: string; silver: string 
             throw new Error(data.error?.message || 'MetalsPriceAPI quota exceeded or error');
         }
 
-        const goldPrice = data.rates?.USDXAU ? `$${data.rates.USDXAU.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : null;
-        const silverPrice = data.rates?.USDXAG ? `$${data.rates.USDXAG.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : null;
+        // API returns rates as 1 USD = X ounces, so INVERT to get $/oz
+        const goldRaw = data.rates?.USDXAU;
+        const silverRaw = data.rates?.USDXAG;
+
+        const goldPrice = goldRaw ? `$${(1 / goldRaw).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : null;
+        const silverPrice = silverRaw ? `$${(1 / silverRaw).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : null;
 
         if (goldPrice && silverPrice) {
-            // Record the successful fetch so we don't exceed daily limit
             await recordMetalsFetch();
             console.log('✅ Metal prices from MetalsPriceAPI (fallback):', { goldPrice, silverPrice });
-            return { gold: goldPrice, silver: silverPrice };
+            return { gold: goldPrice, silver: silverPrice, source: 'MetalsPriceAPI' };
         }
 
         return null;
@@ -82,9 +80,6 @@ export async function getMetalsPrices(): Promise<{ gold: string; silver: string 
         console.warn('⚠️ MetalsPriceAPI fallback also failed:', fallbackError);
         return null;
     }
-    */
-    console.log('ℹ️ MetalsPriceAPI fallback is temporarily disabled — using GoldPrice.org only');
-    return null;
 }
 
 /**

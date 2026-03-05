@@ -1,6 +1,7 @@
 // src/data/utils/town-coordinates.ts
 // City coordinates fetched from Google Sheets (32,350 US cities from Census Gazetteer)
 
+import { getAmericasCoordinates } from './americas-coordinates';
 import { fetchCSV } from './csv';
 import { COORDINATES_CSV_URL } from './sheets';
 
@@ -134,6 +135,12 @@ export async function getCityCoordinatesAsync(hometown: string): Promise<CityCoo
         }
     }
 
+    // Fallback: check Americas (Canada, Mexico, Central/South America, Caribbean)
+    const intl = getAmericasCoordinates(hometown);
+    if (intl) {
+        return { name: intl.name, state: intl.region, lat: intl.lat, lng: intl.lng };
+    }
+
     return null;
 }
 
@@ -179,6 +186,12 @@ export function getCityCoordinates(hometown: string): CityCoordinates | null {
                 return coords;
             }
         }
+    }
+
+    // Fallback: check Americas (Canada, Mexico, Central/South America, Caribbean)
+    const intl = getAmericasCoordinates(hometown);
+    if (intl) {
+        return { name: intl.name, state: intl.region, lat: intl.lat, lng: intl.lng };
     }
 
     return null;

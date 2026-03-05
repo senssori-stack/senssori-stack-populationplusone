@@ -93,13 +93,13 @@ export default function AstrologyComprehensive(props: Props) {
     const smallSize = Math.round(displayWidth * 0.01);
 
     // Calculate natal chart
-    const birthDateObj = new Date(dobISO);
+    const birthDateObj = new Date(dobISO + 'T00:00:00');
     const natalChart = useMemo(() => {
         return calculateNatalChart(birthDateObj, latitude, longitude);
     }, [dobISO, latitude, longitude]);
 
     // Calculate all astrology data
-    const birthDate = new Date(dobISO);
+    const birthDate = new Date(dobISO + 'T00:00:00');
     const year = birthDate.getFullYear();
     const chineseZodiac = getChineseZodiac(year);
     const chineseElement = getChineseElement(year);

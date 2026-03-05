@@ -216,8 +216,96 @@ async function fetchTopSong() {
 }
 
 async function fetchTopMovie() {
+    // Primary: Scrape Box Office Mojo for the actual #1 box office movie
+    try {
+        const title = await fetchFromBoxOfficeMojo();
+        if (title) {
+            console.log('✅ #1 Movie from Box Office Mojo:', title);
+            return title;
+        }
+    } catch (e) {
+        console.warn('⚠️ Box Office Mojo scrape failed, trying TMDb fallback:', e.message);
+    }
+
+    // Fallback: TMDb now_playing sorted by popularity
+    try {
+        const title = await fetchFromTMDb();
+        if (title) {
+            console.log('⚠️ #1 Movie from TMDb fallback:', title);
+            return title;
+        }
+    } catch (e) {
+        console.warn('⚠️ TMDb fallback also failed:', e.message);
+    }
+
+    return 'Unknown Movie';
+}
+
+// Scrape Box Office Mojo weekend summary for the actual #1 box office movie
+function fetchFromBoxOfficeMojo() {
     return new Promise((resolve, reject) => {
-        // Use now_playing for current theatrical releases (closest to box office #1)
+        const url = 'https://www.boxofficemojo.com/weekend/';
+        const options = {
+            hostname: 'www.boxofficemojo.com',
+            path: '/weekend/',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; PopulationPlusOne/1.0)',
+                'Accept': 'text/html',
+            },
+        };
+        https.get(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try {
+                    // Box Office Mojo weekend summary page has rows like:
+                    // <td>...date...</td> ... <td><a href="...">Movie Title</a></td>
+                    // The #1 Release is the 7th column in each weekend row
+                    // We look for the first row that has actual gross data (not future weekends)
+
+                    // Find all weekend table rows with gross data and #1 release links
+                    // Pattern: look for rows with dollar amounts followed by a movie title link
+                    const rowPattern = /\$[\d,]+[\s\S]*?<td[^>]*>\s*<a[^>]*href="\/release[^"]*"[^>]*>([^<]+)<\/a>\s*<\/td>/gi;
+                    const matches = [...data.matchAll(rowPattern)];
+
+                    if (matches.length > 0) {
+                        // First match is the most recent weekend with data
+                        const movieTitle = matches[0][1].trim();
+                        if (movieTitle && movieTitle !== '-') {
+                            resolve(movieTitle);
+                            return;
+                        }
+                    }
+
+                    // Alternative: parse the specific weekend detail page pattern
+                    // Look for the #1 Release column in the summary table
+                    const altPattern = /<a[^>]*href="\/weekend\/\d{4}W\d+[^"]*"[^>]*>[^<]*<\/a>[\s\S]*?<td[^>]*>\s*<a[^>]*href="\/release[^"]*"[^>]*>([^<]+)<\/a>/gi;
+                    const altMatches = [...data.matchAll(altPattern)];
+
+                    if (altMatches.length > 0) {
+                        const movieTitle = altMatches[0][1].trim();
+                        if (movieTitle && movieTitle !== '-') {
+                            resolve(movieTitle);
+                            return;
+                        }
+                    }
+
+                    console.warn('⚠️ Could not parse #1 movie from Box Office Mojo HTML');
+                    resolve(null);
+                } catch (e) {
+                    console.warn('Box Office Mojo parse error:', e);
+                    resolve(null);
+                }
+            });
+        }).on('error', (e) => {
+            reject(e);
+        });
+    });
+}
+
+// TMDb fallback: now_playing sorted by popularity
+function fetchFromTMDb() {
+    return new Promise((resolve, reject) => {
         const url = `https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB_API_KEY}&region=US&language=en-US&page=1`;
         https.get(url, (res) => {
             let data = '';
@@ -225,20 +313,15 @@ async function fetchTopMovie() {
             res.on('end', () => {
                 try {
                     const json = JSON.parse(data);
-                    // Sort by popularity descending to get the most popular currently playing movie
                     const movies = json.results || [];
                     movies.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
                     const movie = movies[0];
-                    resolve(movie ? movie.title : 'Unknown Movie');
+                    resolve(movie ? movie.title : null);
                 } catch (e) {
-                    console.warn('Movie error:', e);
-                    resolve('Unknown Movie');
+                    resolve(null);
                 }
             });
-        }).on('error', (e) => {
-            console.warn('Movie fetch error:', e);
-            resolve('Unknown Movie');
-        });
+        }).on('error', reject);
     });
 }
 

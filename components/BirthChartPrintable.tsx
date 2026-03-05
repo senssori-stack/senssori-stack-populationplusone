@@ -115,7 +115,7 @@ export default function BirthChartPrintable(props: Props) {
         );
     }
 
-    const formattedDate = new Date(dobISO).toLocaleDateString('en-US', {
+    const formattedDate = new Date(dobISO + 'T00:00:00').toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',

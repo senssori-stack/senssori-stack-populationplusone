@@ -160,14 +160,35 @@ function fetchTopSong() {
 }
 
 function fetchTopMovie() {
+  // Primary: Scrape Box Office Mojo for actual #1 box office movie
   try {
-    const url = 'https://api.themoviedb.org/3/movie/popular?api_key=' + TMDB_KEY + '&region=US';
-    const response = UrlFetchApp.fetch(url);
-    const data = JSON.parse(response.getContentText());
+    var response = UrlFetchApp.fetch('https://www.boxofficemojo.com/weekend/', {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PopulationPlusOne/1.0)' },
+      muteHttpExceptions: true
+    });
+    var html = response.getContentText();
+    // Find the first #1 Release link (most recent weekend with data)
+    // The #1 Release column contains links like: <a href="/release/...">Movie Title</a>
+    var pattern = /\$[\d,]+[\s\S]*?<a[^>]*href="\/release[^"]*"[^>]*>([^<]+)<\/a>/i;
+    var match = html.match(pattern);
+    if (match && match[1] && match[1].trim() !== '-') {
+      Logger.log('✅ #1 Movie from Box Office Mojo: ' + match[1].trim());
+      return match[1].trim();
+    }
+  } catch (e) {
+    Logger.log('⚠️ Box Office Mojo scrape failed: ' + e);
+  }
+  
+  // Fallback: TMDb popular (not accurate for box office, but better than nothing)
+  try {
+    var url = 'https://api.themoviedb.org/3/movie/popular?api_key=' + TMDB_KEY + '&region=US';
+    var response = UrlFetchApp.fetch(url);
+    var data = JSON.parse(response.getContentText());
+    Logger.log('⚠️ #1 Movie from TMDb fallback: ' + data.results[0].title);
     return data.results[0].title;
   } catch (e) {
-    Logger.log('⚠️ TMDB API failed: ' + e);
-    return 'Wicked';
+    Logger.log('⚠️ TMDb API also failed: ' + e);
+    return 'Unknown Movie';
   }
 }
 ────────────────────────────────────────────────────────────────

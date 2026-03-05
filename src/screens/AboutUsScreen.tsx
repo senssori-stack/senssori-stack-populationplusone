@@ -143,11 +143,11 @@ export default function AboutUsScreen({ navigation }: Props) {
                         </TouchableOpacity>
 
                         <Text style={styles.sourceCategory}>Entertainment</Text>
-                        <TouchableOpacity onPress={() => Linking.openURL('https://www.billboard.com/charts/hot-100/')}>
-                            <Text style={styles.sourceLink}>🎵 #1 Song — Billboard Hot 100 (billboard.com)</Text>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://www.last.fm/charts')}>
+                            <Text style={styles.sourceLink}>🎵 #1 Song — Last.fm Global Chart (last.fm)</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => Linking.openURL('https://www.themoviedb.org/')}>
-                            <Text style={styles.sourceLink}>🎬 #1 Movie — TMDb / The Movie Database (themoviedb.org)</Text>
+                        <TouchableOpacity onPress={() => Linking.openURL('https://www.boxofficemojo.com/weekend/')}>
+                            <Text style={styles.sourceLink}>🎬 #1 Movie — Box Office Mojo (boxofficemojo.com)</Text>
                         </TouchableOpacity>
 
                         <Text style={styles.sourceCategory}>Sports</Text>

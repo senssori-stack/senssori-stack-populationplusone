@@ -14,10 +14,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // https://script.google.com/macros/s/AKfycb.../exec
 const APPS_SCRIPT_WEB_APP_URL = '';  // ← PASTE YOUR DEPLOYED WEB APP URL HERE
 
-// Rate-limit: max 2 Metals API fetches per calendar day
+// Rate-limit: max 3 metals fetches per calendar day, spaced ~8 hours apart
 const METALS_FETCH_COUNT_KEY = 'metals_api_fetch_count';
 const METALS_FETCH_DATE_KEY = 'metals_api_fetch_date';
-const MAX_METALS_FETCHES_PER_DAY = 2;
+const METALS_LAST_FETCH_TIME_KEY = 'metals_last_fetch_time';
+const MAX_METALS_FETCHES_PER_DAY = 3;
+const MIN_FETCH_GAP_MS = 8 * 60 * 60 * 1000; // 8 hours between fetches
 
 // ─── RATE LIMITING ───────────────────────────────────────────────
 
@@ -31,13 +33,27 @@ export async function canFetchMetalsToday(): Promise<boolean> {
         const savedDate = await AsyncStorage.getItem(METALS_FETCH_DATE_KEY);
         const savedCount = await AsyncStorage.getItem(METALS_FETCH_COUNT_KEY);
 
-        if (savedDate !== today) {
-            // New day — reset counter
-            return true;
+        // Check daily count
+        if (savedDate === today) {
+            const count = parseInt(savedCount || '0', 10);
+            if (count >= MAX_METALS_FETCHES_PER_DAY) {
+                console.log(`⛔ Metals fetch blocked: ${count}/${MAX_METALS_FETCHES_PER_DAY} used today`);
+                return false;
+            }
         }
 
-        const count = parseInt(savedCount || '0', 10);
-        return count < MAX_METALS_FETCHES_PER_DAY;
+        // Check minimum time gap (8 hours between fetches)
+        const lastFetchTime = await AsyncStorage.getItem(METALS_LAST_FETCH_TIME_KEY);
+        if (lastFetchTime) {
+            const elapsed = Date.now() - parseInt(lastFetchTime, 10);
+            if (elapsed < MIN_FETCH_GAP_MS) {
+                const hoursLeft = ((MIN_FETCH_GAP_MS - elapsed) / (60 * 60 * 1000)).toFixed(1);
+                console.log(`⏳ Metals fetch blocked: next fetch in ${hoursLeft}h (8h gap)`);
+                return false;
+            }
+        }
+
+        return true;
     } catch {
         // If AsyncStorage fails, allow the fetch (be optimistic)
         return true;
@@ -60,8 +76,9 @@ export async function recordMetalsFetch(): Promise<void> {
         count += 1;
         await AsyncStorage.setItem(METALS_FETCH_DATE_KEY, today);
         await AsyncStorage.setItem(METALS_FETCH_COUNT_KEY, count.toString());
+        await AsyncStorage.setItem(METALS_LAST_FETCH_TIME_KEY, Date.now().toString());
 
-        console.log(`📊 Metals API usage today: ${count}/${MAX_METALS_FETCHES_PER_DAY}`);
+        console.log(`📊 Metals fetch usage today: ${count}/${MAX_METALS_FETCHES_PER_DAY} (next allowed in 8h)`);
     } catch (error) {
         console.warn('⚠️ Failed to record metals fetch count:', error);
     }

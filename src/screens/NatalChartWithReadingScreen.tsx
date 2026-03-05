@@ -58,7 +58,7 @@ const ASCENDANT_DESCRIPTIONS: Record<string, string> = {
 export default function NatalChartWithReadingScreen({ navigation, route }: Props) {
     const params = route.params || {};
 
-    const birthDate = params.dobISO ? new Date(params.dobISO) : new Date();
+    const birthDate = params.dobISO ? new Date(params.dobISO + 'T00:00:00') : new Date();
     const babyName = params.babyFirst ? `${params.babyFirst}${params.babyMiddle ? ' ' + params.babyMiddle : ''}` : 'Baby';
     const hometown = params.hometown || 'their birthplace';
     const theme = params.theme || 'green';
