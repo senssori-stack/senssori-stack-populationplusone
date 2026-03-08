@@ -1,13 +1,15 @@
 const { withProjectBuildGradle } = require("expo/config-plugins");
 
 module.exports = function withJitpackStripeExclude(config) {
-  return withProjectBuildGradle(config, (config) => {
-    if (config.modResults.language === "groovy") {
-      config.modResults.contents = config.modResults.contents.replace(
-        `maven { url 'https://www.jitpack.io' }`,
-        `maven {\n            url 'https://www.jitpack.io'\n            content {\n                excludeGroup 'com.stripe'\n            }\n        }`
-      );
-    }
-    return config;
-  });
+    return withProjectBuildGradle(config, (config) => {
+        if (config.modResults.language === "groovy") {
+            // Remove jitpack entirely - no dependencies need it, and it causes
+            // timeouts when Gradle tries to resolve com.stripe:stripe-android
+            config.modResults.contents = config.modResults.contents.replace(
+                /\s*maven\s*\{\s*url\s*['"]https:\/\/www\.jitpack\.io['"]\s*\}/,
+                ""
+            );
+        }
+        return config;
+    });
 };
