@@ -51,7 +51,8 @@
           "merchantIdentifier": "merchant.com.newearthling.PopulationPlusOne",
           "enableGooglePay": true
         }
-      ]
+      ],
+      "./plugins/withJitpackStripeExclude"
     ],
     "extra": {
       "eas": {
