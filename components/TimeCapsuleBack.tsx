@@ -138,7 +138,7 @@ export default function TimeCapsuleBack(props: Props) {
     // Build intro with zodiac and birthstone info
     const zodiacEmoji = '♈';
     const birthstoneEmoji = '💎';
-    const lifepathEmoji = '🎱';
+    const lifepathEmoji = '🔢';
     const lifePathStr = props.lifePathNumber ? `${lifepathEmoji}${props.lifePathNumber}` : '';
 
     // 1) Full-name intro
@@ -172,7 +172,7 @@ export default function TimeCapsuleBack(props: Props) {
     const rows: [string, string][] = [
         ['Zodiac', props.zodiac],
         ['Birthstone', props.birthstone],
-        ...(props.lifePathNumber ? [['Life Path Number', String(props.lifePathNumber)] as [string, string]] : []),
+        ...(props.lifePathNumber ? [['🔢 Life Path Number', String(props.lifePathNumber)] as [string, string]] : []),
         ...SNAP_KEYS.map(({ label, key }) => [label, formatSnapshotValue(key, props.snapshot[key] ?? '')] as [string, string]),
     ];
 

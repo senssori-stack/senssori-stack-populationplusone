@@ -185,7 +185,7 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
     const babyCount = designData.babyCount || babyFirstNames.length || 1;
 
     // Count uploaded photos
-    const uploadedPhotos: string[] = (designData.photoUris || []).filter((u: any) => u && typeof u === 'string');
+    const uploadedPhotos = (designData.photoUris || []).filter((u): u is string => u != null && typeof u === 'string');
     const photoCount = uploadedPhotos.length;
 
     // --- DYNAMIC ADD-ONS: Expand per-photo/per-baby designs ---
@@ -633,7 +633,7 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
                                 }}>
                                     {previewTab === 'front' ? (
                                         <SignFrontLandscape
-                                            theme={designData.theme}
+                                            theme={designData.theme || 'green'}
                                             photoUris={allPhotoUris}
                                             previewScale={fitScale}
                                             hometown={designData.hometown}
@@ -644,7 +644,7 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
                                         />
                                     ) : (
                                         <TimeCapsuleLandscape
-                                            theme={designData.theme}
+                                            theme={designData.theme || 'green'}
                                             babies={tcBabies}
                                             dobISO={dobISO}
                                             motherName={designData.motherName || ''}

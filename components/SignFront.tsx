@@ -8,6 +8,7 @@ interface SignFrontProps {
     population?: string;
     photoUri?: string;
     backgroundColor?: string;
+    nameGold?: boolean;
 }
 
 export default function SignFront({
@@ -17,6 +18,7 @@ export default function SignFront({
     population = '0',
     photoUri,
     backgroundColor = '#000080',
+    nameGold = false,
 }: SignFrontProps) {
     const { width } = useWindowDimensions();
 
@@ -67,7 +69,7 @@ export default function SignFront({
                         </Text>
 
                         {/* Baby name */}
-                        <Text style={[styles.babyName, { fontSize: baseFontSize * 2 }]}>
+                        <Text style={[styles.babyName, { fontSize: baseFontSize * 2 }, nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 4 }]}>
                             {babyName.toUpperCase()}
                         </Text>
 

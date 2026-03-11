@@ -14,6 +14,7 @@ interface BaseballCardProps {
     lifePathNumber?: string;
     photoUri?: string;
     backgroundColor?: string;
+    nameGold?: boolean;
 }
 
 /**
@@ -34,6 +35,7 @@ export default function BaseballCard({
     lifePathNumber = '',
     photoUri,
     backgroundColor = '#000080',
+    nameGold = false,
 }: BaseballCardProps) {
     const { width } = useWindowDimensions();
 
@@ -104,11 +106,11 @@ export default function BaseballCard({
 
                 {/* Name plate */}
                 <View style={[styles.namePlate, { backgroundColor, paddingVertical: displayHeight * 0.015 }]}>
-                    <Text style={[styles.playerName, { fontSize: baseFontSize * 1.3 }]}>
+                    <Text style={[styles.playerName, { fontSize: baseFontSize * 1.3 }, nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 }]}>
                         {firstName.toUpperCase()}
                     </Text>
                     {lastName && (
-                        <Text style={[styles.lastName, { fontSize: baseFontSize * 0.8 }]}>
+                        <Text style={[styles.lastName, { fontSize: baseFontSize * 0.8 }, nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 }]}>
                             {lastName.toUpperCase()}
                         </Text>
                     )}
@@ -170,7 +172,7 @@ export default function BaseballCard({
                 {/* Footer */}
                 <View style={[styles.footer, { backgroundColor, height: displayHeight * 0.04 }]}>
                     <Text style={[styles.footerText, { fontSize: baseFontSize * 0.45 }]}>
-                        PopulationPlusOne.com • #{lifePathNumber || '1'} Life Path
+                        PopulationPlusOne.com • 🔢 #{lifePathNumber || '1'} Life Path
                     </Text>
                 </View>
             </View>

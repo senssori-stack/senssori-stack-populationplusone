@@ -80,6 +80,8 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
     // Preview scale for SignFrontLandscape
     const signFrontPreviewScale = (width * 0.92) / 3300;
 
+    const goldNameStyle = params.nameGold ? { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 4 } : {};
+
     // Refs for capturing
     const signFrontRef = useRef<ViewShot | null>(null);
     const classicRef = useRef<ViewShot | null>(null);
@@ -277,6 +279,7 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
                                                         population={population}
                                                         personName={params.personName || ''}
                                                         dobISO={params.dobISO}
+                                                        nameGold={params.nameGold}
                                                     />
                                                 </ViewShot>
                                                 {/* Ground stakes */}
@@ -310,7 +313,7 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
                                                                 <Text style={[styles.plusOne, { fontSize: signWidth * 0.28, marginBottom: -10, textAlign: 'center' }]}>
                                                                     {plusLabel}
                                                                 </Text>
-                                                                <Text style={[styles.babyName, { fontSize: signWidth * 0.09 }]}>
+                                                                <Text style={[styles.babyName, { fontSize: signWidth * 0.09 }, goldNameStyle]}>
                                                                     {babyName.toUpperCase()}
                                                                 </Text>
                                                             </View>
@@ -351,7 +354,7 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
                                                                 <Text style={[styles.welcomeText, { fontSize: signWidth * 0.078, marginBottom: 4, textAlign: 'center' }]}>
                                                                     Welcome To
                                                                 </Text>
-                                                                <Text style={[styles.babyName, { fontSize: signWidth * 0.09 }]}>
+                                                                <Text style={[styles.babyName, { fontSize: signWidth * 0.09 }, goldNameStyle]}>
                                                                     {babyName.toUpperCase()}
                                                                 </Text>
                                                             </View>
@@ -392,7 +395,7 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
                                                                 <Text style={[styles.welcomeText, { fontSize: signWidth * 0.078, marginBottom: 4, textAlign: 'center', color: colors.bg, fontStyle: 'italic' }]}>
                                                                     Welcome To
                                                                 </Text>
-                                                                <Text style={[styles.babyNameMinimal, { fontSize: signWidth * 0.09, color: colors.bg }]}>
+                                                                <Text style={[styles.babyNameMinimal, { fontSize: signWidth * 0.09, color: params.nameGold ? '#FFD700' : colors.bg }, params.nameGold && { textShadowColor: '#B8860B', textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 4 }]}>
                                                                     {babyName.toUpperCase()}
                                                                 </Text>
                                                             </View>

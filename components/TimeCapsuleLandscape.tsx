@@ -44,6 +44,9 @@ type Props = {
     weightOz: string;
     lengthIn: string;
     hometown: string;
+    heritage?: string;
+    heritageWithFlags?: string;
+    nationality?: string;
     snapshot: Record<string, string>;
     zodiac: string;
     birthstone: string;
@@ -51,6 +54,10 @@ type Props = {
     previewScale?: number;
     mode?: 'baby' | 'milestone'; // 'baby' for birth announcement, 'milestone' for birthdays
     message?: string; // Prewritten message for milestone mode
+    hideThenColumn?: boolean; // Hide the THEN column (e.g. for weddings)
+    isMemorial?: boolean; // Death announcement: shows THEN column with birth-date data
+    dateOfBirthISO?: string; // For memorials: person's actual DOB (dobISO = date of death)
+    dateOfDeathISO?: string; // For memorials: date of death for display
 };
 
 /**
@@ -194,6 +201,9 @@ export default function TimeCapsuleLandscape(props: Props) {
         weightOz,
         lengthIn,
         hometown,
+        heritage,
+        heritageWithFlags,
+        nationality,
         zodiac,
         birthstone,
         lifePathNumber,
@@ -201,7 +211,14 @@ export default function TimeCapsuleLandscape(props: Props) {
         previewScale = 0.2,
         mode,
         message,
+        hideThenColumn = false,
+        isMemorial = false,
+        dateOfBirthISO,
+        dateOfDeathISO,
     } = props;
+
+    // For memorials, use the person's actual DOB for THEN data (dobISO = date of death for population routing)
+    const thenDateISO = isMemorial && dateOfBirthISO ? dateOfBirthISO : dobISO;
 
     // Get historical snapshot data based on birth date
     const [historicalSnapshot, setHistoricalSnapshot] = useState<Record<string, string>>(snapshot || {});
@@ -217,8 +234,8 @@ export default function TimeCapsuleLandscape(props: Props) {
     useEffect(() => {
         const loadHistoricalData = async () => {
             try {
-                // Get THEN data (birth date)
-                const historicalData = await getSnapshotWithHistorical(dobISO);
+                // Get THEN data (birth date — or person's actual DOB for memorials)
+                const historicalData = await getSnapshotWithHistorical(thenDateISO);
                 setHistoricalSnapshot(historicalData);
                 console.log('Historical (THEN) data loaded:', Object.keys(historicalData).length, 'keys');
 
@@ -236,33 +253,33 @@ export default function TimeCapsuleLandscape(props: Props) {
                     const { getHistoricalPopulationForCity } = await import('../src/data/utils/historical-populations');
                     const { getCurrentPopulationForCity } = await import('../src/data/utils/populations');
 
-                    // Get birth year from dobISO
-                    const dobDateObj = new Date(dobISO + 'T00:00:00');
-                    const birthYear = dobDateObj.getFullYear();
+                    // Get birth year from thenDateISO (person's actual DOB for memorials)
+                    const thenDateObj = new Date(thenDateISO + 'T00:00:00');
+                    const thenYear = thenDateObj.getFullYear();
                     const CUTOFF_DATE = new Date('2020-01-01T00:00:00');
-                    const isBefore2020 = dobDateObj < CUTOFF_DATE;
+                    const isBefore2020 = thenDateObj < CUTOFF_DATE;
 
                     console.log(`📍 Fetching city population for ${hometown}`);
-                    console.log(`   Birth year: ${birthYear}, Before 2020: ${isBefore2020}`);
+                    console.log(`   THEN year: ${thenYear}, Before 2020: ${isBefore2020}`);
 
                     /**
                      * ⚠️ CRITICAL POPULATION FETCH RULES (must match front sign logic):
-                     * DOB BEFORE 01-01-2020:
+                     * THEN DATE BEFORE 01-01-2020:
                      *   THEN section → HISTORICAL CSV (getHistoricalPopulationForCity)
                      *   NOW section  → CURRENT CSV (getCurrentPopulationForCity)
-                     * DOB ON/AFTER 01-01-2020:
+                     * THEN DATE ON/AFTER 01-01-2020:
                      *   THEN section → CURRENT CSV (getCurrentPopulationForCity) — same source as front sign
                      *   NOW section  → CURRENT CSV (getCurrentPopulationForCity)
                      */
 
                     let popThen: number | null;
                     if (isBefore2020) {
-                        // DOB before 2020 → THEN uses HISTORICAL CSV
-                        console.log('🟡 DOB before 2020 - THEN uses HISTORICAL CSV');
-                        popThen = await getHistoricalPopulationForCity(hometown, birthYear);
+                        // THEN date before 2020 → THEN uses HISTORICAL CSV
+                        console.log('🟡 THEN date before 2020 - THEN uses HISTORICAL CSV');
+                        popThen = await getHistoricalPopulationForCity(hometown, thenYear);
                     } else {
-                        // DOB on/after 2020 → THEN uses CURRENT CSV (matches front sign)
-                        console.log('🔵 DOB on/after 2020 - THEN uses CURRENT CSV (same as front sign)');
+                        // THEN date on/after 2020 → THEN uses CURRENT CSV
+                        console.log('🔵 THEN date on/after 2020 - THEN uses CURRENT CSV');
                         popThen = await getCurrentPopulationForCity(hometown);
                     }
 
@@ -294,12 +311,12 @@ export default function TimeCapsuleLandscape(props: Props) {
             }
         };
 
-        if (dobISO) {
+        if (thenDateISO) {
             loadHistoricalData();
         } else {
             setHistoricalSnapshot(snapshot || {});
         }
-    }, [dobISO, snapshot, hometown]);
+    }, [thenDateISO, snapshot, hometown]);
 
     const colors = COLOR_SCHEMES[theme];
 
@@ -391,18 +408,68 @@ export default function TimeCapsuleLandscape(props: Props) {
     // Get zodiac and birthstone emojis
     const zodiacEmoji = ZODIAC_EMOJIS[zodiac] || '♈';
     const birthstoneEmoji = BIRTHSTONE_EMOJIS[birthstone] || '💎';
-    const lifepathEmoji = '🎱'; // Ping pong ball emoji for life path numbers
+    const lifepathEmoji = '🔢';
 
     // Check if this is a milestone (birthday) or baby announcement
     // Detect milestone mode: either explicit mode prop OR no birth measurements (weight/length)
-    const isMilestoneMode = mode === 'milestone' || (!weightLb && !weightOz && !lengthIn && !fatherName);
+    const isMilestoneMode = isMemorial || mode === 'milestone' || (!weightLb && !weightOz && !lengthIn && !fatherName);
 
-    if (isMilestoneMode) {
+    // THEN column shows for milestones, memorials, and non-baby modes (unless explicitly hidden)
+    const showThenColumn = isMilestoneMode && !hideThenColumn;
+
+    if (isMemorial) {
+        // MEMORIAL / DEATH ANNOUNCEMENT FORMAT:
+        // Format the person's actual DOB for the intro text
+        let birthDateFormatted = '';
+        if (dateOfBirthISO) {
+            try {
+                const d = new Date(dateOfBirthISO + 'T00:00:00');
+                birthDateFormatted = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            } catch (e) { }
+        }
+        let deathDateFormatted = '';
+        if (dateOfDeathISO) {
+            try {
+                const d = new Date(dateOfDeathISO + 'T00:00:00');
+                deathDateFormatted = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            } catch (e) { }
+        }
+
+        // Calculate age at death
+        let ageAtDeath = age;
+        if (dateOfBirthISO && dateOfDeathISO) {
+            const dob = new Date(dateOfBirthISO + 'T00:00:00');
+            const dod = new Date(dateOfDeathISO + 'T00:00:00');
+            ageAtDeath = dod.getFullYear() - dob.getFullYear();
+            const mDiff = dod.getMonth() - dob.getMonth();
+            if (mDiff < 0 || (mDiff === 0 && dod.getDate() < dob.getDate())) ageAtDeath--;
+        }
+
+        let memorialSentence = `${fullNamesForSentence}`;
+        if (birthDateFormatted) memorialSentence += ` was born on ${birthDateFormatted}`;
+        memorialSentence += ` in ${toTitleCase(hometown)}`;
+        if (deathDateFormatted) memorialSentence += ` and passed away on ${deathDateFormatted}`;
+        if (ageAtDeath > 0) memorialSentence += ` at the age of ${ageAtDeath}`;
+
+        parts.push(memorialSentence);
+
+        let attributeText = `${babyFirstOnly || fullNamesForSentence}'s zodiac sign is ${zodiac} ${zodiacEmoji} their birthstone is ${birthstone} ${birthstoneEmoji}`;
+        if (lifePathNumber) {
+            attributeText += ` have a life path number of ${lifePathNumber} ${lifepathEmoji}`;
+        }
+        parts.push(attributeText);
+    } else if (isMilestoneMode) {
         // BIRTHDAY MILESTONE FORMAT:
         // "[full name] was born on [date] in [city, st] and is now [age] years old. 
         // [first name]'s zodiac sign is [sign] [emoji] their birthstone is [birthstone] 
         // have a life path number of [number] [emoji]"
-        parts.push(`${fullNamesForSentence} was born on ${formattedDate} in ${toTitleCase(hometown)} and is now ${age} years old`);
+        let bornSentence = `${fullNamesForSentence} was born on ${formattedDate} in ${toTitleCase(hometown)}`;
+        const traits = [(heritageWithFlags || heritage)?.trim(), nationality?.trim()].filter(Boolean);
+        if (traits.length > 0) {
+            bornSentence += `. ${babyFirstOnly} is proudly ${traits.join(' and ')}`;
+        }
+        bornSentence += ` and is now ${age} years old`;
+        parts.push(bornSentence);
 
         let attributeText = `${babyFirstOnly}'s zodiac sign is ${zodiac} ${zodiacEmoji} their birthstone is ${birthstone} ${birthstoneEmoji}`;
         if (lifePathNumber) {
@@ -417,6 +484,10 @@ export default function TimeCapsuleLandscape(props: Props) {
 
         // Build the birth details sentence
         let birthSentence = `${fullNamesForSentence} was born on ${formattedDate} in ${toTitleCase(hometown)}`;
+        const babyTraits = [(heritageWithFlags || heritage)?.trim(), nationality?.trim()].filter(Boolean);
+        if (babyTraits.length > 0) {
+            birthSentence += `. ${babyFirstOnly} is proudly ${babyTraits.join(' and ')}`;
+        }
 
         // Add weight and length if available
         if (weightLb && weightOz && lengthIn && weightLb.trim() && weightOz.trim() && lengthIn.trim()) {
@@ -470,12 +541,12 @@ export default function TimeCapsuleLandscape(props: Props) {
         }
     }, [hometown]);
 
-    // Get birth year for historical minimum wage lookup
-    const birthYear = dobISO ? new Date(dobISO + 'T00:00:00').getFullYear() : new Date().getFullYear();
+    // Get THEN year for historical minimum wage lookup (person's DOB for memorials)
+    const thenYear = thenDateISO ? new Date(thenDateISO + 'T00:00:00').getFullYear() : new Date().getFullYear();
 
     // For THEN: Use FEDERAL minimum wage for historical accuracy (we don't have historical state data)
     // For NOW: Use geolocation-aware minimum wage (highest of federal, state, or local)
-    const historicalFederalMinWage = getFederalMinimumWage(birthYear);
+    const historicalFederalMinWage = getFederalMinimumWage(thenYear);
     const currentMinWage = getMinimumWage(hometown, new Date().getFullYear());
 
     // Build data rows with THEN and NOW columns (no zodiac/birthstone in table)
@@ -678,7 +749,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                                             {'and has a life path number of ' + lifePathNumber}
                                         </Text>
                                         <ClickableEmoji
-                                            emoji="🎱"
+                                            emoji="🔢"
                                             url={getLifePathLink(lifePathNumber)}
                                             style={{ fontSize: bodySize, color: colors.text }}
                                         />
@@ -752,12 +823,12 @@ export default function TimeCapsuleLandscape(props: Props) {
                             <Text style={[styles.label, { fontSize: labelSize * 0.9, color: colors.text, width: '40%', fontWeight: '900' }]}>
                                 {/* Empty space for label column */}
                             </Text>
-                            {mode !== 'baby' && (
+                            {showThenColumn && (
                                 <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, width: '20%', textAlign: 'center', fontWeight: '900' }]}>
                                     THEN
                                 </Text>
                             )}
-                            {mode === 'baby' && (
+                            {!showThenColumn && (
                                 <View style={{ width: '20%' }} />
                             )}
                             <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, width: '40%', textAlign: 'right', fontWeight: '900' }]}>
@@ -797,7 +868,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                                             style={{ fontSize: labelSize, color: colors.text, marginLeft: 4 }}
                                         />
                                     </View>
-                                    {mode !== 'baby' && (
+                                    {showThenColumn && (
                                         <Text
                                             style={[styles.value, {
                                                 fontSize: valueSize,
@@ -810,7 +881,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                                             {thenRomanNumeral ? `${thenRomanNumeral} ` : ''}{thenValue}
                                         </Text>
                                     )}
-                                    {mode === 'baby' && (
+                                    {!showThenColumn && (
                                         <View style={{ width: '20%' }} />
                                     )}
                                     <Text style={[styles.value, { fontSize: valueSize, color: colors.text, width: '40%', textAlign: 'right' }]} numberOfLines={1}>

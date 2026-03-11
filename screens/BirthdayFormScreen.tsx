@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import PhotoUploadGrid from '../components/PhotoUploadGrid';
 import ScrollableDatePicker from '../components/ScrollableDatePicker';
+import { formatHeritageDisplay, HERITAGE_OPTIONS } from '../constants/heritage';
 import { COLOR_SCHEMES } from '../src/data/utils/colors';
 import { getPopulationForCity } from '../src/data/utils/populations';
 import type { RootStackParamList, ThemeName } from '../src/types';
@@ -159,6 +160,9 @@ export default function BirthdayFormScreen({ navigation }: Props) {
     const [personName, setPersonName] = useState('Jessica Sample Doe');
     const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]);
     const [hometown, setHometown] = useState('Bellefontaine Neighbors, MO');
+    const [selectedHeritages, setSelectedHeritages] = useState<string[]>([]);
+    const [showHeritageModal, setShowHeritageModal] = useState(false);
+    const [nationality, setNationality] = useState('');
     const [dobDate, setDobDate] = useState<Date>(new Date(2026, 1, 4)); // Feb 4, 2026
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedMessage, setSelectedMessage] = useState<MessageKey>('classic');
@@ -166,6 +170,7 @@ export default function BirthdayFormScreen({ navigation }: Props) {
     const [editableMessage, setEditableMessage] = useState('');
     const [messageWasEdited, setMessageWasEdited] = useState(false);
     const [selectedColor, setSelectedColor] = useState<ThemeName>('green');
+    const [nameGold, setNameGold] = useState(false);
     const [loading, setLoading] = useState(false);
     const [population, setPopulation] = useState<number | null>(null);
 
@@ -274,10 +279,13 @@ export default function BirthdayFormScreen({ navigation }: Props) {
                 motherName: personName.trim(),
                 photoUris: photos.filter(p => p !== null) as string[],
                 hometown: hometown.trim(),
+                heritage: formatHeritageDisplay(selectedHeritages) || undefined,
+                nationality: nationality.trim() || undefined,
                 dobISO: dobISO,
                 mode: 'milestone',
                 message: finalMessage,
                 population: pop,
+                nameGold,
             });
         } catch (error) {
             console.error('Error fetching population:', error);
@@ -356,6 +364,90 @@ export default function BirthdayFormScreen({ navigation }: Props) {
                 value={personName}
                 onChangeText={setPersonName}
                 placeholder="Enter full name"
+                placeholderTextColor="#999"
+            />
+
+            {/* Heritage */}
+            <Text style={styles.label}>Heritage (optional)</Text>
+            <TouchableOpacity
+                style={styles.dropdown}
+                onPress={() => setShowHeritageModal(true)}
+            >
+                <Text style={selectedHeritages.length > 0 ? styles.dropdownText : styles.dropdownPlaceholder}>
+                    {selectedHeritages.length > 0 ? formatHeritageDisplay(selectedHeritages) : 'Select 1–4 heritages...'}
+                </Text>
+                <Text style={styles.dropdownArrow}>▼</Text>
+            </TouchableOpacity>
+
+            {/* Heritage Multi-Select Modal */}
+            <Modal visible={showHeritageModal} transparent animationType="slide">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Select Heritage(s)</Text>
+                        <Text style={styles.modalSubtitle}>
+                            Represent your bloodlines — pick 1 to 4
+                        </Text>
+                        <Text style={styles.heritageCounter}>
+                            {selectedHeritages.length} / 4 selected
+                        </Text>
+                        <ScrollView style={styles.modalScroll}>
+                            {HERITAGE_OPTIONS.map(option => {
+                                const isSelected = selectedHeritages.includes(option.id);
+                                const atLimit = selectedHeritages.length >= 4 && !isSelected;
+                                return (
+                                    <TouchableOpacity
+                                        key={option.id}
+                                        style={[
+                                            styles.modalOption,
+                                            isSelected && styles.modalOptionSelected,
+                                            atLimit && styles.modalOptionDisabled,
+                                        ]}
+                                        onPress={() => {
+                                            if (atLimit) return;
+                                            setSelectedHeritages(prev =>
+                                                isSelected
+                                                    ? prev.filter(id => id !== option.id)
+                                                    : [...prev, option.id]
+                                            );
+                                        }}
+                                    >
+                                        <Text style={[
+                                            styles.modalOptionText,
+                                            isSelected && styles.modalOptionTextSelected,
+                                            atLimit && styles.modalOptionTextDisabled,
+                                        ]}>
+                                            {option.symbol}  {option.label}
+                                        </Text>
+                                        {isSelected && <Text style={styles.checkmark}>✓</Text>}
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </ScrollView>
+                        {selectedHeritages.length > 0 && (
+                            <TouchableOpacity
+                                style={styles.clearButton}
+                                onPress={() => setSelectedHeritages([])}
+                            >
+                                <Text style={styles.clearButtonText}>Clear All</Text>
+                            </TouchableOpacity>
+                        )}
+                        <TouchableOpacity
+                            style={styles.modalDone}
+                            onPress={() => setShowHeritageModal(false)}
+                        >
+                            <Text style={styles.modalDoneText}>Done</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Nationality */}
+            <Text style={styles.label}>Nationality (optional)</Text>
+            <TextInput
+                style={styles.input}
+                value={nationality}
+                onChangeText={setNationality}
+                placeholder="e.g. American"
                 placeholderTextColor="#999"
             />
 
@@ -447,6 +539,22 @@ export default function BirthdayFormScreen({ navigation }: Props) {
                         glowAnim={glowAnims[index]}
                     />
                 ))}
+            </View>
+
+            <Text style={styles.label}>Name Style</Text>
+            <View style={styles.toggleGroup}>
+                <TouchableOpacity
+                    style={[styles.toggleBtn, !nameGold && styles.toggleActive]}
+                    onPress={() => setNameGold(false)}
+                >
+                    <Text style={[styles.toggleText, !nameGold && styles.toggleActiveText]}>White</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.toggleBtn, nameGold && { backgroundColor: '#FFD700' }]}
+                    onPress={() => setNameGold(true)}
+                >
+                    <Text style={[styles.toggleText, nameGold && { color: '#333' }]}>✨ Gold</Text>
+                </TouchableOpacity>
             </View>
 
             {/* Preview Button */}
@@ -569,6 +677,11 @@ const styles = StyleSheet.create({
         gap: 8,
         justifyContent: 'center',
     },
+    toggleGroup: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+    toggleBtn: { flex: 1, paddingVertical: 12, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center' },
+    toggleActive: { backgroundColor: '#fff' },
+    toggleText: { fontWeight: '700', color: '#fff', fontSize: 14 },
+    toggleActiveText: { color: '#333' },
     previewButton: {
         backgroundColor: '#fff',
         borderRadius: 12,
@@ -612,13 +725,70 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         marginBottom: 8,
         backgroundColor: '#f5f5f5',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
     modalOptionSelected: {
         backgroundColor: '#000080',
     },
+    modalOptionDisabled: {
+        opacity: 0.35,
+    },
     modalOptionText: {
         fontSize: 16,
         color: '#333',
+        flex: 1,
+    },
+    modalOptionTextSelected: {
+        color: '#fff',
+    },
+    modalOptionTextDisabled: {
+        color: '#bbb',
+    },
+    checkmark: {
+        fontSize: 18,
+        color: '#fff',
+        fontWeight: '900',
+    },
+    modalSubtitle: {
+        fontSize: 14,
+        color: '#999',
+        textAlign: 'center',
+        marginBottom: 4,
+    },
+    heritageCounter: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#000080',
+        textAlign: 'center',
+        marginBottom: 10,
+    },
+    dropdownPlaceholder: {
+        fontSize: 16,
+        color: '#999',
+    },
+    clearButton: {
+        marginTop: 8,
+        padding: 10,
+        alignItems: 'center',
+    },
+    clearButtonText: {
+        color: '#FF3B30',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    modalDone: {
+        marginTop: 8,
+        padding: 14,
+        backgroundColor: '#000080',
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    modalDoneText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '900',
     },
     modalClose: {
         marginTop: 16,

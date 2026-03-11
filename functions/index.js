@@ -51,6 +51,70 @@ exports.createPaymentIntent = functions.https.onCall(async (data, context) => {
     }
 });
 
+// ==========================================
+// WEDDING RSVP — Create wedding & manage RSVPs
+// ==========================================
+
+/**
+ * createWedding — Called when couple generates wedding postcards
+ * Creates a Firestore document for the wedding with RSVP collection
+ */
+exports.createWedding = functions.https.onCall(async (data, context) => {
+    try {
+        const { coupleName, weddingDate, venue, hometown, theme } = data;
+
+        if (!coupleName) {
+            throw new functions.https.HttpsError('invalid-argument', 'Couple name is required.');
+        }
+
+        // Generate a unique wedding ID
+        const weddingId = `wedding-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
+        await db.collection('weddings').doc(weddingId).set({
+            coupleName,
+            weddingDate: weddingDate || '',
+            venue: venue || '',
+            hometown: hometown || '',
+            theme: theme || 'gold',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        console.log('✅ Wedding created:', weddingId, 'for', coupleName);
+
+        return {
+            weddingId,
+            rsvpLink: `https://populationplusone.com/rsvp/${weddingId}`,
+        };
+    } catch (error) {
+        console.error('❌ createWedding error:', error);
+        throw new functions.https.HttpsError('internal', error.message);
+    }
+});
+
+/**
+ * getWeddingRSVPs — Retrieve all RSVPs for a wedding
+ */
+exports.getWeddingRSVPs = functions.https.onCall(async (data, context) => {
+    try {
+        const { weddingId } = data;
+
+        if (!weddingId) {
+            throw new functions.https.HttpsError('invalid-argument', 'Wedding ID is required.');
+        }
+
+        const rsvpSnapshot = await db.collection('weddings').doc(weddingId).collection('rsvps').get();
+        const rsvps = rsvpSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
+
+        return { rsvps };
+    } catch (error) {
+        console.error('❌ getWeddingRSVPs error:', error);
+        throw new functions.https.HttpsError('internal', error.message);
+    }
+});
+
 // API Keys
 const METAL_PRICE_API_KEY = 'b11a31e0534e4f7d0ce7f52262cfa644';
 const ALPHA_VANTAGE_API_KEY = '8NT72TK4I1W8CNWY';

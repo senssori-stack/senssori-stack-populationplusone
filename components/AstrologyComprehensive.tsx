@@ -347,7 +347,7 @@ export default function AstrologyComprehensive(props: Props) {
                                             <Text style={{ fontSize: bodySize * 0.95, color: colors.text, fontWeight: 'bold' }}>{chineseElement} {chineseZodiac}</Text>
                                         </View>
                                         <View style={{ width: '48%' }}>
-                                            <Text style={{ fontSize: labelSize * 0.95, color: colors.text, opacity: 0.7, marginBottom: 2 }}>Life Path Number:</Text>
+                                            <Text style={{ fontSize: labelSize * 0.95, color: colors.text, opacity: 0.7, marginBottom: 2 }}>🔢 Life Path Number:</Text>
                                             <Text style={{ fontSize: bodySize * 0.95, color: colors.text, fontWeight: 'bold' }}>{lifePathResult.number}</Text>
                                         </View>
                                         <View style={{ width: '48%' }}>
@@ -479,7 +479,7 @@ export default function AstrologyComprehensive(props: Props) {
                                             <Text style={{ fontSize: bodySize * 2, color: colors.text, fontWeight: 'bold' }}>{chineseElement} {chineseZodiac}</Text>
                                         </View>
                                         <View>
-                                            <Text style={{ fontSize: labelSize * 2, color: colors.text, opacity: 0.7 }}>Life Path Number:</Text>
+                                            <Text style={{ fontSize: labelSize * 2, color: colors.text, opacity: 0.7 }}>🔢 Life Path Number:</Text>
                                             <Text style={{ fontSize: bodySize * 2, color: colors.text, fontWeight: 'bold' }}>{lifePathResult.number}</Text>
                                         </View>
                                         <View>

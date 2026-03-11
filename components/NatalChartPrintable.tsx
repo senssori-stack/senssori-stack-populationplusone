@@ -93,10 +93,11 @@ type Props = {
     dobISO: string;
     hometown: string;
     previewScale?: number;
+    isWedding?: boolean;
 };
 
 export default function NatalChartPrintable(props: Props) {
-    const { theme, babyName, dobISO, hometown, previewScale = 0.2 } = props;
+    const { theme, babyName, dobISO, hometown, previewScale = 0.2, isWedding = false } = props;
 
     const colors = COLOR_SCHEMES[theme];
     const displayWidth = LANDSCAPE_WIDTH * previewScale;
@@ -160,7 +161,7 @@ export default function NatalChartPrintable(props: Props) {
                     {/* Header */}
                     <View style={styles.header}>
                         <Text style={[styles.title, { fontSize: titleSize, color: colors.text }]}>
-                            ✨ NATAL CHART ✨
+                            {isWedding ? '✨ WEDDING CHART ✨' : '✨ NATAL CHART ✨'}
                         </Text>
                         <Text style={[styles.subtitle, { fontSize: sectionTitleSize * 0.9, color: colors.text }]}>
                             {babyName}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, useWindowDimensions } from 'react-native';
+import { Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 interface PostcardSignProps {
     babyName: string;
@@ -12,6 +12,7 @@ interface PostcardSignProps {
     photoUri?: string;
     backgroundColor?: string;
     message?: string;
+    nameGold?: boolean;
 }
 
 /**
@@ -30,6 +31,7 @@ export default function PostcardSign({
     photoUri,
     backgroundColor = '#000080',
     message = '',
+    nameGold = false,
 }: PostcardSignProps) {
     const { width } = useWindowDimensions();
 
@@ -73,7 +75,7 @@ export default function PostcardSign({
 
                 {/* Photo overlay with name */}
                 <View style={[styles.photoOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
-                    <Text style={[styles.overlayName, { fontSize: baseFontSize * 1.4 }]}>
+                    <Text style={[styles.overlayName, { fontSize: baseFontSize * 1.4 }, nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 }]}>
                         {babyName}
                     </Text>
                 </View>
@@ -86,7 +88,7 @@ export default function PostcardSign({
                     <Text style={[styles.welcomeText, { fontSize: baseFontSize * 0.9 }]}>
                         Introducing...
                     </Text>
-                    <Text style={[styles.babyName, { fontSize: baseFontSize * 1.6 }]}>
+                    <Text style={[styles.babyName, { fontSize: baseFontSize * 1.6 }, nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 }]}>
                         {babyName.toUpperCase()}
                     </Text>
                 </View>

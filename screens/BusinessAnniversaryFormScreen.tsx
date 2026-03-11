@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
     Alert,
     Animated,
-    Modal,
     ScrollView,
     StyleSheet,
     Text,
@@ -18,46 +17,14 @@ import { COLOR_SCHEMES } from '../src/data/utils/colors';
 import { getPopulationForCity } from '../src/data/utils/populations';
 import type { RootStackParamList, ThemeName } from '../src/types';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'AnniversaryForm'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'BusinessAnniversaryForm'>;
 
-const ANNIVERSARY_OPTIONS = [
-    { id: '1st', label: '💍 1st Anniversary - Paper', emoji: '💍', traditional: 'Paper' },
-    { id: '2nd', label: '💍 2nd Anniversary - Cotton', emoji: '💍', traditional: 'Cotton' },
-    { id: '3rd', label: '💍 3rd Anniversary - Leather', emoji: '💍', traditional: 'Leather' },
-    { id: '4th', label: '💍 4th Anniversary - Fruit & Flowers', emoji: '💍', traditional: 'Fruit & Flowers' },
-    { id: '5th', label: '💍 5th Anniversary - Wood', emoji: '💍', traditional: 'Wood' },
-    { id: '6th', label: '💍 6th Anniversary - Candy/Iron', emoji: '💍', traditional: 'Candy/Iron' },
-    { id: '7th', label: '💍 7th Anniversary - Wool/Copper', emoji: '💍', traditional: 'Wool/Copper' },
-    { id: '8th', label: '💍 8th Anniversary - Pottery/Bronze', emoji: '💍', traditional: 'Pottery/Bronze' },
-    { id: '9th', label: '💍 9th Anniversary - Willow/Pottery', emoji: '💍', traditional: 'Willow/Pottery' },
-    { id: '10th', label: '💍 10th Anniversary - Tin/Aluminum', emoji: '💍', traditional: 'Tin/Aluminum' },
-    { id: '11th', label: '💍 11th Anniversary - Steel', emoji: '💍', traditional: 'Steel' },
-    { id: '12th', label: '💍 12th Anniversary - Silk/Linen', emoji: '💍', traditional: 'Silk/Linen' },
-    { id: '13th', label: '💍 13th Anniversary - Lace', emoji: '💍', traditional: 'Lace' },
-    { id: '14th', label: '💍 14th Anniversary - Ivory', emoji: '💍', traditional: 'Ivory' },
-    { id: '15th', label: '💎 15th Anniversary - Crystal', emoji: '💎', traditional: 'Crystal' },
-    { id: '20th', label: '🏺 20th Anniversary - China', emoji: '🏺', traditional: 'China' },
-    { id: '25th', label: '🥈 25th Anniversary - Silver', emoji: '🥈', traditional: 'Silver' },
-    { id: '30th', label: '🦪 30th Anniversary - Pearl', emoji: '🦪', traditional: 'Pearl' },
-    { id: '35th', label: '💠 35th Anniversary - Coral', emoji: '💠', traditional: 'Coral' },
-    { id: '40th', label: '❤️ 40th Anniversary - Ruby', emoji: '❤️', traditional: 'Ruby' },
-    { id: '45th', label: '💙 45th Anniversary - Sapphire', emoji: '💙', traditional: 'Sapphire' },
-    { id: '50th', label: '🥇 50th Anniversary - Gold', emoji: '🥇', traditional: 'Gold' },
-    { id: '55th', label: '💚 55th Anniversary - Emerald', emoji: '💚', traditional: 'Emerald' },
-    { id: '60th', label: '💎 60th Anniversary - Diamond', emoji: '💎', traditional: 'Diamond' },
-    { id: '65th', label: '💜 65th Anniversary - Blue Sapphire', emoji: '💜', traditional: 'Blue Sapphire' },
-    { id: '70th', label: '💍 70th Anniversary - Platinum', emoji: '💍', traditional: 'Platinum' },
-    { id: '75th', label: '💎 75th Anniversary - Diamond/Gold', emoji: '💎', traditional: 'Diamond/Gold' },
-];
-
-const getAnniversaryMessage = (anniversaryId: string, style: 'classic' | 'celebration' | 'heartfelt') => {
-    const option = ANNIVERSARY_OPTIONS.find(o => o.id === anniversaryId);
-    const traditional = option?.traditional || '';
-
+const getBusinessMessage = (style: 'classic' | 'celebration' | 'heartfelt', years: number) => {
+    const yearsText = years === 1 ? '1 year' : `${years} years`;
     const messages = {
-        classic: `{coupleNames}'s ${anniversaryId} anniversary and still going strong! Your love story is one for the ages. The traditional gift is ${traditional}. Here's to many more years of happiness together.`,
-        celebration: `${anniversaryId} years of love, laughter, and putting up with each other! {coupleNames}, you two are relationship goals. Time to celebrate with something ${traditional}!`,
-        heartfelt: `${anniversaryId} years of building a beautiful life together. {coupleNames}, your love inspires everyone around you. May your bond continue to grow stronger each day.`,
+        classic: `Cheers to ${yearsText} of excellence! From our very first day to today, we've been proud to serve this community. Thank you for being part of our journey — here's to many more years together.`,
+        celebration: `${yearsText} strong and still going! 🎉 Pop the confetti — we're celebrating this incredible milestone with the community that made it all possible. Thank you for your loyalty and support!`,
+        heartfelt: `${yearsText} ago, a dream became reality. Through every challenge and triumph, our doors stayed open because of YOU — our amazing customers, neighbors, and friends. From the bottom of our hearts, thank you.`,
     };
 
     return messages[style] || messages.classic;
@@ -115,26 +82,29 @@ const AnimatedColorBox = ({
 
 type MessageKey = 'classic' | 'celebration' | 'heartfelt';
 
-export default function AnniversaryFormScreen({ navigation }: Props) {
+export default function BusinessAnniversaryFormScreen({ navigation }: Props) {
     const { width } = useWindowDimensions();
 
-    // Form state - Prefilled with sample data
-    const [selectedAnniversary, setSelectedAnniversary] = useState<string>('25th');
-    const [showAnniversaryModal, setShowAnniversaryModal] = useState(false);
-    const [spouse1Name, setSpouse1Name] = useState('Jane Doe');
-    const [spouse2Name, setSpouse2Name] = useState('John Doe');
+    // Form state
+    const [businessName, setBusinessName] = useState('');
+    const [businessType, setBusinessType] = useState<'bar' | 'restaurant' | 'business'>('restaurant');
     const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]);
-    const [hometown, setHometown] = useState('Bellefontaine Neighbors, MO');
-    const [anniversaryDate, setAnniversaryDate] = useState<Date>(new Date(2026, 1, 4)); // Feb 4, 2026
+    const [hometown, setHometown] = useState('');
+    const [establishedDate, setEstablishedDate] = useState<Date>(new Date(2016, 0, 1));
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedMessage, setSelectedMessage] = useState<MessageKey>('classic');
-    const [customMessage, setCustomMessage] = useState('');
     const [editableMessage, setEditableMessage] = useState('');
     const [messageWasEdited, setMessageWasEdited] = useState(false);
     const [selectedColor, setSelectedColor] = useState<ThemeName>('gold');
     const [nameGold, setNameGold] = useState(false);
     const [loading, setLoading] = useState(false);
     const [population, setPopulation] = useState<number | null>(null);
+
+    // Calculate years
+    const getYears = () => {
+        const now = new Date();
+        return Math.max(1, now.getFullYear() - establishedDate.getFullYear());
+    };
 
     // Cascading glow animation
     const glowAnims = useRef(
@@ -177,55 +147,38 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
         runCascade();
     }, []);
 
-    const getSelectedAnniversaryLabel = () => {
-        const found = ANNIVERSARY_OPTIONS.find(opt => opt.id === selectedAnniversary);
-        return found ? found.label : 'Select Anniversary';
-    };
-
-    const getCoupleNames = () => {
-        if (spouse1Name.trim() && spouse2Name.trim()) {
-            const firstName1 = spouse1Name.trim().split(' ')[0];
-            return `${firstName1} and ${spouse2Name.trim()}`;
-        }
-        return spouse1Name.trim() || spouse2Name.trim() || 'The Happy Couple';
-    };
-
     const getFormattedMessage = () => {
-        let template = getAnniversaryMessage(selectedAnniversary, selectedMessage);
-        const coupleNames = getCoupleNames();
-
-        return template.replace(/{coupleNames}/g, coupleNames);
+        const template = getBusinessMessage(selectedMessage, getYears());
+        return template.replace(/{businessName}/g, businessName.trim() || 'Our Business');
     };
 
     useEffect(() => {
         if (!messageWasEdited) {
             setEditableMessage(getFormattedMessage());
         }
-    }, [spouse1Name, spouse2Name, selectedAnniversary, selectedMessage]);
+    }, [businessName, selectedMessage, establishedDate]);
 
     const handlePreview = async () => {
-        if (!spouse1Name.trim() || !spouse2Name.trim()) {
-            Alert.alert('Missing Information', 'Please enter both spouse names.');
+        if (!businessName.trim()) {
+            Alert.alert('Missing Information', 'Please enter the business name.');
             return;
         }
         if (!hometown.trim()) {
-            Alert.alert('Missing Information', 'Please enter the hometown.');
+            Alert.alert('Missing Information', 'Please enter the location.');
             return;
         }
 
         setLoading(true);
         const finalMessage = editableMessage + ' Here is some interesting information surrounding your anniversary.';
         try {
-            // Format date as YYYY-MM-DD (required by historical snapshot lookup)
-            // ⚠️ CRITICAL: Must pass DOB - routes to HISTORICAL CSV (before 2020) or CURRENT CSV (after 2020)
-            const dobISO = `${anniversaryDate.getFullYear()}-${String(anniversaryDate.getMonth() + 1).padStart(2, '0')}-${String(anniversaryDate.getDate()).padStart(2, '0')}`;
+            const dobISO = `${establishedDate.getFullYear()}-${String(establishedDate.getMonth() + 1).padStart(2, '0')}-${String(establishedDate.getDate()).padStart(2, '0')}`;
             const pop = await getPopulationForCity(hometown.trim(), dobISO);
             setPopulation(pop);
 
             navigation.navigate('Preview', {
                 theme: selectedColor,
-                personName: getCoupleNames(),
-                motherName: getCoupleNames(),
+                personName: businessName.trim(),
+                motherName: businessName.trim(),
                 photoUris: photos.filter(p => p !== null) as string[],
                 hometown: hometown.trim(),
                 dobISO: dobISO,
@@ -233,21 +186,25 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
                 message: finalMessage,
                 population: pop || undefined,
                 babyCount: 2,
+                hidePlusLabel: true,
+                hidePostcard: true,
                 nameGold,
             });
         } catch (error) {
             console.error('Error fetching population:', error);
-            const dobISO = `${anniversaryDate.getFullYear()}-${String(anniversaryDate.getMonth() + 1).padStart(2, '0')}-${String(anniversaryDate.getDate()).padStart(2, '0')}`;
+            const fallbackDobISO = `${establishedDate.getFullYear()}-${String(establishedDate.getMonth() + 1).padStart(2, '0')}-${String(establishedDate.getDate()).padStart(2, '0')}`;
             navigation.navigate('Preview', {
                 theme: selectedColor,
-                personName: getCoupleNames(),
-                motherName: getCoupleNames(),
+                personName: businessName.trim(),
+                motherName: businessName.trim(),
                 photoUris: photos.filter(p => p !== null) as string[],
                 hometown: hometown.trim(),
-                dobISO: dobISO,
+                dobISO: fallbackDobISO,
                 mode: 'milestone',
                 message: finalMessage,
                 babyCount: 2,
+                hidePlusLabel: true,
+                hidePostcard: true,
                 nameGold,
             });
         } finally {
@@ -263,77 +220,50 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
         'charcoal', 'slate', 'gray', 'silver', 'lightGray',
     ];
 
+    const businessTypeLabels: Record<typeof businessType, string> = {
+        bar: '🍺 Bar / Pub',
+        restaurant: '🍽️ Restaurant',
+        business: '🏢 Business',
+    };
+
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.title}>Anniversary Announcement</Text>
+            <Text style={styles.title}>Business Anniversary</Text>
 
-            {/* Anniversary Type Dropdown */}
-            <Text style={styles.label}>Anniversary</Text>
-            <TouchableOpacity
-                style={styles.dropdown}
-                onPress={() => setShowAnniversaryModal(true)}
-            >
-                <Text style={styles.dropdownText}>{getSelectedAnniversaryLabel()}</Text>
-                <Text style={styles.dropdownArrow}>▼</Text>
-            </TouchableOpacity>
+            {/* Business Type */}
+            <Text style={styles.label}>Type of Business</Text>
+            <View style={styles.typeButtons}>
+                {(['bar', 'restaurant', 'business'] as const).map(type => (
+                    <TouchableOpacity
+                        key={type}
+                        style={[
+                            styles.typeButton,
+                            businessType === type && styles.typeButtonSelected,
+                        ]}
+                        onPress={() => setBusinessType(type)}
+                    >
+                        <Text style={[
+                            styles.typeButtonText,
+                            businessType === type && styles.typeButtonTextSelected,
+                        ]}>
+                            {businessTypeLabels[type]}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
 
-            {/* Anniversary Type Modal */}
-            <Modal visible={showAnniversaryModal} transparent animationType="slide">
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Select Anniversary</Text>
-                        <ScrollView style={styles.modalScroll}>
-                            {ANNIVERSARY_OPTIONS.map(option => (
-                                <TouchableOpacity
-                                    key={option.id}
-                                    style={[
-                                        styles.modalOption,
-                                        selectedAnniversary === option.id && styles.modalOptionSelected
-                                    ]}
-                                    onPress={() => {
-                                        setSelectedAnniversary(option.id);
-                                        setShowAnniversaryModal(false);
-                                    }}
-                                >
-                                    <Text style={[
-                                        styles.modalOptionText,
-                                        selectedAnniversary === option.id && styles.modalOptionTextSelected
-                                    ]}>{option.label}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
-                        <TouchableOpacity
-                            style={styles.modalClose}
-                            onPress={() => setShowAnniversaryModal(false)}
-                        >
-                            <Text style={styles.modalCloseText}>Cancel</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
-
-            {/* Spouse/Partner/GF/BF 1 Name */}
-            <Text style={styles.label}>Spouse/Partner/GF/BF 1 Name</Text>
+            {/* Business Name */}
+            <Text style={styles.label}>Business Name</Text>
             <TextInput
                 style={styles.input}
-                value={spouse1Name}
-                onChangeText={setSpouse1Name}
-                placeholder="Enter first spouse's name"
+                value={businessName}
+                onChangeText={setBusinessName}
+                placeholder="e.g. Joe's Bar & Grill"
                 placeholderTextColor="#999"
             />
 
-            {/* Spouse/Partner/GF/BF 2 Name */}
-            <Text style={styles.label}>Spouse/Partner/GF/BF 2 Name</Text>
-            <TextInput
-                style={styles.input}
-                value={spouse2Name}
-                onChangeText={setSpouse2Name}
-                placeholder="Enter second spouse's name"
-                placeholderTextColor="#999"
-            />
-
-            {/* Hometown */}
-            <Text style={styles.label}>Hometown (City, State)</Text>
+            {/* Location */}
+            <Text style={styles.label}>Location (City, State)</Text>
             <TextInput
                 style={styles.input}
                 value={hometown}
@@ -342,22 +272,22 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
                 placeholderTextColor="#999"
             />
 
-            {/* Anniversary Date */}
-            <Text style={styles.label}>Wedding Date</Text>
+            {/* Established Date */}
+            <Text style={styles.label}>Established Date</Text>
             <TouchableOpacity
                 style={styles.dateButton}
                 onPress={() => setShowDatePicker(true)}
             >
                 <Text style={styles.dateText}>
-                    {anniversaryDate.toLocaleDateString()}
+                    {establishedDate.toLocaleDateString()}
                 </Text>
             </TouchableOpacity>
             <ScrollableDatePicker
                 visible={showDatePicker}
-                date={anniversaryDate}
-                onDateChange={(date) => setAnniversaryDate(date)}
+                date={establishedDate}
+                onDateChange={(date) => setEstablishedDate(date)}
                 onClose={() => setShowDatePicker(false)}
-                title="Wedding Date"
+                title="Established Date"
             />
 
             {/* Photos - Up to 3 */}
@@ -365,7 +295,7 @@ export default function AnniversaryFormScreen({ navigation }: Props) {
                 photos={photos}
                 onPhotosChange={setPhotos}
                 maxPhotos={3}
-                label="Anniversary Photos (Optional - up to 3)"
+                label="Business Photos (Optional - up to 3)"
             />
 
             {/* Message Style */}
@@ -486,22 +416,6 @@ const styles = StyleSheet.create({
         height: 100,
         textAlignVertical: 'top',
     },
-    dropdown: {
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 12,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    dropdownText: {
-        fontSize: 16,
-        color: '#333',
-    },
-    dropdownArrow: {
-        fontSize: 12,
-        color: '#666',
-    },
     dateButton: {
         backgroundColor: '#fff',
         borderRadius: 8,
@@ -511,25 +425,27 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#333',
     },
-    photoButton: {
+    typeButtons: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    typeButton: {
+        flex: 1,
         backgroundColor: '#1a1a9e',
         borderRadius: 8,
-        padding: 20,
+        padding: 10,
         alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 2,
-        borderColor: '#fff',
-        borderStyle: 'dashed',
     },
-    photoButtonText: {
+    typeButtonSelected: {
+        backgroundColor: '#fff',
+    },
+    typeButtonText: {
         color: '#fff',
-        fontSize: 16,
         fontWeight: '600',
+        fontSize: 13,
     },
-    photoPreview: {
-        width: 100,
-        height: 100,
-        borderRadius: 8,
+    typeButtonTextSelected: {
+        color: '#000080',
     },
     messageButtons: {
         flexDirection: 'row',
@@ -577,53 +493,5 @@ const styles = StyleSheet.create({
         color: '#000080',
         fontSize: 18,
         fontWeight: '900',
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContent: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 20,
-        width: '85%',
-        maxHeight: '70%',
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: '900',
-        color: '#333',
-        textAlign: 'center',
-        marginBottom: 16,
-    },
-    modalScroll: {
-        maxHeight: 300,
-    },
-    modalOption: {
-        padding: 14,
-        borderRadius: 8,
-        marginBottom: 8,
-        backgroundColor: '#f5f5f5',
-    },
-    modalOptionSelected: {
-        backgroundColor: '#000080',
-    },
-    modalOptionText: {
-        fontSize: 16,
-        color: '#333',
-    },
-    modalOptionTextSelected: {
-        color: '#fff',
-    },
-    modalClose: {
-        marginTop: 16,
-        padding: 12,
-        alignItems: 'center',
-    },
-    modalCloseText: {
-        color: '#666',
-        fontSize: 16,
     },
 });

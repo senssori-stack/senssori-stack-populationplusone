@@ -137,6 +137,13 @@ export default function FuneralHomePortalScreen({ navigation }: Props) {
                             </TouchableOpacity>
 
                             <TouchableOpacity
+                                style={[styles.createButton, { backgroundColor: '#1a1a2e', marginTop: 0 }]}
+                                onPress={() => navigation.navigate('DeathAnnouncementForm')}
+                            >
+                                <Text style={[styles.createButtonText, { color: '#fff' }]}>Create Death Announcement</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
                                 style={styles.disconnectButton}
                                 onPress={handleDisconnect}
                             >

@@ -27,6 +27,7 @@ type Props = {
     population?: number;
     personName?: string;
     dobISO?: string; // ISO date string for EST./year labels on pre-2020 dates
+    nameGold?: boolean; // Render name in shiny gold
 };
 
 export default function AnnouncementYardSign(props: Props) {
@@ -38,6 +39,7 @@ export default function AnnouncementYardSign(props: Props) {
         population,
         personName = '',
         dobISO,
+        nameGold = false,
     } = props;
 
     // Determine if date is before Jan 1, 2020 for EST./year labels
@@ -242,7 +244,8 @@ export default function AnnouncementYardSign(props: Props) {
                         left: 0,
                         right: 0,
                         fontSize: personNameFontSize,
-                        color: '#FFFFFF',
+                        color: nameGold ? '#FFD700' : '#FFFFFF',
+                        ...(nameGold ? { textShadowColor: '#B8860B', textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 4 } : {}),
                         transform: [{ translateY: -personNameFontSize / 2 }]
                     }]}>
                         {personName}

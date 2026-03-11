@@ -18,7 +18,7 @@ export interface AspectType {
 
 export const ASPECT_TYPES: AspectType[] = [
     { name: 'Conjunction', angle: 0, orb: 8, symbol: '☌', nature: 'major', influence: 'neutral' },
-    { name: 'Sextile', angle: 60, orb: 4, symbol: '⚹', nature: 'minor', influence: 'harmonious' },
+    { name: 'Sextile', angle: 60, orb: 4, symbol: '⚹', nature: 'major', influence: 'harmonious' },
     { name: 'Square', angle: 90, orb: 7, symbol: '□', nature: 'major', influence: 'challenging' },
     { name: 'Trine', angle: 120, orb: 7, symbol: '△', nature: 'major', influence: 'harmonious' },
     { name: 'Opposition', angle: 180, orb: 8, symbol: '☍', nature: 'major', influence: 'challenging' },
@@ -178,20 +178,74 @@ export function getSignificantTransits(transits: Transit[], limit: number = 5): 
 }
 
 /**
- * Get moon phase for today
+ * Get moon phase for a date — Meeus astronomical algorithm
  */
 export function getMoonPhase(date: Date = new Date()): { phase: string; emoji: string; description: string } {
-    // Simple moon phase calculation
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
+    // Julian Day Number
+    const y = date.getUTCFullYear();
+    const m = date.getUTCMonth() + 1;
+    const d = date.getUTCDate() + date.getUTCHours() / 24 +
+        date.getUTCMinutes() / 1440 + date.getUTCSeconds() / 86400;
+    let Y = y, M = m;
+    if (M <= 2) { Y -= 1; M += 12; }
+    const A = Math.floor(Y / 100);
+    const B = 2 - A + Math.floor(A / 4);
+    const jde = Math.floor(365.25 * (Y + 4716)) + Math.floor(30.6001 * (M + 1)) + d + B - 1524.5;
 
-    // Calculate days since known new moon (Jan 6, 2000)
-    const knownNewMoon = new Date(2000, 0, 6, 18, 14, 0);
-    const diffMs = date.getTime() - knownNewMoon.getTime();
-    const diffDays = diffMs / (1000 * 60 * 60 * 24);
-    const synodicMonth = 29.530588853;
-    const phase = (diffDays % synodicMonth) / synodicMonth;
+    const T = (jde - 2451545.0) / 36525;
+    const T2 = T * T;
+    const T3 = T2 * T;
+    const rad = (deg: number) => deg * Math.PI / 180;
+    const norm = (deg: number) => ((deg % 360) + 360) % 360;
+
+    // Sun longitude (Meeus Ch.25)
+    const L0 = norm(280.46646 + 36000.76983 * T + 0.0003032 * T2);
+    const Ms = norm(357.52911 + 35999.05029 * T - 0.0001537 * T2);
+    const Msr = rad(Ms);
+    const C = (1.914602 - 0.004817 * T) * Math.sin(Msr) + (0.019993 - 0.000101 * T) * Math.sin(2 * Msr) + 0.000289 * Math.sin(3 * Msr);
+    const omega = rad(125.04 - 1934.136 * T);
+    const sunLon = norm(L0 + C - 0.00569 - 0.00478 * Math.sin(omega));
+
+    // Moon longitude (Meeus Ch.47 principal terms)
+    const T4 = T3 * T;
+    const Lp = norm(218.3164477 + 481267.88123421 * T - 0.0015786 * T2 + T3 / 538841 - T4 / 65194000);
+    const D = norm(297.8501921 + 445267.1114034 * T - 0.0018819 * T2 + T3 / 545868 - T4 / 113065000);
+    const Mm = norm(357.5291092 + 35999.0502909 * T - 0.0001536 * T2 + T3 / 24490000);
+    const Mp = norm(134.9633964 + 477198.8675055 * T + 0.0087414 * T2 + T3 / 69699 - T4 / 14712000);
+    const F = norm(93.2720950 + 483202.0175233 * T - 0.0036539 * T2 - T3 / 3526000 + T4 / 863310000);
+    const Dr = rad(D), Mmr = rad(Mm), Mpr = rad(Mp), Fr = rad(F);
+    const E = 1 - 0.002516 * T - 0.0000074 * T2;
+
+    let sl = 0;
+    sl += 6288774 * Math.sin(Mpr);
+    sl += 1274027 * Math.sin(2 * Dr - Mpr);
+    sl += 658314 * Math.sin(2 * Dr);
+    sl += 213618 * Math.sin(2 * Mpr);
+    sl += -185116 * Math.sin(Mmr) * E;
+    sl += -114332 * Math.sin(2 * Fr);
+    sl += 58793 * Math.sin(2 * Dr - 2 * Mpr);
+    sl += 57066 * Math.sin(2 * Dr - Mmr - Mpr) * E;
+    sl += 53322 * Math.sin(2 * Dr + Mpr);
+    sl += 45758 * Math.sin(2 * Dr - Mmr) * E;
+    sl += -40923 * Math.sin(Mmr - Mpr) * E;
+    sl += -34720 * Math.sin(Dr);
+    sl += -30383 * Math.sin(Mmr + Mpr) * E;
+    sl += 15327 * Math.sin(2 * Dr - 2 * Fr);
+    sl += -12528 * Math.sin(Mpr + 2 * Fr);
+    sl += 10980 * Math.sin(Mpr - 2 * Fr);
+    sl += 10675 * Math.sin(4 * Dr - Mpr);
+    sl += 10034 * Math.sin(3 * Mpr);
+    sl += 8548 * Math.sin(4 * Dr - 2 * Mpr);
+    sl += -7888 * Math.sin(2 * Dr + Mmr - Mpr) * E;
+    sl += -6766 * Math.sin(2 * Dr + Mmr) * E;
+    sl += -5163 * Math.sin(Dr - Mpr);
+    sl += 4987 * Math.sin(Dr + Mmr) * E;
+    sl += 4036 * Math.sin(2 * Dr - Mmr + Mpr) * E;
+    const moonLon = norm(Lp + sl / 1000000);
+
+    // Phase from elongation
+    const elongation = norm(moonLon - sunLon);
+    const phase = elongation / 360;
 
     if (phase < 0.0625) return { phase: 'New Moon', emoji: '🌑', description: 'Time for new beginnings and setting intentions' };
     if (phase < 0.1875) return { phase: 'Waxing Crescent', emoji: '🌒', description: 'Take action on your intentions, build momentum' };

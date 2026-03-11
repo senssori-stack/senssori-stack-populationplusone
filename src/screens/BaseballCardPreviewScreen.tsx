@@ -16,10 +16,65 @@ import CartModal from '../../components/CartModal';
 import DownloadModal, { DownloadItem } from '../../components/DownloadModal';
 import TradingCardLogo from '../../components/TradingCardLogo';
 import { PRODUCT_PRICES, useCart } from '../context/CartContext';
+import { getChineseElement, getChineseZodiac } from '../data/utils/astrology-utils';
 import { birthstoneFromISO } from '../data/utils/birthstone';
 import { COLOR_SCHEMES } from '../data/utils/colors';
+import { ZODIAC_EMOJIS } from '../data/utils/emoji-links';
+import { calculateLifePath } from '../data/utils/life-path-calculator';
+import { getMoonPhase } from '../data/utils/transit-calculator';
 import { getZodiacFromISO } from '../data/utils/zodiac';
 import type { RootStackParamList } from '../types';
+
+const ZODIAC_SPIRIT_ANIMAL: Record<string, { animal: string; emoji: string }> = {
+    Aries: { animal: 'Hawk', emoji: '🦅' },
+    Taurus: { animal: 'Bear', emoji: '🐻' },
+    Gemini: { animal: 'Dolphin', emoji: '🐬' },
+    Cancer: { animal: 'Wolf', emoji: '🐺' },
+    Leo: { animal: 'Lion', emoji: '🦁' },
+    Virgo: { animal: 'Fox', emoji: '🦊' },
+    Libra: { animal: 'Swan', emoji: '🦢' },
+    Scorpio: { animal: 'Phoenix', emoji: '🔥' },
+    Sagittarius: { animal: 'Horse', emoji: '🐴' },
+    Capricorn: { animal: 'Mountain Goat', emoji: '🐐' },
+    Aquarius: { animal: 'Owl', emoji: '🦉' },
+    Pisces: { animal: 'Seahorse', emoji: '🐡' },
+};
+
+const ZODIAC_ELEMENT: Record<string, string> = {
+    Aries: 'Fire 🔥', Taurus: 'Earth 🌍', Gemini: 'Air 💨', Cancer: 'Water 💧',
+    Leo: 'Fire 🔥', Virgo: 'Earth 🌍', Libra: 'Air 💨', Scorpio: 'Water 💧',
+    Sagittarius: 'Fire 🔥', Capricorn: 'Earth 🌍', Aquarius: 'Air 💨', Pisces: 'Water 💧',
+};
+
+const TAROT_NAMES: { name: string; symbol: string }[] = [
+    { name: 'The Fool', symbol: '🃏' }, { name: 'The Magician', symbol: '🎩' },
+    { name: 'The High Priestess', symbol: '🌙' }, { name: 'The Empress', symbol: '👑' },
+    { name: 'The Emperor', symbol: '🏛️' }, { name: 'The Hierophant', symbol: '📿' },
+    { name: 'The Lovers', symbol: '💕' }, { name: 'The Chariot', symbol: '🏎️' },
+    { name: 'Strength', symbol: '🦁' }, { name: 'The Hermit', symbol: '🏔️' },
+    { name: 'Wheel of Fortune', symbol: '🎡' }, { name: 'Justice', symbol: '⚖️' },
+    { name: 'The Hanged Man', symbol: '🙃' }, { name: 'Death', symbol: '🦋' },
+    { name: 'Temperance', symbol: '⚗️' }, { name: 'The Devil', symbol: '⛓️' },
+    { name: 'The Tower', symbol: '⚡' }, { name: 'The Star', symbol: '⭐' },
+    { name: 'The Moon', symbol: '🌕' }, { name: 'The Sun', symbol: '☀️' },
+    { name: 'Judgement', symbol: '📯' }, { name: 'The World', symbol: '🌍' },
+];
+
+function getTarotBirthCard(date: Date): { soul: typeof TAROT_NAMES[0]; personality: typeof TAROT_NAMES[0] | null } {
+    const dateStr = `${date.getMonth() + 1}${date.getDate()}${date.getFullYear()}`;
+    let sum = dateStr.split('').reduce((acc, d) => acc + parseInt(d, 10), 0);
+    while (sum > 21) {
+        sum = sum.toString().split('').reduce((acc, d) => acc + parseInt(d, 10), 0);
+    }
+    const soul = TAROT_NAMES[sum] || TAROT_NAMES[0];
+    let p = sum;
+    while (p > 9 && p !== 11 && p !== 22) {
+        p = p.toString().split('').reduce((acc, d) => acc + parseInt(d, 10), 0);
+    }
+    if (p === 22) p = 0;
+    const personality = p !== sum ? (TAROT_NAMES[p] || null) : null;
+    return { soul, personality };
+}
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BaseballCardPreview'>;
 
@@ -35,15 +90,18 @@ type Props = NativeStackScreenProps<RootStackParamList, 'BaseballCardPreview'>;
 export default function BaseballCardPreviewScreen({ route, navigation }: Props) {
     const { width } = useWindowDimensions();
     const params = route.params || {};
+    const isMemorial = !!params.isMemorial;
 
     // Get baby info
-    const babyFirst = params.babies?.[0]?.first || params.babyFirst || 'Baby';
+    const babyFirst = params.babies?.[0]?.first || params.babyFirst || (isMemorial ? '' : 'Baby');
     const babyMiddle = params.babies?.[0]?.middle || params.babyMiddle || '';
     const babyLast = params.babies?.[0]?.last || params.babyLast || '';
-    const fullName = [babyFirst, babyMiddle, babyLast].filter(Boolean).join(' ');
+    const fullName = params.personName || [babyFirst, babyMiddle, babyLast].filter(Boolean).join(' ');
     // Resolve photo from all possible sources (photoUris array from 3-slot picker, babies array, or direct photoUri)
     const photoUri = params.photoUri || params.photoUris?.find((u: string | null) => u) || params.babies?.[0]?.photoUris?.find((u: string | null | undefined) => u) || params.babies?.[0]?.photoUri || null;
     const hometown = params.hometown || 'Hometown, USA';
+    const heritage = params.heritage || '';
+    const nationality = params.nationality || '';
     const dobDate = params.dobISO ? new Date(params.dobISO + 'T00:00:00') : new Date();
     const birthDateStr = dobDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const dobISO = dobDate.toISOString().split('T')[0];
@@ -54,6 +112,38 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
     // Fun stats
     const zodiac = getZodiacFromISO(dobISO);
     const birthstone = birthstoneFromISO(dobISO);
+    const birthYear = dobDate.getFullYear();
+    const moonPhaseData = getMoonPhase(dobDate);
+    const chineseZodiac = getChineseZodiac(birthYear);
+    const chineseElement = getChineseElement(birthYear);
+    const spiritAnimal = zodiac ? ZODIAC_SPIRIT_ANIMAL[zodiac] : null;
+    const westernElement = zodiac ? ZODIAC_ELEMENT[zodiac] : null;
+    const lifePathResult = calculateLifePath(dobISO);
+    const lifePathNumber = lifePathResult.number.toString();
+    const zodiacEmoji = zodiac ? ZODIAC_EMOJIS[zodiac] || '' : '';
+    const tarot = getTarotBirthCard(dobDate);
+
+    // Memorial-specific data
+    const actualDobDate = params.dateOfBirthOriginal ? new Date(params.dateOfBirthOriginal + 'T00:00:00') : dobDate;
+    const actualDobStr = actualDobDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const dodDate = params.dateOfDeath ? new Date(params.dateOfDeath + 'T00:00:00') : null;
+    const dodStr = dodDate ? dodDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    const memorialPrayer = params.memorialPrayer || params.jointLetter || '';
+    // Parse first name from fullName for memorial display
+    const firstNameOnly = fullName.split(' ')[0] || fullName;
+
+    // Memorial card style selector
+    const [cardStyle, setCardStyle] = useState<'classic' | 'dove' | 'floral' | 'simple' | 'cross'>(
+        params.memorialCardStyle || 'classic'
+    );
+
+    const MEMORIAL_STYLES = [
+        { id: 'classic' as const, label: '✨ Classic Gold', emoji: '✨' },
+        { id: 'dove' as const, label: '🕊️ Dove & Sky', emoji: '🕊️' },
+        { id: 'floral' as const, label: '🌿 Floral', emoji: '🌿' },
+        { id: 'simple' as const, label: '☁️ Peaceful', emoji: '☁️' },
+        { id: 'cross' as const, label: '✝️ Cross', emoji: '✝️' },
+    ];
 
     const theme = params.theme || 'green';
     const colors = COLOR_SCHEMES[theme] || COLOR_SCHEMES.green;
@@ -88,8 +178,8 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
 
     // Download items
     const downloadItems: DownloadItem[] = [
-        { id: 'babycard-front', label: 'Card Front', category: 'babycard' },
-        { id: 'babycard-back', label: 'Card Back (Stats)', category: 'babycard' },
+        { id: 'babycard-front', label: isMemorial ? 'Memorial Card Front' : 'Card Front', category: 'babycard' },
+        { id: 'babycard-back', label: isMemorial ? 'Memorial Card Back (Prayer)' : 'Card Back (Stats)', category: 'babycard' },
     ];
 
     // Simple capture function for a single view
@@ -115,238 +205,575 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
         return captureView(itemId);
     };
 
-    // --- Zoom/Pan gesture state ---
-    const { height: screenHeight } = useWindowDimensions();
-    const zoomScale = useRef(new Animated.Value(1)).current;
-    const baseScale = useRef(new Animated.Value(1)).current;
-    const translateX = useRef(new Animated.Value(0)).current;
-    const translateY = useRef(new Animated.Value(0)).current;
-    const baseTranslateX = useRef(new Animated.Value(0)).current;
-    const baseTranslateY = useRef(new Animated.Value(0)).current;
-    const lastScale = useRef(1);
-    const lastTranslateX = useRef(0);
-    const lastTranslateY = useRef(0);
-    const doubleTapRef = useRef(null);
-    const pinchRef = useRef(null);
-    const panRef = useRef(null);
-    const isZoomedIn = useRef(false);
-    const [scrollEnabled, setScrollEnabled] = useState(true);
+    // --- Zoom/Pan gesture helpers ---
+    function useZoomGesture() {
+        const zoomScale = useRef(new Animated.Value(1)).current;
+        const baseScale = useRef(new Animated.Value(1)).current;
+        const tX = useRef(new Animated.Value(0)).current;
+        const tY = useRef(new Animated.Value(0)).current;
+        const baseTX = useRef(new Animated.Value(0)).current;
+        const baseTY = useRef(new Animated.Value(0)).current;
+        const lastScale = useRef(1);
+        const lastTX = useRef(0);
+        const lastTY = useRef(0);
+        const doubleTapRef = useRef(null);
+        const pinchRef = useRef(null);
+        const panRef = useRef(null);
+        const isZoomedIn = useRef(false);
 
-    const onPinchGestureEvent = Animated.event(
-        [{ nativeEvent: { scale: zoomScale } }],
-        { useNativeDriver: false }
-    );
-    const onPinchHandlerStateChange = (event: any) => {
-        if (event.nativeEvent.oldState === State.ACTIVE) {
-            const newScale = lastScale.current * event.nativeEvent.scale;
-            lastScale.current = Math.max(0.5, Math.min(4.0, newScale));
-            baseScale.setValue(lastScale.current);
-            zoomScale.setValue(1);
-            setScrollEnabled(lastScale.current <= 1.05);
-        }
+        const onPinchEvent = Animated.event([{ nativeEvent: { scale: zoomScale } }], { useNativeDriver: false });
+        const onPinchStateChange = (e: any) => {
+            if (e.nativeEvent.oldState === State.ACTIVE) {
+                const s = Math.max(0.5, Math.min(4.0, lastScale.current * e.nativeEvent.scale));
+                lastScale.current = s;
+                baseScale.setValue(s);
+                zoomScale.setValue(1);
+                updateScroll();
+            }
+        };
+        const onPanEvent = Animated.event([{ nativeEvent: { translationX: tX, translationY: tY } }], { useNativeDriver: false });
+        const onPanStateChange = (e: any) => {
+            if (e.nativeEvent.oldState === State.ACTIVE) {
+                lastTX.current += e.nativeEvent.translationX;
+                lastTY.current += e.nativeEvent.translationY;
+                baseTX.setValue(lastTX.current);
+                baseTY.setValue(lastTY.current);
+                tX.setValue(0);
+                tY.setValue(0);
+            }
+        };
+        const onDoubleTap = (e: any) => {
+            if (e.nativeEvent.state === State.ACTIVE) {
+                const target = isZoomedIn.current ? 1.0 : 2.0;
+                zoomScale.setValue(1); baseScale.setValue(target);
+                tX.setValue(0); tY.setValue(0); baseTX.setValue(0); baseTY.setValue(0);
+                lastScale.current = target; lastTX.current = 0; lastTY.current = 0;
+                isZoomedIn.current = !isZoomedIn.current;
+                updateScroll();
+            }
+        };
+        const reset = () => {
+            lastScale.current = 1; lastTX.current = 0; lastTY.current = 0; isZoomedIn.current = false;
+            zoomScale.setValue(1); baseScale.setValue(1);
+            tX.setValue(0); tY.setValue(0); baseTX.setValue(0); baseTY.setValue(0);
+            updateScroll();
+        };
+        const transform = [
+            { scale: Animated.multiply(baseScale, zoomScale) },
+            { translateX: Animated.add(baseTX, tX) },
+            { translateY: Animated.add(baseTY, tY) },
+        ];
+        return { doubleTapRef, pinchRef, panRef, onPinchEvent, onPinchStateChange, onPanEvent, onPanStateChange, onDoubleTap, reset, transform, lastScale };
+    }
+
+    const [scrollEnabled, setScrollEnabled] = useState(true);
+    const updateScroll = () => {
+        setScrollEnabled(frontZoom.lastScale.current <= 1.05 && backZoom.lastScale.current <= 1.05);
     };
-    const onPanGestureEvent = Animated.event(
-        [{ nativeEvent: { translationX: translateX, translationY: translateY } }],
-        { useNativeDriver: false }
-    );
-    const onPanHandlerStateChange = (event: any) => {
-        if (event.nativeEvent.oldState === State.ACTIVE) {
-            let newTX = lastTranslateX.current + event.nativeEvent.translationX;
-            let newTY = lastTranslateY.current + event.nativeEvent.translationY;
-            lastTranslateX.current = newTX;
-            lastTranslateY.current = newTY;
-            baseTranslateX.setValue(lastTranslateX.current);
-            baseTranslateY.setValue(lastTranslateY.current);
-            translateX.setValue(0);
-            translateY.setValue(0);
-        }
-    };
-    const onDoubleTap = (event: any) => {
-        if (event.nativeEvent.state === State.ACTIVE) {
-            const target = isZoomedIn.current ? 1.0 : 2.0;
-            zoomScale.setValue(1);
-            baseScale.setValue(target);
-            translateX.setValue(0);
-            translateY.setValue(0);
-            baseTranslateX.setValue(0);
-            baseTranslateY.setValue(0);
-            lastScale.current = target;
-            lastTranslateX.current = 0;
-            lastTranslateY.current = 0;
-            isZoomedIn.current = !isZoomedIn.current;
-            setScrollEnabled(target <= 1.05);
-        }
-    };
-    const resetZoom = () => {
-        lastScale.current = 1;
-        lastTranslateX.current = 0;
-        lastTranslateY.current = 0;
-        isZoomedIn.current = false;
-        zoomScale.setValue(1);
-        baseScale.setValue(1);
-        translateX.setValue(0);
-        translateY.setValue(0);
-        baseTranslateX.setValue(0);
-        baseTranslateY.setValue(0);
-        setScrollEnabled(true);
-    };
+    const frontZoom = useZoomGesture();
+    const backZoom = useZoomGesture();
+    const resetAllZoom = () => { frontZoom.reset(); backZoom.reset(); };
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content} scrollEnabled={scrollEnabled}>
-            <Text style={styles.title}>⚾ Trading Cards</Text>
-            <Text style={styles.subtitle}>A collectible keepsake!</Text>
+            <Text style={styles.title}>{isMemorial ? '🕊️ Memorial Cards' : '⚾ Trading Cards'}</Text>
+            <Text style={styles.subtitle}>{isMemorial ? 'A dignified keepsake to honor their memory' : 'A collectible keepsake!'}</Text>
+
+            {/* Memorial style picker */}
+            {isMemorial && (
+                <View style={{ width: '100%', marginBottom: 16 }}>
+                    <Text style={{ fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 8 }}>Choose a style:</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 8, gap: 8 }}>
+                        {MEMORIAL_STYLES.map((s) => (
+                            <TouchableOpacity
+                                key={s.id}
+                                onPress={() => setCardStyle(s.id)}
+                                style={{
+                                    paddingHorizontal: 14,
+                                    paddingVertical: 10,
+                                    borderRadius: 12,
+                                    backgroundColor: cardStyle === s.id ? '#333' : '#e8e8e8',
+                                    borderWidth: cardStyle === s.id ? 2 : 1,
+                                    borderColor: cardStyle === s.id ? '#FFD700' : '#ccc',
+                                }}
+                            >
+                                <Text style={{ fontSize: 13, color: cardStyle === s.id ? '#fff' : '#333', fontWeight: cardStyle === s.id ? '700' : '400' }}>
+                                    {s.label}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
+            )}
 
             {/* Zoomable card area */}
-            <View style={{ width: '100%', minHeight: 300, alignItems: 'center' }}>
-                <TouchableOpacity onPress={resetZoom} style={{ alignSelf: 'flex-end', marginBottom: 8, paddingHorizontal: 12, paddingVertical: 4, backgroundColor: '#ddd', borderRadius: 8 }}>
+            <View style={{ width: '100%', alignItems: 'center' }}>
+                <TouchableOpacity onPress={resetAllZoom} style={{ alignSelf: 'flex-end', marginBottom: 8, paddingHorizontal: 12, paddingVertical: 4, backgroundColor: '#ddd', borderRadius: 8 }}>
                     <Text style={{ fontSize: 13, color: '#333' }}>Reset Zoom</Text>
                 </TouchableOpacity>
-                <GestureHandlerRootView style={{ width: '100%', alignItems: 'center' }}>
-                    <TapGestureHandler ref={doubleTapRef} onHandlerStateChange={onDoubleTap} numberOfTaps={2}>
-                        <Animated.View>
-                            <PanGestureHandler
-                                ref={panRef}
-                                onGestureEvent={onPanGestureEvent}
-                                onHandlerStateChange={onPanHandlerStateChange}
-                                waitFor={doubleTapRef}
-                                simultaneousHandlers={pinchRef}
-                                minPointers={1}
-                                maxPointers={1}
-                            >
-                                <Animated.View>
-                                    <PinchGestureHandler
-                                        ref={pinchRef}
-                                        onGestureEvent={onPinchGestureEvent}
-                                        onHandlerStateChange={onPinchHandlerStateChange}
-                                    >
-                                        <Animated.View style={{
-                                            transform: [
-                                                { scale: Animated.multiply(baseScale, zoomScale) },
-                                                { translateX: Animated.add(baseTranslateX, translateX) },
-                                                { translateY: Animated.add(baseTranslateY, translateY) },
-                                            ],
-                                        }}>
 
-                                            {/* Card Front */}
-                                            <View style={styles.cardSection}>
-                                                <Text style={styles.sideLabel}>Front</Text>
+                {/* Card Front — independent zoom */}
+                <View style={styles.cardSection}>
+                    <Text style={styles.sideLabel}>Front</Text>
+                    <GestureHandlerRootView style={{ alignItems: 'center' }}>
+                        <TapGestureHandler ref={frontZoom.doubleTapRef} onHandlerStateChange={frontZoom.onDoubleTap} numberOfTaps={2}>
+                            <Animated.View>
+                                <PanGestureHandler
+                                    ref={frontZoom.panRef}
+                                    onGestureEvent={frontZoom.onPanEvent}
+                                    onHandlerStateChange={frontZoom.onPanStateChange}
+                                    waitFor={frontZoom.doubleTapRef}
+                                    simultaneousHandlers={frontZoom.pinchRef}
+                                    minPointers={1}
+                                    maxPointers={1}
+                                >
+                                    <Animated.View>
+                                        <PinchGestureHandler
+                                            ref={frontZoom.pinchRef}
+                                            onGestureEvent={frontZoom.onPinchEvent}
+                                            onHandlerStateChange={frontZoom.onPinchStateChange}
+                                        >
+                                            <Animated.View style={{ transform: frontZoom.transform }}>
                                                 <ViewShot ref={frontRef} options={{ format: 'png', quality: 1 }}>
-                                                    <View style={[styles.card, { width: cardWidth, height: cardHeight }]}>
-                                                        {/* Card border effect */}
-                                                        <View style={[styles.cardInner, { borderColor: colors.bg }]}>
-                                                            {/* Photo area */}
-                                                            <View style={styles.photoContainer}>
-                                                                {photoUri ? (
-                                                                    <Image source={{ uri: photoUri }} style={styles.photo} />
-                                                                ) : (
-                                                                    <View style={[styles.photoPlaceholder, { backgroundColor: colors.bg }]}>
-                                                                        <Text style={styles.placeholderEmoji}>👶</Text>
+                                                    {isMemorial ? (
+                                                        /* ========== MEMORIAL CARD FRONT ========== */
+                                                        <View style={[styles.card, { width: cardWidth, height: cardHeight, overflow: 'hidden' }]}>
+                                                            {cardStyle === 'classic' && (
+                                                                /* Classic Gold: cream bg, gold ornate corners, Celtic heart */
+                                                                <View style={{ flex: 1, backgroundColor: '#FAF3E0', borderWidth: 3, borderColor: '#C5A55A', borderRadius: 10, padding: 2 }}>
+                                                                    {/* Ornate corner decorations */}
+                                                                    <Text style={{ position: 'absolute', top: 2, left: 4, fontSize: cardWidth * 0.07, color: '#C5A55A' }}>❧</Text>
+                                                                    <Text style={{ position: 'absolute', top: 2, right: 4, fontSize: cardWidth * 0.07, color: '#C5A55A', transform: [{ scaleX: -1 }] }}>❧</Text>
+                                                                    <Text style={{ position: 'absolute', bottom: 2, left: 4, fontSize: cardWidth * 0.07, color: '#C5A55A', transform: [{ scaleY: -1 }] }}>❧</Text>
+                                                                    <Text style={{ position: 'absolute', bottom: 2, right: 4, fontSize: cardWidth * 0.07, color: '#C5A55A', transform: [{ scaleX: -1 }, { scaleY: -1 }] }}>❧</Text>
+                                                                    {/* Inner gold border */}
+                                                                    <View style={{ flex: 1, borderWidth: 1, borderColor: '#D4AF37', borderRadius: 6, alignItems: 'center', justifyContent: 'center', padding: 8 }}>
+                                                                        {/* Photo */}
+                                                                        <View style={{ width: cardWidth * 0.55, height: cardWidth * 0.55, borderWidth: 1, borderColor: '#C5A55A', backgroundColor: '#E8E0D0', marginTop: 8, justifyContent: 'center', alignItems: 'center' }}>
+                                                                            {photoUri ? (
+                                                                                <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+                                                                            ) : (
+                                                                                <Text style={{ fontSize: cardWidth * 0.12, color: '#C5A55A' }}>🕊️</Text>
+                                                                            )}
+                                                                        </View>
+                                                                        {/* Name */}
+                                                                        <Text style={{ fontSize: cardWidth * 0.065, fontWeight: '700', color: '#333', marginTop: 10, textAlign: 'center' }}>{fullName}</Text>
+                                                                        {/* Dates */}
+                                                                        <Text style={{ fontSize: cardWidth * 0.033, color: '#777', marginTop: 4 }}>{actualDobStr}  —  {dodStr}</Text>
+                                                                        {/* Celtic heart */}
+                                                                        <Text style={{ fontSize: cardWidth * 0.1, color: '#C5A55A', marginTop: 8 }}>♡</Text>
                                                                     </View>
-                                                                )}
-                                                            </View>
+                                                                </View>
+                                                            )}
+                                                            {cardStyle === 'dove' && (
+                                                                /* Dove & Sky: blue gradient bg, dove imagery */
+                                                                <View style={{ flex: 1, backgroundColor: '#B8D4E8', borderRadius: 10, alignItems: 'center', justifyContent: 'center', padding: 10 }}>
+                                                                    {/* Sky gradient overlay */}
+                                                                    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', backgroundColor: '#8FB8D8', borderTopLeftRadius: 10, borderTopRightRadius: 10, opacity: 0.5 }} />
+                                                                    {/* Dove */}
+                                                                    <Text style={{ fontSize: cardWidth * 0.15, marginBottom: 4, zIndex: 1 }}>🕊️</Text>
+                                                                    {/* Photo */}
+                                                                    <View style={{ width: cardWidth * 0.5, height: cardWidth * 0.5, borderRadius: 8, borderWidth: 2, borderColor: '#fff', backgroundColor: '#d0e4f0', overflow: 'hidden', zIndex: 1 }}>
+                                                                        {photoUri ? (
+                                                                            <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+                                                                        ) : (
+                                                                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                                                                <Text style={{ fontSize: cardWidth * 0.1, color: '#8FB8D8' }}>📷</Text>
+                                                                            </View>
+                                                                        )}
+                                                                    </View>
+                                                                    {/* In Loving Memory */}
+                                                                    <Text style={{ fontSize: cardWidth * 0.042, fontStyle: 'italic', color: '#2C3E50', marginTop: 10, zIndex: 1 }}>In Loving Memory of</Text>
+                                                                    {/* Name */}
+                                                                    <Text style={{ fontSize: cardWidth * 0.065, fontWeight: '800', color: '#1a3050', marginTop: 4, textAlign: 'center', zIndex: 1 }}>{fullName}</Text>
+                                                                    {/* Dates */}
+                                                                    <Text style={{ fontSize: cardWidth * 0.032, color: '#4a6a8a', marginTop: 4, zIndex: 1 }}>{actualDobStr}  —  {dodStr}</Text>
+                                                                    {/* Rest In Peace */}
+                                                                    <Text style={{ fontSize: cardWidth * 0.038, fontStyle: 'italic', color: '#2C3E50', marginTop: 8, zIndex: 1 }}>Rest In Peace</Text>
+                                                                </View>
+                                                            )}
+                                                            {cardStyle === 'floral' && (
+                                                                /* Floral Botanical: white with green leaf accents, elegant script */
+                                                                <View style={{ flex: 1, backgroundColor: '#FFFFFF', borderRadius: 10, alignItems: 'center', justifyContent: 'center', padding: 12 }}>
+                                                                    {/* Top floral accents */}
+                                                                    <View style={{ position: 'absolute', top: 6, right: 6, flexDirection: 'row' }}>
+                                                                        <Text style={{ fontSize: cardWidth * 0.06, opacity: 0.6 }}>🌿</Text>
+                                                                        <Text style={{ fontSize: cardWidth * 0.05, opacity: 0.4, marginLeft: -4 }}>🍃</Text>
+                                                                    </View>
+                                                                    <View style={{ position: 'absolute', bottom: 6, left: 6, flexDirection: 'row' }}>
+                                                                        <Text style={{ fontSize: cardWidth * 0.05, opacity: 0.4 }}>🍃</Text>
+                                                                        <Text style={{ fontSize: cardWidth * 0.06, opacity: 0.6, marginLeft: -4 }}>🌿</Text>
+                                                                    </View>
+                                                                    {/* In Loving Memory */}
+                                                                    <Text style={{ fontSize: cardWidth * 0.048, fontStyle: 'italic', color: '#556B2F', marginBottom: 8 }}>In Loving Memory</Text>
+                                                                    {/* Photo */}
+                                                                    <View style={{ width: cardWidth * 0.52, height: cardWidth * 0.58, borderRadius: 4, borderWidth: 1, borderColor: '#ccc', backgroundColor: '#f9f9f9', overflow: 'hidden' }}>
+                                                                        {photoUri ? (
+                                                                            <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+                                                                        ) : (
+                                                                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                                                                <Text style={{ fontSize: cardWidth * 0.1, color: '#bbb' }}>📷</Text>
+                                                                            </View>
+                                                                        )}
+                                                                    </View>
+                                                                    {/* Name */}
+                                                                    <Text style={{ fontSize: cardWidth * 0.058, fontWeight: '700', color: '#2E2E2E', marginTop: 10, textAlign: 'center' }}>{fullName.toUpperCase()}</Text>
+                                                                    {/* Dates */}
+                                                                    <Text style={{ fontSize: cardWidth * 0.032, color: '#888', marginTop: 4 }}>{actualDobStr}  —  {dodStr}</Text>
+                                                                </View>
+                                                            )}
+                                                            {cardStyle === 'simple' && (
+                                                                /* Simple/Peaceful: soft gradient, dove, clean layout */
+                                                                <View style={{ flex: 1, backgroundColor: '#E8EFF5', borderRadius: 10, alignItems: 'center', justifyContent: 'center', padding: 10 }}>
+                                                                    {/* Subtle doves in background */}
+                                                                    <Text style={{ position: 'absolute', top: '15%', right: '8%', fontSize: cardWidth * 0.12, opacity: 0.12 }}>🕊️</Text>
+                                                                    <Text style={{ position: 'absolute', bottom: '20%', left: '5%', fontSize: cardWidth * 0.09, opacity: 0.08 }}>🕊️</Text>
+                                                                    {/* Photo */}
+                                                                    <View style={{ width: cardWidth * 0.48, height: cardWidth * 0.48, borderRadius: cardWidth * 0.24, borderWidth: 3, borderColor: '#fff', backgroundColor: '#dde5ee', overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 6, elevation: 4 }}>
+                                                                        {photoUri ? (
+                                                                            <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+                                                                        ) : (
+                                                                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                                                                <Text style={{ fontSize: cardWidth * 0.12, color: '#aabbcc' }}>🕊️</Text>
+                                                                            </View>
+                                                                        )}
+                                                                    </View>
+                                                                    {/* In Loving Memory */}
+                                                                    <Text style={{ fontSize: cardWidth * 0.042, fontStyle: 'italic', color: '#5a6a7a', marginTop: 12 }}>In Loving Memory of</Text>
+                                                                    {/* Name */}
+                                                                    <Text style={{ fontSize: cardWidth * 0.06, fontWeight: '800', color: '#1C2833', marginTop: 4, textAlign: 'center' }}>{fullName}</Text>
+                                                                    {/* Dates */}
+                                                                    <Text style={{ fontSize: cardWidth * 0.032, color: '#6a7a8a', marginTop: 6 }}>{actualDobStr}  —  {dodStr}</Text>
+                                                                    {/* Rest In Peace */}
+                                                                    <Text style={{ fontSize: cardWidth * 0.036, fontStyle: 'italic', color: '#5a6a7a', marginTop: 10 }}>Rest In Peace</Text>
+                                                                </View>
+                                                            )}
+                                                            {cardStyle === 'cross' && (
+                                                                /* Cross & Border: gold vine border, cross with dove at top */
+                                                                <View style={{ flex: 1, backgroundColor: '#FFF9F0', borderWidth: 2, borderColor: '#C5A55A', borderRadius: 10, padding: 4 }}>
+                                                                    {/* Decorative vine border */}
+                                                                    <View style={{ flex: 1, borderWidth: 1, borderColor: '#D4B96A', borderRadius: 6, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', padding: 8 }}>
+                                                                        {/* Corner vines */}
+                                                                        <Text style={{ position: 'absolute', top: 0, left: 2, fontSize: cardWidth * 0.055, color: '#C5A55A' }}>❦</Text>
+                                                                        <Text style={{ position: 'absolute', top: 0, right: 2, fontSize: cardWidth * 0.055, color: '#C5A55A', transform: [{ scaleX: -1 }] }}>❦</Text>
+                                                                        <Text style={{ position: 'absolute', bottom: 0, left: 2, fontSize: cardWidth * 0.055, color: '#C5A55A', transform: [{ scaleY: -1 }] }}>❦</Text>
+                                                                        <Text style={{ position: 'absolute', bottom: 0, right: 2, fontSize: cardWidth * 0.055, color: '#C5A55A', transform: [{ scaleX: -1 }, { scaleY: -1 }] }}>❦</Text>
+                                                                        {/* Cross */}
+                                                                        <Text style={{ fontSize: cardWidth * 0.12, color: '#8B7D3C', marginBottom: 4 }}>✝️</Text>
+                                                                        {/* Photo */}
+                                                                        <View style={{ width: cardWidth * 0.5, height: cardWidth * 0.5, borderWidth: 2, borderColor: '#D4B96A', backgroundColor: '#F0EBE0', overflow: 'hidden' }}>
+                                                                            {photoUri ? (
+                                                                                <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+                                                                            ) : (
+                                                                                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                                                                    <Text style={{ fontSize: cardWidth * 0.1, color: '#C5A55A' }}>📷</Text>
+                                                                                </View>
+                                                                            )}
+                                                                        </View>
+                                                                        {/* Name */}
+                                                                        <Text style={{ fontSize: cardWidth * 0.06, fontWeight: '700', color: '#3D3424', marginTop: 8, textAlign: 'center' }}>{fullName}</Text>
+                                                                        {/* Dates */}
+                                                                        <Text style={{ fontSize: cardWidth * 0.032, color: '#8B7D5C', marginTop: 4 }}>{actualDobStr}  —  {dodStr}</Text>
+                                                                        {/* Rest In Peace */}
+                                                                        <Text style={{ fontSize: cardWidth * 0.036, fontStyle: 'italic', color: '#6B5D3C', marginTop: 6 }}>Rest In Peace</Text>
+                                                                    </View>
+                                                                </View>
+                                                            )}
+                                                        </View>
+                                                    ) : (
+                                                        /* ========== BABY CARD FRONT ========== */
+                                                        <View style={[styles.card, { width: cardWidth, height: cardHeight }]}>
+                                                            {/* Card border effect */}
+                                                            <View style={[styles.cardInner, { borderColor: colors.bg }]}>
+                                                                {/* Photo area */}
+                                                                <View style={styles.photoContainer}>
+                                                                    {photoUri ? (
+                                                                        <Image source={{ uri: photoUri }} style={styles.photo} />
+                                                                    ) : (
+                                                                        <View style={[styles.photoPlaceholder, { backgroundColor: colors.bg }]}>
+                                                                            <Text style={styles.placeholderEmoji}>👶</Text>
+                                                                        </View>
+                                                                    )}
+                                                                </View>
 
-                                                            {/* Name banner */}
-                                                            <View style={[styles.nameBanner, { backgroundColor: colors.bg }]}>
-                                                                <Text style={[styles.firstName, { fontSize: cardWidth * 0.06 }]}>
-                                                                    {babyFirst.toUpperCase()}{babyLast ? ` ${babyLast.toUpperCase()}` : ''}
-                                                                </Text>
-                                                            </View>
+                                                                {/* Name banner */}
+                                                                <View style={[styles.nameBanner, { backgroundColor: colors.bg }]}>
+                                                                    <Text style={[styles.firstName, { fontSize: cardWidth * 0.06 }, params.nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 }]}>
+                                                                        {babyFirst.toUpperCase()}{babyLast ? ` ${babyLast.toUpperCase()}` : ''}
+                                                                    </Text>
+                                                                </View>
 
-                                                            {/* Team/Location */}
-                                                            <View style={styles.teamBar}>
-                                                                <Text style={[styles.teamText, { fontSize: cardWidth * 0.04 }]}>
-                                                                    🏠 TEAM {(babyLast || 'BABY').toUpperCase()} FAMILY
-                                                                </Text>
-                                                            </View>
+                                                                {/* Team/Location */}
+                                                                <View style={styles.teamBar}>
+                                                                    <Text style={[styles.teamText, { fontSize: cardWidth * 0.04 }]}>
+                                                                        🏠 TEAM {(babyLast || 'BABY').toUpperCase()} FAMILY
+                                                                    </Text>
+                                                                </View>
 
-                                                            {/* Rookie badge */}
-                                                            <View style={[styles.rookieBadge, { backgroundColor: colors.bg }]}>
-                                                                <Text style={styles.rookieText}>ROOKIE</Text>
-                                                            </View>
+                                                                {/* Rookie badge */}
+                                                                <View style={[styles.rookieBadge, { backgroundColor: colors.bg }]}>
+                                                                    <Text style={styles.rookieText}>ROOKIE</Text>
+                                                                </View>
 
-                                                            {/* Brand logo - top left like Topps */}
-                                                            <View style={styles.brandLogo}>
-                                                                <TradingCardLogo size={cardWidth * 0.107} bgColor={colors.bg} />
+                                                                {/* Brand logo - top left */}
+                                                                <View style={styles.brandLogo}>
+                                                                    <TradingCardLogo size={cardWidth * 0.107} bgColor={colors.bg} />
+                                                                </View>
                                                             </View>
                                                         </View>
-                                                    </View>
+                                                    )}
                                                 </ViewShot>
-                                            </View>
+                                            </Animated.View>
+                                        </PinchGestureHandler>
+                                    </Animated.View>
+                                </PanGestureHandler>
+                            </Animated.View>
+                        </TapGestureHandler>
+                    </GestureHandlerRootView>
+                </View>
 
-                                            {/* Card Back */}
-                                            <View style={styles.cardSection}>
-                                                <Text style={styles.sideLabel}>Back</Text>
+                {/* Card Back — independent zoom */}
+                <View style={styles.cardSection}>
+                    <Text style={styles.sideLabel}>Back</Text>
+                    <GestureHandlerRootView style={{ alignItems: 'center' }}>
+                        <TapGestureHandler ref={backZoom.doubleTapRef} onHandlerStateChange={backZoom.onDoubleTap} numberOfTaps={2}>
+                            <Animated.View>
+                                <PanGestureHandler
+                                    ref={backZoom.panRef}
+                                    onGestureEvent={backZoom.onPanEvent}
+                                    onHandlerStateChange={backZoom.onPanStateChange}
+                                    waitFor={backZoom.doubleTapRef}
+                                    simultaneousHandlers={backZoom.pinchRef}
+                                    minPointers={1}
+                                    maxPointers={1}
+                                >
+                                    <Animated.View>
+                                        <PinchGestureHandler
+                                            ref={backZoom.pinchRef}
+                                            onGestureEvent={backZoom.onPinchEvent}
+                                            onHandlerStateChange={backZoom.onPinchStateChange}
+                                        >
+                                            <Animated.View style={{ transform: backZoom.transform }}>
                                                 <ViewShot ref={backRef} options={{ format: 'png', quality: 1 }}>
-                                                    <View style={[styles.card, styles.cardBack, { width: cardWidth, height: cardHeight }]}>
-                                                        {/* Header */}
-                                                        <View style={[styles.backHeader, { backgroundColor: colors.bg }]}>
-                                                            <Text style={[styles.backName, { fontSize: cardWidth * 0.08 }]}>
-                                                                {fullName}
-                                                            </Text>
-                                                            <Text style={[styles.backPosition, { fontSize: cardWidth * 0.04 }]}>
-                                                                Position: NEWEST FAMILY MEMBER
-                                                            </Text>
+                                                    {isMemorial ? (
+                                                        /* ========== MEMORIAL CARD BACK ========== */
+                                                        <View style={[styles.card, { width: cardWidth, height: cardHeight, overflow: 'hidden' }]}>
+                                                            {cardStyle === 'classic' && (
+                                                                /* Classic Gold back: cream, gold ornate border, prayer */
+                                                                <View style={{ flex: 1, backgroundColor: '#FAF3E0', borderWidth: 3, borderColor: '#C5A55A', borderRadius: 10, padding: 2 }}>
+                                                                    <Text style={{ position: 'absolute', top: 2, left: 4, fontSize: cardWidth * 0.07, color: '#C5A55A' }}>❧</Text>
+                                                                    <Text style={{ position: 'absolute', top: 2, right: 4, fontSize: cardWidth * 0.07, color: '#C5A55A', transform: [{ scaleX: -1 }] }}>❧</Text>
+                                                                    <Text style={{ position: 'absolute', bottom: 2, left: 4, fontSize: cardWidth * 0.07, color: '#C5A55A', transform: [{ scaleY: -1 }] }}>❧</Text>
+                                                                    <Text style={{ position: 'absolute', bottom: 2, right: 4, fontSize: cardWidth * 0.07, color: '#C5A55A', transform: [{ scaleX: -1 }, { scaleY: -1 }] }}>❧</Text>
+                                                                    <View style={{ flex: 1, borderWidth: 1, borderColor: '#D4AF37', borderRadius: 6, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14, paddingVertical: 10 }}>
+                                                                        <Text style={{ fontSize: cardWidth * 0.08, color: '#C5A55A', marginBottom: 6 }}>♡</Text>
+                                                                        <Text style={{ fontSize: cardWidth * 0.036, fontStyle: 'italic', color: '#555', textAlign: 'center', lineHeight: cardWidth * 0.058, paddingHorizontal: 4 }}>
+                                                                            {memorialPrayer || `Pray for us O dearest ${firstNameOnly},\nTo Jesus Christ our King\nThat he may bless our lonely home\nWhere thou once dwelt therein\nAnd pray that God may give\nus strength\nTo bear our heavy cross;\nFor no one knows but only He\nThe treasure we have lost.`}
+                                                                        </Text>
+                                                                        <View style={{ marginTop: 10, alignItems: 'center' }}>
+                                                                            <Text style={{ fontSize: cardWidth * 0.03, color: '#999' }}>{actualDobStr}  —  {dodStr}</Text>
+                                                                            <Text style={{ fontSize: cardWidth * 0.028, color: '#aaa', marginTop: 2 }}>Rest In Peace</Text>
+                                                                        </View>
+                                                                    </View>
+                                                                </View>
+                                                            )}
+                                                            {cardStyle === 'dove' && (
+                                                                /* Dove & Sky back: blue gradient, cross, dove, prayer */
+                                                                <View style={{ flex: 1, backgroundColor: '#B8D4E8', borderRadius: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14, paddingVertical: 10 }}>
+                                                                    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '60%', backgroundColor: '#8FB8D8', borderTopLeftRadius: 10, borderTopRightRadius: 10, opacity: 0.4 }} />
+                                                                    {/* Dove background */}
+                                                                    <Text style={{ position: 'absolute', top: '12%', right: '10%', fontSize: cardWidth * 0.2, opacity: 0.08 }}>🕊️</Text>
+                                                                    <Text style={{ position: 'absolute', bottom: '15%', left: '5%', fontSize: cardWidth * 0.15, opacity: 0.06 }}>🕊️</Text>
+                                                                    {/* Cross */}
+                                                                    <Text style={{ fontSize: cardWidth * 0.1, color: '#5A7A9A', marginBottom: 6, zIndex: 1 }}>✝️</Text>
+                                                                    <Text style={{ fontSize: cardWidth * 0.036, fontStyle: 'italic', color: '#2C3E50', textAlign: 'center', lineHeight: cardWidth * 0.058, paddingHorizontal: 4, zIndex: 1 }}>
+                                                                        {memorialPrayer || `Along the road of Suffering\nYou found a little lane;\nThat took you up to heaven,\nAnd ended all your pain.\nYou may be out of sight,\nWe may be worlds apart;\nBut you are always\nin our prayers,\nAnd forever in our hearts.`}
+                                                                    </Text>
+                                                                    <View style={{ marginTop: 10, alignItems: 'center', zIndex: 1 }}>
+                                                                        <Text style={{ fontSize: cardWidth * 0.03, color: '#4a6a8a' }}>{actualDobStr}  —  {dodStr}</Text>
+                                                                    </View>
+                                                                </View>
+                                                            )}
+                                                            {cardStyle === 'floral' && (
+                                                                /* Floral back: white with leaf accents, prayer */
+                                                                <View style={{ flex: 1, backgroundColor: '#FFFFFF', borderRadius: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 12 }}>
+                                                                    <View style={{ position: 'absolute', top: 6, right: 6, flexDirection: 'row' }}>
+                                                                        <Text style={{ fontSize: cardWidth * 0.06, opacity: 0.6 }}>🌿</Text>
+                                                                        <Text style={{ fontSize: cardWidth * 0.05, opacity: 0.4, marginLeft: -4 }}>🍃</Text>
+                                                                    </View>
+                                                                    <View style={{ position: 'absolute', bottom: 6, left: 6, flexDirection: 'row' }}>
+                                                                        <Text style={{ fontSize: cardWidth * 0.05, opacity: 0.4 }}>🍃</Text>
+                                                                        <Text style={{ fontSize: cardWidth * 0.06, opacity: 0.6, marginLeft: -4 }}>🌿</Text>
+                                                                    </View>
+                                                                    <Text style={{ fontSize: cardWidth * 0.042, fontStyle: 'italic', color: '#556B2F', marginBottom: 8 }}>In Loving Memory</Text>
+                                                                    <View style={{ width: '100%', height: 1, backgroundColor: '#D4E0C8', marginBottom: 8 }} />
+                                                                    <Text style={{ fontSize: cardWidth * 0.034, fontStyle: 'italic', color: '#444', textAlign: 'center', lineHeight: cardWidth * 0.055, paddingHorizontal: 4 }}>
+                                                                        {memorialPrayer || `If my parting has left a void,\nthen fill it with remembered joys.\nA friendship shared, a laugh, a kiss,\nOh yes, these things I too will miss.\n\nBe not burdened with times of sorrow,\nlook for the sunrise of each tomorrow.\nMy life's been full, I've savored much,\ngood friends, good times,\na loved one's touch.`}
+                                                                    </Text>
+                                                                    <View style={{ width: '100%', height: 1, backgroundColor: '#D4E0C8', marginTop: 8 }} />
+                                                                    <View style={{ marginTop: 8, alignItems: 'center' }}>
+                                                                        <Text style={{ fontSize: cardWidth * 0.048, fontWeight: '600', color: '#333' }}>{fullName}</Text>
+                                                                        <Text style={{ fontSize: cardWidth * 0.03, color: '#888', marginTop: 2 }}>{actualDobStr}  —  {dodStr}</Text>
+                                                                    </View>
+                                                                </View>
+                                                            )}
+                                                            {cardStyle === 'simple' && (
+                                                                /* Peaceful back: soft blue-gray, prayer centered */
+                                                                <View style={{ flex: 1, backgroundColor: '#E8EFF5', borderRadius: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14, paddingVertical: 10 }}>
+                                                                    <Text style={{ position: 'absolute', top: '10%', left: '8%', fontSize: cardWidth * 0.12, opacity: 0.08 }}>🕊️</Text>
+                                                                    <Text style={{ position: 'absolute', bottom: '12%', right: '6%', fontSize: cardWidth * 0.1, opacity: 0.06 }}>🕊️</Text>
+                                                                    <Text style={{ fontSize: cardWidth * 0.042, fontStyle: 'italic', color: '#5a6a7a', marginBottom: 6 }}>A Prayer for {firstNameOnly}</Text>
+                                                                    <View style={{ width: '60%', height: 1, backgroundColor: '#c0ccd8', marginBottom: 8 }} />
+                                                                    <Text style={{ fontSize: cardWidth * 0.034, fontStyle: 'italic', color: '#3a4a5a', textAlign: 'center', lineHeight: cardWidth * 0.056, paddingHorizontal: 4 }}>
+                                                                        {memorialPrayer || `God looked around his garden\nAnd found an empty place.\nHe then looked down upon the earth\nAnd saw your tired face.\n\nHe put his arms around you\nAnd lifted you to rest.\nGod's garden must be beautiful,\nHe always takes the best.`}
+                                                                    </Text>
+                                                                    <View style={{ width: '60%', height: 1, backgroundColor: '#c0ccd8', marginTop: 8 }} />
+                                                                    <View style={{ marginTop: 8, alignItems: 'center' }}>
+                                                                        <Text style={{ fontSize: cardWidth * 0.048, fontWeight: '700', color: '#1C2833' }}>{fullName}</Text>
+                                                                        <Text style={{ fontSize: cardWidth * 0.03, color: '#6a7a8a', marginTop: 2 }}>{actualDobStr}  —  {dodStr}</Text>
+                                                                        <Text style={{ fontSize: cardWidth * 0.028, fontStyle: 'italic', color: '#8a9aaa', marginTop: 4 }}>Forever In Our Hearts</Text>
+                                                                    </View>
+                                                                </View>
+                                                            )}
+                                                            {cardStyle === 'cross' && (
+                                                                /* Cross back: gold vine border, cross at top, prayer */
+                                                                <View style={{ flex: 1, backgroundColor: '#FFF9F0', borderWidth: 2, borderColor: '#C5A55A', borderRadius: 10, padding: 4 }}>
+                                                                    <View style={{ flex: 1, borderWidth: 1, borderColor: '#D4B96A', borderRadius: 6, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 8 }}>
+                                                                        <Text style={{ position: 'absolute', top: 0, left: 2, fontSize: cardWidth * 0.055, color: '#C5A55A' }}>❦</Text>
+                                                                        <Text style={{ position: 'absolute', top: 0, right: 2, fontSize: cardWidth * 0.055, color: '#C5A55A', transform: [{ scaleX: -1 }] }}>❦</Text>
+                                                                        <Text style={{ position: 'absolute', bottom: 0, left: 2, fontSize: cardWidth * 0.055, color: '#C5A55A', transform: [{ scaleY: -1 }] }}>❦</Text>
+                                                                        <Text style={{ position: 'absolute', bottom: 0, right: 2, fontSize: cardWidth * 0.055, color: '#C5A55A', transform: [{ scaleX: -1 }, { scaleY: -1 }] }}>❦</Text>
+                                                                        {/* Cross with dove */}
+                                                                        <Text style={{ fontSize: cardWidth * 0.1, color: '#8B7D3C', marginBottom: 4 }}>✝️</Text>
+                                                                        <Text style={{ fontSize: cardWidth * 0.035, fontStyle: 'italic', color: '#4A4030', textAlign: 'center', lineHeight: cardWidth * 0.056, paddingHorizontal: 2 }}>
+                                                                            {memorialPrayer || `Pray for us O dearest ${firstNameOnly},\nTo Jesus Christ our King\nThat he may bless our lonely home\nWhere thou once dwelt therein\nAnd pray that God may give\nus strength\nTo bear our heavy cross;\nFor no one knows but only He\nThe treasure we have lost.`}
+                                                                        </Text>
+                                                                        <View style={{ marginTop: 8, alignItems: 'center' }}>
+                                                                            <Text style={{ fontSize: cardWidth * 0.03, color: '#8B7D5C' }}>{actualDobStr}  —  {dodStr}</Text>
+                                                                            <Text style={{ fontSize: cardWidth * 0.028, fontStyle: 'italic', color: '#6B5D3C', marginTop: 2 }}>Rest In Peace</Text>
+                                                                        </View>
+                                                                    </View>
+                                                                </View>
+                                                            )}
                                                         </View>
-
-                                                        {/* Stats table */}
-                                                        <View style={styles.statsTable}>
-                                                            <Text style={[styles.statsHeader, { fontSize: cardWidth * 0.05 }]}>
-                                                                VITAL STATS
-                                                            </Text>
-
-                                                            <View style={styles.statRow}>
-                                                                <Text style={styles.statLabel}>Debut Date</Text>
-                                                                <Text style={styles.statValue}>{birthDateStr}</Text>
+                                                    ) : (
+                                                        /* ========== BABY CARD BACK ========== */
+                                                        <View style={[styles.card, styles.cardBack, { width: cardWidth, height: cardHeight }]}>
+                                                            {/* Header */}
+                                                            <View style={[styles.backHeader, { backgroundColor: colors.bg }]}>
+                                                                <Text style={[styles.backName, { fontSize: cardWidth * 0.065 }, params.nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 }]}>
+                                                                    {fullName}
+                                                                </Text>
+                                                                <Text style={[styles.backPosition, { fontSize: cardWidth * 0.032 }]}>
+                                                                    Position: NEWEST FAMILY MEMBER
+                                                                </Text>
                                                             </View>
 
-                                                            <View style={styles.statRow}>
-                                                                <Text style={styles.statLabel}>Weight</Text>
-                                                                <Text style={styles.statValue}>{weightLb} lbs {weightOz} oz</Text>
+                                                            <View style={styles.statsTable}>
+                                                                <Text style={[styles.statsHeader, { fontSize: cardWidth * 0.04 }]}>
+                                                                    VITAL STATS
+                                                                </Text>
+
+                                                                <View style={styles.statRow}>
+                                                                    <Text style={styles.statLabel}>Debut Date</Text>
+                                                                    <Text style={styles.statValue}>{birthDateStr}</Text>
+                                                                </View>
+
+                                                                <View style={styles.statRow}>
+                                                                    <Text style={styles.statLabel}>Weight</Text>
+                                                                    <Text style={styles.statValue}>{weightLb} lbs {weightOz} oz</Text>
+                                                                </View>
+
+                                                                <View style={styles.statRow}>
+                                                                    <Text style={styles.statLabel}>Height</Text>
+                                                                    <Text style={styles.statValue}>{lengthIn}"</Text>
+                                                                </View>
+
+                                                                <View style={styles.statRow}>
+                                                                    <Text style={styles.statLabel}>Team</Text>
+                                                                    <Text style={styles.statValue}>{babyLast || 'TBD'} Family</Text>
+                                                                </View>
+
+                                                                <View style={styles.statRow}>
+                                                                    <Text style={styles.statLabel}>Hometown</Text>
+                                                                    <Text style={styles.statValue}>{hometown}</Text>
+                                                                </View>
+
+                                                                {heritage ? (
+                                                                    <View style={styles.statRow}>
+                                                                        <Text style={styles.statLabel}>Heritage</Text>
+                                                                        <Text style={styles.statValue}>{heritage}</Text>
+                                                                    </View>
+                                                                ) : null}
+                                                                {nationality ? (
+                                                                    <View style={styles.statRow}>
+                                                                        <Text style={styles.statLabel}>Nationality</Text>
+                                                                        <Text style={styles.statValue}>{nationality}</Text>
+                                                                    </View>
+                                                                ) : null}
+
+                                                                <Text style={[styles.statsHeader, { fontSize: cardWidth * 0.038, marginTop: 3 }]}>
+                                                                    COSMIC PROFILE
+                                                                </Text>
+
+                                                                <View style={styles.statRow}>
+                                                                    <Text style={styles.statLabel}>Zodiac</Text>
+                                                                    <Text style={styles.statValue}>{zodiacEmoji} {zodiac || 'Unknown'}</Text>
+                                                                </View>
+
+                                                                <View style={styles.statRow}>
+                                                                    <Text style={styles.statLabel}>Birthstone</Text>
+                                                                    <Text style={styles.statValue}>{birthstone || 'Unknown'}</Text>
+                                                                </View>
+
+                                                                <View style={styles.statRow}>
+                                                                    <Text style={styles.statLabel}>Moon Phase</Text>
+                                                                    <Text style={styles.statValue}>{moonPhaseData.emoji} {moonPhaseData.phase}</Text>
+                                                                </View>
+
+                                                                <View style={styles.statRow}>
+                                                                    <Text style={styles.statLabel}>🔢 Life Path #</Text>
+                                                                    <Text style={styles.statValue}>{lifePathNumber || '—'}</Text>
+                                                                </View>
+
+                                                                <View style={styles.statRow}>
+                                                                    <Text style={styles.statLabel}>Spirit Animal</Text>
+                                                                    <Text style={styles.statValue}>{spiritAnimal ? `${spiritAnimal.emoji} ${spiritAnimal.animal}` : '—'}</Text>
+                                                                </View>
+
+                                                                <View style={styles.statRow}>
+                                                                    <Text style={styles.statLabel}>Element</Text>
+                                                                    <Text style={styles.statValue}>{westernElement || '—'}</Text>
+                                                                </View>
+
+                                                                <View style={styles.statRow}>
+                                                                    <Text style={styles.statLabel}>Chinese Zodiac</Text>
+                                                                    <Text style={styles.statValue}>{chineseElement} {chineseZodiac}</Text>
+                                                                </View>
+
+                                                                <View style={styles.statRow}>
+                                                                    <Text style={styles.statLabel}>Tarot Card</Text>
+                                                                    <Text style={styles.statValue}>{tarot.soul.symbol} {tarot.soul.name}</Text>
+                                                                </View>
                                                             </View>
 
-                                                            <View style={styles.statRow}>
-                                                                <Text style={styles.statLabel}>Height</Text>
-                                                                <Text style={styles.statValue}>{lengthIn}"</Text>
-                                                            </View>
-
-                                                            <View style={styles.statRow}>
-                                                                <Text style={styles.statLabel}>Birthstone</Text>
-                                                                <Text style={styles.statValue}>{birthstone || 'Unknown'}</Text>
-                                                            </View>
-
-                                                            <View style={styles.statRow}>
-                                                                <Text style={styles.statLabel}>Zodiac</Text>
-                                                                <Text style={styles.statValue}>{zodiac || 'Unknown'}</Text>
-                                                            </View>
-
-                                                            <View style={styles.statRow}>
-                                                                <Text style={styles.statLabel}>Team</Text>
-                                                                <Text style={styles.statValue}>{babyLast || 'TBD'} Family</Text>
-                                                            </View>
-
-                                                            <View style={styles.statRow}>
-                                                                <Text style={styles.statLabel}>Hometown</Text>
-                                                                <Text style={styles.statValue}>{hometown}</Text>
+                                                            {/* Footer */}
+                                                            <View style={styles.backFooter}>
+                                                                <Text style={styles.cardNumber}>#001</Text>
+                                                                <TradingCardLogo size={cardWidth * 0.067} bgColor={colors.bg} />
+                                                                <Text style={styles.brand}>Population +1™</Text>
                                                             </View>
                                                         </View>
-
-                                                        {/* Footer */}
-                                                        <View style={styles.backFooter}>
-                                                            <Text style={styles.cardNumber}>#001</Text>
-                                                            <TradingCardLogo size={cardWidth * 0.067} bgColor={colors.bg} />
-                                                            <Text style={styles.brand}>Population +1™</Text>
-                                                        </View>
-                                                    </View>
+                                                    )}
                                                 </ViewShot>
-                                            </View>
-
-                                        </Animated.View>
-                                    </PinchGestureHandler>
-                                </Animated.View>
-                            </PanGestureHandler>
-                        </Animated.View>
-                    </TapGestureHandler>
-                </GestureHandlerRootView>
+                                            </Animated.View>
+                                        </PinchGestureHandler>
+                                    </Animated.View>
+                                </PanGestureHandler>
+                            </Animated.View>
+                        </TapGestureHandler>
+                    </GestureHandlerRootView>
+                </View>
             </View>
 
             {/* Cart Actions */}
@@ -422,7 +849,7 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
                 visible={showCartModal}
                 onClose={() => setShowCartModal(false)}
             />
-        </ScrollView>
+        </ScrollView >
     );
 }
 
@@ -538,7 +965,8 @@ const styles = StyleSheet.create({
         padding: 0,
     },
     backHeader: {
-        padding: 12,
+        paddingVertical: 5,
+        paddingHorizontal: 8,
         alignItems: 'center',
     },
     backName: {
@@ -547,42 +975,46 @@ const styles = StyleSheet.create({
     },
     backPosition: {
         color: 'rgba(255,255,255,0.8)',
-        marginTop: 4,
+        marginTop: 1,
     },
     statsTable: {
         flex: 1,
-        padding: 12,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
     },
     statsHeader: {
         fontWeight: 'bold',
         color: '#333',
         textAlign: 'center',
-        marginBottom: 12,
-        borderBottomWidth: 2,
+        marginBottom: 3,
+        borderBottomWidth: 1.5,
         borderBottomColor: '#ddd',
-        paddingBottom: 8,
+        paddingBottom: 2,
     },
     statRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingVertical: 6,
-        borderBottomWidth: 1,
+        paddingVertical: 2.5,
+        borderBottomWidth: StyleSheet.hairlineWidth,
         borderBottomColor: '#eee',
     },
     statLabel: {
         color: '#666',
-        fontSize: 12,
+        fontSize: 9,
     },
     statValue: {
         color: '#333',
         fontWeight: '600',
-        fontSize: 12,
+        fontSize: 9,
+        flexShrink: 1,
+        textAlign: 'right',
     },
     backFooter: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 8,
+        paddingVertical: 4,
+        paddingHorizontal: 6,
         backgroundColor: '#f5f5f5',
     },
     cardNumber: {

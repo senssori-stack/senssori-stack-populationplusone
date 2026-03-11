@@ -12,6 +12,7 @@ type Props = {
     babyName: string;
     zodiacSign?: string;
     previewScale?: number;
+    isWedding?: boolean;
 };
 
 const ZODIAC_SYMBOLS: Record<string, string> = {
@@ -26,7 +27,7 @@ const ZODIAC_SYMBOLS: Record<string, string> = {
  * Landscape 11x8.5" format — 3-column layout to maximize space.
  */
 export default function NatalChartBack(props: Props) {
-    const { theme, babyName, zodiacSign, previewScale = 0.2 } = props;
+    const { theme, babyName, zodiacSign, previewScale = 0.2, isWedding = false } = props;
     const colors = COLOR_SCHEMES[theme] || COLOR_SCHEMES.green;
 
     const displayWidth = LANDSCAPE_WIDTH * previewScale;
@@ -56,18 +57,18 @@ export default function NatalChartBack(props: Props) {
     ];
 
     const houses = [
-        { num: '1st', name: 'Self', desc: 'Identity & appearance' },
-        { num: '2nd', name: 'Values', desc: 'Money & self-worth' },
-        { num: '3rd', name: 'Communication', desc: 'Thinking & siblings' },
-        { num: '4th', name: 'Home', desc: 'Family & roots' },
-        { num: '5th', name: 'Creativity', desc: 'Joy & self-expression' },
-        { num: '6th', name: 'Health', desc: 'Routines & wellness' },
-        { num: '7th', name: 'Partnerships', desc: 'Relationships & bonds' },
-        { num: '8th', name: 'Transformation', desc: 'Deep change & rebirth' },
-        { num: '9th', name: 'Exploration', desc: 'Travel & philosophy' },
-        { num: '10th', name: 'Career', desc: 'Public life & reputation' },
-        { num: '11th', name: 'Community', desc: 'Friends & dreams' },
-        { num: '12th', name: 'Spirituality', desc: 'Inner world & rest' },
+        { num: '1st', name: '🪞 Self', desc: 'Your "front door" — first impressions & appearance' },
+        { num: '2nd', name: '💰 Money', desc: 'Your wallet — earnings, possessions & self-worth' },
+        { num: '3rd', name: '💬 Communication', desc: 'Your phone — talking, learning & siblings' },
+        { num: '4th', name: '🏠 Home', desc: 'Your bedroom — family, roots & comfort' },
+        { num: '5th', name: '🎨 Fun', desc: 'Your playground — creativity, romance & joy' },
+        { num: '6th', name: '⚕️ Health', desc: 'Your gym — daily habits, routines & wellness' },
+        { num: '7th', name: '💑 Partnerships', desc: 'Your partner\'s chair — marriage & commitment' },
+        { num: '8th', name: '🦋 Transformation', desc: 'Your locked diary — deep bonds & big changes' },
+        { num: '9th', name: '✈️ Exploration', desc: 'Your passport — travel, education & big ideas' },
+        { num: '10th', name: '👔 Career', desc: 'Your office — public image & achievements' },
+        { num: '11th', name: '👥 Friends', desc: 'Your group chat — community & future dreams' },
+        { num: '12th', name: '🔮 Spirituality', desc: 'Your dream journal — inner world & intuition' },
     ];
 
     return (
@@ -78,10 +79,10 @@ export default function NatalChartBack(props: Props) {
                     {/* Header */}
                     <View style={styles.header}>
                         <Text style={[styles.title, { fontSize: titleSize, color: colors.text }]}>
-                            📖 HOW TO READ YOUR NATAL CHART 📖
+                            {isWedding ? '📖 HOW TO READ YOUR WEDDING CHART 📖' : '📖 HOW TO READ YOUR NATAL CHART 📖'}
                         </Text>
                         <Text style={[styles.subtitle, { fontSize: sectionTitleSize * 0.8, color: colors.text, opacity: 0.85 }]}>
-                            A Simple Guide to {babyName}'s Celestial Blueprint
+                            {isWedding ? `A Guide to ${babyName}'s Wedding Day Astrology` : `A Simple Guide to ${babyName}'s Celestial Blueprint`}
                         </Text>
                     </View>
 
@@ -94,10 +95,12 @@ export default function NatalChartBack(props: Props) {
                             {/* What Is a Natal Chart? */}
                             <View style={[styles.card, { backgroundColor: cardBg, borderRadius: cardRadius }]}>
                                 <Text style={[styles.cardTitle, { fontSize: sectionTitleSize, color: '#ffd54f' }]}>
-                                    🌌 What Is a Natal Chart?
+                                    {isWedding ? '🌌 What Is a Wedding Chart?' : '🌌 What Is a Natal Chart?'}
                                 </Text>
                                 <Text style={[styles.cardBody, { fontSize: smallSize, color: colors.text }]}>
-                                    A natal chart is a snapshot of the sky at the exact moment of birth. It maps where the Sun, Moon, and planets were positioned among the 12 zodiac signs — a cosmic fingerprint unique to every person. It highlights natural strengths, tendencies, and potential.
+                                    {isWedding
+                                        ? 'A wedding chart is a snapshot of the sky at the moment a couple says "I do." Astrologers have long used planetary alignments to choose auspicious wedding dates — analyzing Venus for love, Jupiter for abundance, and the Moon for emotional harmony. The positions of these celestial bodies on your wedding day shape the energetic foundation of your marriage.'
+                                        : 'A natal chart is a snapshot of the sky at the exact moment of birth. It maps where the Sun, Moon, and planets were positioned among the 12 zodiac signs — a cosmic fingerprint unique to every person. It highlights natural strengths, tendencies, and potential.'}
                                 </Text>
                             </View>
 
@@ -107,27 +110,27 @@ export default function NatalChartBack(props: Props) {
                                     ✨ The Big Three
                                 </Text>
                                 <Text style={[styles.cardBody, { fontSize: smallSize * 0.92, color: colors.text }]}>
-                                    The three most important placements in any chart:
+                                    {isWedding ? 'The three most influential placements for your wedding day:' : 'The three most important placements in any chart:'}
                                 </Text>
 
                                 <View style={styles.bulletGroup}>
-                                    <Text style={[styles.bulletTitle, { fontSize: smallSize, color: '#ffd54f' }]}>☉ Sun Sign — Core Self</Text>
+                                    <Text style={[styles.bulletTitle, { fontSize: smallSize, color: '#ffd54f' }]}>{isWedding ? '☉ Sun Sign — The Marriage Identity' : '☉ Sun Sign — Core Self'}</Text>
                                     <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text }]}>
-                                        Your identity, ego, and life purpose. The "main character energy" of the chart.
+                                        {isWedding ? 'The Sun\'s sign on your wedding day defines the core energy and public identity of your union — how the world sees your partnership.' : 'Your identity, ego, and life purpose. The "main character energy" of the chart.'}
                                     </Text>
                                 </View>
 
                                 <View style={styles.bulletGroup}>
-                                    <Text style={[styles.bulletTitle, { fontSize: smallSize, color: '#b0bec5' }]}>☽ Moon Sign — Emotional World</Text>
+                                    <Text style={[styles.bulletTitle, { fontSize: smallSize, color: '#b0bec5' }]}>{isWedding ? '☽ Moon Sign — Emotional Bond' : '☽ Moon Sign — Emotional World'}</Text>
                                     <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text }]}>
-                                        How you feel, what brings comfort. Especially important for babies and children.
+                                        {isWedding ? 'The Moon governs the emotional undercurrent of your wedding day. A well-placed Moon brings warmth, joy, and deep connection between partners.' : 'How you feel, what brings comfort. Especially important for babies and children.'}
                                     </Text>
                                 </View>
 
                                 <View style={styles.bulletGroup}>
-                                    <Text style={[styles.bulletTitle, { fontSize: smallSize, color: colors.text }]}>↑ Rising Sign — First Impression</Text>
+                                    <Text style={[styles.bulletTitle, { fontSize: smallSize, color: colors.text }]}>{isWedding ? '♀ Venus — Love & Harmony' : '↑ Rising Sign — First Impression'}</Text>
                                     <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text }]}>
-                                        The sign rising on the eastern horizon at birth. How others see you — your "social mask."
+                                        {isWedding ? 'Venus is the planet of love and beauty. Its position on your wedding day influences romance, affection, and the aesthetic magic of your celebration.' : 'The sign rising on the eastern horizon at birth. How others see you — your "social mask."'}
                                     </Text>
                                 </View>
                             </View>
@@ -190,7 +193,9 @@ export default function NatalChartBack(props: Props) {
                                     🪐 The Planets
                                 </Text>
                                 <Text style={[styles.cardBody, { fontSize: smallSize * 0.92, color: colors.text, marginBottom: 2 }]}>
-                                    Each planet governs a different part of life. The sign it was in at birth colors how that energy expresses:
+                                    {isWedding
+                                        ? 'Each planet influences a different aspect of your marriage. Their signs on your wedding day shape these energies:'
+                                        : 'Each planet governs a different part of life. The sign it was in at birth colors how that energy expresses:'}
                                 </Text>
 
                                 {planets.map((planet) => (
@@ -208,27 +213,6 @@ export default function NatalChartBack(props: Props) {
                                 ))}
                             </View>
 
-                            {/* Good to Know */}
-                            <View style={[styles.card, { backgroundColor: cardBg, borderRadius: cardRadius }]}>
-                                <Text style={[styles.cardTitle, { fontSize: sectionTitleSize, color: '#ffd54f' }]}>
-                                    💡 Good to Know
-                                </Text>
-                                <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text }]}>
-                                    • Your Sun sign is what you read in horoscopes — but it's only one piece of the puzzle
-                                </Text>
-                                <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text, marginTop: 2 }]}>
-                                    • The Moon sign often matters most for babies — it shows what makes them feel safe and loved
-                                </Text>
-                                <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text, marginTop: 2 }]}>
-                                    • No placement is "bad." Every sign has strengths to be embraced
-                                </Text>
-                                <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text, marginTop: 2 }]}>
-                                    • A chart shows potential, not destiny — it's a starting point, not a limit
-                                </Text>
-                                <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text, marginTop: 2 }]}>
-                                    • Exact birth time and location make the Rising sign and house positions more precise
-                                </Text>
-                            </View>
                         </View>
 
                         {/* COLUMN 3 — The 12 Houses (2-column sub-grid) */}
@@ -239,7 +223,9 @@ export default function NatalChartBack(props: Props) {
                                     🏠 The 12 Houses — Areas of Life
                                 </Text>
                                 <Text style={[styles.cardBody, { fontSize: smallSize * 0.92, color: colors.text, marginBottom: 4 }]}>
-                                    The 12 houses divide life into different areas. The zodiac sign on each house colors how that area is experienced:
+                                    {isWedding
+                                        ? 'Think of married life as a house with 12 rooms — each room covers a different theme. The zodiac sign on each house on your wedding day shapes that area:'
+                                        : 'Think of life as a house with 12 rooms. Each room covers a different part of life, and the zodiac sign on that room\'s door shapes how you experience it:'}
                                 </Text>
 
                                 {/* Houses in 2 sub-columns: 1-6 left, 7-12 right */}
@@ -279,6 +265,50 @@ export default function NatalChartBack(props: Props) {
                                         ))}
                                     </View>
                                 </View>
+                            </View>
+
+                            {/* Good to Know */}
+                            <View style={[styles.card, { backgroundColor: cardBg, borderRadius: cardRadius }]}>
+                                <Text style={[styles.cardTitle, { fontSize: sectionTitleSize, color: '#ffd54f' }]}>
+                                    💡 Good to Know
+                                </Text>
+                                {isWedding ? (
+                                    <>
+                                        <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text }]}>
+                                            • Electional astrology is the ancient practice of choosing the best date & time for important events like weddings
+                                        </Text>
+                                        <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text, marginTop: 2 }]}>
+                                            • Avoid Venus or Mars retrograde periods — they can bring miscommunication or revisiting old patterns
+                                        </Text>
+                                        <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text, marginTop: 2 }]}>
+                                            • A waxing Moon (growing toward full) symbolizes growth, building, and new beginnings for a marriage
+                                        </Text>
+                                        <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text, marginTop: 2 }]}>
+                                            • Jupiter aspects bring luck and expansion — a well-aspected Jupiter blesses the union with abundance
+                                        </Text>
+                                        <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text, marginTop: 2 }]}>
+                                            • The 7th House rules partnerships — planets here on your wedding day directly influence the marriage
+                                        </Text>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text }]}>
+                                            • Your Sun sign is what you read in horoscopes — but it's only one piece of the puzzle
+                                        </Text>
+                                        <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text, marginTop: 2 }]}>
+                                            • The Moon sign often matters most for babies — it shows what makes them feel safe and loved
+                                        </Text>
+                                        <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text, marginTop: 2 }]}>
+                                            • No placement is "bad." Every sign has strengths to be embraced
+                                        </Text>
+                                        <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text, marginTop: 2 }]}>
+                                            • A chart shows potential, not destiny — it's a starting point, not a limit
+                                        </Text>
+                                        <Text style={[styles.bulletBody, { fontSize: smallSize * 0.92, color: colors.text, marginTop: 2 }]}>
+                                            • Exact birth time and location make the Rising sign and house positions more precise
+                                        </Text>
+                                    </>
+                                )}
                             </View>
                         </View>
                     </View>
@@ -448,8 +478,10 @@ const styles = StyleSheet.create({
     },
     zodiacCorner: {
         position: 'absolute',
-        bottom: '5%',
-        right: '5%',
+        bottom: '3%',
+        left: 0,
+        right: 0,
+        alignItems: 'center',
     },
     zodiacSymbol: {
         fontWeight: 'bold',

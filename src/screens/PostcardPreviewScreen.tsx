@@ -1,5 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useRef, useState } from 'react';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
     ScrollView,
@@ -13,9 +14,11 @@ import { GestureHandlerRootView, PanGestureHandler, PinchGestureHandler, State, 
 import ViewShot from 'react-native-view-shot';
 import CartModal from '../../components/CartModal';
 import DownloadModal, { DownloadItem } from '../../components/DownloadModal';
+import QRCodePlaceholder from '../../components/QRCodePlaceholder';
 import SignFrontLandscape from '../../components/SignFrontLandscape';
 import { PRODUCT_PRICES, useCart } from '../context/CartContext';
 import { COLOR_SCHEMES } from '../data/utils/colors';
+import { db } from '../data/utils/firebase-config';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PostcardPreview'>;
@@ -51,6 +54,34 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
     const lengthIn = params.lengthIn || '';
     const weight = weightLb && weightOz ? `${weightLb} lbs ${weightOz} oz` : '';
     const length = lengthIn ? `${lengthIn}"` : '';
+
+    const isWedding = !!params.hidePlusLabel;
+
+    // Generate a stable wedding ID for RSVP
+    const [weddingId] = useState(() => {
+        if (!isWedding) return '';
+        return `wedding-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+    });
+    const rsvpUrl = weddingId ? `https://populationplusone.com/rsvp/${weddingId}` : '';
+
+    // Create wedding document in Firebase when wedding postcard is generated
+    useEffect(() => {
+        if (!isWedding || !weddingId || !db) return;
+        const createWeddingDoc = async () => {
+            try {
+                await setDoc(doc(db, 'weddings', weddingId), {
+                    coupleName: fullName,
+                    weddingDate: birthDateStr,
+                    hometown,
+                    theme,
+                    createdAt: serverTimestamp(),
+                });
+            } catch (error) {
+                console.error('Error creating wedding doc:', error);
+            }
+        };
+        createWeddingDoc();
+    }, [isWedding, weddingId]);
 
     const theme = params.theme || 'green';
     const colors = COLOR_SCHEMES[theme] || COLOR_SCHEMES.green;
@@ -191,8 +222,8 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content} scrollEnabled={scrollEnabled}>
-            <Text style={styles.title}>💌 Invitation Cards</Text>
-            <Text style={styles.subtitle}>Mail or share with family & friends!</Text>
+            <Text style={styles.title}>{isWedding ? '💒 Wedding Invitations' : '💌 Invitation Cards'}</Text>
+            <Text style={styles.subtitle}>{isWedding ? 'Share the joy with family & friends!' : 'Mail or share with family & friends!'}</Text>
 
             {/* Zoomable card area */}
             <View style={{ width: '100%', minHeight: 300, alignItems: 'center' }}>
@@ -239,6 +270,8 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
                                                             personName={fullName}
                                                             babyCount={params.babyCount || 1}
                                                             dobISO={params.dobISO}
+                                                            hidePlusLabel={params.hidePlusLabel}
+                                                            nameGold={params.nameGold}
                                                         />
                                                     </View>
                                                 </ViewShot>
@@ -252,46 +285,55 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
                                                         {/* LEFT SIDE - Message/Content Area (per USPS rules) */}
                                                         <View style={styles.messageHalf}>
                                                             <Text style={[styles.inviteHeader, { color: colors.bg, fontSize: cardWidth * 0.045 }]}>
-                                                                You're Invited!
+                                                                {isWedding ? 'You\'re Invited!' : 'You\'re Invited!'}
                                                             </Text>
                                                             <Text style={[styles.inviteSubheader, { fontSize: cardWidth * 0.025 }]}>
-                                                                to celebrate the arrival of
+                                                                {isWedding ? 'to the wedding celebration of' : 'to celebrate the arrival of'}
                                                             </Text>
-                                                            <Text style={[styles.inviteBabyName, { color: colors.bg, fontSize: cardWidth * 0.04 }]}>
+                                                            <Text style={[styles.inviteBabyName, { color: params.nameGold ? '#FFD700' : colors.bg, fontSize: cardWidth * 0.04 }, params.nameGold && { textShadowColor: '#B8860B', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 }]}>
                                                                 {fullName}
                                                             </Text>
 
-                                                            {/* Baby Stats - Compact */}
+                                                            {/* Stats - Compact */}
                                                             <View style={styles.statsCompact}>
                                                                 <Text style={[styles.statLine, { fontSize: cardWidth * 0.022 }]}>
-                                                                    Born: {birthDateStr}
+                                                                    {isWedding ? `Date: ${birthDateStr}` : `Born: ${birthDateStr}`}
                                                                 </Text>
-                                                                {weight && (
+                                                                {!isWedding && weight ? (
                                                                     <Text style={[styles.statLine, { fontSize: cardWidth * 0.022 }]}>
                                                                         {weight} • {length}
                                                                     </Text>
-                                                                )}
+                                                                ) : null}
+                                                                {isWedding && hometown ? (
+                                                                    <Text style={[styles.statLine, { fontSize: cardWidth * 0.022 }]}>
+                                                                        {hometown}
+                                                                    </Text>
+                                                                ) : null}
                                                             </View>
 
                                                             {/* Party Details */}
                                                             <View style={styles.partyCompact}>
                                                                 <View style={styles.detailRowCompact}>
-                                                                    <Text style={[styles.detailLabelCompact, { fontSize: cardWidth * 0.02 }]}>When:</Text>
+                                                                    <Text style={[styles.detailLabelCompact, { fontSize: cardWidth * 0.02 }]}>{isWedding ? 'Ceremony:' : 'When:'}</Text>
                                                                     <View style={[styles.blankLineCompact, { borderBottomColor: colors.bg }]} />
                                                                 </View>
                                                                 <View style={styles.detailRowCompact}>
-                                                                    <Text style={[styles.detailLabelCompact, { fontSize: cardWidth * 0.02 }]}>Where:</Text>
+                                                                    <Text style={[styles.detailLabelCompact, { fontSize: cardWidth * 0.02 }]}>{isWedding ? 'Reception:' : 'Where:'}</Text>
                                                                     <View style={[styles.blankLineCompact, { borderBottomColor: colors.bg }]} />
                                                                 </View>
                                                                 <View style={styles.detailRowCompact}>
                                                                     <Text style={[styles.detailLabelCompact, { fontSize: cardWidth * 0.02 }]}>RSVP:</Text>
-                                                                    <View style={[styles.blankLineCompact, { borderBottomColor: colors.bg }]} />
+                                                                    {isWedding ? (
+                                                                        <Text style={[styles.detailLabelCompact, { fontSize: cardWidth * 0.017, color: '#666', flex: 1 }]}>Scan QR →</Text>
+                                                                    ) : (
+                                                                        <View style={[styles.blankLineCompact, { borderBottomColor: colors.bg }]} />
+                                                                    )}
                                                                 </View>
                                                             </View>
 
                                                             {parents && (
                                                                 <Text style={[styles.hostedBy, { fontSize: cardWidth * 0.018 }]}>
-                                                                    Hosted by {parents}
+                                                                    {isWedding ? `Together with their families` : `Hosted by ${parents}`}
                                                                 </Text>
                                                             )}
                                                         </View>
@@ -301,25 +343,55 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
 
                                                         {/* RIGHT SIDE - Address Area (per USPS rules) */}
                                                         <View style={styles.addressHalf}>
-                                                            {/* Stamp Box - Upper Right */}
-                                                            <View style={styles.stampBox}>
-                                                                <Text style={styles.stampText}>PLACE</Text>
-                                                                <Text style={styles.stampText}>STAMP</Text>
-                                                                <Text style={styles.stampText}>HERE</Text>
-                                                            </View>
+                                                            {isWedding ? (
+                                                                <>
+                                                                    {/* QR Code for RSVP */}
+                                                                    <View style={styles.qrSection}>
+                                                                        <QRCodePlaceholder
+                                                                            size={cardWidth * 0.18}
+                                                                            value={rsvpUrl}
+                                                                            label=""
+                                                                        />
+                                                                        <Text style={[styles.qrLabel, { fontSize: cardWidth * 0.016 }]}>
+                                                                            Scan to RSVP
+                                                                        </Text>
+                                                                    </View>
 
-                                                            {/* Address Lines */}
-                                                            <View style={styles.addressArea}>
-                                                                <View style={styles.addressLine} />
-                                                                <View style={styles.addressLine} />
-                                                                <View style={styles.addressLine} />
-                                                                <View style={styles.addressLine} />
-                                                            </View>
+                                                                    {/* Address Lines */}
+                                                                    <View style={styles.addressArea}>
+                                                                        <View style={styles.addressLine} />
+                                                                        <View style={styles.addressLine} />
+                                                                        <View style={styles.addressLine} />
+                                                                    </View>
 
-                                                            {/* Brand watermark */}
-                                                            <Text style={[styles.brandText, { fontSize: cardWidth * 0.016 }]}>
-                                                                PopulationPlusOne.com
-                                                            </Text>
+                                                                    {/* Brand watermark */}
+                                                                    <Text style={[styles.brandText, { fontSize: cardWidth * 0.016 }]}>
+                                                                        PopulationPlusOne.com
+                                                                    </Text>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    {/* Stamp Box - Upper Right */}
+                                                                    <View style={styles.stampBox}>
+                                                                        <Text style={styles.stampText}>PLACE</Text>
+                                                                        <Text style={styles.stampText}>STAMP</Text>
+                                                                        <Text style={styles.stampText}>HERE</Text>
+                                                                    </View>
+
+                                                                    {/* Address Lines */}
+                                                                    <View style={styles.addressArea}>
+                                                                        <View style={styles.addressLine} />
+                                                                        <View style={styles.addressLine} />
+                                                                        <View style={styles.addressLine} />
+                                                                        <View style={styles.addressLine} />
+                                                                    </View>
+
+                                                                    {/* Brand watermark */}
+                                                                    <Text style={[styles.brandText, { fontSize: cardWidth * 0.016 }]}>
+                                                                        PopulationPlusOne.com
+                                                                    </Text>
+                                                                </>
+                                                            )}
                                                         </View>
                                                     </View>
                                                 </ViewShot>
@@ -373,13 +445,23 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
                     <Text style={styles.actionTileEmoji}>🛒</Text>
                     <Text style={styles.actionTileLabel}>View Cart</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.actionTile, { backgroundColor: '#dc2626' }]}
-                    onPress={() => navigation.navigate('GiftSuggestions', { occasion: 'newborn' })}
-                >
-                    <Text style={styles.actionTileEmoji}>🎁</Text>
-                    <Text style={styles.actionTileLabel}>Find a Gift</Text>
-                </TouchableOpacity>
+                {isWedding ? (
+                    <TouchableOpacity
+                        style={[styles.actionTile, { backgroundColor: '#7b1fa2' }]}
+                        onPress={() => navigation.navigate('WeddingRSVPDashboard', { weddingId, coupleName: fullName })}
+                    >
+                        <Text style={styles.actionTileEmoji}>📋</Text>
+                        <Text style={styles.actionTileLabel}>View RSVPs</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity
+                        style={[styles.actionTile, { backgroundColor: '#dc2626' }]}
+                        onPress={() => navigation.navigate('GiftSuggestions', { occasion: 'newborn' })}
+                    >
+                        <Text style={styles.actionTileEmoji}>🎁</Text>
+                        <Text style={styles.actionTileLabel}>Find a Gift</Text>
+                    </TouchableOpacity>
+                )}
                 <TouchableOpacity
                     style={[styles.actionTile, { backgroundColor: '#455a64' }]}
                     onPress={() => navigation.goBack()}
@@ -544,6 +626,16 @@ const styles = StyleSheet.create({
     },
     brandText: {
         color: '#bbb',
+    },
+    qrSection: {
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    qrLabel: {
+        color: '#555',
+        fontWeight: '700',
+        marginTop: 2,
+        textAlign: 'center',
     },
     downloadButton: {
         backgroundColor: '#000080',

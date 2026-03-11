@@ -10,8 +10,8 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import type { RootStackParamList } from '../types';
 import { getZodiacSign, ZODIAC_DATABASE } from '../data/utils/zodiac-database';
+import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LuckyNumbers'>;
 
@@ -36,13 +36,13 @@ const calculateLifePathNumber = (birthDate: Date): number => {
     const month = birthDate.getMonth() + 1;
     const day = birthDate.getDate();
     const year = birthDate.getFullYear();
-    
+
     // Reduce each component separately, then add
     const monthReduced = reduceToSingleDigit(month, false);
     const dayReduced = reduceToSingleDigit(day, false);
     const yearSum = String(year).split('').reduce((sum, digit) => sum + parseInt(digit), 0);
     const yearReduced = reduceToSingleDigit(yearSum, false);
-    
+
     const total = monthReduced + dayReduced + yearReduced;
     return reduceToSingleDigit(total);
 };
@@ -58,12 +58,12 @@ const calculatePersonalYearNumber = (birthDate: Date): number => {
     const currentYear = new Date().getFullYear();
     const month = birthDate.getMonth() + 1;
     const day = birthDate.getDate();
-    
+
     const monthReduced = reduceToSingleDigit(month, false);
     const dayReduced = reduceToSingleDigit(day, false);
     const yearSum = String(currentYear).split('').reduce((sum, digit) => sum + parseInt(digit), 0);
     const yearReduced = reduceToSingleDigit(yearSum, false);
-    
+
     const total = monthReduced + dayReduced + yearReduced;
     return reduceToSingleDigit(total, false);
 };
@@ -121,12 +121,12 @@ const COLOR_HEX: { [key: string]: string } = {
 
 export default function LuckyNumbersScreen({ navigation, route }: Props) {
     const birthDate = new Date(route.params.birthDate);
-    
+
     // Calculate all numerology numbers
     const lifePathNumber = calculateLifePathNumber(birthDate);
     const birthdayNumber = calculateBirthdayNumber(birthDate);
     const personalYearNumber = calculatePersonalYearNumber(birthDate);
-    
+
     // Get zodiac info
     const zodiacSign = getZodiacSign(birthDate.getMonth() + 1, birthDate.getDate());
     const zodiacData = ZODIAC_DATABASE[zodiacSign];
@@ -160,7 +160,7 @@ export default function LuckyNumbersScreen({ navigation, route }: Props) {
 
                 {/* Life Path Number - The Big One */}
                 <View style={styles.featuredSection}>
-                    <Text style={styles.featuredLabel}>Life Path Number</Text>
+                    <Text style={styles.featuredLabel}>🔢 Life Path Number</Text>
                     <View style={styles.featuredBall}>
                         <Text style={styles.featuredNumber}>{lifePathNumber}</Text>
                     </View>
@@ -225,37 +225,37 @@ export default function LuckyNumbersScreen({ navigation, route }: Props) {
                 {/* What These Numbers Mean */}
                 <View style={styles.infoSection}>
                     <Text style={styles.infoTitle}>Understanding Your Numbers</Text>
-                    
+
                     <Text style={styles.infoSubtitle}>🌟 Life Path Number</Text>
                     <Text style={styles.infoText}>
-                        Your most important numerology number, calculated by reducing your full birth date 
-                        to a single digit (or master number 11, 22, 33). It reveals your life's purpose, 
+                        Your most important numerology number, calculated by reducing your full birth date
+                        to a single digit (or master number 11, 22, 33). It reveals your life's purpose,
                         core personality traits, and the path you're meant to walk.
                     </Text>
 
                     <Text style={styles.infoSubtitle}>🎂 Birthday Number</Text>
                     <Text style={styles.infoText}>
-                        Derived from just your birth day, this number represents your natural talents and 
+                        Derived from just your birth day, this number represents your natural talents and
                         abilities—the gifts you were born with that come easily to you.
                     </Text>
 
                     <Text style={styles.infoSubtitle}>📆 Personal Year Number</Text>
                     <Text style={styles.infoText}>
-                        Calculated from your birth month and day plus the current year, this number 
-                        reveals the theme and energy of your current year. It cycles through 1-9 
+                        Calculated from your birth month and day plus the current year, this number
+                        reveals the theme and energy of your current year. It cycles through 1-9
                         over a nine-year period.
                     </Text>
 
                     <Text style={styles.infoSubtitle}>✨ Zodiac Lucky Numbers</Text>
                     <Text style={styles.infoText}>
-                        These traditional lucky numbers are associated with your zodiac sign based on 
-                        centuries of astrological tradition. Each sign has specific numbers that resonate 
+                        These traditional lucky numbers are associated with your zodiac sign based on
+                        centuries of astrological tradition. Each sign has specific numbers that resonate
                         with its planetary ruler and elemental nature.
                     </Text>
 
                     <Text style={styles.infoSubtitle}>🎨 Lucky Color & Day</Text>
                     <Text style={styles.infoText}>
-                        Your lucky color and day are determined by your zodiac sign's ruling planet 
+                        Your lucky color and day are determined by your zodiac sign's ruling planet
                         and traditional associations that have been observed across cultures.
                     </Text>
                 </View>
@@ -263,8 +263,8 @@ export default function LuckyNumbersScreen({ navigation, route }: Props) {
                 {/* Authenticity Note */}
                 <View style={styles.disclaimer}>
                     <Text style={styles.disclaimerText}>
-                        ✨ These numbers are calculated using genuine numerological and astrological 
-                        principles based on your birth date. They represent real traditions that 
+                        ✨ These numbers are calculated using genuine numerological and astrological
+                        principles based on your birth date. They represent real traditions that
                         have been practiced for thousands of years.
                     </Text>
                 </View>

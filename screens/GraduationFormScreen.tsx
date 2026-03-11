@@ -169,6 +169,7 @@ export default function GraduationFormScreen({ navigation }: Props) {
     const [editableMessage, setEditableMessage] = useState('');
     const [messageWasEdited, setMessageWasEdited] = useState(false);
     const [selectedColor, setSelectedColor] = useState<ThemeName>('navyBlue');
+    const [nameGold, setNameGold] = useState(false);
     const [loading, setLoading] = useState(false);
     const [population, setPopulation] = useState<number | null>(null);
 
@@ -270,6 +271,7 @@ export default function GraduationFormScreen({ navigation }: Props) {
                 mode: 'milestone',
                 message: finalMessage,
                 population: pop || undefined,
+                nameGold,
             });
         } catch (error) {
             console.error('Error fetching population:', error);
@@ -282,6 +284,7 @@ export default function GraduationFormScreen({ navigation }: Props) {
                 dobISO: dobISO,
                 mode: 'milestone',
                 message: finalMessage,
+                nameGold,
             });
         } finally {
             setLoading(false);
@@ -470,6 +473,22 @@ export default function GraduationFormScreen({ navigation }: Props) {
                 ))}
             </View>
 
+            <Text style={styles.label}>Name Style</Text>
+            <View style={styles.toggleGroup}>
+                <TouchableOpacity
+                    style={[styles.toggleBtn, !nameGold && styles.toggleActive]}
+                    onPress={() => setNameGold(false)}
+                >
+                    <Text style={[styles.toggleText, !nameGold && styles.toggleActiveText]}>White</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.toggleBtn, nameGold && { backgroundColor: '#FFD700' }]}
+                    onPress={() => setNameGold(true)}
+                >
+                    <Text style={[styles.toggleText, nameGold && { color: '#333' }]}>✨ Gold</Text>
+                </TouchableOpacity>
+            </View>
+
             {/* Preview Button */}
             <TouchableOpacity
                 style={[styles.previewButton, loading && styles.previewButtonDisabled]}
@@ -590,6 +609,11 @@ const styles = StyleSheet.create({
         gap: 8,
         justifyContent: 'center',
     },
+    toggleGroup: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+    toggleBtn: { flex: 1, paddingVertical: 12, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center' },
+    toggleActive: { backgroundColor: '#fff' },
+    toggleText: { fontWeight: '700', color: '#fff', fontSize: 14 },
+    toggleActiveText: { color: '#333' },
     previewButton: {
         backgroundColor: '#fff',
         borderRadius: 12,

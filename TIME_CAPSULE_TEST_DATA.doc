@@ -1,0 +1,95 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<style>
+body { font-family: Calibri, Arial, sans-serif; font-size: 9pt; margin: 0.5in; }
+h1 { font-size: 14pt; text-align: center; margin-bottom: 4pt; }
+h2 { font-size: 10pt; margin-top: 8pt; margin-bottom: 2pt; border-bottom: 1px solid #333; }
+table { border-collapse: collapse; width: 100%; margin-bottom: 6pt; font-size: 8pt; }
+th { background-color: #2c3e50; color: white; padding: 3pt 4pt; text-align: left; font-size: 8pt; }
+td { border: 1px solid #ccc; padding: 2pt 4pt; font-size: 8pt; }
+tr:nth-child(even) { background-color: #f2f2f2; }
+.header-row td { font-weight: bold; }
+.note { font-size: 7pt; color: #666; margin-top: 4pt; }
+.section { margin-bottom: 6pt; }
+p { margin: 2pt 0; font-size: 8.5pt; }
+@page { size: 8.5in 11in; margin: 0.5in; }
+</style>
+</head>
+<body>
+
+<h1>TIME CAPSULE — ACCURACY TEST DATA</h1>
+<p style="text-align:center; font-size:8pt; color:#666;">Test Date: March 7, 2026 &nbsp;|&nbsp; All values from app source data files</p>
+
+<!-- DATE 1 -->
+<h2>November 15, 1971 &nbsp;&mdash;&nbsp; Zodiac: Scorpio &nbsp;|&nbsp; Birthstone: Topaz/Citrine &nbsp;|&nbsp; Life Path: 8</h2>
+<table>
+<tr><th>Field</th><th>THEN (1971)</th><th>NOW (Mar 2026)</th></tr>
+<tr><td>Gas (Gallon)</td><td>$0.36</td><td>$2.91</td></tr>
+<tr><td>Minimum Wage</td><td>$1.60/hr</td><td>$7.25/hr</td></tr>
+<tr><td>Loaf of Bread</td><td>$0.25</td><td>$2.39</td></tr>
+<tr><td>Dozen Eggs</td><td>$0.52</td><td>$4.90</td></tr>
+<tr><td>Milk (Gallon)</td><td>$1.32</td><td>$3.00</td></tr>
+<tr><td>Gold (oz)</td><td>$41</td><td><i>live API</i></td></tr>
+<tr><td>Silver (oz)</td><td>$1.54</td><td><i>live API</i></td></tr>
+<tr><td>Dow Jones</td><td>N/A</td><td>44,873.28</td></tr>
+<tr><td>#1 Song</td><td>Joy to the World — Three Dog Night</td><td>Thats So True — Gracie Abrams</td></tr>
+<tr><td>#1 Movie</td><td>Fiddler on the Roof</td><td>Scream 7</td></tr>
+<tr><td>Superbowl Champs</td><td>Baltimore Colts (V)</td><td>Philadelphia Eagles</td></tr>
+<tr><td>World Series Champs</td><td>Pittsburgh Pirates</td><td>Los Angeles Dodgers</td></tr>
+<tr><td>US Population</td><td>207,660,677</td><td>343,065,849</td></tr>
+<tr><td>World Population</td><td>3,797,847,000</td><td>8,200,000,000</td></tr>
+<tr><td>President</td><td>Richard Nixon</td><td>Donald Trump</td></tr>
+<tr><td>Vice President</td><td>Spiro Agnew</td><td>JD Vance</td></tr>
+</table>
+
+<!-- DATE 2 -->
+<h2>September 12, 1955 &nbsp;&mdash;&nbsp; Zodiac: Virgo &nbsp;|&nbsp; Birthstone: Sapphire &nbsp;|&nbsp; Life Path: 5</h2>
+<table>
+<tr><th>Field</th><th>THEN (1955)</th><th>NOW (Mar 2026)</th></tr>
+<tr><td>Gas (Gallon)</td><td>$0.23</td><td>$2.91</td></tr>
+<tr><td>Minimum Wage</td><td>$0.75/hr</td><td>$7.25/hr</td></tr>
+<tr><td>Loaf of Bread</td><td>$0.18</td><td>$2.39</td></tr>
+<tr><td>Dozen Eggs</td><td>$0.70</td><td>$4.90</td></tr>
+<tr><td>Milk (Gallon)</td><td>$0.52</td><td>$3.00</td></tr>
+<tr><td>Gold (oz)</td><td>$35</td><td><i>live API</i></td></tr>
+<tr><td>Silver (oz)</td><td>$0.85</td><td><i>live API</i></td></tr>
+<tr><td>Dow Jones</td><td>N/A</td><td>44,873.28</td></tr>
+<tr><td>#1 Song</td><td>Rock Around the Clock — Bill Haley</td><td>Thats So True — Gracie Abrams</td></tr>
+<tr><td>#1 Movie</td><td>Lady and the Tramp</td><td>Scream 7</td></tr>
+<tr><td>Superbowl Champs</td><td>N/A (first Super Bowl was 1967)</td><td>Philadelphia Eagles</td></tr>
+<tr><td>World Series Champs</td><td>Brooklyn Dodgers</td><td>Los Angeles Dodgers</td></tr>
+<tr><td>US Population</td><td>165,931,202</td><td>343,065,849</td></tr>
+<tr><td>World Population</td><td>3,550,000,000</td><td>8,200,000,000</td></tr>
+<tr><td>President</td><td>Dwight D. Eisenhower</td><td>Donald Trump</td></tr>
+<tr><td>Vice President</td><td>Richard Nixon</td><td>JD Vance</td></tr>
+</table>
+
+<!-- DATE 3 -->
+<h2>July 7, 1987 &nbsp;&mdash;&nbsp; Zodiac: Cancer &nbsp;|&nbsp; Birthstone: Ruby &nbsp;|&nbsp; Life Path: 3</h2>
+<table>
+<tr><th>Field</th><th>THEN (1987)</th><th>NOW (Mar 2026)</th></tr>
+<tr><td>Gas (Gallon)</td><td>$0.90</td><td>$2.91</td></tr>
+<tr><td>Minimum Wage</td><td>$3.35/hr</td><td>$7.25/hr</td></tr>
+<tr><td>Loaf of Bread</td><td>$0.54</td><td>$2.39</td></tr>
+<tr><td>Dozen Eggs</td><td>$0.54</td><td>$4.90</td></tr>
+<tr><td>Milk (Gallon)</td><td>$2.28</td><td>$3.00</td></tr>
+<tr><td>Gold (oz)</td><td>$448</td><td><i>live API</i></td></tr>
+<tr><td>Silver (oz)</td><td>$7.01</td><td><i>live API</i></td></tr>
+<tr><td>Dow Jones</td><td>N/A</td><td>44,873.28</td></tr>
+<tr><td>#1 Song</td><td>Walk Like an Egyptian — The Bangles</td><td>Thats So True — Gracie Abrams</td></tr>
+<tr><td>#1 Movie</td><td>Three Men and a Baby</td><td>Scream 7</td></tr>
+<tr><td>Superbowl Champs</td><td>New York Giants (XXI)</td><td>Philadelphia Eagles</td></tr>
+<tr><td>World Series Champs</td><td>Minnesota Twins</td><td>Los Angeles Dodgers</td></tr>
+<tr><td>US Population</td><td>242,288,918</td><td>343,065,849</td></tr>
+<tr><td>World Population</td><td>4,500,000,000</td><td>8,200,000,000</td></tr>
+<tr><td>President</td><td>Ronald Reagan</td><td>Donald Trump</td></tr>
+<tr><td>Vice President</td><td>George H.W. Bush</td><td>JD Vance</td></tr>
+</table>
+
+<p class="note"><b>Notes:</b> Pre-2020 dates use yearly averages (not month-specific). Gold/Silver/Dow "NOW" values come from live APIs at runtime. Portrait Time Capsule omits Minimum Wage and #1 Movie rows. Sources: bls.gov, eia.gov, metalpriceapi.com, alphavantage.co, census.gov, last.fm, boxofficemojo.com, espn.com, usa.gov</p>
+
+</body>
+</html>

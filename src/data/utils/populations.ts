@@ -222,11 +222,12 @@ const CENSUS_SUFFIXES = [' city', ' town', ' village', ' cdp', ' borough', ' mun
  * Census data often stores "Kansas City city" or "Nashville-Davidson metropolitan government".
  */
 function stripCensusSuffix(area: string): string {
-    const lower = area.toLowerCase();
     for (const suffix of CENSUS_SUFFIXES) {
         // Only strip if the suffix is at the end of the city part (before the comma)
-        const commaIdx = lower.indexOf(',');
-        const cityPart = commaIdx >= 0 ? lower.substring(0, commaIdx) : lower;
+        const commaIdx = area.indexOf(',');
+        const cityPart = commaIdx >= 0 ? area.substring(0, commaIdx) : area;
+        // Case-sensitive: Census suffixes are lowercase (" city"), name parts are Title Case (" City")
+        // This prevents "Jefferson City" → "Jefferson" while still handling "Jefferson City city" → "Jefferson City"
         if (cityPart.endsWith(suffix)) {
             const stripped = area.substring(0, cityPart.length - suffix.length) + (commaIdx >= 0 ? area.substring(commaIdx) : '');
             return stripped;
@@ -251,6 +252,23 @@ function normArea(city: string, stateFull: string): string[] {
     if (stateAbbr) {
         candidates.push(`${c},${stateAbbr}`);
         candidates.push(`${c}, ${stateAbbr}`);
+    }
+
+    // For cities whose name ends with a Census suffix word (e.g., "Kansas City", "Oklahoma City"),
+    // also generate candidates WITHOUT that suffix to handle pre-stripped/corrupted sheet data.
+    // The Google Sheet may have "Jefferson" instead of "Jefferson City" due to overzealous stripping.
+    const cLower = c.toLowerCase();
+    for (const suffix of CENSUS_SUFFIXES) {
+        if (cLower.endsWith(suffix) && c.length > suffix.length) {
+            const shortened = c.substring(0, c.length - suffix.length).trim();
+            if (shortened.length > 0) {
+                candidates.push(`${shortened},${s}`, `${shortened}, ${s}`);
+                if (stateAbbr) {
+                    candidates.push(`${shortened},${stateAbbr}`, `${shortened}, ${stateAbbr}`);
+                }
+            }
+            break;
+        }
     }
 
     return candidates;
@@ -302,7 +320,9 @@ async function ensureLoaded(): Promise<void> {
             .map(r => {
                 const rawArea = r[areaIdx].trim();
                 // Strip Census designation suffixes (e.g., "Kansas City city" → "Kansas City")
-                const area = stripCensusSuffix(rawArea);
+                // Normalize comma spacing: CSV may have "Jefferson ,  Missouri" → "Jefferson, Missouri"
+                // Normalize whitespace: CSV has double spaces (e.g. "New York,  New York") that break exact matching
+                const area = stripCensusSuffix(rawArea).replace(/\s*,\s*/g, ', ').replace(/\s+/g, ' ').trim();
                 const pop = parseInt(r[popIdx].replace(/,/g, ''), 10);
                 return { area, pop: Number.isFinite(pop) ? pop : NaN };
             });
@@ -314,7 +334,9 @@ async function ensureLoaded(): Promise<void> {
             .map(r => {
                 const rawArea = r[0].trim();
                 // Strip Census designation suffixes (e.g., "Kansas City city" → "Kansas City")
-                const area = stripCensusSuffix(rawArea);
+                // Normalize comma spacing: CSV may have stray spaces around commas
+                // Normalize whitespace: CSV has double spaces that break exact matching
+                const area = stripCensusSuffix(rawArea).replace(/\s*,\s*/g, ', ').replace(/\s+/g, ' ').trim();
                 const popStr = (r[1] || '').toString().replace(/[",]/g, '');
                 const pop = parseInt(popStr, 10);
                 return { area, pop: Number.isFinite(pop) ? pop : NaN };
@@ -345,93 +367,161 @@ async function ensureLoaded(): Promise<void> {
  * @param dobISO - Date of birth in ISO format (YYYY-MM-DD). Routes to appropriate CSV.
  */
 /**
- * Map well-known boroughs, neighborhoods, and sub-city areas to their parent city.
- * Census data only lists incorporated cities, not boroughs or neighborhoods.
- * e.g., "Queens, NY" → "New York, NY" (Queens is a borough of NYC, not a separate census city)
+ * NYC borough current populations (US Census 2020 + estimates).
+ * Boroughs are tracked as separate counties by the Census Bureau.
  */
-const BOROUGH_TO_CITY: Record<string, string> = {
-    // New York City boroughs
-    'queens': 'New York',
-    'brooklyn': 'New York',
-    'manhattan': 'New York',
-    'the bronx': 'New York',
-    'bronx': 'New York',
-    'staten island': 'New York',
-    'harlem': 'New York',
-    'astoria': 'New York',
-    'flushing': 'New York',
-    'williamsburg': 'New York',
-    'bushwick': 'New York',
-    'bed-stuy': 'New York',
-    'bedford-stuyvesant': 'New York',
-    'soho': 'New York',
-    'tribeca': 'New York',
-    'chelsea': 'New York',
-    'greenpoint': 'New York',
-    'long island city': 'New York',
-    'east village': 'New York',
-    'west village': 'New York',
-    'upper east side': 'New York',
-    'upper west side': 'New York',
-    'lower east side': 'New York',
-    'hell\'s kitchen': 'New York',
-    'washington heights': 'New York',
-    'inwood': 'New York',
-    'jamaica': 'New York',
-    'bayside': 'New York',
-    'forest hills': 'New York',
-    'bay ridge': 'New York',
-    'bensonhurst': 'New York',
-    'flatbush': 'New York',
-    'coney island': 'New York',
-    'brighton beach': 'New York',
-    'park slope': 'New York',
-    'crown heights': 'New York',
-    'east new york': 'New York',
-    'brownsville': 'New York',
-    'south bronx': 'New York',
-    'mott haven': 'New York',
-    'riverdale': 'New York',
-    'pelham bay': 'New York',
-    'tottenville': 'New York',
-    'st. george': 'New York',
+const NYC_BOROUGH_CURRENT_POP: Record<string, number> = {
+    'queens': 2405464,
+    'brooklyn': 2736074,
+    'manhattan': 1694251,
+    'bronx': 1472654,
+    'the bronx': 1472654,
+    'staten island': 495747,
+};
+
+/**
+ * NYC borough historical populations (US Census decennial data).
+ * Source: Census Bureau county-level population counts.
+ */
+const NYC_BOROUGH_HISTORICAL_POP: Record<string, Record<number, number>> = {
+    'queens': {
+        1910: 284041, 1920: 469042, 1930: 1079129, 1940: 1297634, 1950: 1550849,
+        1960: 1809578, 1970: 1986473, 1980: 1891325, 1990: 1951598, 2000: 2229379,
+        2010: 2230722, 2020: 2405464,
+    },
+    'brooklyn': {
+        1910: 1634351, 1920: 2018356, 1930: 2560401, 1940: 2698285, 1950: 2738175,
+        1960: 2627319, 1970: 2602012, 1980: 2230936, 1990: 2300664, 2000: 2465326,
+        2010: 2504700, 2020: 2736074,
+    },
+    'manhattan': {
+        1910: 2331542, 1920: 2284103, 1930: 1867312, 1940: 1889924, 1950: 1960101,
+        1960: 1698281, 1970: 1539233, 1980: 1428285, 1990: 1487536, 2000: 1537195,
+        2010: 1585873, 2020: 1694251,
+    },
+    'bronx': {
+        1910: 430980, 1920: 732016, 1930: 1265258, 1940: 1394711, 1950: 1451277,
+        1960: 1424815, 1970: 1471701, 1980: 1168972, 1990: 1203789, 2000: 1332650,
+        2010: 1385108, 2020: 1472654,
+    },
+    'the bronx': {
+        1910: 430980, 1920: 732016, 1930: 1265258, 1940: 1394711, 1950: 1451277,
+        1960: 1424815, 1970: 1471701, 1980: 1168972, 1990: 1203789, 2000: 1332650,
+        2010: 1385108, 2020: 1472654,
+    },
+    'staten island': {
+        1910: 85969, 1920: 116531, 1930: 158346, 1940: 174441, 1950: 191555,
+        1960: 221991, 1970: 295443, 1980: 352121, 1990: 378977, 2000: 443728,
+        2010: 468730, 2020: 495747,
+    },
+};
+
+/**
+ * Map neighborhoods to their parent borough or city.
+ * NYC boroughs are NOT mapped here — they have their own population data above.
+ * Only neighborhoods (sub-areas) are mapped to their parent borough.
+ */
+const NEIGHBORHOOD_TO_PARENT: Record<string, string> = {
+    // Queens neighborhoods
+    'astoria': 'Queens', 'flushing': 'Queens', 'jamaica': 'Queens',
+    'bayside': 'Queens', 'forest hills': 'Queens', 'long island city': 'Queens',
+    // Brooklyn neighborhoods
+    'williamsburg': 'Brooklyn', 'bushwick': 'Brooklyn', 'bed-stuy': 'Brooklyn',
+    'bedford-stuyvesant': 'Brooklyn', 'greenpoint': 'Brooklyn', 'bay ridge': 'Brooklyn',
+    'bensonhurst': 'Brooklyn', 'flatbush': 'Brooklyn', 'coney island': 'Brooklyn',
+    'brighton beach': 'Brooklyn', 'park slope': 'Brooklyn', 'crown heights': 'Brooklyn',
+    'east new york': 'Brooklyn', 'brownsville': 'Brooklyn',
+    // Manhattan neighborhoods
+    'harlem': 'Manhattan', 'soho': 'Manhattan', 'tribeca': 'Manhattan',
+    'chelsea': 'Manhattan', 'east village': 'Manhattan', 'west village': 'Manhattan',
+    'upper east side': 'Manhattan', 'upper west side': 'Manhattan',
+    'lower east side': 'Manhattan', 'hell\'s kitchen': 'Manhattan',
+    'washington heights': 'Manhattan', 'inwood': 'Manhattan',
+    // Bronx neighborhoods
+    'south bronx': 'Bronx', 'mott haven': 'Bronx', 'riverdale': 'Bronx', 'pelham bay': 'Bronx',
+    // Staten Island neighborhoods
+    'tottenville': 'Staten Island', 'st. george': 'Staten Island',
     // Chicago neighborhoods
-    'south side': 'Chicago',
-    'north side': 'Chicago',
-    'west side': 'Chicago',
-    'hyde park': 'Chicago',
-    'wicker park': 'Chicago',
-    'lincoln park': 'Chicago',
+    'south side': 'Chicago', 'north side': 'Chicago', 'west side': 'Chicago',
+    'hyde park': 'Chicago', 'wicker park': 'Chicago', 'lincoln park': 'Chicago',
     'logan square': 'Chicago',
     // Los Angeles neighborhoods
-    'hollywood': 'Los Angeles',
-    'venice': 'Los Angeles',
-    'silver lake': 'Los Angeles',
-    'echo park': 'Los Angeles',
-    'koreatown': 'Los Angeles',
-    'westwood': 'Los Angeles',
-    'bel air': 'Los Angeles',
-    'brentwood': 'Los Angeles',
-    'san pedro': 'Los Angeles',
-    'watts': 'Los Angeles',
-    'boyle heights': 'Los Angeles',
+    'hollywood': 'Los Angeles', 'venice': 'Los Angeles', 'silver lake': 'Los Angeles',
+    'echo park': 'Los Angeles', 'koreatown': 'Los Angeles', 'westwood': 'Los Angeles',
+    'bel air': 'Los Angeles', 'brentwood': 'Los Angeles', 'san pedro': 'Los Angeles',
+    'watts': 'Los Angeles', 'boyle heights': 'Los Angeles',
 };
+
+/**
+ * Resolve a hometown to its lookup name.
+ * NYC neighborhoods → parent borough (which has its own population data).
+ * Other neighborhoods → parent city.
+ * NYC boroughs and regular cities pass through unchanged.
+ */
+function resolveHometown(hometown: string): string {
+    const parts = hometown.split(',');
+    if (parts.length < 2) return hometown;
+    const inputCity = parts[0].trim().toLowerCase();
+    const stateRaw = parts.slice(1).join(',').trim();
+    const parent = NEIGHBORHOOD_TO_PARENT[inputCity];
+    if (parent) {
+        return `${parent}, ${stateRaw}`;
+    }
+    return hometown;
+}
+
+/**
+ * Check if a hometown is an NYC borough and return its current population.
+ * Returns null if not an NYC borough.
+ */
+function getBoroughCurrentPop(hometown: string): number | null {
+    const parts = hometown.split(',');
+    if (parts.length < 2) return null;
+    const city = parts[0].trim().toLowerCase();
+    const state = parts.slice(1).join(',').trim().toLowerCase();
+    if (state !== 'ny' && state !== 'new york') return null;
+    const pop = NYC_BOROUGH_CURRENT_POP[city];
+    return pop !== undefined ? pop : null;
+}
+
+/**
+ * Check if a hometown is an NYC borough and return its historical population.
+ * Uses closest available census year. Returns null if not an NYC borough.
+ */
+function getBoroughHistoricalPop(hometown: string, year: number): number | null {
+    const parts = hometown.split(',');
+    if (parts.length < 2) return null;
+    const city = parts[0].trim().toLowerCase();
+    const state = parts.slice(1).join(',').trim().toLowerCase();
+    if (state !== 'ny' && state !== 'new york') return null;
+    const data = NYC_BOROUGH_HISTORICAL_POP[city];
+    if (!data) return null;
+    // Find closest census year
+    const years = Object.keys(data).map(Number).sort((a, b) => a - b);
+    let closest = years[0];
+    for (const y of years) {
+        if (Math.abs(y - year) < Math.abs(closest - year)) closest = y;
+    }
+    return data[closest];
+}
 
 export async function getPopulationForCity(hometown: string, dobISO?: string): Promise<number | null> {
     console.log('📍 getPopulationForCity called with:', hometown, 'DOB:', dobISO || 'not provided');
 
-    // ── BOROUGH/NEIGHBORHOOD RESOLUTION ──
-    // Census data only lists incorporated cities. Map boroughs & neighborhoods to parent city.
-    const parts = hometown.split(',');
-    if (parts.length >= 2) {
-        const inputCity = parts[0].trim().toLowerCase();
-        const parentCity = BOROUGH_TO_CITY[inputCity];
-        if (parentCity) {
-            const stateRaw = parts.slice(1).join(',').trim();
-            const resolved = `${parentCity}, ${stateRaw}`;
-            console.log(`🏙️ Borough/neighborhood resolved: "${hometown}" → "${resolved}"`);
-            hometown = resolved;
-        }
+    // ── NYC BOROUGH CHECK — boroughs have their own county-level population data ──
+    const boroughPop = dobISO ? getBoroughHistoricalPop(hometown, new Date(dobISO + 'T00:00:00').getFullYear()) : getBoroughCurrentPop(hometown);
+    if (boroughPop !== null) {
+        console.log(`🏙️ NYC borough population found: ${hometown} → ${boroughPop.toLocaleString()}`);
+        return boroughPop;
+    }
+
+    // ── NEIGHBORHOOD RESOLUTION — map neighborhoods to parent city/borough ──
+    hometown = resolveHometown(hometown);
+    // If resolved to a borough, check borough data again
+    const resolvedBoroughPop = dobISO ? getBoroughHistoricalPop(hometown, new Date(dobISO + 'T00:00:00').getFullYear()) : getBoroughCurrentPop(hometown);
+    if (resolvedBoroughPop !== null) {
+        console.log(`🏙️ Neighborhood → borough population: ${hometown} → ${resolvedBoroughPop.toLocaleString()}`);
+        return resolvedBoroughPop;
     }
 
     const CUTOFF_DATE = new Date('2020-01-01T00:00:00');
@@ -616,6 +706,21 @@ export async function getPopulationForCity(hometown: string, dobISO?: string): P
 export async function getCurrentPopulationForCity(hometown: string): Promise<number | null> {
     console.log('📍 getCurrentPopulationForCity called for TIME CAPSULE NOW section:', hometown);
     console.log('🔵 Using CURRENT CSV (POPULATIONS_CSV_URL) for NOW population');
+
+    // ── NYC BOROUGH CHECK — boroughs have their own county-level population data ──
+    const boroughPop = getBoroughCurrentPop(hometown);
+    if (boroughPop !== null) {
+        console.log(`🏙️ NYC borough NOW population: ${hometown} → ${boroughPop.toLocaleString()}`);
+        return boroughPop;
+    }
+
+    // ── NEIGHBORHOOD RESOLUTION ──
+    hometown = resolveHometown(hometown);
+    const resolvedBoroughPop = getBoroughCurrentPop(hometown);
+    if (resolvedBoroughPop !== null) {
+        console.log(`🏙️ Neighborhood → borough NOW population: ${hometown} → ${resolvedBoroughPop.toLocaleString()}`);
+        return resolvedBoroughPop;
+    }
 
     try {
         await ensureLoaded();

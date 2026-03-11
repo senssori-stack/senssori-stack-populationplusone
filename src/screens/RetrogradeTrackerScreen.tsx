@@ -124,6 +124,59 @@ export default function RetrogradeTrackerScreen({ route }: Props) {
 
                 <Text style={styles.mainTitle}>☿℞ Retrograde Tracker</Text>
 
+                {/* What Is Retrograde? */}
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>🔭 What Is Retrograde?</Text>
+                    <Text style={styles.bodyText}>
+                        When a planet is "retrograde" it appears to move backward in the sky from Earth's perspective. It doesn't actually reverse — it's an optical illusion caused by differences in orbital speed, like a fast car passing a slower one on the highway. The slower car seems to drift backward even though it's still moving forward.
+                    </Text>
+                    <Text style={styles.bodyText}>
+                        In astrology, retrograde periods are believed to turn a planet's energy inward. Whatever that planet governs — communication (Mercury), love (Venus), action (Mars), growth (Jupiter), structure (Saturn) — slows down, reverses, or demands review during its retrograde. Think of it as the universe pressing "pause" so you can revisit, reflect, and correct before moving forward again.
+                    </Text>
+                </View>
+
+                {/* Ancient Roots */}
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>📜 Thousands of Years of Observation</Text>
+                    <Text style={styles.bodyText}>
+                        Retrograde tracking is one of the oldest practices in the history of civilization. Babylonian astronomers were recording planetary retrogrades on clay tablets as early as 700 BC. Ancient Greek astrologers built the concept into Hellenistic astrology — the foundation of everything we practice today.
+                    </Text>
+                    <Text style={styles.bodyText}>
+                        The symbol ℞ (retrograde) comes from the Latin word "retrogradus" meaning "to step backward." Classical astrologers considered retrograde planets "debilitated" — not broken, but operating at a disadvantage, like a person swimming upstream. They advised kings, generals, and merchants to avoid launching campaigns, signing treaties, or starting voyages during key retrogrades.
+                    </Text>
+                    <Text style={styles.bodyText}>
+                        Indian (Vedic) astrology calls retrograde "Vakri" and considers retrograde planets exceptionally powerful — unconventional, unpredictable, and offering karmic lessons. Chinese astrology doesn't use the retrograde concept directly, but its emphasis on cyclical timing echoes the same principle: there are seasons for action and seasons for reflection.
+                    </Text>
+                </View>
+
+                {/* How Retrogrades Affect Daily Life */}
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>🌀 How Retrogrades Affect Daily Life</Text>
+                    <Text style={styles.bodyText}>
+                        You don't need to believe in astrology to notice retrograde effects — millions of people track them as a practical planning tool:
+                    </Text>
+                    <View style={styles.effectRow}>
+                        <Text style={styles.effectEmoji}>💼</Text>
+                        <Text style={styles.effectItem}><Text style={styles.effectBold}>Contracts & Deals:</Text> Mercury retrograde is infamous for miscommunications, lost emails, and contract loopholes. Many business owners avoid signing major agreements during these windows.</Text>
+                    </View>
+                    <View style={styles.effectRow}>
+                        <Text style={styles.effectEmoji}>💕</Text>
+                        <Text style={styles.effectItem}><Text style={styles.effectBold}>Relationships:</Text> Venus retrograde often brings ex-partners back, resurfaces old feelings, and tests current relationships. It's a time not for new love, but for understanding what you truly need.</Text>
+                    </View>
+                    <View style={styles.effectRow}>
+                        <Text style={styles.effectEmoji}>💻</Text>
+                        <Text style={styles.effectItem}><Text style={styles.effectBold}>Technology:</Text> Mercury rules communication and technology. During its retrograde, phones break, software glitches multiply, and backup drives fail. Tech companies often avoid major launches during Mercury Rx.</Text>
+                    </View>
+                    <View style={styles.effectRow}>
+                        <Text style={styles.effectEmoji}>✈️</Text>
+                        <Text style={styles.effectItem}><Text style={styles.effectBold}>Travel:</Text> Flight delays, lost luggage, wrong turns, and booking errors spike during Mercury and Mars retrogrades. Experienced travelers build in extra buffer time.</Text>
+                    </View>
+                    <View style={styles.effectRow}>
+                        <Text style={styles.effectEmoji}>🧠</Text>
+                        <Text style={styles.effectItem}><Text style={styles.effectBold}>Mental Clarity:</Text> Outer planet retrogrades (Jupiter, Saturn, Uranus, Neptune, Pluto) work on a deeper level — prompting existential questions, career pivots, and inner transformation that may take months to fully unfold.</Text>
+                    </View>
+                </View>
+
                 {/* Current Status Summary */}
                 <View style={styles.statusCard}>
                     <View style={styles.statusRow}>
@@ -230,6 +283,17 @@ export default function RetrogradeTrackerScreen({ route }: Props) {
                     </View>
                 )}
 
+                {/* The Retrograde Gift */}
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>🎁 The Retrograde Gift</Text>
+                    <Text style={styles.bodyText}>
+                        Retrogrades get a bad reputation, but ancient astrologers saw them as necessary medicine. Without retrograde periods, life would be all acceleration and no reflection — like driving at full speed without ever checking the mirrors.
+                    </Text>
+                    <Text style={styles.bodyText}>
+                        Each retrograde is an invitation: Mercury asks you to rethink, Venus asks you to re-love, Mars asks you to rest, Jupiter asks you to re-believe, and Saturn asks you to rebuild. The planets below show where those invitations are active right now — and what's coming next.
+                    </Text>
+                </View>
+
                 {/* Individual Planet Details */}
                 {statusData.map(s => (
                     <View key={s.planet} style={[styles.card, s.isRetro && { borderColor: s.color + '66', borderWidth: 2 }]}>
@@ -291,4 +355,8 @@ const styles = StyleSheet.create({
     birthRetroRow: { borderLeftWidth: 3, paddingLeft: 12, marginBottom: 10 },
     birthPlanet: { fontSize: 14, fontWeight: '800', marginBottom: 2 },
     birthEffect: { fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 20 },
+    effectRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
+    effectEmoji: { fontSize: 18, marginTop: 1 },
+    effectItem: { flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 20 },
+    effectBold: { fontWeight: '800', color: '#fff' },
 });

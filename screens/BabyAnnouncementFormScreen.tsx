@@ -3,6 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import {
     Alert,
+    Modal,
     ScrollView,
     StyleSheet,
     Text,
@@ -11,6 +12,7 @@ import {
     useWindowDimensions,
     View,
 } from 'react-native';
+import { formatHeritageDisplay, HERITAGE_OPTIONS } from '../constants/heritage';
 
 const COLORS = [
     '#0066CC', '#0080FF', '#0099FF', '#00CCFF', '#00FFFF',
@@ -36,6 +38,8 @@ export default function BabyAnnouncementFormScreen() {
     const [motherName, setMotherName] = useState('Sarah Sample');
     const [fatherName, setFatherName] = useState('Jack Sample');
     const [hometown, setHometown] = useState('Kansas City, MO');
+    const [selectedHeritages, setSelectedHeritages] = useState<string[]>([]);
+    const [showHeritageModal, setShowHeritageModal] = useState(false);
     const [dobDate, setDobDate] = useState(new Date(2026, 1, 14));
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [weightLb, setWeightLb] = useState('7');
@@ -203,6 +207,80 @@ export default function BabyAnnouncementFormScreen() {
                 value={fatherName}
                 onChangeText={setFatherName}
             />
+
+            {/* Heritage */}
+            <Text style={styles.label}>Heritage / Nationality (optional)</Text>
+            <TouchableOpacity
+                style={styles.dropdown}
+                onPress={() => setShowHeritageModal(true)}
+            >
+                <Text style={selectedHeritages.length > 0 ? styles.dropdownText : styles.dropdownPlaceholder}>
+                    {selectedHeritages.length > 0 ? formatHeritageDisplay(selectedHeritages) : 'Select 1–4 heritages...'}
+                </Text>
+                <Text style={styles.dropdownArrow}>▼</Text>
+            </TouchableOpacity>
+
+            {/* Heritage Multi-Select Modal */}
+            <Modal visible={showHeritageModal} transparent animationType="slide">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Select Heritage(s)</Text>
+                        <Text style={styles.modalSubtitle}>
+                            Represent baby's bloodlines — pick 1 to 4
+                        </Text>
+                        <Text style={styles.heritageCounter}>
+                            {selectedHeritages.length} / 4 selected
+                        </Text>
+                        <ScrollView style={styles.modalScroll}>
+                            {HERITAGE_OPTIONS.map(option => {
+                                const isSelected = selectedHeritages.includes(option.id);
+                                const atLimit = selectedHeritages.length >= 4 && !isSelected;
+                                return (
+                                    <TouchableOpacity
+                                        key={option.id}
+                                        style={[
+                                            styles.modalOption,
+                                            isSelected && styles.modalOptionSelected,
+                                            atLimit && styles.modalOptionDisabled,
+                                        ]}
+                                        onPress={() => {
+                                            if (atLimit) return;
+                                            setSelectedHeritages(prev =>
+                                                isSelected
+                                                    ? prev.filter(id => id !== option.id)
+                                                    : [...prev, option.id]
+                                            );
+                                        }}
+                                    >
+                                        <Text style={[
+                                            styles.modalOptionText,
+                                            isSelected && styles.modalOptionTextSelected,
+                                            atLimit && styles.modalOptionTextDisabled,
+                                        ]}>
+                                            {option.symbol}  {option.label}
+                                        </Text>
+                                        {isSelected && <Text style={styles.checkmark}>✓</Text>}
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </ScrollView>
+                        {selectedHeritages.length > 0 && (
+                            <TouchableOpacity
+                                style={styles.clearButton}
+                                onPress={() => setSelectedHeritages([])}
+                            >
+                                <Text style={styles.clearButtonText}>Clear All</Text>
+                            </TouchableOpacity>
+                        )}
+                        <TouchableOpacity
+                            style={styles.modalDone}
+                            onPress={() => setShowHeritageModal(false)}
+                        >
+                            <Text style={styles.modalDoneText}>Done</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
 
             {/* Hometown */}
             <Text style={styles.label}>Hometown (City, State) — required</Text>
@@ -422,5 +500,116 @@ const styles = StyleSheet.create({
         color: '#333',
         minHeight: 200,
         lineHeight: 22,
+    },
+    dropdown: {
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        padding: 12,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    dropdownText: {
+        fontSize: 16,
+        color: '#333',
+        flex: 1,
+    },
+    dropdownPlaceholder: {
+        fontSize: 16,
+        color: '#999',
+        flex: 1,
+    },
+    dropdownArrow: {
+        fontSize: 12,
+        color: '#666',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 20,
+        width: '85%',
+        maxHeight: '70%',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '900',
+        color: '#333',
+        textAlign: 'center',
+        marginBottom: 4,
+    },
+    modalSubtitle: {
+        fontSize: 14,
+        color: '#999',
+        textAlign: 'center',
+        marginBottom: 4,
+    },
+    heritageCounter: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#000080',
+        textAlign: 'center',
+        marginBottom: 10,
+    },
+    modalScroll: {
+        maxHeight: 300,
+    },
+    modalOption: {
+        padding: 14,
+        borderRadius: 8,
+        marginBottom: 8,
+        backgroundColor: '#f5f5f5',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    modalOptionSelected: {
+        backgroundColor: '#000080',
+    },
+    modalOptionDisabled: {
+        opacity: 0.35,
+    },
+    modalOptionText: {
+        fontSize: 16,
+        color: '#333',
+        flex: 1,
+    },
+    modalOptionTextSelected: {
+        color: '#fff',
+    },
+    modalOptionTextDisabled: {
+        color: '#bbb',
+    },
+    checkmark: {
+        fontSize: 18,
+        color: '#fff',
+        fontWeight: '900',
+    },
+    clearButton: {
+        marginTop: 8,
+        padding: 10,
+        alignItems: 'center',
+    },
+    clearButtonText: {
+        color: '#FF3B30',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    modalDone: {
+        marginTop: 8,
+        padding: 14,
+        backgroundColor: '#000080',
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    modalDoneText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '900',
     },
 });

@@ -44,6 +44,11 @@ export type FormData = {
     snapshot: Record<string, string>;
     population: number | null;
 
+    // Heritage & Nationality
+    heritage: string;
+    heritageWithFlags: string;
+    nationality: string;
+
     // Milestone specific
     personName: string;
     message: string;
@@ -77,6 +82,9 @@ const defaultFormData: FormData = {
     photoUris: [],
     snapshot: {},
     population: null,
+    heritage: '',
+    heritageWithFlags: '',
+    nationality: '',
     personName: '',
     message: '',
 };

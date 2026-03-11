@@ -273,7 +273,7 @@ function getZodiacData(date: Date): ZodiacData {
     return zodiacSigns[11]; // Pisces
 }
 
-const elementColors: Record<string, string[]> = {
+const elementColors: Record<string, [string, string, ...string[]]> = {
     'Fire': ['#ff6b35', '#f7931e', '#fbb03b'],
     'Earth': ['#5d4037', '#795548', '#8d6e63'],
     'Air': ['#64b5f6', '#90caf9', '#bbdefb'],

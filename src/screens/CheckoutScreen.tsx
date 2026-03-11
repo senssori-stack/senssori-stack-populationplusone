@@ -7,6 +7,7 @@ import {
     ActivityIndicator,
     Alert,
     KeyboardAvoidingView,
+    Linking,
     Platform,
     ScrollView,
     StyleSheet,
@@ -17,6 +18,7 @@ import {
 } from 'react-native';
 import { useCart } from '../context/CartContext';
 import { app } from '../data/utils/firebase-config';
+import { saveOrderRecord } from '../services/orderService';
 import type { RootStackParamList } from '../types';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, useWindowDimensions } from 'react-native';
+import { Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 interface YardSignProps {
     babyName: string;
@@ -11,6 +11,7 @@ interface YardSignProps {
     population?: string;
     photoUri?: string;
     backgroundColor?: string;
+    nameGold?: boolean;
 }
 
 /**
@@ -28,6 +29,7 @@ export default function YardSign({
     population = '0',
     photoUri,
     backgroundColor = '#000080',
+    nameGold = false,
 }: YardSignProps) {
     const { width } = useWindowDimensions();
 
@@ -119,7 +121,7 @@ export default function YardSign({
                     )}
 
                     {/* Baby Name - HUGE for visibility */}
-                    <Text style={[styles.babyName, { fontSize: baseFontSize * 2.8, marginTop: displayHeight * 0.025 }]}>
+                    <Text style={[styles.babyName, { fontSize: baseFontSize * 2.8, marginTop: displayHeight * 0.025 }, nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 4 }]}>
                         {babyName.toUpperCase()}
                     </Text>
 

@@ -52,7 +52,14 @@
           "enableGooglePay": true
         }
       ],
-      "./plugins/withJitpackStripeExclude"
+      "./plugins/withJitpackStripeExclude",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#7c4dff"
+        }
+      ]
     ],
     "extra": {
       "eas": {

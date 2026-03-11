@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Modal,
     PanResponder,
@@ -95,18 +95,18 @@ const PLANET_MEANINGS: Record<string, string> = {
 
 // House meanings - the 12 areas of life
 const HOUSE_INFO: { name: string; emoji: string; theme: string; description: string }[] = [
-    { name: '1st House', emoji: '🪞', theme: 'Self & Identity', description: 'Your appearance, first impressions, and how you approach life. This is YOU - your personality and physical self.' },
-    { name: '2nd House', emoji: '💰', theme: 'Money & Values', description: 'Your finances, possessions, self-worth, and what you value most. How you earn and spend money.' },
-    { name: '3rd House', emoji: '💬', theme: 'Communication', description: 'How you think, speak, and learn. Also siblings, neighbors, and short trips. Your everyday mind.' },
-    { name: '4th House', emoji: '🏠', theme: 'Home & Family', description: 'Your roots, home life, family, and emotional foundation. Where you feel safe and secure.' },
-    { name: '5th House', emoji: '🎨', theme: 'Creativity & Fun', description: 'Romance, children, creative expression, hobbies, and joy. What brings you pleasure and play.' },
-    { name: '6th House', emoji: '⚕️', theme: 'Health & Service', description: 'Daily routines, health habits, work environment, and being of service to others.' },
-    { name: '7th House', emoji: '💑', theme: 'Partnerships', description: 'Marriage, business partners, and close one-on-one relationships. Who you attract and commit to.' },
-    { name: '8th House', emoji: '🦋', theme: 'Transformation', description: 'Deep bonds, shared resources, intimacy, and major life changes. Death and rebirth cycles.' },
-    { name: '9th House', emoji: '✈️', theme: 'Exploration', description: 'Higher education, travel, philosophy, and expanding your horizons. Your search for meaning.' },
-    { name: '10th House', emoji: '👔', theme: 'Career & Legacy', description: 'Your public image, career, achievements, and reputation. What you\'re known for in the world.' },
-    { name: '11th House', emoji: '👥', theme: 'Community', description: 'Friends, groups, hopes, and dreams. Your social network and humanitarian ideals.' },
-    { name: '12th House', emoji: '🔮', theme: 'Spirituality', description: 'The subconscious, dreams, secrets, and spiritual life. What\'s hidden and your connection to the divine.' },
+    { name: '1st House', emoji: '🪞', theme: 'Self & First Impressions', description: 'Think of this as your "front door." It\'s the very first thing people notice about you — your appearance, your vibe, the energy you walk into a room with. If someone describes you in three words after meeting you once, that\'s your 1st House.' },
+    { name: '2nd House', emoji: '💰', theme: 'Money & Self-Worth', description: 'This is your wallet AND your self-esteem. It covers how you earn money, what you spend it on, and what you truly value. A strong 2nd House means you know your worth — literally and figuratively.' },
+    { name: '3rd House', emoji: '💬', theme: 'Communication & Learning', description: 'How do you text? How do you explain things? That\'s your 3rd House. It rules everyday talking, thinking, and learning — plus your relationship with siblings and neighbors. It\'s your day-to-day brain.' },
+    { name: '4th House', emoji: '🏠', theme: 'Home & Family', description: 'This is your safe place — your childhood home, your family, your roots. It represents where you go when you need comfort. It\'s the foundation everything else in your life is built on.' },
+    { name: '5th House', emoji: '🎨', theme: 'Fun, Creativity & Romance', description: 'The fun house! This is where joy lives — hobbies, first dates, creative projects, play, and children. Anything that makes you light up and lose track of time belongs here.' },
+    { name: '6th House', emoji: '⚕️', theme: 'Health & Daily Routine', description: 'Your alarm clock, your workout, your meals, your to-do list. This house rules your daily habits and health. It\'s not glamorous, but it\'s the engine that keeps your life running smoothly.' },
+    { name: '7th House', emoji: '💑', theme: 'Partnerships & Marriage', description: 'If the 1st House is "me," the 7th House is "we." This is the house of marriage, serious relationships, and business partners — the people you commit to and build a life with.' },
+    { name: '8th House', emoji: '🦋', theme: 'Transformation & Deep Bonds', description: 'The deepest, most intense house. It covers things people don\'t talk about at dinner — intimacy, shared finances, psychological transformation, and life\'s biggest changes. Scary but powerful.' },
+    { name: '9th House', emoji: '✈️', theme: 'Travel & Big Ideas', description: 'Your passport and your philosophy degree. This house is about expanding your world — through travel, higher education, religion, or simply asking "what\'s the meaning of all this?"' },
+    { name: '10th House', emoji: '👔', theme: 'Career & Reputation', description: 'Your LinkedIn profile in the sky. This house rules your career, public image, achievements, and what you\'re known for. It\'s your legacy — what people say about you when you\'re not in the room.' },
+    { name: '11th House', emoji: '👥', theme: 'Friends & Future Dreams', description: 'Your friend group, your community, and your wildest hopes for the future. This house is about the people who lift you up and the dreams that keep you going.' },
+    { name: '12th House', emoji: '🔮', theme: 'Spirituality & Inner World', description: 'The most mysterious house. It rules your subconscious, your dreams at night, your intuition, and your spiritual life. Think of it as the backstage area of your personality — hidden from the world but deeply important.' },
 ];
 
 // Helper to get zodiac sign from degree
@@ -147,6 +147,88 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
     const lastAngle = useRef<number | null>(null);
     const originalBirthDateRef = useRef(new Date(route.params.birthDate));
     const scrollRef = useRef<ScrollView>(null);
+
+    // Time Travel: slider + speed + autoplay
+    const SLIDER_RANGE = 18262; // ±50 years in days
+    const SPEED_OPTIONS = useMemo(() => [
+        { label: '1hr', days: 1 / 24 },
+        { label: '6hr', days: 0.25 },
+        { label: '12hr', days: 0.5 },
+        { label: '24hr', days: 1 },
+        { label: '10d', days: 10 },
+        { label: '30d', days: 30 },
+        { label: '3mo', days: 91 },
+        { label: '6mo', days: 182 },
+        { label: '1yr', days: 365 },
+    ], []);
+    const [speedIndex, setSpeedIndex] = useState(3); // default: 24hr
+    const [isPlaying, setIsPlaying] = useState(false);
+    const playIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const sliderWidthRef = useRef(300);
+
+    // Helper: apply a new dayOffset everywhere
+    const applyOffset = useCallback((newOffset: number) => {
+        const clamped = Math.max(-SLIDER_RANGE, Math.min(SLIDER_RANGE, newOffset));
+        dayOffsetRef.current = clamped;
+        setDayOffset(clamped);
+        const newDate = new Date(originalBirthDateRef.current);
+        newDate.setDate(newDate.getDate() + clamped);
+        setBirthDate(newDate);
+    }, [SLIDER_RANGE]);
+
+    // Autoplay effect
+    useEffect(() => {
+        if (isPlaying) {
+            playIntervalRef.current = setInterval(() => {
+                const step = SPEED_OPTIONS[speedIndex].days;
+                const next = dayOffsetRef.current + step;
+                if (next > SLIDER_RANGE) {
+                    setIsPlaying(false);
+                    return;
+                }
+                applyOffset(next);
+            }, 400);
+        } else {
+            if (playIntervalRef.current) {
+                clearInterval(playIntervalRef.current);
+                playIntervalRef.current = null;
+            }
+        }
+        return () => {
+            if (playIntervalRef.current) {
+                clearInterval(playIntervalRef.current);
+                playIntervalRef.current = null;
+            }
+        };
+    }, [isPlaying, speedIndex, SPEED_OPTIONS, SLIDER_RANGE, applyOffset]);
+
+    // Slider PanResponder
+    const timeSliderPan = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: () => true,
+            onPanResponderGrant: (evt) => {
+                setIsPlaying(false);
+                const x = evt.nativeEvent.locationX;
+                const fraction = Math.max(0, Math.min(1, x / sliderWidthRef.current));
+                const newOffset = Math.round((fraction * 2 - 1) * 18262);
+                applyOffset(newOffset);
+                scrollRef.current?.setNativeProps?.({ scrollEnabled: false });
+            },
+            onPanResponderMove: (evt) => {
+                const x = evt.nativeEvent.locationX;
+                const fraction = Math.max(0, Math.min(1, x / sliderWidthRef.current));
+                const newOffset = Math.round((fraction * 2 - 1) * 18262);
+                applyOffset(newOffset);
+            },
+            onPanResponderRelease: () => {
+                scrollRef.current?.setNativeProps?.({ scrollEnabled: true });
+            },
+            onPanResponderTerminate: () => {
+                scrollRef.current?.setNativeProps?.({ scrollEnabled: true });
+            },
+        })
+    ).current;
 
     const toggleEdu = (key: string) => setExpandedEdu(prev => prev === key ? null : key);
 
@@ -261,6 +343,57 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
         })
     ).current;
 
+    // Third PanResponder for the geocentric / flat-earth wheel (same shared date)
+    const geoSpinAccum = useRef(0);
+    const geoLastAngle = useRef<number | null>(null);
+    const geoPanResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: (_, gs) =>
+                Math.abs(gs.dx) > 5 || Math.abs(gs.dy) > 5,
+            onPanResponderGrant: () => {
+                geoLastAngle.current = null;
+                geoSpinAccum.current = dayOffsetRef.current * 15;
+                setIsSpinning(true);
+                scrollRef.current?.setNativeProps?.({ scrollEnabled: false });
+            },
+            onPanResponderMove: (evt) => {
+                const touch = evt.nativeEvent;
+                const angle = Math.atan2(
+                    touch.locationY - 190,
+                    touch.locationX - 190
+                ) * (180 / Math.PI);
+
+                if (geoLastAngle.current !== null) {
+                    let delta = angle - geoLastAngle.current;
+                    if (delta > 180) delta -= 360;
+                    if (delta < -180) delta += 360;
+                    geoSpinAccum.current += delta;
+
+                    const newDayOffset = Math.round(geoSpinAccum.current / 15);
+                    if (newDayOffset !== dayOffsetRef.current) {
+                        dayOffsetRef.current = newDayOffset;
+                        setDayOffset(newDayOffset);
+                        const newDate = new Date(originalBirthDateRef.current);
+                        newDate.setDate(newDate.getDate() + newDayOffset);
+                        setBirthDate(newDate);
+                    }
+                }
+                geoLastAngle.current = angle;
+            },
+            onPanResponderRelease: () => {
+                geoLastAngle.current = null;
+                setIsSpinning(false);
+                scrollRef.current?.setNativeProps?.({ scrollEnabled: true });
+            },
+            onPanResponderTerminate: () => {
+                geoLastAngle.current = null;
+                setIsSpinning(false);
+                scrollRef.current?.setNativeProps?.({ scrollEnabled: true });
+            },
+        })
+    ).current;
+
     // Get coordinates from location, default to NYC if not found
     const coordinates = useMemo(() => {
         if (birthLocation) {
@@ -291,6 +424,116 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
     const moonSign = natalChart.planets[1]?.zodiac || 'Unknown';
     const ascendantSign = natalChart.ascendantZodiac || 'Unknown';
     const sunElement = SIGN_ELEMENTS[sunSign] || 'Unknown';
+
+    // ── Life Event Prime Time Detection ──
+    const getPlanet = (name: string) => natalChart.planets.find(p => p.name === name);
+    const houseOf = (planetLng: number): number => {
+        const h = natalChart.houses;
+        if (!h || h.length < 12) return 0;
+        for (let i = 0; i < 12; i++) {
+            const next = (i + 1) % 12;
+            let start = h[i], end = h[next];
+            if (end < start) end += 360;
+            let lng = planetLng;
+            if (lng < start) lng += 360;
+            if (lng >= start && lng < end) return i + 1;
+        }
+        return 1;
+    };
+
+    const WATER_SIGNS = ['Cancer', 'Scorpio', 'Pisces'];
+    const FIXED_SIGNS = ['Taurus', 'Leo', 'Scorpio', 'Aquarius'];
+    const FIRE_SIGNS = ['Aries', 'Leo', 'Sagittarius'];
+
+    interface PrimeEvent { emoji: string; title: string; reason: string }
+
+    const primeEvents = useMemo((): PrimeEvent[] => {
+        const events: PrimeEvent[] = [];
+        const venus = getPlanet('Venus');
+        const mercury = getPlanet('Mercury');
+        const mars = getPlanet('Mars');
+        const jupiter = getPlanet('Jupiter');
+        const saturn = getPlanet('Saturn');
+        const moon = getPlanet('Moon');
+        const sun = getPlanet('Sun');
+        if (!venus || !mercury || !mars || !jupiter || !moon || !sun) return events;
+
+        const venusHouse = houseOf(venus.longitude);
+        const jupiterHouse = houseOf(jupiter.longitude);
+        const moonHouse = houseOf(moon.longitude);
+        const sunHouse = houseOf(sun.longitude);
+        const marsHouse = houseOf(mars.longitude);
+        const mercuryHouse = houseOf(mercury.longitude);
+        const saturnHouse = saturn ? houseOf(saturn.longitude) : 0;
+        const dow = birthDate.getDay(); // 0=Sun..6=Sat
+
+        // 1. Wedding — Venus direct + Mercury direct + strong Venus sign + 7th house alignment + favorable Moon
+        const venusStrong = venus.zodiac === 'Taurus' || venus.zodiac === 'Libra' || venus.zodiac === 'Pisces';
+        const seventhActive = venusHouse === 7 || jupiterHouse === 7;
+        const moonFavorable = moon.zodiac === 'Cancer' || moon.zodiac === 'Pisces' || moon.zodiac === 'Taurus' || moon.zodiac === 'Libra';
+        // Need: Venus direct + Mercury direct + Venus in strong sign + 7th house active + favorable Moon
+        if (!venus.retrograde && !mercury.retrograde && venusStrong && seventhActive && moonFavorable) {
+            events.push({ emoji: '💒', title: 'Wedding / Engagement', reason: `Venus ${venus.zodiac} H${venusHouse} + ${jupiterHouse === 7 ? 'Jupiter in 7th' : 'Moon in ' + moon.zodiac} — rare alignment` });
+        }
+
+        // 2. Buying a Home — Moon in fixed sign + 4th house active + Mercury direct
+        if (!mercury.retrograde && FIXED_SIGNS.includes(moon.zodiac) &&
+            (moonHouse === 4 || jupiterHouse === 4)) {
+            events.push({ emoji: '🏠', title: 'Buying a Home', reason: `Moon in ${moon.zodiac} (fixed) — stable foundations` });
+        }
+
+        // 3. Starting a Business — Jupiter/Sun on MC (10th) + Mercury direct
+        if (!mercury.retrograde && (sunHouse === 10 || jupiterHouse === 10)) {
+            events.push({ emoji: '💼', title: 'Starting a Business', reason: `${sunHouse === 10 ? 'Sun' : 'Jupiter'} in the 10th — career visibility` });
+        }
+
+        // 4. Trying to Conceive — Jupiter/Venus in 5th + Moon in water sign
+        if ((jupiterHouse === 5 || venusHouse === 5) && WATER_SIGNS.includes(moon.zodiac)) {
+            events.push({ emoji: '👶', title: 'Trying to Conceive', reason: `${jupiterHouse === 5 ? 'Jupiter' : 'Venus'} in 5th + Moon in ${moon.zodiac}` });
+        }
+
+        // 5. Major Travel — Mercury & Jupiter direct + 9th house active
+        if (!mercury.retrograde && !jupiter.retrograde && !mars.retrograde &&
+            (jupiterHouse === 9 || mercuryHouse === 9)) {
+            events.push({ emoji: '✈️', title: 'Major Travel', reason: `${jupiterHouse === 9 ? 'Jupiter' : 'Mercury'} in 9th — horizons expand` });
+        }
+
+        // 6. Signing Contracts — Mercury direct + well-placed + Jupiter in 9th
+        if (!mercury.retrograde && (mercury.zodiac === 'Gemini' || mercury.zodiac === 'Virgo') &&
+            jupiterHouse === 9) {
+            events.push({ emoji: '📝', title: 'Signing Contracts', reason: `Mercury in ${mercury.zodiac} + Jupiter in 9th — justice favors you` });
+        }
+
+        // 7. School / Exams — Mercury in Gemini/Virgo + direct
+        if (!mercury.retrograde &&
+            (mercury.zodiac === 'Gemini' || mercury.zodiac === 'Virgo') &&
+            (mercuryHouse === 3 || mercuryHouse === 9)) {
+            events.push({ emoji: '🎓', title: 'School / Exams', reason: `Mercury in ${mercury.zodiac} H${mercuryHouse} — intellect peaks` });
+        }
+
+        // 8. Financial Investments — Venus/Jupiter in 2nd + no Mars retro
+        if (!venus.retrograde && !mercury.retrograde &&
+            (venusHouse === 2 || jupiterHouse === 2) &&
+            (venus.zodiac === 'Taurus' || jupiter.zodiac === 'Taurus' || dow === 4 || dow === 5)) {
+            events.push({ emoji: '💰', title: 'Financial Investments', reason: `${venusHouse === 2 ? 'Venus' : 'Jupiter'} in 2nd — wealth energy active` });
+        }
+
+        // 9. Elective Surgery — Mars direct + waning moon indicator (moon past opposition to sun)
+        const moonSunDiff = ((moon.longitude - sun.longitude) + 360) % 360;
+        const isWaningMoon = moonSunDiff > 180;
+        if (!mars.retrograde && !mercury.retrograde && isWaningMoon && marsHouse === 6) {
+            events.push({ emoji: '🏥', title: 'Elective Surgery', reason: 'Mars direct in 6th + waning Moon — optimal recovery' });
+        }
+
+        // 10. Launching a Project — Sun/Jupiter in 1st/10th + Mercury direct + fire energy
+        if (!mercury.retrograde && !venus.retrograde && !mars.retrograde &&
+            (sunHouse === 1 || sunHouse === 10 || jupiterHouse === 1 || jupiterHouse === 10) &&
+            FIRE_SIGNS.includes(ascendantSign)) {
+            events.push({ emoji: '🚀', title: 'Launching a Product', reason: `${FIRE_SIGNS.includes(ascendantSign) ? ascendantSign : 'Fire'} rising + visibility — go time` });
+        }
+
+        return events;
+    }, [natalChart, birthDate]);
 
     const formattedDate = birthDate.toLocaleDateString(undefined, {
         weekday: 'long',
@@ -342,7 +585,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                 {/* Header */}
                 <View style={styles.header}>
                     <Text style={styles.emoji}>🔮</Text>
-                    <Text style={styles.title}>Your Natal Chart</Text>
+                    <Text style={styles.title}>{route.params.babyName ? `${route.params.babyName}'s Natal Chart` : 'Your Natal Chart'}</Text>
                     <Text style={styles.subtitle}>{formattedDate}</Text>
                     {birthLocation ? (
                         <Text style={styles.subtitleLocation}>📍 {birthLocation}  •  🕐 {birthTime}</Text>
@@ -410,7 +653,17 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                     </View>
                 )}
 
+                {/* ── ACCURACY MATTERS BANNER ── */}
+                <View style={styles.accuracyBanner}>
+                    <Text style={styles.accuracyBannerIcon}>⚠️</Text>
+                    <Text style={styles.accuracyBannerTitle}>Accuracy Matters</Text>
+                    <Text style={styles.accuracyBannerText}>
+                        The birth date, exact birth time, and birth city are all important for an accurate chart. Without all three, the Rising sign, house placements, and Moon sign may be off — and the Prime Time life events rely on accurate houses to detect unique windows of opportunity. For best results, check the official birth certificate for the exact time and location.
+                    </Text>
+                </View>
+
                 {/* ═══ NATAL CHART WHEEL — wheel first, then title/info ═══ */}
+                <Text style={styles.wheelHeading}>🔮 Natal Chart Wheel</Text>
                 <View style={styles.chartContainer}>
                     <View style={styles.chartWrapper} {...panResponder.panHandlers}>
                         {/* Spin date overlay */}
@@ -422,6 +675,26 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                                 <Text style={styles.spinOverlayDelta}>
                                     {dayOffset === 0 ? 'Original Date' : `${dayOffset > 0 ? '+' : ''}${dayOffset} day${Math.abs(dayOffset) !== 1 ? 's' : ''}`}
                                 </Text>
+                            </View>
+                        )}
+                        {/* Prime Life Events Indicator */}
+                        {primeEvents.length > 0 && (
+                            <View style={styles.primeEventsPanel}>
+                                <View style={styles.primeEventsHeader}>
+                                    <Text style={styles.primeEventsGlow}>⭐</Text>
+                                    <Text style={styles.primeEventsTitle}>PRIME TIME</Text>
+                                    <Text style={styles.primeEventsGlow}>⭐</Text>
+                                </View>
+                                {primeEvents.map((evt, i) => (
+                                    <View key={i} style={styles.primeEventRow}>
+                                        <Text style={styles.primeEventEmoji}>{evt.emoji}</Text>
+                                        <View style={styles.primeEventText}>
+                                            <Text style={styles.primeEventName}>{evt.title}</Text>
+                                            <Text style={styles.primeEventReason}>{evt.reason}</Text>
+                                        </View>
+                                    </View>
+                                ))}
+                                <Text style={styles.primeEventsNote}>Personalized to YOUR chart — your birth time and city determine house placements, so two people on the same date may see different events.</Text>
                             </View>
                         )}
                         <View style={styles.wheelRow}>
@@ -683,46 +956,40 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                         </TouchableOpacity>
                     )}
 
-                    <Text style={styles.sectionTitle}>🌌 Your Birth Chart</Text>
-                    <Text style={styles.sectionExplainer}>
-                        This is a traditional natal chart with the Ascendant (ASC) anchored to the left — the same layout used by professional astrologers worldwide. The outer ring shows the 12 zodiac signs, rotated to match YOUR unique sky at birth. Planet symbols inside show their real ecliptic positions. The 12 numbered sections are your astrological houses, each governing a different area of life. The tiny Earth at center represents YOU.{"\n\n"}The four cardinal points (colored lines) are:{"\n"}• ASC (Ascendant) — Left side — Your rising sign, how others first see you{"\n"}• DSC (Descendant) — Right side — Partnerships and relationships{"\n"}• MC (Midheaven) — Near top — Career, public image, and life goals{"\n"}• IC (Imum Coeli) — Near bottom — Home, roots, and inner foundation
-                    </Text>
+                    {/* ── BEGINNER-FRIENDLY GUIDE ── */}
 
-                    {/* Spin hint */}
-                    <View style={styles.spinHint}>
-                        <Text style={styles.spinHintText}>👆 Spin the wheel with your finger to travel through time!</Text>
-                        <Text style={styles.spinHintDetail}>
-                            {"\n"}The wheel moves in 15° increments — each 15° of rotation equals 1 day. Since a full circle is 360°, one complete revolution moves you 24 days (360 ÷ 15 = 24).{"\n\n"}• A small nudge (15°) = 1 day{"\n"}• Quarter turn (90°) = 6 days{"\n"}• Half turn (180°) = 12 days{"\n"}• Full revolution (360°) = 24 days{"\n"}• Clockwise = forward in time{"\n"}• Counter-clockwise = backward in time{"\n\n"}Watch the planets shift positions as you spin! The entire chart — Big Three, houses, and planet placements — recalculates in real time. Use the Reset button to return to the original birth date.
+                    {/* Step 1: What even IS a natal chart? */}
+                    <View style={styles.wheelExplainerCard}>
+                        <Text style={styles.wheelExplainerTitle}>📚 First Things First — What Is a Natal Chart?</Text>
+                        <Text style={styles.wheelExplainerText}>
+                            Imagine freezing the entire sky at the exact second a baby was born — every planet, the Sun, and the Moon all locked in place. That frozen snapshot is a <Text style={{ fontWeight: 'bold', color: '#FFD700' }}>natal chart</Text> (also called a birth chart).{"\n\n"}Astrologers have used these charts for thousands of years to understand personality, strengths, and life themes. No two birth charts are exactly the same — the sky is always moving, so even twins born minutes apart can have different charts. Think of it as a one-of-a-kind cosmic fingerprint.
+                        </Text>
+                    </View>
+
+                    {/* Step 2: How to read the wheel */}
+                    <View style={styles.wheelExplainerCard}>
+                        <Text style={styles.wheelExplainerTitle}>🔎 How to Read This Wheel</Text>
+                        <Text style={styles.wheelExplainerText}>
+                            Don't worry if it looks complex — here's what each part means:{"\n\n"}<Text style={{ fontWeight: 'bold', color: '#E0E0E0' }}>🔵 The Outer Ring — Zodiac Signs</Text>{"\n"}The colorful symbols around the edge (♈ ♉ ♊ etc.) are the 12 zodiac signs. The wheel is rotated so that the baby's unique sky is shown — no two charts have the same rotation.{"\n\n"}<Text style={{ fontWeight: 'bold', color: '#E0E0E0' }}>🪐 The Planet Symbols Inside</Text>{"\n"}The symbols scattered inside the wheel (☉ ☽ ♂ ♃ etc.) show where each planet was in the sky at the moment of birth. Each planet represents a different part of personality:{"\n"}  • ☉ Sun = core identity (who you are){"\n"}  • ☽ Moon = emotions (how you feel){"\n"}  • ☿ Mercury = communication{"\n"}  • ♀ Venus = love and beauty{"\n"}  • ♂ Mars = drive and energy{"\n"}  • ♃ Jupiter = luck and growth{"\n"}  • ♄ Saturn = discipline and life lessons{"\n"}  • ♅ Uranus = individuality{"\n"}  • ♆ Neptune = imagination and dreams{"\n"}  • ♇ Pluto = transformation{"\n\n"}<Text style={{ fontWeight: 'bold', color: '#E0E0E0' }}>🏠 The Numbered Wedges (1–12) — Houses</Text>{"\n"}The 12 numbered pie slices are called "houses." Each house rules a different area of life:{"\n"}  • House 1 = Self and first impressions{"\n"}  • House 4 = Home and family{"\n"}  • House 7 = Relationships and partnerships{"\n"}  • House 10 = Career and public life{"\n"}  • (The other houses cover money, communication, creativity, health, travel, friends, and more){"\n\n"}When a planet lands in a house, it means that part of your personality (the planet) strongly influences that area of life (the house).{"\n\n"}<Text style={{ fontWeight: 'bold', color: '#E0E0E0' }}>✦ The Four Colored Lines</Text>{"\n"}You'll notice four bold lines crossing the wheel. These are the chart's anchors:{"\n"}  • <Text style={{ color: '#FFD700' }}>Gold line (left)</Text> = ASC (Ascendant / Rising) — how others first see you{"\n"}  • <Text style={{ color: '#FF6B6B' }}>Red line (right)</Text> = DSC (Descendant) — partnerships and relationships{"\n"}  • <Text style={{ color: '#4ECDC4' }}>Teal line (top area)</Text> = MC (Midheaven) — career, reputation, life goals{"\n"}  • <Text style={{ color: '#A78BFA' }}>Purple line (bottom area)</Text> = IC (Imum Coeli) — home, roots, inner foundation{"\n\n"}<Text style={{ fontWeight: 'bold', color: '#E0E0E0' }}>🌍 The Earth at the Center</Text>{"\n"}The small Earth in the middle represents the baby — because in astrology, the chart is drawn from the perspective of the person standing on Earth, looking up at the sky.
+                        </Text>
+                    </View>
+
+                    {/* Step 3: Spin = time machine */}
+                    <View style={styles.wheelExplainerCard}>
+                        <Text style={styles.wheelExplainerTitle}>🌀 It's Also a Time Machine!</Text>
+                        <Text style={styles.wheelExplainerText}>
+                            This isn't just a static picture — you can <Text style={{ fontWeight: 'bold', color: '#FFD700' }}>spin the wheel with your finger</Text> to travel through time and see how the sky changes day by day.{"\n\n"}<Text style={{ fontWeight: 'bold', color: '#E0E0E0' }}>How it works:</Text>{"\n"}  • Swipe clockwise → move forward in time{"\n"}  • Swipe counter-clockwise → move backward{"\n"}  • A small swipe = 1 day, a big swipe = several days{"\n"}  • One full revolution around the wheel = 24 days{"\n\n"}As you spin, watch the planet symbols move to new positions. The Big Three (Sun sign, Moon sign, and Rising sign), all the house placements, and everything on the chart updates live. A date overlay appears at the top so you always know what day you're looking at.{"\n\n"}All three wheels on this page — the Natal Chart, the Solar System, and the Ancient Geocentric model — stay perfectly synchronized, so you can see the same moment from three different perspectives.{"\n\n"}Use the <Text style={{ fontWeight: 'bold', color: '#4ECDC4' }}>Reset</Text> button to snap back to the original birth date anytime.
                         </Text>
                     </View>
 
 
                 </View>
 
-                {/* What is a Natal Chart - Educational Intro */}
-                <View style={styles.educationCard}>
-                    <Text style={styles.educationTitle}>📚 What is a Natal Chart?</Text>
-                    <Text style={styles.educationText}>
-                        A natal chart (also called a birth chart) is like a cosmic snapshot of the sky at the exact moment you were born. It shows where all the planets were positioned and which zodiac signs they were in.
-                        {'\n\n'}
-                        Ancient astrologers believed these planetary positions influence your personality, strengths, challenges, and life path. Think of it as a celestial blueprint unique to you!
-                    </Text>
-                </View>
-
-                {/* ── ACCURACY MATTERS BANNER ── */}
-                <View style={styles.accuracyBanner}>
-                    <Text style={styles.accuracyBannerIcon}>⚠️</Text>
-                    <Text style={styles.accuracyBannerTitle}>Accuracy Matters</Text>
-                    <Text style={styles.accuracyBannerText}>
-                        Your birth date, exact birth time, and birth city are critical for providing the most accurate and realistic natal chart. Without all three, your Rising sign, house placements, and Moon sign may be inaccurate. For best results, check your official birth certificate for the exact time and location.
-                    </Text>
-                </View>
-
                 {/* The Big Three */}
                 <View style={styles.bigThreeContainer}>
-                    <Text style={styles.sectionTitle}>✨ Your Big Three</Text>
+                    <Text style={styles.sectionTitle}>✨ The Big Three</Text>
                     <Text style={styles.sectionExplainer}>
-                        The "Big Three" are the most important placements in your chart. Together, they paint a picture of who you are at your core, how you feel, and how you present yourself to the world.
+                        If you only learn three things from this chart, make it these. The "Big Three" are the three most important placements — think of them as the headline summary of the entire natal chart:{"\n\n"}• <Text style={{ fontWeight: 'bold', color: '#FFD700' }}>Sun Sign</Text> — Who you are at your core (your identity, ego, and life purpose){"\n"}• <Text style={{ fontWeight: 'bold', color: '#C0C0C0' }}>Moon Sign</Text> — How you feel on the inside (your emotions, instincts, and inner world){"\n"}• <Text style={{ fontWeight: 'bold', color: '#4ECDC4' }}>Rising Sign</Text> — How the world sees you (your first impression, appearance, and vibe){"\n\n"}Everyone knows their Sun sign (that's your "regular" zodiac sign based on birthday). But the Moon and Rising are just as important — and they require your exact birth time and city to calculate.
                     </Text>
 
                     <View style={styles.bigThreeCard}>
@@ -1106,101 +1373,92 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                     {/* Time Travel Slider */}
                     <View style={styles.timeSliderContainer}>
                         <Text style={styles.timeSliderTitle}>⏳ Time Travel</Text>
-                        <View style={styles.timeSliderRow}>
-                            <TouchableOpacity
-                                style={styles.timeSliderBtn}
-                                onPress={() => {
-                                    const newOffset = dayOffset - 365;
-                                    setDayOffset(newOffset);
-                                    dayOffsetRef.current = newOffset;
-                                    const newDate = new Date(originalBirthDateRef.current);
-                                    newDate.setDate(newDate.getDate() + newOffset);
-                                    setBirthDate(newDate);
-                                }}
+
+                        {/* Current date display */}
+                        <Text style={styles.timeTravelDate}>
+                            {birthDate.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                        </Text>
+
+                        {/* Slider track */}
+                        <View style={styles.sliderTrackWrap}>
+                            <Text style={styles.sliderLabel}>Past</Text>
+                            <View
+                                style={styles.sliderTrack}
+                                onLayout={(e) => { sliderWidthRef.current = e.nativeEvent.layout.width; }}
+                                {...timeSliderPan.panHandlers}
                             >
-                                <Text style={styles.timeSliderBtnText}>−1Y</Text>
-                            </TouchableOpacity>
+                                {/* Fill bar from center to thumb */}
+                                {dayOffset !== 0 && (
+                                    <View style={[
+                                        styles.sliderFill,
+                                        dayOffset > 0
+                                            ? { left: '50%', width: `${(dayOffset / SLIDER_RANGE) * 50}%` }
+                                            : { right: '50%', width: `${(Math.abs(dayOffset) / SLIDER_RANGE) * 50}%` },
+                                    ]} />
+                                )}
+                                {/* Center mark (birthday) */}
+                                <View style={styles.sliderCenter} />
+                                {/* Thumb */}
+                                <View style={[styles.sliderThumb, {
+                                    left: `${((dayOffset + SLIDER_RANGE) / (2 * SLIDER_RANGE)) * 100}%`,
+                                    marginLeft: -8,
+                                }]} />
+                            </View>
+                            <Text style={styles.sliderLabel}>Future</Text>
+                        </View>
+
+                        {/* Offset label */}
+                        {dayOffset !== 0 && (
+                            <Text style={styles.timeSliderOffset}>
+                                {(() => {
+                                    const totalDays = Math.abs(Math.round(dayOffset));
+                                    const sign = dayOffset > 0 ? '+' : '−';
+                                    if (totalDays < 1) {
+                                        const hrs = Math.round(totalDays * 24);
+                                        return `${sign}${hrs} hr${hrs !== 1 ? 's' : ''} from birth`;
+                                    }
+                                    if (totalDays < 365) return `${sign}${totalDays} day${totalDays !== 1 ? 's' : ''} from birth`;
+                                    const years = Math.floor(totalDays / 365.25);
+                                    const remDays = Math.round(totalDays - years * 365.25);
+                                    if (remDays === 0) return `${sign}${years} yr${years !== 1 ? 's' : ''} from birth`;
+                                    return `${sign}${years}y ${remDays}d from birth`;
+                                })()}
+                            </Text>
+                        )}
+
+                        {/* Speed selector row */}
+                        <View style={styles.speedRow}>
+                            {SPEED_OPTIONS.map((opt, i) => (
+                                <TouchableOpacity
+                                    key={opt.label}
+                                    style={[styles.speedBtn, speedIndex === i && styles.speedBtnActive]}
+                                    onPress={() => setSpeedIndex(i)}
+                                >
+                                    <Text style={[styles.speedBtnText, speedIndex === i && styles.speedBtnTextActive]}>
+                                        {opt.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        {/* Play / Reset controls */}
+                        <View style={styles.playRow}>
                             <TouchableOpacity
-                                style={styles.timeSliderBtn}
-                                onPress={() => {
-                                    const newOffset = dayOffset - 30;
-                                    setDayOffset(newOffset);
-                                    dayOffsetRef.current = newOffset;
-                                    const newDate = new Date(originalBirthDateRef.current);
-                                    newDate.setDate(newDate.getDate() + newOffset);
-                                    setBirthDate(newDate);
-                                }}
+                                style={[styles.playBtn, isPlaying && styles.playBtnActive]}
+                                onPress={() => setIsPlaying(prev => !prev)}
                             >
-                                <Text style={styles.timeSliderBtnText}>−1M</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.timeSliderBtn}
-                                onPress={() => {
-                                    const newOffset = dayOffset - 1;
-                                    setDayOffset(newOffset);
-                                    dayOffsetRef.current = newOffset;
-                                    const newDate = new Date(originalBirthDateRef.current);
-                                    newDate.setDate(newDate.getDate() + newOffset);
-                                    setBirthDate(newDate);
-                                }}
-                            >
-                                <Text style={styles.timeSliderBtnText}>◀ Day</Text>
+                                <Text style={styles.playBtnText}>{isPlaying ? '⏸' : '▶'}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.timeSliderBtn, styles.timeSliderResetBtn]}
                                 onPress={() => {
-                                    setDayOffset(0);
-                                    dayOffsetRef.current = 0;
-                                    setBirthDate(new Date(originalBirthDateRef.current));
+                                    setIsPlaying(false);
+                                    applyOffset(0);
                                 }}
                             >
-                                <Text style={[styles.timeSliderBtnText, { color: '#FFD54F' }]}>⟲</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.timeSliderBtn}
-                                onPress={() => {
-                                    const newOffset = dayOffset + 1;
-                                    setDayOffset(newOffset);
-                                    dayOffsetRef.current = newOffset;
-                                    const newDate = new Date(originalBirthDateRef.current);
-                                    newDate.setDate(newDate.getDate() + newOffset);
-                                    setBirthDate(newDate);
-                                }}
-                            >
-                                <Text style={styles.timeSliderBtnText}>Day ▶</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.timeSliderBtn}
-                                onPress={() => {
-                                    const newOffset = dayOffset + 30;
-                                    setDayOffset(newOffset);
-                                    dayOffsetRef.current = newOffset;
-                                    const newDate = new Date(originalBirthDateRef.current);
-                                    newDate.setDate(newDate.getDate() + newOffset);
-                                    setBirthDate(newDate);
-                                }}
-                            >
-                                <Text style={styles.timeSliderBtnText}>+1M</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.timeSliderBtn}
-                                onPress={() => {
-                                    const newOffset = dayOffset + 365;
-                                    setDayOffset(newOffset);
-                                    dayOffsetRef.current = newOffset;
-                                    const newDate = new Date(originalBirthDateRef.current);
-                                    newDate.setDate(newDate.getDate() + newOffset);
-                                    setBirthDate(newDate);
-                                }}
-                            >
-                                <Text style={styles.timeSliderBtnText}>+1Y</Text>
+                                <Text style={[styles.timeSliderBtnText, { color: '#FFD54F' }]}>⟲ Reset</Text>
                             </TouchableOpacity>
                         </View>
-                        {dayOffset !== 0 && (
-                            <Text style={styles.timeSliderOffset}>
-                                {dayOffset > 0 ? '+' : ''}{dayOffset} day{Math.abs(dayOffset) !== 1 ? 's' : ''} from birth
-                            </Text>
-                        )}
                     </View>
 
                     {/* Solar System Key — Planets */}
@@ -1299,6 +1557,145 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                     </View>
                 </View>
 
+                {/* ═══ ANCIENT GEOCENTRIC / FLAT EARTH COSMOLOGY ═══ */}
+                <View style={styles.solarSystemContainer}>
+                    <Text style={styles.sectionTitle}>🌍 Ancient Geocentric Cosmology</Text>
+                    <Text style={styles.sectionExplainer}>
+                        Before Copernicus, every civilization placed Earth at the center of existence. This is the model used for thousands of years — and the one that astrology is still based on today.{"\n\n"}The ancient geocentric model placed a flat or disc-shaped Earth at the center, covered by a dome (the "firmament") containing the fixed stars. The Sun, Moon, and five visible planets (Mercury through Saturn) orbited Earth in concentric crystal spheres — each sphere producing a musical note, creating the legendary "Music of the Spheres."{"\n\n"}This diagram shows the classical order of celestial spheres as described by Ptolemy (~150 AD), which remained the accepted model of the cosmos for over 1,400 years.
+                    </Text>
+
+                    {/* Spin hint for geocentric model */}
+                    <View style={styles.spinHint}>
+                        <Text style={styles.spinHintText}>👆 Spin the wheel to watch the Sun and Moon orbit the Earth!</Text>
+                        <Text style={styles.spinHintDetail}>
+                            Watch the Moon race around while Saturn barely creeps — just as the ancients observed.
+                        </Text>
+                    </View>
+
+                    {(() => {
+                        const feSize = 390;
+                        const feCx = feSize / 2;
+                        const feCy = feSize / 2;
+                        // Ptolemaic spheres — classical order from Earth outward
+                        const spheres = [
+                            { name: 'Earth', sym: '🌍', r: 28, color: '#4FC3F7', fill: '#1a3a4a' },
+                            { name: 'Moon', sym: '☽', r: 52, color: '#C0C0C0', fill: 'none' },
+                            { name: 'Mercury', sym: '☿', r: 76, color: '#B0B0B0', fill: 'none' },
+                            { name: 'Venus', sym: '♀', r: 100, color: '#FFD700', fill: 'none' },
+                            { name: 'Sun', sym: '☉', r: 124, color: '#FFA000', fill: 'none' },
+                            { name: 'Mars', sym: '♂', r: 148, color: '#FF6B35', fill: 'none' },
+                            { name: 'Jupiter', sym: '♃', r: 164, color: '#FFB74D', fill: 'none' },
+                            { name: 'Saturn', sym: '♄', r: 178, color: '#BCAAA4', fill: 'none' },
+                        ];
+
+                        // Compute planet positions using the birth date orbital data
+                        const j2000 = new Date(Date.UTC(2000, 0, 1, 12, 0, 0));
+                        const dSinceJ2k = (birthDate.getTime() - j2000.getTime()) / 86400000;
+                        const geoRates: Record<string, { L0: number; rate: number }> = {
+                            Moon: { L0: 218.32, rate: 13.17640 },
+                            Mercury: { L0: 252.25, rate: 4.09233 },
+                            Venus: { L0: 181.98, rate: 1.60213 },
+                            Sun: { L0: 280.46, rate: 0.98565 },
+                            Mars: { L0: 355.45, rate: 0.52403 },
+                            Jupiter: { L0: 34.40, rate: 0.08309 },
+                            Saturn: { L0: 50.08, rate: 0.03346 },
+                        };
+
+                        return (
+                            <View style={styles.solarSystemWheel} {...geoPanResponder.panHandlers}>
+                                {/* Spin date overlay for geocentric model */}
+                                {(isSpinning || dayOffset !== 0) && (
+                                    <View style={styles.solarSpinOverlay}>
+                                        <Text style={styles.spinOverlayDate}>
+                                            {birthDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        </Text>
+                                        <Text style={styles.spinOverlayDelta}>
+                                            {dayOffset === 0 ? 'Original Date' : `${dayOffset > 0 ? '+' : ''}${dayOffset} day${Math.abs(dayOffset) !== 1 ? 's' : ''}`}
+                                        </Text>
+                                    </View>
+                                )}
+                                <Svg width={feSize} height={feSize}>
+                                    {/* Firmament — outermost sphere of fixed stars */}
+                                    <Circle cx={feCx} cy={feCy} r={feSize * 0.49} fill="#040418" />
+                                    {/* Scattered stars on the firmament */}
+                                    {[{ x: 30, y: 40 }, { x: 60, y: 20 }, { x: 100, y: 50 }, { x: 145, y: 15 }, { x: 200, y: 30 }, { x: 250, y: 12 }, { x: 290, y: 45 }, { x: 330, y: 25 }, { x: 350, y: 60 }, { x: 18, y: 100 }, { x: 365, y: 100 }, { x: 12, y: 170 }, { x: 368, y: 185 }, { x: 20, y: 250 }, { x: 360, y: 240 }, { x: 40, y: 320 }, { x: 100, y: 355 }, { x: 175, y: 370 }, { x: 260, y: 360 }, { x: 330, y: 340 }, { x: 355, y: 290 }].map((s, i) => (
+                                        <Circle key={`fstar-${i}`} cx={s.x} cy={s.y} r={0.8 + Math.random() * 0.4} fill="rgba(255,255,255,0.4)" />
+                                    ))}
+                                    <SvgText x={feCx} y={18} fontSize={8} textAnchor="middle" fill="rgba(255,255,255,0.35)">✦ FIRMAMENT — FIXED STARS ✦</SvgText>
+                                    <SvgText x={feCx} y={feSize - 8} fontSize={8} textAnchor="middle" fill="rgba(255,255,255,0.35)">✦ PRIMUM MOBILE ✦</SvgText>
+
+                                    {/* Crystal spheres — draw from outermost to innermost */}
+                                    {[...spheres].reverse().map((s) => (
+                                        <Circle key={`sphere-${s.name}`} cx={feCx} cy={feCy} r={s.r}
+                                            fill={s.fill} stroke={s.color} strokeWidth={0.8}
+                                            strokeDasharray={s.name === 'Earth' ? undefined : '4,3'}
+                                            opacity={s.name === 'Earth' ? 1 : 0.5}
+                                        />
+                                    ))}
+
+                                    {/* Earth at the very center — solid disc */}
+                                    <Circle cx={feCx} cy={feCy} r={28} fill="#1a3a4a" />
+                                    <Circle cx={feCx} cy={feCy} r={28} fill="none" stroke="#4FC3F7" strokeWidth={1.5} />
+                                    <SvgText x={feCx} y={feCy + 5} fontSize={18} textAnchor="middle">🌍</SvgText>
+                                    <SvgText x={feCx} y={feCy + 22} fontSize={7} textAnchor="middle" fill="#4FC3F7" fontWeight="bold">TERRA</SvgText>
+
+                                    {/* Planet positions on their respective spheres */}
+                                    {spheres.slice(1).map((s) => {
+                                        const geo = geoRates[s.name];
+                                        if (!geo) return null;
+                                        const lng = (geo.L0 + geo.rate * dSinceJ2k) % 360;
+                                        const rad = ((lng - 90) * Math.PI) / 180;
+                                        const px = feCx + s.r * Math.cos(rad);
+                                        const py = feCy + s.r * Math.sin(rad);
+                                        const dotR = s.name === 'Sun' ? 10 : s.name === 'Moon' ? 8 : 6;
+                                        return (
+                                            <G key={`geo-${s.name}`}>
+                                                <Circle cx={px} cy={py} r={dotR} fill={s.color} opacity={0.9} />
+                                                <SvgText x={px} y={py + 4} fontSize={s.name === 'Sun' ? 12 : 10} textAnchor="middle">{s.sym}</SvgText>
+                                                <SvgText x={px} y={py + dotR + 10} fontSize={7} textAnchor="middle" fill={s.color} fontWeight="bold">{s.name}</SvgText>
+                                            </G>
+                                        );
+                                    })}
+
+                                    {/* Sphere labels on the right edge */}
+                                    {spheres.slice(1).map((s) => (
+                                        <SvgText key={`lbl-${s.name}`} x={feCx + s.r + 4} y={feCy - 2} fontSize={6}
+                                            fill={s.color} opacity={0.6}>{s.name}</SvgText>
+                                    ))}
+                                </Svg>
+                            </View>
+                        );
+                    })()}
+
+                    {/* Geocentric Key */}
+                    <Text style={styles.solarKeySectionHeader}>🏛️ The Seven Classical Spheres</Text>
+                    <View style={styles.solarKeyGrid}>
+                        {[
+                            { sym: '☽', name: '1st Sphere — Moon', desc: 'Closest to Earth. Rules emotions, instincts, and the tides.', color: '#C0C0C0' },
+                            { sym: '☿', name: '2nd Sphere — Mercury', desc: 'Communication, intellect, and commerce.', color: '#B0B0B0' },
+                            { sym: '♀', name: '3rd Sphere — Venus', desc: 'Love, beauty, harmony, and desire.', color: '#FFD700' },
+                            { sym: '☉', name: '4th Sphere — Sun', desc: 'The heart of the cosmos. Life force, ego, and vitality.', color: '#FFA000' },
+                            { sym: '♂', name: '5th Sphere — Mars', desc: 'War, energy, passion, and drive.', color: '#FF6B35' },
+                            { sym: '♃', name: '6th Sphere — Jupiter', desc: 'Wisdom, expansion, luck, and justice.', color: '#FFB74D' },
+                            { sym: '♄', name: '7th Sphere — Saturn', desc: 'Time, structure, karma, and limitation. The outermost visible planet.', color: '#BCAAA4' },
+                        ].map(p => (
+                            <View key={p.name} style={[styles.solarKeyItem, { width: '100%' as any }]}>
+                                <View style={[styles.solarKeyDot, { backgroundColor: p.color }]} />
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.solarKeyName}>{p.sym} {p.name}</Text>
+                                    <Text style={[styles.solarKeyOrbit, { marginTop: 2 }]}>{p.desc}</Text>
+                                </View>
+                            </View>
+                        ))}
+                    </View>
+
+                    <View style={styles.solarNote}>
+                        <Text style={styles.solarNoteText}>
+                            ℹ️  This is the Ptolemaic geocentric model (~150 AD) that dominated Western, Islamic, and Indian astronomy for over 1,400 years. The seven classical "planets" (including the Sun and Moon) each occupied a crystal sphere. Beyond Saturn lay the Firmament of fixed stars, and beyond that, the Primum Mobile — the "first mover" that set all spheres in motion. This is the cosmological framework that astrology was built upon and still uses today.
+                        </Text>
+                    </View>
+                </View>
+
                 {/* Planet Positions */}
                 <View style={styles.planetsContainer}>
                     <Text style={styles.sectionTitle}>🪐 Planet Positions</Text>
@@ -1321,7 +1718,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                 <View style={styles.housesContainer}>
                     <Text style={styles.sectionTitle}>🏛️ The 12 Houses</Text>
                     <Text style={styles.sectionExplainer}>
-                        While planets show WHAT energies you have and signs show HOW they express, houses show WHERE in life these energies play out. Think of houses as 12 different areas or "departments" of your life.
+                        Imagine your life divided into 12 departments — career, love, money, home, health, friends, and so on. Those are the 12 "houses." Every natal chart has all 12, and each one covers a specific area of life.{"\n\n"}Here's the simple version of how it all connects:{"\n"}• <Text style={{ fontWeight: 'bold', color: '#FFD700' }}>Planets</Text> = WHAT energy you have (ex: Venus = love energy){"\n"}• <Text style={{ fontWeight: 'bold', color: '#4ECDC4' }}>Zodiac Signs</Text> = HOW that energy expresses itself (ex: Venus in Leo = dramatic, generous love){"\n"}• <Text style={{ fontWeight: 'bold', color: '#FF6B6B' }}>Houses</Text> = WHERE in your life it shows up (ex: Venus in the 10th House = love shows up in your career){"\n\n"}So when you see a planet sitting in a house, it means that planet's energy is focused on that area of your life. The more planets in one house, the more action that area gets!
                     </Text>
 
                     {natalChart.houses && natalChart.houses.length > 0 ? (
@@ -1512,8 +1909,8 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
                             <Text style={styles.eduRefHeading}>THE PLANETS & THEIR MEANINGS</Text>
                             <Text style={styles.eduText}>☉ Sun — Your core identity, ego, and life purpose. The essential "you."{"\n"}☽ Moon — Your emotions, instincts, and inner world. How you feel and nurture.{"\n"}☿ Mercury — Communication, thinking, and learning style.{"\n"}♀ Venus — Love, beauty, values, and what you attract.{"\n"}♂ Mars — Drive, energy, passion, and how you take action.{"\n"}♃ Jupiter — Expansion, luck, wisdom, and abundance.{"\n"}♄ Saturn — Discipline, structure, responsibility, and life lessons.{"\n"}♅ Uranus — Innovation, rebellion, sudden change, and freedom.{"\n"}♆ Neptune — Dreams, intuition, spirituality, and illusion.{"\n"}♇ Pluto — Transformation, power, death and rebirth, and deep psychology.</Text>
 
-                            <Text style={styles.eduRefHeading}>THE 12 HOUSES</Text>
-                            <Text style={styles.eduText}>1st House — Self, appearance, and first impressions (ruled by Aries){"\n"}2nd House — Money, possessions, and personal values (Taurus){"\n"}3rd House — Communication, siblings, and short travel (Gemini){"\n"}4th House — Home, family, roots, and emotional foundations (Cancer){"\n"}5th House — Creativity, romance, children, and fun (Leo){"\n"}6th House — Health, daily routines, and service to others (Virgo){"\n"}7th House — Partnerships, marriage, and one-on-one relationships (Libra){"\n"}8th House — Transformation, shared resources, and deep intimacy (Scorpio){"\n"}9th House — Travel, higher education, philosophy, and beliefs (Sagittarius){"\n"}10th House — Career, public reputation, and life achievements (Capricorn){"\n"}11th House — Friends, community, hopes, and wishes (Aquarius){"\n"}12th House — Spirituality, hidden matters, and the subconscious (Pisces)</Text>
+                            <Text style={styles.eduRefHeading}>THE 12 HOUSES — YOUR LIFE IN 12 ROOMS</Text>
+                            <Text style={styles.eduText}>Think of your chart as a house with 12 rooms. Each room represents a different part of your life:{"\n\n"}🪞 1st House — Your front door. First impressions, appearance, and the energy you bring into a room. (Aries){"\n"}💰 2nd House — Your wallet. Money, possessions, and self-worth. (Taurus){"\n"}💬 3rd House — Your phone. Everyday communication, learning, siblings, and neighbors. (Gemini){"\n"}🏠 4th House — Your bedroom. Home, family, roots, and where you feel safest. (Cancer){"\n"}🎨 5th House — Your playground. Fun, creativity, romance, hobbies, and children. (Leo){"\n"}⚕️ 6th House — Your gym. Health, daily habits, routines, and work life. (Virgo){"\n"}💑 7th House — Your partner's chair. Marriage, committed relationships, and business partners. (Libra){"\n"}🦋 8th House — Your locked diary. Deep bonds, shared finances, transformation, and life's biggest changes. (Scorpio){"\n"}✈️ 9th House — Your passport. Travel, higher education, philosophy, and big questions about life. (Sagittarius){"\n"}👔 10th House — Your office. Career, public image, achievements, and reputation. (Capricorn){"\n"}👥 11th House — Your group chat. Friends, community, hopes, and future dreams. (Aquarius){"\n"}🔮 12th House — Your dream journal. Spirituality, the subconscious, intuition, and hidden strengths. (Pisces)</Text>
 
                             <Text style={styles.eduRefHeading}>MAJOR ASPECTS</Text>
                             <Text style={styles.eduText}>☌ Conjunction (0°) — Two planets in the same place. Intense blending of energies. Can be harmonious or tense depending on the planets.{"\n\n"}⚹ Sextile (60°) — A friendly, cooperative aspect. Opportunities that require some effort to activate. Generally positive.{"\n\n"}□ Square (90°) — Tension and challenge. Creates friction that drives growth. The most dynamic aspect — problems that push you to evolve.{"\n\n"}△ Trine (120°) — The most harmonious aspect. Natural talents and easy flow of energy. Gifts that come effortlessly.{"\n\n"}☍ Opposition (180°) — Two planets facing each other. Creates awareness through contrast. Requires balance between opposing needs.</Text>
@@ -1828,6 +2225,40 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         paddingHorizontal: 10,
     },
+    wheelHeading: {
+        fontSize: 26,
+        fontWeight: 'bold',
+        color: '#FFD700',
+        textAlign: 'center',
+        marginBottom: 10,
+        marginTop: 4,
+        letterSpacing: 1,
+        textShadowColor: 'rgba(255,215,0,0.4)',
+        textShadowOffset: { width: 0, height: 0 },
+        textShadowRadius: 10,
+    },
+    wheelExplainerCard: {
+        backgroundColor: 'rgba(255,255,255,0.07)',
+        borderRadius: 16,
+        padding: 16,
+        marginTop: 16,
+        marginBottom: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(255,215,0,0.15)',
+    },
+    wheelExplainerTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#FFD700',
+        textAlign: 'center',
+        marginBottom: 10,
+    },
+    wheelExplainerText: {
+        fontSize: 14,
+        color: 'rgba(255,255,255,0.88)',
+        lineHeight: 22,
+        textAlign: 'left',
+    },
     sectionTitle: {
         fontSize: 23,
         fontWeight: 'bold',
@@ -2035,17 +2466,11 @@ const styles = StyleSheet.create({
         includeFontPadding: false,
     },
     sidebarMiniLabel: {
-        fontSize: 7,
-        fontWeight: '700',
-        color: 'rgba(255,255,255,0.85)',
-        textAlign: 'center',
-        includeFontPadding: false,
-    },
-    sidebarMiniLabel: {
         fontSize: 8,
         fontWeight: '700',
         color: 'rgba(255,255,255,0.85)',
         textAlign: 'center',
+        includeFontPadding: false,
     },
     spinHint: {
         backgroundColor: 'rgba(255,255,255,0.12)',
@@ -2314,6 +2739,111 @@ const styles = StyleSheet.create({
         color: 'rgba(255,255,255,0.6)',
         textAlign: 'center' as const,
         marginTop: 6,
+    },
+    timeTravelDate: {
+        fontSize: 15,
+        fontWeight: '600' as const,
+        color: '#fff',
+        textAlign: 'center' as const,
+        marginBottom: 10,
+    },
+    sliderTrackWrap: {
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+        gap: 6,
+        marginBottom: 6,
+    },
+    sliderLabel: {
+        fontSize: 9,
+        fontWeight: '700' as const,
+        color: 'rgba(255,255,255,0.4)',
+        textTransform: 'uppercase' as const,
+    },
+    sliderTrack: {
+        flex: 1,
+        height: 28,
+        backgroundColor: 'rgba(255,255,255,0.08)',
+        borderRadius: 14,
+        justifyContent: 'center' as const,
+        overflow: 'hidden' as const,
+    },
+    sliderFill: {
+        position: 'absolute' as const,
+        top: 4,
+        bottom: 4,
+        backgroundColor: 'rgba(100,181,246,0.4)',
+        borderRadius: 10,
+    },
+    sliderCenter: {
+        position: 'absolute' as const,
+        left: '50%' as any,
+        marginLeft: -1,
+        width: 2,
+        top: 2,
+        bottom: 2,
+        backgroundColor: 'rgba(255,213,79,0.6)',
+        borderRadius: 1,
+    },
+    sliderThumb: {
+        position: 'absolute' as const,
+        width: 16,
+        height: 16,
+        borderRadius: 8,
+        backgroundColor: '#64B5F6',
+        borderWidth: 2,
+        borderColor: '#fff',
+        top: 6,
+    },
+    speedRow: {
+        flexDirection: 'row' as const,
+        justifyContent: 'center' as const,
+        alignItems: 'center' as const,
+        flexWrap: 'wrap' as const,
+        gap: 5,
+        marginTop: 8,
+        marginBottom: 8,
+    },
+    speedBtn: {
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderRadius: 6,
+        paddingHorizontal: 7,
+        paddingVertical: 4,
+    },
+    speedBtnActive: {
+        backgroundColor: 'rgba(100,181,246,0.35)',
+        borderWidth: 1,
+        borderColor: '#64B5F6',
+    },
+    speedBtnText: {
+        fontSize: 10,
+        fontWeight: '700' as const,
+        color: 'rgba(255,255,255,0.6)',
+    },
+    speedBtnTextActive: {
+        color: '#fff',
+    },
+    playRow: {
+        flexDirection: 'row' as const,
+        justifyContent: 'center' as const,
+        alignItems: 'center' as const,
+        gap: 12,
+    },
+    playBtn: {
+        backgroundColor: 'rgba(255,255,255,0.12)',
+        borderRadius: 20,
+        width: 40,
+        height: 40,
+        alignItems: 'center' as const,
+        justifyContent: 'center' as const,
+    },
+    playBtnActive: {
+        backgroundColor: 'rgba(100,181,246,0.35)',
+        borderWidth: 1,
+        borderColor: '#64B5F6',
+    },
+    playBtnText: {
+        fontSize: 18,
+        color: '#fff',
     },
     solarKeyGrid: {
         flexDirection: 'row' as const,
@@ -2686,5 +3216,69 @@ const styles = StyleSheet.create({
         fontSize: 23,
         color: '#311b92',
         fontWeight: 'bold',
+    },
+
+    // ── Prime Life Events Panel ──
+    primeEventsPanel: {
+        backgroundColor: 'rgba(76,175,80,0.15)',
+        borderRadius: 12,
+        paddingVertical: 10,
+        paddingHorizontal: 14,
+        marginBottom: 10,
+        borderWidth: 2,
+        borderColor: '#4CAF50',
+        shadowColor: '#4CAF50',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.6,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    primeEventsHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 8,
+        gap: 6,
+    },
+    primeEventsGlow: {
+        fontSize: 16,
+    },
+    primeEventsTitle: {
+        fontSize: 14,
+        fontWeight: '900',
+        color: '#4CAF50',
+        letterSpacing: 2,
+        textAlign: 'center',
+    },
+    primeEventRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: 6,
+        gap: 8,
+    },
+    primeEventEmoji: {
+        fontSize: 20,
+        width: 28,
+    },
+    primeEventText: {
+        flex: 1,
+    },
+    primeEventName: {
+        fontSize: 13,
+        fontWeight: '800',
+        color: '#fff',
+    },
+    primeEventReason: {
+        fontSize: 11,
+        color: 'rgba(255,255,255,0.7)',
+        fontStyle: 'italic',
+    },
+    primeEventsNote: {
+        fontSize: 10,
+        color: 'rgba(255,255,255,0.55)',
+        fontStyle: 'italic',
+        textAlign: 'center',
+        marginTop: 6,
+        paddingHorizontal: 4,
     },
 });

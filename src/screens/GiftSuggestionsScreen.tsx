@@ -37,7 +37,7 @@ const RETAILERS: Retailer[] = [
     { key: 'walmart', name: 'Walmart', emoji: '\uD83D\uDED2', color: '#0071dc', bgColor: '#e3f2fd' },
 ];
 
-type OccasionKey = 'newborn' | 'birthday' | 'graduation' | 'anniversary' | 'milestone';
+type OccasionKey = 'newborn' | 'birthday' | 'graduation' | 'anniversary' | 'wedding' | 'milestone';
 
 interface GiftCategory {
     id: string;
@@ -118,6 +118,22 @@ const OCCASIONS: Occasion[] = [
             { id: 'an6', name: 'Wine & Champagne', emoji: '\uD83C\uDF77', searchTerm: 'anniversary+wine+champagne+gift', color: '#ab47bc' },
             { id: 'an7', name: 'Photo Frames & Albums', emoji: '\uD83D\uDDBC\uFE0F', searchTerm: 'anniversary+photo+frame+album', color: '#ce93d8' },
             { id: 'an8', name: 'Date Night Gifts', emoji: '\uD83C\uDF1F', searchTerm: 'date+night+gift+box+couple', color: '#ba68c8' },
+        ],
+    },
+    {
+        key: 'wedding',
+        label: 'Wedding',
+        emoji: '\uD83D\uDC92',
+        color: '#e91e63',
+        categories: [
+            { id: 'wd1', name: 'Wedding Gift Sets', emoji: '\uD83C\uDF81', searchTerm: 'wedding+gift+set+couple', color: '#e91e63' },
+            { id: 'wd2', name: 'Kitchen & Home', emoji: '\uD83C\uDF73', searchTerm: 'wedding+kitchen+home+gift', color: '#d81b60' },
+            { id: 'wd3', name: 'Personalized Gifts', emoji: '\u2764\uFE0F', searchTerm: 'personalized+wedding+gift+couple', color: '#c2185b' },
+            { id: 'wd4', name: 'Luggage & Travel', emoji: '\u2708\uFE0F', searchTerm: 'honeymoon+travel+luggage+gift', color: '#ad1457' },
+            { id: 'wd5', name: 'Bedding & Linens', emoji: '\uD83D\uDECF\uFE0F', searchTerm: 'wedding+bedding+luxury+linens', color: '#880e4f' },
+            { id: 'wd6', name: 'Wine & Champagne', emoji: '\uD83C\uDF7E', searchTerm: 'wedding+champagne+wine+gift', color: '#f06292' },
+            { id: 'wd7', name: 'Photo Frames & Albums', emoji: '\uD83D\uDDBC\uFE0F', searchTerm: 'wedding+photo+frame+album', color: '#f48fb1' },
+            { id: 'wd8', name: 'Cash & Gift Cards', emoji: '\uD83D\uDCB3', searchTerm: 'wedding+gift+card', color: '#ec407a' },
         ],
     },
     {

@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
     Alert,
     Animated,
+    Modal,
     ScrollView,
     StyleSheet,
     Text, TextInput,
@@ -14,6 +15,8 @@ import PhotoUploadGrid from '../../components/PhotoUploadGrid';
 import ScrollableDatePicker from '../../components/ScrollableDatePicker';
 
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import type { HeritageEmojiMap } from '../../constants/heritage';
+import { HERITAGE_OPTIONS, formatHeritageDisplay, formatHeritageWithFlags } from '../../constants/heritage';
 import { useFormContext } from '../context/FormContext';
 import { COLOR_SCHEMES } from "../data/utils/colors";
 import { getPopulationForCity } from '../data/utils/populations';
@@ -84,6 +87,7 @@ export default function FormScreen({ navigation, route }: Props) {
     // Initialize state from context (or defaults for testing)
     const [theme, setTheme] = useState<ThemeName>(savedFormData.theme as ThemeName || "green");
     const [mode, setMode] = useState<'baby' | 'birthday'>(savedFormData.mode === 'birthday' ? 'birthday' : 'baby');
+    const [nameGold, setNameGold] = useState(false);
 
     // Cascading glow animation for color palette
     const glowAnims = useRef(
@@ -146,6 +150,12 @@ export default function FormScreen({ navigation, route }: Props) {
             if (savedFormData.fatherName) setFatherName(savedFormData.fatherName);
             if (savedFormData.email) setEmail(savedFormData.email);
             if (savedFormData.hometown) setHometown(savedFormData.hometown);
+            if (savedFormData.heritage) setSelectedHeritages(
+                typeof savedFormData.heritage === 'string' && savedFormData.heritage
+                    ? [savedFormData.heritage]
+                    : Array.isArray(savedFormData.heritage) ? savedFormData.heritage : []
+            );
+            if (savedFormData.nationality) setNationality(savedFormData.nationality);
             if (savedFormData.dobDate) setDobDate(savedFormData.dobDate);
             if (savedFormData.birthTime) setBirthTime(savedFormData.birthTime);
             if (savedFormData.weightLb) setWeightLb(savedFormData.weightLb);
@@ -182,6 +192,10 @@ export default function FormScreen({ navigation, route }: Props) {
     const [fatherName, setFatherName] = useState("Jack Sample");
     const [email, setEmail] = useState(""); // For marketing
     const [hometown, setHometown] = useState("Kansas City, MO");
+    const [selectedHeritages, setSelectedHeritages] = useState<string[]>([]);
+    const [heritageEmojis, setHeritageEmojis] = useState<HeritageEmojiMap>({});
+    const [showHeritageModal, setShowHeritageModal] = useState(false);
+    const [nationality, setNationality] = useState("");
     const [dobDate, setDobDate] = useState<Date>(new Date(2026, 1, 14)); // Feb 14, 2026
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [birthTime, setBirthTime] = useState<Date>(new Date()); // Time of birth
@@ -222,6 +236,9 @@ export default function FormScreen({ navigation, route }: Props) {
             fatherName,
             email,
             hometown,
+            heritage: formatHeritageDisplay(selectedHeritages, heritageEmojis),
+            heritageWithFlags: formatHeritageWithFlags(selectedHeritages, heritageEmojis),
+            nationality,
             dobDate,
             birthTime,
             weightLb,
@@ -231,7 +248,7 @@ export default function FormScreen({ navigation, route }: Props) {
             snapshot,
             population,
         });
-    }, [theme, mode, babyFirst, babyMiddle, babyLast, babies, babyCount, motherName, fatherName, email, hometown, dobDate, birthTime, weightLb, weightOz, lengthIn, photoUris, snapshot, population]);
+    }, [theme, mode, babyFirst, babyMiddle, babyLast, babies, babyCount, motherName, fatherName, email, hometown, selectedHeritages, heritageEmojis, nationality, dobDate, birthTime, weightLb, weightOz, lengthIn, photoUris, snapshot, population]);
 
     useEffect(() => {
         const timeoutId = setTimeout(async () => {
@@ -438,6 +455,9 @@ export default function FormScreen({ navigation, route }: Props) {
             theme,
             motherName: motherName.trim(),
             fatherName: fatherName.trim(),
+            heritage: formatHeritageDisplay(selectedHeritages, heritageEmojis) || undefined,
+            heritageWithFlags: formatHeritageWithFlags(selectedHeritages, heritageEmojis) || undefined,
+            nationality: nationality.trim() || undefined,
             email: email.trim(),
             hometown: hometown.trim(),
             dobISO: `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`,
@@ -493,6 +513,7 @@ export default function FormScreen({ navigation, route }: Props) {
         payload.population = finalPopulation;
         // Letter to Baby
         payload.jointLetter = letterToBaby;
+        payload.nameGold = nameGold;
         navigation.navigate('Preview', payload);
     }
 
@@ -615,6 +636,109 @@ export default function FormScreen({ navigation, route }: Props) {
                 placeholderTextColor="#999"
                 value={fatherName}
                 onChangeText={setFatherName}
+            />
+
+            {/* Heritage */}
+            <Text style={styles.label}>Heritage (optional)</Text>
+            <TouchableOpacity
+                style={styles.dropdown}
+                onPress={() => setShowHeritageModal(true)}
+            >
+                <Text style={selectedHeritages.length > 0 ? styles.dropdownText : styles.dropdownPlaceholder}>
+                    {selectedHeritages.length > 0 ? formatHeritageDisplay(selectedHeritages, heritageEmojis) : 'Select heritage(s)...'}
+                </Text>
+                <Text style={styles.dropdownArrow}>▼</Text>
+            </TouchableOpacity>
+
+            {/* Heritage Multi-Select Modal */}
+            <Modal visible={showHeritageModal} transparent animationType="slide">
+                <View style={styles.heritageModalOverlay}>
+                    <View style={styles.heritageModalContent}>
+                        <Text style={styles.heritageModalTitle}>Select Heritage(s)</Text>
+                        <Text style={styles.heritageModalSubtitle}>Tap to select · pick an emoji per heritage</Text>
+                        <ScrollView style={styles.heritageModalScroll}>
+                            {HERITAGE_OPTIONS.map(option => {
+                                const isSelected = selectedHeritages.includes(option.id);
+                                const chosenEmoji = heritageEmojis[option.id] || option.symbols[0];
+                                return (
+                                    <TouchableOpacity
+                                        key={option.id}
+                                        style={[
+                                            styles.heritageModalOption,
+                                            isSelected && styles.heritageModalOptionSelected
+                                        ]}
+                                        onPress={() => {
+                                            if (isSelected) {
+                                                setSelectedHeritages(prev => prev.filter(id => id !== option.id));
+                                                setHeritageEmojis((prev: HeritageEmojiMap) => { const next = { ...prev }; delete next[option.id]; return next; });
+                                            } else {
+                                                setSelectedHeritages(prev => [...prev, option.id]);
+                                                setHeritageEmojis((prev: HeritageEmojiMap) => ({ ...prev, [option.id]: option.symbols[0] }));
+                                            }
+                                        }}
+                                    >
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                            <Text style={[
+                                                styles.heritageModalOptionText,
+                                                isSelected && styles.heritageModalOptionTextSelected
+                                            ]}>
+                                                {chosenEmoji}  {option.label}
+                                            </Text>
+                                        </View>
+                                        {isSelected && (
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                                                {option.symbols.map((sym, i) => (
+                                                    <TouchableOpacity
+                                                        key={i}
+                                                        onPress={(e) => {
+                                                            e.stopPropagation?.();
+                                                            setHeritageEmojis((prev: HeritageEmojiMap) => ({ ...prev, [option.id]: sym }));
+                                                        }}
+                                                        style={{
+                                                            width: 28, height: 28,
+                                                            borderRadius: 14,
+                                                            alignItems: 'center', justifyContent: 'center',
+                                                            backgroundColor: chosenEmoji === sym ? 'rgba(255,255,255,0.3)' : 'transparent',
+                                                            borderWidth: chosenEmoji === sym ? 1.5 : 0,
+                                                            borderColor: '#fff',
+                                                        }}
+                                                    >
+                                                        <Text style={{ fontSize: 16 }}>{sym}</Text>
+                                                    </TouchableOpacity>
+                                                ))}
+                                                <Text style={[styles.heritageCheckmark, { marginLeft: 4 }]}>✓</Text>
+                                            </View>
+                                        )}
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </ScrollView>
+                        {selectedHeritages.length > 0 && (
+                            <TouchableOpacity
+                                style={styles.heritageClearButton}
+                                onPress={() => { setSelectedHeritages([]); setHeritageEmojis({}); }}
+                            >
+                                <Text style={styles.heritageClearButtonText}>Clear All</Text>
+                            </TouchableOpacity>
+                        )}
+                        <TouchableOpacity
+                            style={styles.heritageModalDone}
+                            onPress={() => setShowHeritageModal(false)}
+                        >
+                            <Text style={styles.heritageModalDoneText}>Done</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Nationality */}
+            <Text style={styles.label}>Nationality (optional)</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="e.g., American"
+                placeholderTextColor="#999"
+                value={nationality}
+                onChangeText={setNationality}
             />
 
             {/* Hometown */}
@@ -834,6 +958,23 @@ export default function FormScreen({ navigation, route }: Props) {
             </View>
 
             {/* Spelling Reminder */}
+            <Text style={styles.label}>Name Style</Text>
+            <View style={styles.toggleGroup}>
+                <TouchableOpacity
+                    style={[styles.toggleBtn, !nameGold && styles.toggleActive]}
+                    onPress={() => setNameGold(false)}
+                >
+                    <Text style={[styles.toggleText, !nameGold && styles.toggleActiveText]}>White</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.toggleBtn, nameGold && { backgroundColor: '#FFD700' }]}
+                    onPress={() => setNameGold(true)}
+                >
+                    <Text style={[styles.toggleText, nameGold && { color: '#333' }]}>✨ Gold</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Spelling Reminder - Original */}
             <View style={styles.spellingReminder}>
                 <Text style={styles.spellingReminderEmoji}>{"\uD83D\uDC8E"}</Text>
                 <Text style={styles.spellingReminderText}>
@@ -1152,6 +1293,106 @@ const styles = StyleSheet.create({
         color: 'rgba(255,255,255,0.6)',
         fontSize: 13,
         fontWeight: '600',
+    },
+
+    // Heritage dropdown
+    dropdown: {
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        padding: 12,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    dropdownText: {
+        fontSize: 16,
+        color: '#333',
+        flex: 1,
+    },
+    dropdownPlaceholder: {
+        fontSize: 16,
+        color: '#999',
+        flex: 1,
+    },
+    dropdownArrow: {
+        fontSize: 12,
+        color: '#666',
+    },
+    heritageModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    heritageModalContent: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 20,
+        width: '85%',
+        maxHeight: '70%',
+    },
+    heritageModalTitle: {
+        fontSize: 20,
+        fontWeight: '900',
+        color: '#333',
+        textAlign: 'center',
+        marginBottom: 4,
+    },
+    heritageModalSubtitle: {
+        fontSize: 14,
+        color: '#999',
+        textAlign: 'center',
+        marginBottom: 12,
+    },
+    heritageModalScroll: {
+        maxHeight: 300,
+    },
+    heritageModalOption: {
+        padding: 14,
+        borderRadius: 8,
+        marginBottom: 8,
+        backgroundColor: '#f5f5f5',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    heritageModalOptionSelected: {
+        backgroundColor: '#000080',
+    },
+    heritageModalOptionText: {
+        fontSize: 16,
+        color: '#333',
+        flex: 1,
+    },
+    heritageModalOptionTextSelected: {
+        color: '#fff',
+    },
+    heritageCheckmark: {
+        fontSize: 18,
+        color: '#fff',
+        fontWeight: '900',
+    },
+    heritageClearButton: {
+        marginTop: 8,
+        padding: 10,
+        alignItems: 'center',
+    },
+    heritageClearButtonText: {
+        color: '#FF3B30',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    heritageModalDone: {
+        marginTop: 8,
+        padding: 14,
+        backgroundColor: '#000080',
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    heritageModalDoneText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '900',
     },
 
 });

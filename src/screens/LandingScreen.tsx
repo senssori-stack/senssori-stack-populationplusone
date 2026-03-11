@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
@@ -21,6 +21,8 @@ export default function LandingScreen({ navigation }: Props) {
     const tapCountRef = useRef(0);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const pulseAnim = useRef(new Animated.Value(1)).current;
+    const [announcementsOpen, setAnnouncementsOpen] = useState(false);
+    const [allThingsBabyOpen, setAllThingsBabyOpen] = useState(false);
 
     useEffect(() => {
         Animated.loop(
@@ -103,85 +105,99 @@ export default function LandingScreen({ navigation }: Props) {
 
                     <Text style={styles.sectionTitle}>What would you like to create?</Text>
 
-                    {/* Card 1: New Baby Announcement */}
+                    {/* Build An Announcement — collapsible group */}
                     <TouchableOpacity
                         style={styles.cardButton}
-                        onPress={() => navigation.navigate('Form')}
+                        onPress={() => setAnnouncementsOpen(!announcementsOpen)}
                         activeOpacity={0.85}
                     >
                         <View style={styles.cardContent}>
-                            <View style={styles.cardIconBox}>
-                                <Text style={styles.cardEmoji}>👶</Text>
+                            <View style={[styles.cardIconBox, { backgroundColor: '#000060' }]}>
+                                <Text style={styles.cardEmoji}>📣</Text>
                             </View>
                             <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Newborn Baby Announcement</Text>
+                                <Text style={styles.cardTitle}>Create Your Announcement</Text>
+                                <Text style={{ fontSize: 12, color: '#666', marginTop: 2, fontWeight: '700' }}>
+                                    {announcementsOpen ? 'Tap to collapse' : 'Baby • Birthday • Graduation • Wedding & more'}
+                                </Text>
                             </View>
+                            <Text style={{ fontSize: 18, color: '#000080', fontWeight: '700' }}>{announcementsOpen ? '▼' : '▶'}</Text>
                         </View>
                     </TouchableOpacity>
 
-                    {/* Card 2: Birthday Announcement */}
-                    <TouchableOpacity
-                        style={styles.cardButton}
-                        onPress={() => navigation.navigate('BirthdayForm')}
-                        activeOpacity={0.85}
-                    >
-                        <View style={styles.cardContent}>
-                            <View style={styles.cardIconBox}>
-                                <Text style={styles.cardEmoji}>🎂</Text>
-                            </View>
-                            <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Birthday Announcement</Text>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
+                    {announcementsOpen && (
+                        <View style={styles.announcementGroup}>
+                            {/* Card 1: New Baby Announcement */}
+                            <TouchableOpacity
+                                style={styles.subCardButton}
+                                onPress={() => navigation.navigate('Form')}
+                                activeOpacity={0.85}
+                            >
+                                <Text style={styles.subCardEmoji}>👶</Text>
+                                <Text style={styles.subCardTitle}>Newborn Baby</Text>
+                            </TouchableOpacity>
 
-                    {/* Card 3: Graduation Announcement */}
-                    <TouchableOpacity
-                        style={styles.cardButton}
-                        onPress={() => navigation.navigate('GraduationForm')}
-                        activeOpacity={0.85}
-                    >
-                        <View style={styles.cardContent}>
-                            <View style={styles.cardIconBox}>
-                                <Text style={styles.cardEmoji}>🎓</Text>
-                            </View>
-                            <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Graduation Announcement</Text>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
+                            {/* Card 2: Birthday Announcement */}
+                            <TouchableOpacity
+                                style={styles.subCardButton}
+                                onPress={() => navigation.navigate('BirthdayForm')}
+                                activeOpacity={0.85}
+                            >
+                                <Text style={styles.subCardEmoji}>🎂</Text>
+                                <Text style={styles.subCardTitle}>Birthday</Text>
+                            </TouchableOpacity>
 
-                    {/* Card 4: Anniversary Announcement */}
-                    <TouchableOpacity
-                        style={styles.cardButton}
-                        onPress={() => navigation.navigate('AnniversaryForm')}
-                        activeOpacity={0.85}
-                    >
-                        <View style={styles.cardContent}>
-                            <View style={styles.cardIconBox}>
-                                <Text style={styles.cardEmoji}>💍</Text>
-                            </View>
-                            <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Anniversary Announcement</Text>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
+                            {/* Card 3: Graduation Announcement */}
+                            <TouchableOpacity
+                                style={styles.subCardButton}
+                                onPress={() => navigation.navigate('GraduationForm')}
+                                activeOpacity={0.85}
+                            >
+                                <Text style={styles.subCardEmoji}>🎓</Text>
+                                <Text style={styles.subCardTitle}>Graduation</Text>
+                            </TouchableOpacity>
 
-                    {/* Card 5: Life Milestones */}
-                    <TouchableOpacity
-                        style={styles.cardButton}
-                        onPress={() => navigation.navigate('LifeMilestones')}
-                        activeOpacity={0.85}
-                    >
-                        <View style={styles.cardContent}>
-                            <View style={styles.cardIconBox}>
-                                <Text style={styles.cardEmoji}>🎉</Text>
-                            </View>
-                            <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Life Milestones</Text>
-                            </View>
+                            {/* Card 4a: Wedding Announcement */}
+                            <TouchableOpacity
+                                style={styles.subCardButton}
+                                onPress={() => navigation.navigate('WeddingForm')}
+                                activeOpacity={0.85}
+                            >
+                                <Text style={styles.subCardEmoji}>💒</Text>
+                                <Text style={styles.subCardTitle}>Wedding</Text>
+                            </TouchableOpacity>
+
+                            {/* Card 4b: Anniversary Announcement */}
+                            <TouchableOpacity
+                                style={styles.subCardButton}
+                                onPress={() => navigation.navigate('AnniversaryForm')}
+                                activeOpacity={0.85}
+                            >
+                                <Text style={styles.subCardEmoji}>💍</Text>
+                                <Text style={styles.subCardTitle}>Anniversary</Text>
+                            </TouchableOpacity>
+
+                            {/* Card 4c: Business Anniversary */}
+                            <TouchableOpacity
+                                style={styles.subCardButton}
+                                onPress={() => navigation.navigate('BusinessAnniversaryForm')}
+                                activeOpacity={0.85}
+                            >
+                                <Text style={styles.subCardEmoji}>🍺</Text>
+                                <Text style={styles.subCardTitle}>Business Anniversary</Text>
+                            </TouchableOpacity>
+
+                            {/* Card 5: Life Milestones */}
+                            <TouchableOpacity
+                                style={styles.subCardButton}
+                                onPress={() => navigation.navigate('LifeMilestones')}
+                                activeOpacity={0.85}
+                            >
+                                <Text style={styles.subCardEmoji}>🎉</Text>
+                                <Text style={styles.subCardTitle}>Life Milestones</Text>
+                            </TouchableOpacity>
                         </View>
-                    </TouchableOpacity>
+                    )}
 
                     {/* Divider Gap */}
                     <View style={styles.sectionGap} />
@@ -198,9 +214,55 @@ export default function LandingScreen({ navigation }: Props) {
                             </View>
                             <View style={styles.cardTextContainer}>
                                 <Text style={styles.cardTitle}>Written in the Stars</Text>
+                                <Text style={{ fontSize: 12, color: '#666', marginTop: 2, fontWeight: '700' }}>Astrology + Horoscope + Natal Chart + more</Text>
                             </View>
                         </View>
                     </TouchableOpacity>
+
+                    {/* All Things Baby — collapsible group */}
+                    <TouchableOpacity
+                        style={styles.cardButton}
+                        onPress={() => setAllThingsBabyOpen(!allThingsBabyOpen)}
+                        activeOpacity={0.85}
+                    >
+                        <View style={styles.cardContent}>
+                            <View style={[styles.cardIconBox, { backgroundColor: '#1a1040' }]}>
+                                <Text style={styles.cardEmoji}>👶</Text>
+                            </View>
+                            <View style={styles.cardTextContainer}>
+                                <Text style={styles.cardTitle}>All Things Baby</Text>
+                                <Text style={{ fontSize: 12, color: '#666', marginTop: 2, fontWeight: '700' }}>
+                                    {allThingsBabyOpen ? 'Tap to collapse' : 'Baby Hub • Milestone Tracker • Growth Chart • Bedtime Stories'}
+                                </Text>
+                            </View>
+                            <Text style={{ fontSize: 18, color: '#000080', fontWeight: '700' }}>{allThingsBabyOpen ? '▼' : '▶'}</Text>
+                        </View>
+                    </TouchableOpacity>
+
+                    {allThingsBabyOpen && (
+                        <View style={styles.announcementGroup}>
+                            <TouchableOpacity
+                                style={styles.subCardButton}
+                                onPress={() => navigation.navigate('AllThingsBaby')}
+                                activeOpacity={0.85}
+                            >
+                                <Text style={styles.subCardEmoji}>🍼</Text>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.subCardTitle}>Baby Hub</Text>
+                                    <Text style={{ fontSize: 10, color: '#888', marginTop: 1, fontWeight: '700' }}>Milestone Tracker + Growth Chart + Bedtime Stories + More</Text>
+                                </View>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.subCardButton}
+                                onPress={() => navigation.navigate('JumpstartAmericanDream')}
+                                activeOpacity={0.85}
+                            >
+                                <Text style={styles.subCardEmoji}>🇺🇸</Text>
+                                <Text style={styles.subCardTitle}>Jumpstart the American Dream</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
 
                     {/* Card 4: Just For Fun */}
                     <TouchableOpacity
@@ -214,6 +276,7 @@ export default function LandingScreen({ navigation }: Props) {
                             </View>
                             <View style={styles.cardTextContainer}>
                                 <Text style={styles.cardTitle}>Just For Fun</Text>
+                                <Text style={{ fontSize: 12, color: '#666', marginTop: 2, fontWeight: '700' }}>Fun Facts About Your Birthday</Text>
                             </View>
                         </View>
                     </TouchableOpacity>
@@ -230,54 +293,6 @@ export default function LandingScreen({ navigation }: Props) {
                             </View>
                             <View style={styles.cardTextContainer}>
                                 <Text style={styles.cardTitle}>Gift Suggestions</Text>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
-
-                    {/* All Things Baby */}
-                    <TouchableOpacity
-                        style={styles.cardButton}
-                        onPress={() => navigation.navigate('AllThingsBaby')}
-                        activeOpacity={0.85}
-                    >
-                        <View style={styles.cardContent}>
-                            <View style={[styles.cardIconBox, { backgroundColor: '#1a1040' }]}>
-                                <Text style={styles.cardEmoji}>👶</Text>
-                            </View>
-                            <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>All Things Baby</Text>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
-
-                    {/* Jumpstart the American Dream */}
-                    <TouchableOpacity
-                        style={styles.cardButton}
-                        onPress={() => navigation.navigate('JumpstartAmericanDream')}
-                        activeOpacity={0.85}
-                    >
-                        <View style={styles.cardContent}>
-                            <View style={[styles.cardIconBox, { backgroundColor: '#001f3f' }]}>
-                                <Text style={styles.cardEmoji}>🇺🇸</Text>
-                            </View>
-                            <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Jumpstart the American Dream</Text>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
-
-                    {/* Build Your Family Tree */}
-                    <TouchableOpacity
-                        style={styles.cardButton}
-                        onPress={() => navigation.navigate('FamilyTreeIntro')}
-                        activeOpacity={0.85}
-                    >
-                        <View style={styles.cardContent}>
-                            <View style={styles.cardIconBox}>
-                                <Text style={styles.cardEmoji}>🌳</Text>
-                            </View>
-                            <View style={styles.cardTextContainer}>
-                                <Text style={styles.cardTitle}>Build Your Family Tree</Text>
                             </View>
                         </View>
                     </TouchableOpacity>
@@ -452,5 +467,31 @@ const styles = StyleSheet.create({
     },
     sectionGap: {
         height: 24,
+    },
+    announcementGroup: {
+        marginBottom: 8,
+        paddingLeft: 12,
+    },
+    subCardButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.92)',
+        borderRadius: 12,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        marginBottom: 10,
+        borderLeftWidth: 4,
+        borderLeftColor: '#000080',
+    },
+    subCardEmoji: {
+        fontSize: 24,
+        width: 40,
+        textAlign: 'center',
+    },
+    subCardTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#000080',
+        flex: 1,
     },
 });

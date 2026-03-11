@@ -16,6 +16,9 @@ type Props = {
     personName?: string;
     babyCount?: number; // 1 = single (+1), 2 = twins (+2), 3 = triplets (+3)
     dobISO?: string; // ISO date string for EST./year labels on pre-2020 dates
+    hidePlusLabel?: boolean; // Hide the +1/+2 label (e.g. for weddings)
+    isMemorial?: boolean; // Death announcement: shows -1 and "In Loving Memory"
+    nameGold?: boolean; // Render name in shiny gold
 };
 
 export default function SignFrontLandscape(props: Props) {
@@ -28,6 +31,9 @@ export default function SignFrontLandscape(props: Props) {
         personName = '',
         babyCount = 1,
         dobISO,
+        hidePlusLabel = false,
+        isMemorial = false,
+        nameGold = false,
     } = props;
 
     // ⚠️ DEFENSIVE: Coerce population to number — handles string, number, or undefined
@@ -45,7 +51,8 @@ export default function SignFrontLandscape(props: Props) {
     const displayYear = isPreYear2020 && dobISO ? new Date(dobISO + 'T00:00:00').getFullYear().toString() : null;
 
     const colors = COLOR_SCHEMES[theme] || COLOR_SCHEMES.green;
-    const plusLabel = `+${babyCount}`;
+    const plusLabel = isMemorial ? '-1' : `+${babyCount}`;
+    const weddingYear = hidePlusLabel && dobISO ? new Date(dobISO + 'T00:00:00').getFullYear().toString() : null;
 
     // ====== FIXED DIMENSIONS - LOCKED ======
     const displayWidth = LANDSCAPE_WIDTH * previewScale;
@@ -209,6 +216,26 @@ export default function SignFrontLandscape(props: Props) {
                         Welcome To
                     </Text>
 
+                    {/* MEMORIAL OVERLAY: "In Loving Memory" replaces "Welcome To" */}
+                    {isMemorial && (
+                        <Text style={[styles.text, {
+                            position: 'absolute',
+                            top: welcomeToLockedMargin,
+                            left: 0,
+                            right: 0,
+                            fontSize: welcomeToFontSize,
+                            color: '#FFFFFF',
+                            fontStyle: 'italic',
+                            fontWeight: '700',
+                            fontFamily: 'cursive',
+                            transform: [{ scaleX: 1.25 }],
+                            zIndex: 20,
+                            backgroundColor: colors.bg,
+                        }]}>
+                            In Loving Memory
+                        </Text>
+                    )}
+
                     {/* CITY, ST - SECONDARY RULE: Centers between Welcome To bottom and POPULATION top */}
                     <Text style={[styles.text, {
                         position: 'absolute',
@@ -247,13 +274,24 @@ export default function SignFrontLandscape(props: Props) {
                                 {population.toLocaleString()}
                             </Text>
                         )}
-                        <Text style={[styles.text, {
-                            fontSize: Math.round(welcomeToFontSize * 0.75),
-                            color: '#FFFFFF',
-                            marginTop: Math.round(welcomeToFontSize * -0.14)
-                        }]}>
-                            {plusLabel}
-                        </Text>
+                        {!hidePlusLabel && (
+                            <Text style={[styles.text, {
+                                fontSize: Math.round(welcomeToFontSize * 0.75),
+                                color: '#FFFFFF',
+                                marginTop: Math.round(welcomeToFontSize * -0.14)
+                            }]}>
+                                {plusLabel}
+                            </Text>
+                        )}
+                        {hidePlusLabel && weddingYear && (
+                            <Text style={[styles.text, {
+                                fontSize: Math.round(welcomeToFontSize * 0.55),
+                                color: '#FFFFFF',
+                                marginTop: Math.round(welcomeToFontSize * -0.14)
+                            }]}>
+                                Established {weddingYear}
+                            </Text>
+                        )}
                     </View>
 
                     {/* PERSON NAME - SECONDARY RULE: Centers between +1 bottom and photo top */}
@@ -263,7 +301,8 @@ export default function SignFrontLandscape(props: Props) {
                         left: 0,
                         right: 0,
                         fontSize: personNameFontSize,
-                        color: '#FFFFFF',
+                        color: nameGold ? '#FFD700' : '#FFFFFF',
+                        ...(nameGold ? { textShadowColor: '#B8860B', textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 4 } : {}),
                         transform: [{ translateY: -personNameFontSize / 2 }]
                     }]}>
                         {personName}

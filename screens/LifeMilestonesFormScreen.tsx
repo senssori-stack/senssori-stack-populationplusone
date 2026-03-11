@@ -276,6 +276,7 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
     const [editableMessage, setEditableMessage] = useState('');
     const [messageWasEdited, setMessageWasEdited] = useState(false);
     const [selectedColor, setSelectedColor] = useState<ThemeName>('green');
+    const [nameGold, setNameGold] = useState(false);
     const [loading, setLoading] = useState(false);
     const [population, setPopulation] = useState<number | null>(null);
 
@@ -576,6 +577,7 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
             frontOrientation: 'landscape',
             timeCapsuleOrientation: 'landscape',
             babyCount: isAnniversary ? 2 : 1,
+            nameGold,
         };
 
         setLoading(false);
@@ -1057,6 +1059,22 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
                         ))}
                     </View>
                 </View>
+            </View>
+
+            <Text style={styles.label}>Name Style</Text>
+            <View style={styles.toggleGroup}>
+                <TouchableOpacity
+                    style={[styles.toggleBtn, !nameGold && styles.toggleActive]}
+                    onPress={() => setNameGold(false)}
+                >
+                    <Text style={[styles.toggleText, !nameGold && styles.toggleActiveText]}>White</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.toggleBtn, nameGold && { backgroundColor: '#FFD700' }]}
+                    onPress={() => setNameGold(true)}
+                >
+                    <Text style={[styles.toggleText, nameGold && { color: '#333' }]}>✨ Gold</Text>
+                </TouchableOpacity>
             </View>
 
             {/* Build Button */}

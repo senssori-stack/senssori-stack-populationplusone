@@ -23,6 +23,13 @@ const FEATURES = [
         color: '#001f3f',
     },
     {
+        title: 'Build Your Family Tree',
+        subtitle: 'Create an interactive family tree',
+        emoji: '🌳',
+        route: 'FamilyTreeIntro' as const,
+        color: '#2e7d32',
+    },
+    {
         title: 'Baby Milestone Tracker',
         subtitle: 'Track developmental milestones by age',
         emoji: '📊',

@@ -17,6 +17,9 @@ export type PreviewParams = {
     fatherName?: string;
     email?: string; // For marketing
     hometown?: string;
+    heritage?: string;
+    heritageWithFlags?: string;
+    nationality?: string;
     dobISO?: string;
     weightLb?: string;
     weightOz?: string;
@@ -33,6 +36,18 @@ export type PreviewParams = {
     personName?: string; // For milestone mode - the person's full name
     message?: string; // Prewritten message for milestone mode
     babyCount?: number; // 1 = single, 2 = twins, 3 = triplets
+    hidePlusLabel?: boolean; // Hide the +1/+2 label on the front sign (e.g. for weddings)
+    hidePostcard?: boolean; // Hide postcard option (e.g. for business announcements)
+    nameGold?: boolean; // Render name text in shiny gold instead of white
+    isMemorial?: boolean; // Death announcement mode: shows -1 instead of +1, "In Loving Memory" instead of "Welcome To"
+    dateOfDeath?: string; // For memorial announcements
+    dateOfBirthOriginal?: string; // Original DOB (ISO) for memorial THEN column (since dobISO = date of death for population)
+    memorialPrayer?: string; // Prayer or poem for memorial card back
+    memorialCardStyle?: 'classic' | 'dove' | 'floral' | 'simple' | 'cross'; // Memorial card template style
+    motherLetter?: string;
+    fatherLetter?: string;
+    jointLetter?: string;
+    lifePathNumber?: string;
 };
 
 export type MemorialParams = {
@@ -74,12 +89,15 @@ export type RootStackParamList = {
     Form: undefined;
     HospitalLogin: undefined;
     ObituaryForm: undefined;
+    DeathAnnouncementForm: undefined;
     MemorialPreview: MemorialParams;
     MemorialBack: MemorialParams;
     LifeMilestones: undefined;
     BirthdayForm: undefined;
     GraduationForm: undefined;
     AnniversaryForm: undefined;
+    WeddingForm: undefined;
+    BusinessAnniversaryForm: undefined;
     JustForFun: undefined;
     WrittenInTheStars: undefined;
     Generations: { birthDate: string };
@@ -92,7 +110,7 @@ export type RootStackParamList = {
     FamousBirthdays: { birthDate: string };
     ThenAndNow: { birthDate: string };
     SurnameSearch: { surname?: string };
-    FullAstrology: { birthDate: string; birthTime?: string; birthLocation?: string };
+    FullAstrology: { birthDate: string; birthTime?: string; birthLocation?: string; babyName?: string };
     Horoscope: { birthDate: string; birthTime?: string; birthLocation?: string };
     TipOfTheDay: { birthDate: string };
     Preview: PreviewParams;
@@ -130,9 +148,19 @@ export type RootStackParamList = {
     ChineseZodiac: { birthDate: string; birthTime?: string; birthLocation?: string };
     ZodiacCompatibility: { birthDate: string; birthTime?: string; birthLocation?: string };
     BirthMoonPhase: { birthDate: string; birthTime?: string; birthLocation?: string };
+    BirthSunPosition: { birthDate: string; birthTime?: string; birthLocation?: string };
     SpiritAnimal: { birthDate: string; birthTime?: string; birthLocation?: string };
+    AstrologyEducation: undefined;
     Chakra: { birthDate: string; birthTime?: string; birthLocation?: string };
     Element: { birthDate: string; birthTime?: string; birthLocation?: string };
     TarotBirthCard: { birthDate: string; birthTime?: string; birthLocation?: string };
     RetrogradeTracker: { birthDate: string; birthTime?: string; birthLocation?: string };
+    WeddingDatePlanner: { birthDate?: string; birthTime?: string; birthLocation?: string };
+    LifeEventsTiming: { birthDate?: string; birthTime?: string; birthLocation?: string };
+    WeddingRSVP: { weddingId: string };
+    WeddingRSVPDashboard: { weddingId: string; coupleName?: string };
+    SkyWheels: { birthDate: string; birthTime?: string; birthLocation?: string };
+    Astrocartography: { birthDate: string; birthTime?: string; birthLocation?: string };
+    FriendCompatibility: { birthDate: string; birthTime?: string; birthLocation?: string };
+    BabyRegistryPortal: undefined;
 };
