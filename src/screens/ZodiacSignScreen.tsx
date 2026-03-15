@@ -10,6 +10,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import RisingStars from '../../components/RisingStars';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ZodiacSign'>;
@@ -294,6 +295,7 @@ export default function ZodiacSignScreen({ navigation, route }: Props) {
     return (
         <LinearGradient colors={colors} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor={colors[0]} />
+            <RisingStars />
 
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 {/* Header */}

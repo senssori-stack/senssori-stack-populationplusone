@@ -1,8 +1,9 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useRef, useState } from 'react';
-import { PanResponder, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { PanResponder, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Circle, G, Line, Path, Rect, Svg, Text as SvgText } from 'react-native-svg';
+import RisingStars from '../../components/RisingStars';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BirthMoonPhase'>;
@@ -159,7 +160,66 @@ function getIlluminationPercent(moonAge: number): number {
 }
 
 export default function BirthMoonPhaseScreen({ route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const originalBirthDate = useMemo(() => new Date(route.params.birthDate), [route.params.birthDate]);
+    const [birthDate, setBirthDate] = useState(() => new Date(route.params.birthDate));
+
+    // ── Time Travel State ──
+    const [dayOffset, setDayOffset] = useState(0);
+    const dayOffsetRef = useRef(0);
+    const SLIDER_RANGE = 36525; // ±100 years
+    const sliderWRef = useRef(300);
+    const [sliderW, setSliderW] = useState(300);
+
+    const changeDate = useCallback((newOffset: number) => {
+        const clamped = Math.max(-SLIDER_RANGE, Math.min(SLIDER_RANGE, newOffset));
+        setDayOffset(clamped);
+        dayOffsetRef.current = clamped;
+        setBirthDate(new Date(originalBirthDate.getTime() + clamped * 86400000));
+        setMoonAgeOffset(0);
+        moonAgeOffsetRef.current = 0;
+    }, [originalBirthDate, SLIDER_RANGE]);
+
+    const sliderStartOffsetRef = useRef(0);
+    const timeSliderPan = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: () => true,
+            onPanResponderGrant: () => {
+                sliderStartOffsetRef.current = dayOffsetRef.current;
+            },
+            onPanResponderMove: (_, gesture) => {
+                const daysPerPixel = (2 * SLIDER_RANGE) / sliderWRef.current;
+                changeDate(sliderStartOffsetRef.current + gesture.dx * daysPerPixel);
+            },
+            onPanResponderRelease: () => { },
+        })
+    ).current;
+
+    const jumpToToday = useCallback(() => {
+        const today = new Date();
+        const offsetDays = (today.getTime() - originalBirthDate.getTime()) / 86400000;
+        setDayOffset(offsetDays);
+        dayOffsetRef.current = offsetDays;
+        setBirthDate(today);
+        setMoonAgeOffset(0);
+        moonAgeOffsetRef.current = 0;
+    }, [originalBirthDate]);
+
+    const formatOffset = (offset: number) => {
+        const absOffset = Math.abs(offset);
+        const sign = offset > 0 ? '+' : '−';
+        if (absOffset < 1) {
+            const hrs = Math.round(absOffset * 24);
+            return `${sign}${hrs} hr${hrs !== 1 ? 's' : ''} from birth`;
+        }
+        const totalDays = Math.round(absOffset);
+        if (totalDays < 365) return `${sign}${totalDays} day${totalDays !== 1 ? 's' : ''} from birth`;
+        const years = Math.floor(totalDays / 365.25);
+        const remDays = Math.round(totalDays - years * 365.25);
+        if (remDays === 0) return `${sign}${years} yr${years !== 1 ? 's' : ''} from birth`;
+        return `${sign}${years}y ${remDays}d from birth`;
+    };
+
     const moonAge = getMoonAge(birthDate);
     const phase = getPhase(moonAge);
     const moonSign = getMoonSign(birthDate);
@@ -297,12 +357,57 @@ export default function BirthMoonPhaseScreen({ route }: Props) {
     return (
         <LinearGradient colors={['#0a0a2a', '#1a0030', '#0d0d2b']} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#0a0a2a" />
+            <RisingStars />
             <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
                 <Text style={styles.mainTitle}>🌙 Your Birth Moon</Text>
                 <Text style={styles.birthDate}>
                     {birthDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </Text>
+
+                {/* ═══ TIME TRAVEL SLIDER ═══ */}
+                <View style={styles.sliderSection}>
+                    <Text style={styles.sliderTitle}>⏳ Time Travel</Text>
+                    <Text style={styles.sliderDateText}>
+                        {birthDate.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                    </Text>
+                    {dayOffset !== 0 && (
+                        <Text style={styles.sliderOffsetText}>{formatOffset(dayOffset)}</Text>
+                    )}
+                    <View
+                        style={styles.sliderTrackOuter}
+                        onLayout={(e) => { const w = e.nativeEvent.layout.width; sliderWRef.current = w; setSliderW(w); }}
+                        {...timeSliderPan.panHandlers}
+                    >
+                        <View style={styles.sliderTrack} />
+                        <View style={[styles.sliderCenterMark, { left: sliderW / 2 - 1 }]} />
+                        <View style={[styles.sliderThumb, { left: Math.max(0, Math.min(sliderW - 24, ((dayOffset + SLIDER_RANGE) / (2 * SLIDER_RANGE)) * sliderW - 12)) }]} />
+                    </View>
+                    <View style={styles.sliderLabelsRow}>
+                        <Text style={styles.sliderEndLabel}>−100 yrs</Text>
+                        <TouchableOpacity onPress={() => changeDate(0)}>
+                            <Text style={styles.sliderResetLabel}>⟲ Birth</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={jumpToToday}>
+                            <Text style={[styles.sliderResetLabel, { color: '#40E0D0' }]}>📅 Today</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.sliderEndLabel}>+100 yrs</Text>
+                    </View>
+                    <View style={styles.stepRow}>
+                        {[{ label: '5yr', d: 1826.25 }, { label: '1yr', d: 365.25 }, { label: '6mo', d: 182.625 }, { label: '1mo', d: 30.44 }, { label: '12h', d: 0.5 }, { label: '3h', d: 0.125 }].map(s => (
+                            <TouchableOpacity key={'m' + s.label} onPress={() => changeDate(dayOffset - s.d)} style={styles.stepBtn}>
+                                <Text style={styles.stepBtnText}>◀{s.label}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                    <View style={styles.stepRow}>
+                        {[{ label: '3h', d: 0.125 }, { label: '12h', d: 0.5 }, { label: '1mo', d: 30.44 }, { label: '6mo', d: 182.625 }, { label: '1yr', d: 365.25 }, { label: '5yr', d: 1826.25 }].map(s => (
+                            <TouchableOpacity key={'p' + s.label} onPress={() => changeDate(dayOffset + s.d)} style={styles.stepBtn}>
+                                <Text style={styles.stepBtnText}>{s.label}▶</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
 
                 {/* Moon Visual */}
                 <View style={styles.moonContainer}>
@@ -614,4 +719,18 @@ const styles = StyleSheet.create({
     phaseRowDesc: { fontSize: 11, color: 'rgba(255,255,255,0.4)' },
     orbitalWheelWrap: { alignItems: 'center', marginTop: 4, marginBottom: 4 },
     spinHint: { fontSize: 13, color: 'rgba(255,255,255,0.55)', textAlign: 'center', marginTop: 2 },
+    sliderSection: { marginBottom: 14, paddingHorizontal: 8, paddingVertical: 14, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' },
+    sliderTitle: { fontSize: 16, fontWeight: '800', color: '#FFD54F', textAlign: 'center', marginBottom: 4 },
+    sliderDateText: { fontSize: 14, fontWeight: '700', color: '#fff', textAlign: 'center', marginBottom: 2 },
+    sliderOffsetText: { fontSize: 12, fontWeight: '600', color: '#FFD54F', textAlign: 'center', marginBottom: 6 },
+    sliderTrackOuter: { height: 44, justifyContent: 'center', marginHorizontal: 4, marginVertical: 8 },
+    sliderTrack: { position: 'absolute', left: 0, right: 0, height: 4, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 2 },
+    sliderCenterMark: { position: 'absolute', width: 2, height: 20, backgroundColor: 'rgba(255,213,79,0.5)', borderRadius: 1, top: 12 },
+    sliderThumb: { position: 'absolute', width: 24, height: 24, borderRadius: 12, backgroundColor: '#FFD54F', borderWidth: 2, borderColor: '#fff', top: 10, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3 },
+    sliderLabelsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 4 },
+    sliderEndLabel: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.5)' },
+    sliderResetLabel: { fontSize: 13, fontWeight: '700', color: '#FFD54F' },
+    stepRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, gap: 4 },
+    stepBtn: { flex: 1, paddingVertical: 4, paddingHorizontal: 1, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center' },
+    stepBtnText: { fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.7)' },
 });

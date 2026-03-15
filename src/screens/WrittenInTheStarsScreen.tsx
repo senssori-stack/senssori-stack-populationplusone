@@ -1,7 +1,9 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+    Alert,
+    Animated,
     ScrollView,
     StatusBar,
     StyleSheet,
@@ -22,6 +24,57 @@ export default function WrittenInTheStarsScreen({ navigation }: Props) {
     const [birthLocation, setBirthLocation] = useState('');
     const [showLocationInput, setShowLocationInput] = useState(false);
 
+    // 7 rising stars animation
+    const stars = useRef(
+        Array.from({ length: 7 }, () => ({
+            y: new Animated.Value(0),
+            opacity: new Animated.Value(0),
+        }))
+    ).current;
+    const starConfigs = useRef(
+        Array.from({ length: 7 }, () => ({
+            left: `${8 + Math.random() * 84}%` as string,
+            size: 14 + Math.random() * 16,
+            delay: Math.random() * 800,
+        }))
+    ).current;
+
+    const startStarAnimation = () => {
+        stars.forEach((star, i) => {
+            Animated.sequence([
+                Animated.delay(starConfigs[i].delay),
+                Animated.parallel([
+                    Animated.timing(star.y, {
+                        toValue: -120 - Math.random() * 80,
+                        duration: 1800 + Math.random() * 600,
+                        useNativeDriver: true,
+                    }),
+                    Animated.sequence([
+                        Animated.timing(star.opacity, {
+                            toValue: 1,
+                            duration: 400,
+                            useNativeDriver: true,
+                        }),
+                        Animated.delay(800),
+                        Animated.timing(star.opacity, {
+                            toValue: 0.6,
+                            duration: 600,
+                            useNativeDriver: true,
+                        }),
+                    ]),
+                ]),
+            ]).start();
+        });
+    };
+
+    useEffect(() => {
+        Alert.alert(
+            '✨ Quick Tip!',
+            'EVERYTHING IN THIS SECTION RELIES UPON BIRTHDAY INFO!!!\n\nFor the best and most accurate results, please fill out ALL of your birth information — date, time, and city. The more we know, the more personalized your experience will be!',
+            [{ text: 'Got it!', style: 'default', onPress: startStarAnimation }]
+        );
+    }, []);
+
     const formattedDate = birthDate.toLocaleDateString(undefined, {
         month: 'long',
         day: 'numeric',
@@ -41,6 +94,23 @@ export default function WrittenInTheStarsScreen({ navigation }: Props) {
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 {/* Header */}
                 <View style={styles.header}>
+                    {/* Rising stars */}
+                    {stars.map((star, i) => (
+                        <Animated.Text
+                            key={`star-${i}`}
+                            style={{
+                                position: 'absolute',
+                                bottom: 0,
+                                left: starConfigs[i].left as any,
+                                fontSize: starConfigs[i].size,
+                                color: '#FFD700',
+                                opacity: star.opacity,
+                                transform: [{ translateY: star.y }],
+                            }}
+                        >
+                            ✦
+                        </Animated.Text>
+                    ))}
                     <Text style={styles.headerEmoji}>✨</Text>
                     <Text style={styles.mainTitle}>Written in the Stars</Text>
                     <Text style={styles.subtitle}>
@@ -73,7 +143,7 @@ export default function WrittenInTheStarsScreen({ navigation }: Props) {
                             value={birthLocation}
                             onChangeText={setBirthLocation}
                             placeholder="e.g. New York, Chicago, Los Angeles"
-                            placeholderTextColor="rgba(255,255,255,0.4)"
+                            placeholderTextColor="rgba(0,0,0,0.4)"
                             onBlur={() => setShowLocationInput(false)}
                             autoFocus
                         />
@@ -96,13 +166,13 @@ export default function WrittenInTheStarsScreen({ navigation }: Props) {
                 </View>
 
                 {/* ═══════════════════════════════════════════════ */}
-                {/* SECTION 1: YOUR CORE PROFILE                   */}
+                {/* SECTION 1: ALL ABOUT YOU                        */}
                 {/* ═══════════════════════════════════════════════ */}
                 <View style={styles.sectionHeader}>
                     <Text style={styles.sectionEmoji}>🌟</Text>
                     <View>
-                        <Text style={styles.sectionTitle}>Your Core Profile</Text>
-                        <Text style={styles.sectionSubtitle}>The essentials — start here</Text>
+                        <Text style={styles.sectionTitle}>All About You</Text>
+                        <Text style={styles.sectionSubtitle}>Your personality, symbols &amp; hidden layers</Text>
                     </View>
                 </View>
                 <View style={styles.buttonSection}>
@@ -143,6 +213,71 @@ export default function WrittenInTheStarsScreen({ navigation }: Props) {
                         <Text style={styles.featureEmoji}>🔢</Text>
                         <Text style={styles.featureTitle}>Your Numerology Numbers</Text>
                         <Text style={styles.featureDesc}>Life Path, Birthday, &amp; Personal Year</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.featureButton}
+                        onPress={() => navigation.navigate('ChineseZodiac', {
+                            birthDate: birthDate.toISOString(),
+                            birthTime: formattedTime,
+                            birthLocation: birthLocation || undefined,
+                        })}
+                    >
+                        <Text style={styles.featureEmoji}>🐉</Text>
+                        <Text style={styles.featureTitle}>Chinese Zodiac</Text>
+                        <Text style={styles.featureDesc}>Your animal sign, element, yin/yang &amp; compatibility</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.featureButton}
+                        onPress={() => navigation.navigate('SpiritAnimal', {
+                            birthDate: birthDate.toISOString(),
+                            birthTime: formattedTime,
+                            birthLocation: birthLocation || undefined,
+                        })}
+                    >
+                        <Text style={styles.featureEmoji}>🐾</Text>
+                        <Text style={styles.featureTitle}>Spirit Animal</Text>
+                        <Text style={styles.featureDesc}>Discover your zodiac spirit animal &amp; its wisdom</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.featureButton}
+                        onPress={() => navigation.navigate('Chakra', {
+                            birthDate: birthDate.toISOString(),
+                            birthTime: formattedTime,
+                            birthLocation: birthLocation || undefined,
+                        })}
+                    >
+                        <Text style={styles.featureEmoji}>🧘</Text>
+                        <Text style={styles.featureTitle}>Chakra Profile</Text>
+                        <Text style={styles.featureDesc}>Your zodiac chakra alignment &amp; healing guide</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.featureButton}
+                        onPress={() => navigation.navigate('Element', {
+                            birthDate: birthDate.toISOString(),
+                            birthTime: formattedTime,
+                            birthLocation: birthLocation || undefined,
+                        })}
+                    >
+                        <Text style={styles.featureEmoji}>🔥</Text>
+                        <Text style={styles.featureTitle}>Your Element</Text>
+                        <Text style={styles.featureDesc}>Fire, Earth, Air, or Water — deep dive into your element</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.featureButton}
+                        onPress={() => navigation.navigate('TarotBirthCard', {
+                            birthDate: birthDate.toISOString(),
+                            birthTime: formattedTime,
+                            birthLocation: birthLocation || undefined,
+                        })}
+                    >
+                        <Text style={styles.featureEmoji}>🃏</Text>
+                        <Text style={styles.featureTitle}>Tarot Birth Card</Text>
+                        <Text style={styles.featureDesc}>Your soul &amp; personality tarot cards revealed</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -241,7 +376,31 @@ export default function WrittenInTheStarsScreen({ navigation }: Props) {
 
                     <TouchableOpacity
                         style={styles.featureButton}
-                        onPress={() => navigation.navigate('BirthSunPosition', {
+                        onPress={() => navigation.navigate('SolarSystemTimeCapsule', {
+                            birthDate: birthDate.toISOString(),
+                            birthTime: formattedTime,
+                            birthLocation: birthLocation || undefined,
+                        })}
+                    >
+                        <Text style={styles.featureEmoji}>🪐</Text>
+                        <Text style={styles.featureTitle}>Solar System Time Capsule Wheel</Text>
+                        <Text style={styles.featureDesc}>Explore the full heliocentric solar system with planets, comets &amp; Voyager probes</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.featureButton} onPress={() => navigation.navigate('BiblicalWheels', {
+                            birthDate: birthDate.toISOString(),
+                            birthTime: formattedTime,
+                            birthLocation: birthLocation || undefined,
+                        })}
+                    >
+                        <Text style={styles.featureEmoji}>📜</Text>
+                        <Text style={styles.featureTitle}>Biblical Wheels</Text>
+                        <Text style={styles.featureDesc}>The ancient Hebrew cosmology — firmament, waters above, Earth disc, pillars &amp; Sheol</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.featureButton} onPress={() => navigation.navigate('BirthSunPosition', {
                             birthDate: birthDate.toISOString(),
                             birthTime: formattedTime,
                             birthLocation: birthLocation || undefined,
@@ -276,83 +435,6 @@ export default function WrittenInTheStarsScreen({ navigation }: Props) {
                         <Text style={styles.featureEmoji}>🌍</Text>
                         <Text style={styles.featureTitle}>Astrocartography</Text>
                         <Text style={styles.featureDesc}>Your birth chart mapped onto the globe — discover where your stars shine brightest</Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/* ═══════════════════════════════════════════════ */}
-                {/* SECTION 4: COSMIC IDENTITY                     */}
-                {/* ═══════════════════════════════════════════════ */}
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionEmoji}>🐾</Text>
-                    <View>
-                        <Text style={styles.sectionTitle}>Cosmic Identity</Text>
-                        <Text style={styles.sectionSubtitle}>Personality, archetypes &amp; spiritual layers</Text>
-                    </View>
-                </View>
-                <View style={styles.buttonSection}>
-                    <TouchableOpacity
-                        style={styles.featureButton}
-                        onPress={() => navigation.navigate('ChineseZodiac', {
-                            birthDate: birthDate.toISOString(),
-                            birthTime: formattedTime,
-                            birthLocation: birthLocation || undefined,
-                        })}
-                    >
-                        <Text style={styles.featureEmoji}>🐉</Text>
-                        <Text style={styles.featureTitle}>Chinese Zodiac</Text>
-                        <Text style={styles.featureDesc}>Your animal sign, element, yin/yang &amp; compatibility</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.featureButton}
-                        onPress={() => navigation.navigate('SpiritAnimal', {
-                            birthDate: birthDate.toISOString(),
-                            birthTime: formattedTime,
-                            birthLocation: birthLocation || undefined,
-                        })}
-                    >
-                        <Text style={styles.featureEmoji}>🐾</Text>
-                        <Text style={styles.featureTitle}>Spirit Animal</Text>
-                        <Text style={styles.featureDesc}>Discover your zodiac spirit animal &amp; its wisdom</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.featureButton}
-                        onPress={() => navigation.navigate('Chakra', {
-                            birthDate: birthDate.toISOString(),
-                            birthTime: formattedTime,
-                            birthLocation: birthLocation || undefined,
-                        })}
-                    >
-                        <Text style={styles.featureEmoji}>🧘</Text>
-                        <Text style={styles.featureTitle}>Chakra Profile</Text>
-                        <Text style={styles.featureDesc}>Your zodiac chakra alignment &amp; healing guide</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.featureButton}
-                        onPress={() => navigation.navigate('Element', {
-                            birthDate: birthDate.toISOString(),
-                            birthTime: formattedTime,
-                            birthLocation: birthLocation || undefined,
-                        })}
-                    >
-                        <Text style={styles.featureEmoji}>🔥</Text>
-                        <Text style={styles.featureTitle}>Your Element</Text>
-                        <Text style={styles.featureDesc}>Fire, Earth, Air, or Water — deep dive into your element</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.featureButton}
-                        onPress={() => navigation.navigate('TarotBirthCard', {
-                            birthDate: birthDate.toISOString(),
-                            birthTime: formattedTime,
-                            birthLocation: birthLocation || undefined,
-                        })}
-                    >
-                        <Text style={styles.featureEmoji}>🃏</Text>
-                        <Text style={styles.featureTitle}>Tarot Birth Card</Text>
-                        <Text style={styles.featureDesc}>Your soul &amp; personality tarot cards revealed</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -497,7 +579,8 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     mainTitle: {
-        fontSize: 30,
+        fontSize: 40,
+        fontFamily: 'cursive',
         fontWeight: 'bold',
         color: '#fff',
         textAlign: 'center',
@@ -527,29 +610,29 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
     dateButton: {
-        backgroundColor: 'rgba(255,255,255,0.12)',
+        backgroundColor: '#f5f5f5',
         borderRadius: 12,
         paddingVertical: 14,
         paddingHorizontal: 16,
         marginBottom: 6,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.2)',
+        borderColor: '#ddd',
     },
     dateButtonText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#fff',
+        color: '#333',
         textAlign: 'center',
     },
     locationInput: {
-        backgroundColor: 'rgba(255,255,255,0.12)',
+        backgroundColor: '#f5f5f5',
         borderRadius: 12,
         paddingVertical: 14,
         paddingHorizontal: 16,
         marginBottom: 6,
         borderWidth: 1,
-        borderColor: 'rgba(255,215,0,0.5)',
-        color: '#fff',
+        borderColor: '#4a148c',
+        color: '#333',
         fontSize: 16,
         textAlign: 'center',
     },

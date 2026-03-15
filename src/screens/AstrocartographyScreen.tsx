@@ -14,6 +14,7 @@ import {
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Circle, Defs, G, Line, Path, Rect, Stop, Svg, LinearGradient as SvgLinearGradient, Text as SvgText } from 'react-native-svg';
+import RisingStars from '../../components/RisingStars';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Astrocartography'>;
@@ -605,6 +606,7 @@ export default function AstrocartographyScreen({ route }: Props) {
     return (
         <LinearGradient colors={['#0a0a2e', '#0d1b3e', '#0a0a2e']} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#0a0a2e" />
+            <RisingStars />
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
                 {/* Hero */}

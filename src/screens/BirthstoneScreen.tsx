@@ -1,15 +1,16 @@
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import {
-    View,
-    Text,
+    Dimensions,
     ScrollView,
-    TouchableOpacity,
-    StyleSheet,
     StatusBar,
-    Dimensions
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import RisingStars from '../../components/RisingStars';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Birthstone'>;
@@ -167,6 +168,7 @@ export default function BirthstoneScreen({ navigation, route }: Props) {
     return (
         <LinearGradient colors={[stone.hex, adjustColor(stone.hex, 40), adjustColor(stone.hex, 80)]} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor={stone.hex} />
+            <RisingStars />
 
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 {/* Header */}

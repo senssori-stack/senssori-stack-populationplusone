@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { GestureHandlerRootView, PanGestureHandler, PinchGestureHandler, State, TapGestureHandler } from 'react-native-gesture-handler';
 import ViewShot from 'react-native-view-shot';
+import BaseballCard from '../../components/BaseballCard';
+import BaseballCardBack from '../../components/BaseballCardBack';
 import CartModal from '../../components/CartModal';
 import DownloadModal, { DownloadItem } from '../../components/DownloadModal';
 import TradingCardLogo from '../../components/TradingCardLogo';
@@ -102,12 +104,17 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
     const hometown = params.hometown || 'Hometown, USA';
     const heritage = params.heritage || '';
     const nationality = params.nationality || '';
-    const dobDate = params.dobISO ? new Date(params.dobISO + 'T00:00:00') : new Date();
-    const birthDateStr = dobDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const dobISO = dobDate.toISOString().split('T')[0];
-    const weightLb = params.weightLb || '7';
-    const weightOz = params.weightOz || '8';
-    const lengthIn = params.lengthIn || '20';
+    const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const dobParts = params.dobISO ? params.dobISO.split('-').map(Number) : null;
+    const dobYear = dobParts ? dobParts[0] : new Date().getFullYear();
+    const dobMonth = dobParts ? dobParts[1] : new Date().getMonth() + 1;
+    const dobDay = dobParts ? dobParts[2] : new Date().getDate();
+    const dobDate = new Date(dobYear, dobMonth - 1, dobDay);
+    const birthDateStr = `${MONTH_SHORT[dobMonth - 1]} ${dobDay}, ${dobYear}`;
+    const dobISO = params.dobISO || `${dobYear}-${String(dobMonth).padStart(2, '0')}-${String(dobDay).padStart(2, '0')}`;
+    const weightLb = params.weightLb || '';
+    const weightOz = params.weightOz || '';
+    const lengthIn = params.lengthIn || '';
 
     // Fun stats
     const zodiac = getZodiacFromISO(dobISO);
@@ -124,10 +131,10 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
     const tarot = getTarotBirthCard(dobDate);
 
     // Memorial-specific data
-    const actualDobDate = params.dateOfBirthOriginal ? new Date(params.dateOfBirthOriginal + 'T00:00:00') : dobDate;
-    const actualDobStr = actualDobDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    const dodDate = params.dateOfDeath ? new Date(params.dateOfDeath + 'T00:00:00') : null;
-    const dodStr = dodDate ? dodDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+    const actualDobParts = params.dateOfBirthOriginal ? params.dateOfBirthOriginal.split('-').map(Number) : [dobYear, dobMonth, dobDay];
+    const actualDobStr = `${MONTH_SHORT[actualDobParts[1] - 1]} ${actualDobParts[2]}, ${actualDobParts[0]}`;
+    const dodParts = params.dateOfDeath ? params.dateOfDeath.split('-').map(Number) : null;
+    const dodStr = dodParts ? `${MONTH_SHORT[dodParts[1] - 1]} ${dodParts[2]}, ${dodParts[0]}` : '';
     const memorialPrayer = params.memorialPrayer || params.jointLetter || '';
     // Parse first name from fullName for memorial display
     const firstNameOnly = fullName.split(' ')[0] || fullName;
@@ -155,6 +162,9 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
     // Refs for capturing
     const frontRef = useRef<ViewShot | null>(null);
     const backRef = useRef<ViewShot | null>(null);
+    // Offscreen full-size refs for high-res download
+    const downloadFrontRef = useRef<ViewShot | null>(null);
+    const downloadBackRef = useRef<ViewShot | null>(null);
 
     // Modal state
     const [showDownloadModal, setShowDownloadModal] = useState(false);
@@ -182,12 +192,12 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
         { id: 'babycard-back', label: isMemorial ? 'Memorial Card Back (Prayer)' : 'Card Back (Stats)', category: 'babycard' },
     ];
 
-    // Simple capture function for a single view
+    // Simple capture function — use offscreen full-size refs for download
     const captureView = async (itemId: string): Promise<string | null> => {
         try {
             let ref: React.RefObject<ViewShot | null> | null = null;
-            if (itemId === 'babycard-front') ref = frontRef;
-            if (itemId === 'babycard-back') ref = backRef;
+            if (itemId === 'babycard-front') ref = downloadFrontRef;
+            if (itemId === 'babycard-back') ref = downloadBackRef;
 
             if (ref?.current?.capture) {
                 const uri = await ref.current.capture();
@@ -499,14 +509,14 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
                                                                 {/* Name banner */}
                                                                 <View style={[styles.nameBanner, { backgroundColor: colors.bg }]}>
                                                                     <Text style={[styles.firstName, { fontSize: cardWidth * 0.06 }, params.nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 }]}>
-                                                                        {babyFirst.toUpperCase()}{babyLast ? ` ${babyLast.toUpperCase()}` : ''}
+                                                                        {fullName.toUpperCase()}
                                                                     </Text>
                                                                 </View>
 
                                                                 {/* Team/Location */}
                                                                 <View style={styles.teamBar}>
                                                                     <Text style={[styles.teamText, { fontSize: cardWidth * 0.04 }]}>
-                                                                        🏠 TEAM {(babyLast || 'BABY').toUpperCase()} FAMILY
+                                                                        +1 TEAM {(babyLast || fullName.split(' ').pop() || '').toUpperCase()}
                                                                     </Text>
                                                                 </View>
 
@@ -658,112 +668,20 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
                                                         </View>
                                                     ) : (
                                                         /* ========== BABY CARD BACK ========== */
-                                                        <View style={[styles.card, styles.cardBack, { width: cardWidth, height: cardHeight }]}>
-                                                            {/* Header */}
-                                                            <View style={[styles.backHeader, { backgroundColor: colors.bg }]}>
-                                                                <Text style={[styles.backName, { fontSize: cardWidth * 0.065 }, params.nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 }]}>
-                                                                    {fullName}
-                                                                </Text>
-                                                                <Text style={[styles.backPosition, { fontSize: cardWidth * 0.032 }]}>
-                                                                    Position: NEWEST FAMILY MEMBER
-                                                                </Text>
-                                                            </View>
-
-                                                            <View style={styles.statsTable}>
-                                                                <Text style={[styles.statsHeader, { fontSize: cardWidth * 0.04 }]}>
-                                                                    VITAL STATS
-                                                                </Text>
-
-                                                                <View style={styles.statRow}>
-                                                                    <Text style={styles.statLabel}>Debut Date</Text>
-                                                                    <Text style={styles.statValue}>{birthDateStr}</Text>
-                                                                </View>
-
-                                                                <View style={styles.statRow}>
-                                                                    <Text style={styles.statLabel}>Weight</Text>
-                                                                    <Text style={styles.statValue}>{weightLb} lbs {weightOz} oz</Text>
-                                                                </View>
-
-                                                                <View style={styles.statRow}>
-                                                                    <Text style={styles.statLabel}>Height</Text>
-                                                                    <Text style={styles.statValue}>{lengthIn}"</Text>
-                                                                </View>
-
-                                                                <View style={styles.statRow}>
-                                                                    <Text style={styles.statLabel}>Team</Text>
-                                                                    <Text style={styles.statValue}>{babyLast || 'TBD'} Family</Text>
-                                                                </View>
-
-                                                                <View style={styles.statRow}>
-                                                                    <Text style={styles.statLabel}>Hometown</Text>
-                                                                    <Text style={styles.statValue}>{hometown}</Text>
-                                                                </View>
-
-                                                                {heritage ? (
-                                                                    <View style={styles.statRow}>
-                                                                        <Text style={styles.statLabel}>Heritage</Text>
-                                                                        <Text style={styles.statValue}>{heritage}</Text>
-                                                                    </View>
-                                                                ) : null}
-                                                                {nationality ? (
-                                                                    <View style={styles.statRow}>
-                                                                        <Text style={styles.statLabel}>Nationality</Text>
-                                                                        <Text style={styles.statValue}>{nationality}</Text>
-                                                                    </View>
-                                                                ) : null}
-
-                                                                <Text style={[styles.statsHeader, { fontSize: cardWidth * 0.038, marginTop: 3 }]}>
-                                                                    COSMIC PROFILE
-                                                                </Text>
-
-                                                                <View style={styles.statRow}>
-                                                                    <Text style={styles.statLabel}>Zodiac</Text>
-                                                                    <Text style={styles.statValue}>{zodiacEmoji} {zodiac || 'Unknown'}</Text>
-                                                                </View>
-
-                                                                <View style={styles.statRow}>
-                                                                    <Text style={styles.statLabel}>Birthstone</Text>
-                                                                    <Text style={styles.statValue}>{birthstone || 'Unknown'}</Text>
-                                                                </View>
-
-                                                                <View style={styles.statRow}>
-                                                                    <Text style={styles.statLabel}>Moon Phase</Text>
-                                                                    <Text style={styles.statValue}>{moonPhaseData.emoji} {moonPhaseData.phase}</Text>
-                                                                </View>
-
-                                                                <View style={styles.statRow}>
-                                                                    <Text style={styles.statLabel}>🔢 Life Path #</Text>
-                                                                    <Text style={styles.statValue}>{lifePathNumber || '—'}</Text>
-                                                                </View>
-
-                                                                <View style={styles.statRow}>
-                                                                    <Text style={styles.statLabel}>Spirit Animal</Text>
-                                                                    <Text style={styles.statValue}>{spiritAnimal ? `${spiritAnimal.emoji} ${spiritAnimal.animal}` : '—'}</Text>
-                                                                </View>
-
-                                                                <View style={styles.statRow}>
-                                                                    <Text style={styles.statLabel}>Element</Text>
-                                                                    <Text style={styles.statValue}>{westernElement || '—'}</Text>
-                                                                </View>
-
-                                                                <View style={styles.statRow}>
-                                                                    <Text style={styles.statLabel}>Chinese Zodiac</Text>
-                                                                    <Text style={styles.statValue}>{chineseElement} {chineseZodiac}</Text>
-                                                                </View>
-
-                                                                <View style={styles.statRow}>
-                                                                    <Text style={styles.statLabel}>Tarot Card</Text>
-                                                                    <Text style={styles.statValue}>{tarot.soul.symbol} {tarot.soul.name}</Text>
-                                                                </View>
-                                                            </View>
-
-                                                            {/* Footer */}
-                                                            <View style={styles.backFooter}>
-                                                                <Text style={styles.cardNumber}>#001</Text>
-                                                                <TradingCardLogo size={cardWidth * 0.067} bgColor={colors.bg} />
-                                                                <Text style={styles.brand}>Population +1™</Text>
-                                                            </View>
-                                                        </View>
+                                                        <BaseballCardBack
+                                                            fullName={fullName}
+                                                            lastName={babyLast}
+                                                            dobISO={dobISO}
+                                                            weightLb={weightLb}
+                                                            weightOz={weightOz}
+                                                            lengthIn={lengthIn}
+                                                            hometown={hometown}
+                                                            heritage={heritage}
+                                                            nationality={nationality}
+                                                            backgroundColor={colors.bg}
+                                                            nameGold={params.nameGold}
+                                                            previewWidth={cardWidth}
+                                                        />
                                                     )}
                                                 </ViewShot>
                                             </Animated.View>
@@ -807,33 +725,25 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
 
             {/* Action Tiles */}
             <View style={styles.actionTileGrid}>
-                <TouchableOpacity
-                    style={[styles.actionTile, { backgroundColor: '#2563eb' }]}
-                    onPress={() => setShowDownloadModal(true)}
-                >
-                    <Text style={styles.actionTileEmoji}>📥</Text>
-                    <Text style={styles.actionTileLabel}>Save / Print</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.actionTile, { backgroundColor: '#d97706' }]}
-                    onPress={() => setShowCartModal(true)}
-                >
-                    <Text style={styles.actionTileEmoji}>🛒</Text>
-                    <Text style={styles.actionTileLabel}>View Cart</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.actionTile, { backgroundColor: '#dc2626' }]}
-                    onPress={() => navigation.navigate('GiftSuggestions', { occasion: 'newborn' })}
-                >
-                    <Text style={styles.actionTileEmoji}>🎁</Text>
-                    <Text style={styles.actionTileLabel}>Find a Gift</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.actionTile, { backgroundColor: '#455a64' }]}
-                    onPress={() => navigation.goBack()}
-                >
+                <TouchableOpacity style={[styles.actionTile, { backgroundColor: '#6b7280' }]} onPress={() => navigation.goBack()}>
                     <Text style={styles.actionTileEmoji}>←</Text>
-                    <Text style={styles.actionTileLabel}>Go Back</Text>
+                    <Text style={styles.actionTileLabel}>Back</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.actionTile, { backgroundColor: '#2563eb' }]} onPress={() => setShowDownloadModal(true)}>
+                    <Text style={styles.actionTileEmoji}>📥</Text>
+                    <Text style={styles.actionTileLabel}>Save</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.actionTile, { backgroundColor: '#0000b3' }]} onPress={() => navigation.navigate('PrintService', params as any)}>
+                    <Text style={styles.actionTileEmoji}>🖨️</Text>
+                    <Text style={styles.actionTileLabel}>Print</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.actionTile, { backgroundColor: '#d97706' }]} onPress={() => setShowCartModal(true)}>
+                    <Text style={styles.actionTileEmoji}>🧾</Text>
+                    <Text style={styles.actionTileLabel}>Cart</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.actionTile, { backgroundColor: '#dc2626' }]} onPress={() => navigation.navigate('SendAsGift', params as any)}>
+                    <Text style={styles.actionTileEmoji}>🎁</Text>
+                    <Text style={styles.actionTileLabel}>Gift</Text>
                 </TouchableOpacity>
             </View>
 
@@ -849,6 +759,44 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
                 visible={showCartModal}
                 onClose={() => setShowCartModal(false)}
             />
+
+            {/* Offscreen full-size cards for high-res download */}
+            <View style={{ position: 'absolute', left: -9999, top: 0, opacity: 0 }}>
+                <ViewShot ref={downloadFrontRef} options={{ format: 'png', quality: 1 }}>
+                    <BaseballCard
+                        babyName={fullName}
+                        birthDate={birthDateStr}
+                        birthTime={params.timeOfBirth || ''}
+                        weight={weightLb && weightOz ? `${weightLb} lbs ${weightOz} oz` : weightLb ? `${weightLb} lbs` : ''}
+                        length={lengthIn || ''}
+                        city={hometown.split(',')[0]?.trim() || ''}
+                        state={hometown.split(',').slice(1).join(',')?.trim() || ''}
+                        zodiacSign={zodiac}
+                        birthstone={birthstone}
+                        lifePathNumber={lifePathNumber}
+                        photoUri={photoUri || undefined}
+                        backgroundColor={colors.bg}
+                        nameGold={params.nameGold}
+                        forceFullSize
+                    />
+                </ViewShot>
+                <ViewShot ref={downloadBackRef} options={{ format: 'png', quality: 1 }}>
+                    <BaseballCardBack
+                        fullName={fullName}
+                        lastName={babyLast}
+                        dobISO={dobISO}
+                        weightLb={weightLb}
+                        weightOz={weightOz}
+                        lengthIn={lengthIn}
+                        hometown={hometown}
+                        heritage={heritage}
+                        nationality={nationality}
+                        backgroundColor={colors.bg}
+                        nameGold={params.nameGold}
+                        forceFullSize
+                    />
+                </ViewShot>
+            </View>
         </ScrollView >
     );
 }
@@ -1114,35 +1062,31 @@ const styles = StyleSheet.create({
     },
     actionTileGrid: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
         justifyContent: 'space-between',
-        paddingHorizontal: 20,
+        alignItems: 'center',
+        paddingHorizontal: 10,
         paddingVertical: 16,
-        gap: 12,
+        gap: 6,
     },
     actionTile: {
-        width: '47%',
+        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 18,
-        borderRadius: 16,
+        paddingVertical: 10,
+        borderRadius: 12,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 4,
         elevation: 3,
-        minHeight: 90,
     },
     actionTileEmoji: {
-        fontSize: 48,
-        marginBottom: 6,
-        color: '#fff',
+        fontSize: 18,
+        marginBottom: 2,
     },
     actionTileLabel: {
         color: '#fff',
-        fontSize: 20,
-        fontWeight: '800',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
+        fontSize: 10,
+        fontWeight: '700',
     },
 });

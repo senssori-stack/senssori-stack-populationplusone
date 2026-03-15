@@ -1,6 +1,7 @@
 import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StripeProvider } from '@stripe/stripe-react-native';
+import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
@@ -13,6 +14,7 @@ import FamilyTreeIntroScreen from './screens/FamilyTreeIntroScreen';
 import GraduationFormScreen from './screens/GraduationFormScreen';
 import HospitalLoginScreen from './screens/HospitalLoginScreen';
 import LifeMilestonesFormScreen from './screens/LifeMilestonesFormScreen';
+import TradingCardFormScreen from './screens/TradingCardFormScreen';
 import WeddingAnnouncementFormScreen from './screens/WeddingAnnouncementFormScreen';
 import { STRIPE_PUBLISHABLE_KEY } from './src/config/stripe';
 import { CartProvider } from './src/context/CartContext';
@@ -23,6 +25,7 @@ import AllThingsBabyScreen from './src/screens/AllThingsBabyScreen';
 import AstrocartographyScreen from './src/screens/AstrocartographyScreen';
 import AstrologyEducationScreen from './src/screens/AstrologyEducationScreen';
 import BaseballCardPreviewScreen from './src/screens/BaseballCardPreviewScreen';
+import BiblicalWheelsScreen from './src/screens/BiblicalWheelsScreen';
 import BirthMoonPhaseScreen from './src/screens/BirthMoonPhaseScreen';
 import BirthSunPositionScreen from './src/screens/BirthSunPositionScreen';
 import BirthstoneScreen from './src/screens/BirthstoneScreen';
@@ -66,6 +69,7 @@ import RomanNumeralsScreen from './src/screens/RomanNumeralsScreen';
 import SampleGallery from './src/screens/SampleGallery';
 import SendAsGiftScreen from './src/screens/SendAsGiftScreen';
 import SkyWheelsScreen from './src/screens/SkyWheelsScreen';
+import SolarSystemTimeCapsuleScreen from './src/screens/SolarSystemTimeCapsuleScreen';
 import SourcesScreen from './src/screens/SourcesScreen';
 import SpiritAnimalScreen from './src/screens/SpiritAnimalScreen';
 import StoryReaderScreen from './src/screens/StoryReaderScreen';
@@ -82,13 +86,17 @@ import ZodiacCompatibilityScreen from './src/screens/ZodiacCompatibilityScreen';
 import ZodiacSignScreen from './src/screens/ZodiacSignScreen';
 import type { RootStackParamList } from './src/types';
 
-Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-    }),
-});
+const isExpoGo = Constants.appOwnership === 'expo';
+
+if (!isExpoGo) {
+    Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+            shouldShowAlert: true,
+            shouldPlaySound: true,
+            shouldSetBadge: false,
+        }),
+    });
+}
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -138,6 +146,7 @@ export default function App() {
 
     // Navigate to Horoscope when user taps the daily reminder notification
     useEffect(() => {
+        if (isExpoGo) return;
         const sub = Notifications.addNotificationResponseReceivedListener(response => {
             const data = response.notification.request.content.data;
             if (data?.screen === 'Horoscope' && data?.birthDate && navigationRef.current) {
@@ -360,6 +369,14 @@ export default function App() {
                                     <Stack.Screen
                                         name="BusinessAnniversaryForm"
                                         component={BusinessAnniversaryFormScreen}
+                                        options={{
+                                            headerStyle: { backgroundColor: '#000080' },
+                                            headerTintColor: '#fff',
+                                        }}
+                                    />
+                                    <Stack.Screen
+                                        name="TradingCardForm"
+                                        component={TradingCardFormScreen}
                                         options={{
                                             headerStyle: { backgroundColor: '#000080' },
                                             headerTintColor: '#fff',
@@ -675,6 +692,24 @@ export default function App() {
                                             headerStyle: { backgroundColor: '#000060' },
                                             headerTintColor: '#fff',
                                             title: 'Sky Wheels',
+                                        }}
+                                    />
+                                    <Stack.Screen
+                                        name="SolarSystemTimeCapsule"
+                                        component={SolarSystemTimeCapsuleScreen}
+                                        options={{
+                                            headerStyle: { backgroundColor: '#0d0d2b' },
+                                            headerTintColor: '#fff',
+                                            title: 'Solar System Time Capsule',
+                                        }}
+                                    />
+                                    <Stack.Screen
+                                        name="BiblicalWheels"
+                                        component={BiblicalWheelsScreen}
+                                        options={{
+                                            headerStyle: { backgroundColor: '#1a0a2e' },
+                                            headerTintColor: '#fff',
+                                            title: 'Biblical Wheels',
                                         }}
                                     />
                                     <Stack.Screen

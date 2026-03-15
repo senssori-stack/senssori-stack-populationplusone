@@ -1,6 +1,9 @@
 import React from 'react';
 import { Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
+const US_FLAG_IMAGE = require('../assets/images/us-flag.png');
+const AMERICA250_WHITE = require('../assets/images/america250-white.png');
+
 interface BaseballCardProps {
     babyName: string;
     birthDate?: string;
@@ -15,6 +18,7 @@ interface BaseballCardProps {
     photoUri?: string;
     backgroundColor?: string;
     nameGold?: boolean;
+    forceFullSize?: boolean;
 }
 
 /**
@@ -36,13 +40,14 @@ export default function BaseballCard({
     photoUri,
     backgroundColor = '#000080',
     nameGold = false,
+    forceFullSize = false,
 }: BaseballCardProps) {
     const { width } = useWindowDimensions();
 
     // Standard trading card: 2.5" x 3.5" at 300 DPI = 750 x 1050 pixels
     const fixedDocWidth = 750;
     const fixedDocHeight = 1050;
-    const scale = Math.min((width * 0.85) / fixedDocWidth, 1);
+    const scale = forceFullSize ? 1 : Math.min((width * 0.85) / fixedDocWidth, 1);
     const displayWidth = fixedDocWidth * scale;
     const displayHeight = fixedDocHeight * scale;
     const baseFontSize = displayWidth * 0.048;
@@ -66,9 +71,15 @@ export default function BaseballCard({
             <View style={[styles.cardBorder, { borderWidth: displayWidth * 0.015 }]}>
                 {/* Header - Team name style */}
                 <View style={[styles.header, { backgroundColor, height: displayHeight * 0.08 }]}>
+                    <View style={{ position: 'absolute', left: 10, top: 0, bottom: 0, justifyContent: 'center' }}>
+                        <Image source={US_FLAG_IMAGE} style={{ width: displayWidth * 0.084, height: displayWidth * 0.049, resizeMode: 'contain' }} />
+                    </View>
                     <Text style={[styles.teamName, { fontSize: baseFontSize * 0.9 }]}>
                         ⭐ POPULATION +1™ ⭐
                     </Text>
+                    <View style={{ position: 'absolute', right: 10, top: 0, bottom: 0, justifyContent: 'center' }}>
+                        <Image source={AMERICA250_WHITE} style={{ width: displayWidth * 0.084, height: displayWidth * 0.049, resizeMode: 'contain' }} />
+                    </View>
                 </View>
 
                 {/* Photo section */}
@@ -107,13 +118,8 @@ export default function BaseballCard({
                 {/* Name plate */}
                 <View style={[styles.namePlate, { backgroundColor, paddingVertical: displayHeight * 0.015 }]}>
                     <Text style={[styles.playerName, { fontSize: baseFontSize * 1.3 }, nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 }]}>
-                        {firstName.toUpperCase()}
+                        {babyName.toUpperCase()}
                     </Text>
-                    {lastName && (
-                        <Text style={[styles.lastName, { fontSize: baseFontSize * 0.8 }, nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 }]}>
-                            {lastName.toUpperCase()}
-                        </Text>
-                    )}
                 </View>
 
                 {/* Stats section */}
@@ -162,9 +168,8 @@ export default function BaseballCard({
 
                     {/* Team Name */}
                     <View style={[styles.hometownSection, { marginTop: displayHeight * 0.01 }]}>
-                        <Text style={[styles.hometownLabel, { fontSize: baseFontSize * 0.5 }]}>TEAM</Text>
                         <Text style={[styles.hometownValue, { fontSize: baseFontSize * 0.65 }]}>
-                            {(lastName || babyName.split(' ').pop() || 'BABY').toUpperCase()} FAMILY
+                            +1 TEAM {(lastName || babyName.split(' ').pop() || '').toUpperCase()}
                         </Text>
                     </View>
                 </View>

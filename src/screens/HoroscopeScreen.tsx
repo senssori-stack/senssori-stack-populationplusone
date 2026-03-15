@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import Constants from 'expo-constants';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Notifications from 'expo-notifications';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -15,6 +16,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import RisingStars from '../../components/RisingStars';
 import { calculateNatalChart } from '../data/utils/natal-chart-calculator';
 import { getCityCoordinates } from '../data/utils/town-coordinates';
 import {
@@ -305,8 +307,10 @@ function generateDailyReading(
 
 // ─── Notification helpers ───────────────────────────────────
 const REMINDER_STORAGE_KEY = '@horoscope_reminder';
+const isExpoGo = Constants.appOwnership === 'expo';
 
 async function requestNotificationPermissions(): Promise<boolean> {
+    if (isExpoGo) return false;
     const { status: existing } = await Notifications.getPermissionsAsync();
     if (existing === 'granted') return true;
     const { status } = await Notifications.requestPermissionsAsync();
@@ -314,6 +318,7 @@ async function requestNotificationPermissions(): Promise<boolean> {
 }
 
 async function scheduleDailyReminder(hour: number, minute: number, birthDate: string, birthTime?: string, birthLocation?: string) {
+    if (isExpoGo) return;
     await Notifications.cancelAllScheduledNotificationsAsync();
     await Notifications.scheduleNotificationAsync({
         content: {
@@ -331,6 +336,7 @@ async function scheduleDailyReminder(hour: number, minute: number, birthDate: st
 }
 
 async function cancelDailyReminder() {
+    if (isExpoGo) return;
     await Notifications.cancelAllScheduledNotificationsAsync();
 }
 
@@ -481,7 +487,7 @@ export default function HoroscopeScreen({ navigation, route }: Props) {
     return (
         <LinearGradient colors={['#0f0c29', '#302b63', '#24243e']} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#0f0c29" />
-
+            <RisingStars />
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 {/* ── Header ── */}
                 <View style={styles.header}>

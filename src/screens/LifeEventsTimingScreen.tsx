@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Circle, G, Line, Path, Svg, Text as SvgText } from 'react-native-svg';
+import RisingStars from '../../components/RisingStars';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LifeEventsTiming'>;
@@ -392,6 +393,7 @@ export default function LifeEventsTimingScreen({ route }: Props) {
     return (
         <LinearGradient colors={['#0a0a2e', '#1a1a4e', '#1b2838']} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#0a0a2e" />
+            <RisingStars />
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 {/* Header */}
                 <View style={styles.header}>

@@ -12,7 +12,7 @@ interface TradingCardLogoProps {
 
 /**
  * TradingCardLogo — Topps-style circular brand stamp
- * "POPULATION" wrapped around the top of the circle, "+1" centered big.
+ * "POPULATION" arched around the top of the circle, "+1" centered big.
  * Designed to be overlaid on trading card corners.
  */
 export default function TradingCardLogo({
@@ -21,9 +21,20 @@ export default function TradingCardLogo({
     textColor = '#fff',
 }: TradingCardLogoProps) {
     const borderWidth = Math.max(1.5, size * 0.06);
-    const plusOneSize = size * 0.42;
+    const plusOneSize = size * 0.294;
     const populationSize = size * 0.145;
     const tmSize = size * 0.11;
+
+    // Arch layout for POPULATION letters
+    const innerSize = size - 2 * borderWidth;
+    const cx = innerSize / 2;
+    const cy = innerSize / 2;
+    const letters = 'POPULATION'.split('');
+    const numLetters = letters.length;
+    const textArcRadius = innerSize * 0.37;
+    const totalArcDeg = 150;
+    const charW = populationSize * 0.85;
+    const charH = populationSize * 1.2;
 
     return (
         <View
@@ -39,20 +50,38 @@ export default function TradingCardLogo({
                 },
             ]}
         >
-            {/* POPULATION text curved at the top */}
-            <Text
-                style={[
-                    styles.populationText,
-                    {
-                        fontSize: populationSize,
-                        color: textColor,
-                        top: size * 0.08,
-                    },
-                ]}
-                numberOfLines={1}
-            >
-                POPULATION
-            </Text>
+            {/* POPULATION text arched around the top */}
+            {letters.map((letter, i) => {
+                const angleDeg = -90 - totalArcDeg / 2 + (i / (numLetters - 1)) * totalArcDeg;
+                const angleRad = (angleDeg * Math.PI) / 180;
+                const lx = cx + textArcRadius * Math.cos(angleRad);
+                const ly = cy + textArcRadius * Math.sin(angleRad);
+                return (
+                    <View
+                        key={i}
+                        style={{
+                            position: 'absolute',
+                            left: lx - charW / 2,
+                            top: ly - charH / 2,
+                            width: charW,
+                            height: charH,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transform: [{ rotate: `${angleDeg + 90}deg` }],
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: populationSize,
+                                fontWeight: '900',
+                                color: textColor,
+                            }}
+                        >
+                            {letter}
+                        </Text>
+                    </View>
+                );
+            })}
 
             {/* +1 centered */}
             <Text
@@ -95,12 +124,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 2,
         elevation: 3,
-    },
-    populationText: {
-        fontWeight: '900',
-        letterSpacing: 0.5,
-        position: 'absolute',
-        textAlign: 'center',
     },
     plusOne: {
         fontWeight: '900',

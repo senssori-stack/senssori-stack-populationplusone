@@ -1,6 +1,6 @@
 export function getZodiacFromISO(dobISO: string): string {
-    const d = new Date(dobISO + 'T00:00:00');
-    const md = (d.getMonth() + 1) * 100 + d.getDate();
+    const parts = dobISO.split('-').map(Number);
+    const md = parts[1] * 100 + parts[2];
 
     if (md >= 321 && md <= 419) return 'Aries';
     if (md >= 420 && md <= 520) return 'Taurus';

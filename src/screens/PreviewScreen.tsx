@@ -6,6 +6,7 @@ import { GestureHandlerRootView, PanGestureHandler, PinchGestureHandler, State, 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ViewShot from 'react-native-view-shot';
 import BaseballCard from '../../components/BaseballCard';
+import BaseballCardBack from '../../components/BaseballCardBack';
 import CartModal from '../../components/CartModal';
 import CelebrationOverlay from '../../components/CelebrationOverlay';
 import DownloadModal, { DownloadItem } from '../../components/DownloadModal';
@@ -73,6 +74,10 @@ export default function PreviewScreen({ navigation, route }: Props) {
     const yardMinimalRef = useRef<ViewShot | null>(null);
     const postcardBackRef = useRef<ViewShot | null>(null);
     const baseballFrontRef = useRef<ViewShot | null>(null);
+    const baseballBackRef = useRef<ViewShot | null>(null);
+
+    // Hi-res offscreen ref for print-quality front sign (3300×2550 at previewScale=1)
+    const frontHiResRef = useRef<ViewShot | null>(null);
 
     // Download modal state
     const [showDownloadModal, setShowDownloadModal] = useState(false);
@@ -103,7 +108,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
         { id: 'natal', label: 'Natal Chart (Page 1)', category: 'yardsign' },
         { id: 'natalback', label: 'Chart Reading Guide (Page 2)', category: 'yardsign' },
         { id: 'letter', label: 'Letter to Baby', category: 'yardsign' },
-        ...(params.mode !== 'milestone' ? [
+        ...(params.mode !== 'milestone' || (params.message || '').toLowerCase().includes('birthday') ? [
             { id: 'yard-classic', label: 'Yard Sign — Classic', category: 'yardsign' as const },
             { id: 'yard-welcome', label: 'Yard Sign — Welcome', category: 'yardsign' as const },
             { id: 'yard-minimal', label: 'Yard Sign — Minimal', category: 'yardsign' as const },
@@ -111,8 +116,9 @@ export default function PreviewScreen({ navigation, route }: Props) {
         ...(!params.hidePostcard ? [
             { id: 'postcard-back', label: 'Postcard Back (Invitation)', category: 'postcard' as const },
         ] : []),
-        ...(params.mode !== 'milestone' ? [
+        ...(params.mode !== 'milestone' || (params.message || '').toLowerCase().includes('birthday') ? [
             { id: 'baseball-front', label: 'Baseball Card (Front)', category: 'babycard' as const },
+            { id: 'baseball-back', label: 'Baseball Card (Back)', category: 'babycard' as const },
         ] : []),
     ];
 
@@ -120,7 +126,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
     const captureView = async (itemId: string): Promise<string | null> => {
         try {
             let ref: React.RefObject<ViewShot | null> | null = null;
-            if (itemId === 'front') ref = frontRef;
+            if (itemId === 'front') ref = frontHiResRef;
             if (itemId === 'back') ref = backRef;
             if (itemId === 'natal') ref = natalRef;
             if (itemId === 'natalback') ref = natalBackRef;
@@ -130,6 +136,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
             if (itemId === 'yard-minimal') ref = yardMinimalRef;
             if (itemId === 'postcard-back') ref = postcardBackRef;
             if (itemId === 'baseball-front') ref = baseballFrontRef;
+            if (itemId === 'baseball-back') ref = baseballBackRef;
 
             if (ref?.current?.capture) {
                 return await ref.current.capture();
@@ -145,7 +152,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
     const handleCapture = async (itemId: string): Promise<string | null> => {
         try {
             // Offscreen items don't need viewMode switching — they're always mounted
-            const offscreenIds = ['yard-classic', 'yard-welcome', 'yard-minimal', 'postcard-back', 'baseball-front'];
+            const offscreenIds = ['front', 'yard-classic', 'yard-welcome', 'yard-minimal', 'postcard-back', 'baseball-front', 'baseball-back'];
             if (offscreenIds.includes(itemId)) {
                 await new Promise(r => setTimeout(r, 600));
                 return await captureView(itemId);
@@ -173,6 +180,9 @@ export default function PreviewScreen({ navigation, route }: Props) {
 
     const [zoomScale, setZoomScale] = useState(1);
     const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+
+    // Detect if phone is held sideways (landscape)
+    const isLandscape = screenWidth > screenHeight;
 
     // Gesture handling refs and state
     const scale = useRef(new Animated.Value(1)).current;
@@ -302,10 +312,15 @@ export default function PreviewScreen({ navigation, route }: Props) {
         lastTranslateY.current = 0;
     }, [viewMode, fullScreenScale]);
 
-    // Double-tap toggles between 100% and 150%
+    // Double-tap toggles between fit-to-screen and fill-screen
     const onDoubleTap = (event: any) => {
         if (event.nativeEvent.state === State.ACTIVE) {
-            const targetZoom = isZoomedIn.current ? 1.0 : 1.5;
+            // Calculate a zoom that fills the screen (cover, not just fit)
+            const landscapeW = 3300, landscapeH = 2550;
+            const fitW = screenWidth / (landscapeW * fullScreenScale);
+            const fitH = (screenHeight - (isLandscape ? 40 : 120)) / (landscapeH * fullScreenScale);
+            const fillZoom = Math.max(fitW, fitH); // cover the screen
+            const targetZoom = isZoomedIn.current ? 1.0 : Math.max(1.5, fillZoom);
 
             // Reset animated values
             scale.setValue(1);
@@ -365,7 +380,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
             photoUri: formData.photoUri
         }];
 
-        const dobISO = formData.dobDate.toISOString().split('T')[0];
+        const dobISO = `${formData.dobDate.getFullYear()}-${String(formData.dobDate.getMonth() + 1).padStart(2, '0')}-${String(formData.dobDate.getDate()).padStart(2, '0')}`;
         const zodiac = getZodiacFromISO(dobISO);
         const birthstone = birthstoneFromISO(dobISO);
         const lifePathResult = calculateLifePath(dobISO);
@@ -424,6 +439,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
                             heritage={formData.heritage}
                             heritageWithFlags={formData.heritageWithFlags}
                             nationality={formData.nationality}
+                            militaryBranch={formData.militaryBranch}
                             snapshot={formData.snapshot}
                             zodiac={zodiac}
                             birthstone={birthstone}
@@ -557,96 +573,100 @@ export default function PreviewScreen({ navigation, route }: Props) {
                 zodiacSign={celebrationZodiac}
                 onComplete={() => setShowCelebration(false)}
             />
-            <ScrollView style={{ flex: 1, paddingTop: 40 }} contentContainerStyle={{ flexGrow: 1 }} bounces={false} scrollEnabled={scrollEnabled}>
-                {/* ═══ PREMIUM CONTROL PANEL ═══ */}
-                <LinearGradient colors={['#000080', '#1a1a9e']} style={styles.controlPanel}>
-                    {/* Dynamic Title */}
-                    <Text style={styles.panelTitle}>
-                        {viewMode === 'front' ? labels.front : viewMode === 'back' ? labels.capsule : viewMode === 'letter' ? labels.letter : `${labels.chart} + ${labels.guide}`}
-                    </Text>
-                    <Text style={styles.panelSubtitle}>
-                        {viewMode === 'natal' ? '2-Page Document • 11" × 8.5" Landscape' : '11" × 8.5" Landscape'}
-                    </Text>
+            <ScrollView style={{ flex: 1, paddingTop: isLandscape ? 0 : 40 }} contentContainerStyle={{ flexGrow: 1 }} bounces={false} scrollEnabled={isLandscape ? false : scrollEnabled}>
+                {/* ═══ PREMIUM CONTROL PANEL ═══ (hidden in landscape / disabled when zoomed) */}
+                {!isLandscape && (
+                    <View pointerEvents={zoomScale > 1.1 ? 'none' : 'auto'}>
+                        <LinearGradient colors={['#000080', '#1a1a9e']} style={styles.controlPanel}>
+                            {/* Dynamic Title */}
+                            <Text style={styles.panelTitle}>
+                                {viewMode === 'front' ? labels.front : viewMode === 'back' ? labels.capsule : viewMode === 'letter' ? labels.letter : `${labels.chart} + ${labels.guide}`}
+                            </Text>
+                            <Text style={styles.panelSubtitle}>
+                                {viewMode === 'natal' ? '2-Page Document • 11" × 8.5" Landscape' : '11" × 8.5" Landscape'}
+                            </Text>
 
-                    {/* View toggle tabs */}
-                    <View style={styles.tabRow}>
-                        <TouchableOpacity
-                            style={[styles.tab, { backgroundColor: '#0000b3' }, viewMode === 'front' && styles.tabActive]}
-                            onPress={() => { setViewMode('front'); resetView(); }}
-                        >
-                            <Text style={styles.tabIcon}>+1</Text>
-                            <Text style={styles.tabText}>Sign</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.tab, { backgroundColor: '#2563eb' }, viewMode === 'back' && styles.tabActive]}
-                            onPress={() => { setViewMode('back'); resetView(); }}
-                        >
-                            <Text style={styles.tabIcon}>🕐</Text>
-                            <Text style={styles.tabText}>Capsule</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.tab, { backgroundColor: '#7c3aed' }, viewMode === 'natal' && styles.tabActive]}
-                            onPress={() => { setViewMode('natal'); resetView(); }}
-                        >
-                            <Text style={styles.tabIcon}>✨</Text>
-                            <Text style={styles.tabText}>Chart + Guide</Text>
-                        </TouchableOpacity>
-                        {(params.motherLetter || params.fatherLetter || params.jointLetter) && (
-                            <TouchableOpacity
-                                style={[styles.tab, { backgroundColor: '#dc2626' }, viewMode === 'letter' && styles.tabActive]}
-                                onPress={() => { setViewMode('letter'); resetView(); }}
-                            >
-                                <Text style={styles.tabIcon}>💌</Text>
-                                <Text style={styles.tabText}>Letter</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
+                            {/* View toggle tabs */}
+                            <View style={styles.tabRow}>
+                                <TouchableOpacity
+                                    style={[styles.tab, { backgroundColor: '#0000b3' }, viewMode === 'front' && styles.tabActive]}
+                                    onPress={() => { setViewMode('front'); resetView(); }}
+                                >
+                                    <Text style={styles.tabIcon}>+1</Text>
+                                    <Text style={styles.tabText}>Sign</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.tab, { backgroundColor: '#2563eb' }, viewMode === 'back' && styles.tabActive]}
+                                    onPress={() => { setViewMode('back'); resetView(); }}
+                                >
+                                    <Text style={styles.tabIcon}>🕐</Text>
+                                    <Text style={styles.tabText}>Capsule</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.tab, { backgroundColor: '#7c3aed' }, viewMode === 'natal' && styles.tabActive]}
+                                    onPress={() => { setViewMode('natal'); resetView(); }}
+                                >
+                                    <Text style={styles.tabIcon}>✨</Text>
+                                    <Text style={styles.tabText}>Chart + Guide</Text>
+                                </TouchableOpacity>
+                                {(params.motherLetter || params.fatherLetter || params.jointLetter) && (
+                                    <TouchableOpacity
+                                        style={[styles.tab, { backgroundColor: '#dc2626' }, viewMode === 'letter' && styles.tabActive]}
+                                        onPress={() => { setViewMode('letter'); resetView(); }}
+                                    >
+                                        <Text style={styles.tabIcon}>💌</Text>
+                                        <Text style={styles.tabText}>Letter</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
 
-                    {/* Add-on keepsakes */}
-                    <View style={styles.addOnDivider} />
-                    <Text style={styles.addOnLabel}>ALSO INCLUDED WITH YOUR +1</Text>
-                    <View style={styles.tabRow}>
-                        {params.mode !== 'milestone' && (
-                            <TouchableOpacity
-                                style={[styles.tab, { backgroundColor: '#d97706' }]}
-                                onPress={() => {
-                                    const resolvedPhoto = params.photoUris?.find(u => u) || params.babies?.[0]?.photoUri || params.photoUri || null;
-                                    navigation.navigate('YardSignPreview', { ...params, photoUri: resolvedPhoto });
-                                }}
-                            >
-                                <Text style={styles.tabIcon}>🏡</Text>
-                                <Text style={styles.tabText}>Yard Signs</Text>
-                            </TouchableOpacity>
-                        )}
-                        {!params.hidePostcard && (
-                            <TouchableOpacity
-                                style={[styles.tab, { backgroundColor: '#0ea5e9' }]}
-                                onPress={() => {
-                                    const resolvedPhoto = params.photoUris?.find(u => u) || params.babies?.[0]?.photoUri || params.photoUri || null;
-                                    navigation.navigate('PostcardPreview', { ...params, photoUri: resolvedPhoto });
-                                }}
-                            >
-                                <Text style={styles.tabIcon}>✉️</Text>
-                                <Text style={styles.tabText}>Postcards</Text>
-                            </TouchableOpacity>
-                        )}
-                        {params.mode !== 'milestone' && (
-                            <TouchableOpacity
-                                style={[styles.tab, { backgroundColor: '#dc2626' }]}
-                                onPress={() => {
-                                    const resolvedPhoto = params.photoUris?.find(u => u) || params.babies?.[0]?.photoUri || params.photoUri || null;
-                                    navigation.navigate('BaseballCardPreview', { ...params, photoUri: resolvedPhoto });
-                                }}
-                            >
-                                <Text style={styles.tabIcon}>{params.isMemorial ? '🕊️' : '⚾'}</Text>
-                                <Text style={styles.tabText}>{params.isMemorial ? 'Memorial' : 'Cards'}</Text>
-                            </TouchableOpacity>
-                        )}
+                            {/* Add-on keepsakes */}
+                            <View style={styles.addOnDivider} />
+                            <Text style={styles.addOnLabel}>ALSO INCLUDED WITH YOUR +1</Text>
+                            <View style={styles.tabRow}>
+                                {(params.mode !== 'milestone' || occasionType === 'birthday') && (
+                                    <TouchableOpacity
+                                        style={[styles.tab, { backgroundColor: '#d97706' }]}
+                                        onPress={() => {
+                                            const resolvedPhoto = params.photoUris?.find(u => u) || params.babies?.[0]?.photoUri || params.photoUri || null;
+                                            navigation.navigate('YardSignPreview', { ...params, photoUri: resolvedPhoto });
+                                        }}
+                                    >
+                                        <Text style={styles.tabIcon}>🏡</Text>
+                                        <Text style={styles.tabText}>Yard Signs</Text>
+                                    </TouchableOpacity>
+                                )}
+                                {!params.hidePostcard && (
+                                    <TouchableOpacity
+                                        style={[styles.tab, { backgroundColor: '#0ea5e9' }]}
+                                        onPress={() => {
+                                            const resolvedPhoto = params.photoUris?.find(u => u) || params.babies?.[0]?.photoUri || params.photoUri || null;
+                                            navigation.navigate('PostcardPreview', { ...params, photoUri: resolvedPhoto });
+                                        }}
+                                    >
+                                        <Text style={styles.tabIcon}>✉️</Text>
+                                        <Text style={styles.tabText}>Postcards</Text>
+                                    </TouchableOpacity>
+                                )}
+                                {(params.mode !== 'milestone' || occasionType === 'birthday') && (
+                                    <TouchableOpacity
+                                        style={[styles.tab, { backgroundColor: '#dc2626' }]}
+                                        onPress={() => {
+                                            const resolvedPhoto = params.photoUris?.find(u => u) || params.babies?.[0]?.photoUri || params.photoUri || null;
+                                            navigation.navigate('BaseballCardPreview', { ...params, photoUri: resolvedPhoto });
+                                        }}
+                                    >
+                                        <Text style={styles.tabIcon}>{params.isMemorial ? '🕊️' : '⚾'}</Text>
+                                        <Text style={styles.tabText}>{params.isMemorial ? 'Memorial' : 'Cards'}</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        </LinearGradient>
                     </View>
-                </LinearGradient>
+                )}
 
                 {/* Birth announcement preview with gesture handling */}
-                <GestureHandlerRootView style={[styles.previewContainer, { height: viewMode === 'natal' ? screenHeight * 0.7 : screenHeight * 0.5 }]}>
+                <GestureHandlerRootView style={[styles.previewContainer, { height: isLandscape ? screenHeight : (viewMode === 'natal' ? screenHeight * 0.7 : screenHeight * 0.5), backgroundColor: isLandscape ? '#000' : '#f9f9f9' }]}>
                     <TapGestureHandler
                         ref={doubleTapRef}
                         onHandlerStateChange={onDoubleTap}
@@ -689,43 +709,47 @@ export default function PreviewScreen({ navigation, route }: Props) {
                     </TapGestureHandler>
                 </GestureHandlerRootView>
 
-                {/* Bottom action bar - Tile buttons */}
-                <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 12) + 8 }]}>
-                    <View style={styles.bottomBarRow}>
-                        <TouchableOpacity style={[styles.tileButton, { backgroundColor: '#6b7280' }]} onPress={() => navigation.goBack()}>
-                            <Text style={styles.tileEmoji}>←</Text>
-                            <Text style={styles.tileLabel}>Back</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.tileButton, { backgroundColor: '#2563eb' }]}
-                            onPress={() => setShowDownloadModal(true)}
-                        >
-                            <Text style={styles.tileEmoji}>📥</Text>
-                            <Text style={styles.tileLabel}>Save</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.tileButton, { backgroundColor: '#0000b3' }]}
-                            onPress={() => navigation.navigate('PrintService', params as any)}
-                        >
-                            <Text style={styles.tileEmoji}>🖨️</Text>
-                            <Text style={styles.tileLabel}>Print</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.tileButton, { backgroundColor: '#d97706' }]}
-                            onPress={() => setShowCartModal(true)}
-                        >
-                            <Text style={styles.tileEmoji}>🧾</Text>
-                            <Text style={styles.tileLabel}>Cart{getItemCount() > 0 ? ` (${getItemCount()})` : ''}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.tileButton, { backgroundColor: '#dc2626' }]}
-                            onPress={() => navigation.navigate('SendAsGift', params as any)}
-                        >
-                            <Text style={styles.tileEmoji}>🎁</Text>
-                            <Text style={styles.tileLabel}>Gift</Text>
-                        </TouchableOpacity>
+                {/* Bottom action bar - Tile buttons (hidden in landscape / disabled when zoomed) */}
+                {!isLandscape && (
+                    <View pointerEvents={zoomScale > 1.1 ? 'none' : 'auto'}>
+                        <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 12) + 8 }]}>
+                            <View style={styles.bottomBarRow}>
+                                <TouchableOpacity style={[styles.tileButton, { backgroundColor: '#6b7280' }]} onPress={() => navigation.goBack()}>
+                                    <Text style={styles.tileEmoji}>←</Text>
+                                    <Text style={styles.tileLabel}>Back</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.tileButton, { backgroundColor: '#2563eb' }]}
+                                    onPress={() => setShowDownloadModal(true)}
+                                >
+                                    <Text style={styles.tileEmoji}>📥</Text>
+                                    <Text style={styles.tileLabel}>Save</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.tileButton, { backgroundColor: '#0000b3' }]}
+                                    onPress={() => navigation.navigate('PrintService', params as any)}
+                                >
+                                    <Text style={styles.tileEmoji}>🖨️</Text>
+                                    <Text style={styles.tileLabel}>Print</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.tileButton, { backgroundColor: '#d97706' }]}
+                                    onPress={() => setShowCartModal(true)}
+                                >
+                                    <Text style={styles.tileEmoji}>🧾</Text>
+                                    <Text style={styles.tileLabel}>Cart{getItemCount() > 0 ? ` (${getItemCount()})` : ''}</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.tileButton, { backgroundColor: '#dc2626' }]}
+                                    onPress={() => navigation.navigate('SendAsGift', params as any)}
+                                >
+                                    <Text style={styles.tileEmoji}>🎁</Text>
+                                    <Text style={styles.tileLabel}>Gift</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
                     </View>
-                </View>
+                )}
 
                 <DownloadModal
                     visible={showDownloadModal}
@@ -758,23 +782,54 @@ export default function PreviewScreen({ navigation, route }: Props) {
                         const babyName = [babyFirst, babyMiddle].filter(Boolean).join(' ') || params.personName || 'Baby';
                         const fullName = [babyFirst, babyMiddle, babyLast].filter(Boolean).join(' ') || params.personName || 'Baby';
                         const plusLabel = `+${params.babyCount || 1}`;
-                        const signWidth = 340;
-                        const signHeight = 240;
-                        const dobISO = formData.dobDate.toISOString().split('T')[0];
+                        const signWidth = 2400;
+                        const signHeight = 1800;
+                        const dobISO = `${formData.dobDate.getFullYear()}-${String(formData.dobDate.getMonth() + 1).padStart(2, '0')}-${String(formData.dobDate.getDate()).padStart(2, '0')}`;
                         const zodiac = getZodiacFromISO(dobISO);
                         const birthstone = birthstoneFromISO(dobISO);
                         const lifePathResult = calculateLifePath(dobISO);
                         const birthDateStr = formData.dobDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-                        const weight = formData.weightLb && formData.weightOz ? `${formData.weightLb} lbs ${formData.weightOz} oz` : '';
-                        const length = formData.lengthIn ? `${formData.lengthIn}"` : '';
+                        const weight = formData.weightLb
+                            ? (formData.weightOz ? `${formData.weightLb} lbs ${formData.weightOz} oz` : `${formData.weightLb} lbs`)
+                            : '';
+                        const length = formData.lengthIn
+                            ? (formData.lengthIn.includes("'") ? formData.lengthIn : `${formData.lengthIn}"`)
+                            : '';
                         const parents = [formData.motherName, formData.fatherName].filter(Boolean).join(' & ');
                         const photoUri = formData.photoUri;
-                        const cardWidth = 280;
+                        const cardWidth = 1800;
                         const cardHeight = cardWidth * 1.4;
                         const isWedding = !!params.hidePlusLabel;
 
+                        // Collect photoUris for hi-res front — same logic as renderCurrentView
+                        let hiResPhotoUris: (string | null | undefined)[] = [];
+                        if (params.photoUris && params.photoUris.length > 0) {
+                            hiResPhotoUris = params.photoUris.filter((uri: any) => uri);
+                        } else {
+                            const babiesArr = formData.babies || [{ first: formData.babyFirst, middle: formData.babyMiddle, last: formData.babyLast, photoUri: formData.photoUri }];
+                            hiResPhotoUris = babiesArr.filter((b: any) => b.photoUri).map((b: any) => b.photoUri);
+                        }
+                        hiResPhotoUris = hiResPhotoUris.slice(0, 3);
+
                         return (
                             <>
+                                {/* ★ PRINT-QUALITY Front Sign — full 3300×2550 (previewScale=1) */}
+                                <ViewShot ref={frontHiResRef} options={{ format: 'png', quality: 1 }}>
+                                    <SignFrontLandscape
+                                        theme={formData.theme}
+                                        photoUris={hiResPhotoUris}
+                                        previewScale={1}
+                                        hometown={formData.hometown}
+                                        population={formData.population != null ? formData.population : undefined}
+                                        personName={params.personName || ''}
+                                        babyCount={params.babyCount || 1}
+                                        dobISO={dobISO}
+                                        hidePlusLabel={params.hidePlusLabel}
+                                        isMemorial={params.isMemorial}
+                                        nameGold={params.nameGold}
+                                    />
+                                </ViewShot>
+
                                 {/* Yard Sign — Classic */}
                                 <ViewShot ref={yardClassicRef} options={{ format: 'png', quality: 1 }}>
                                     <View style={{ width: signWidth, height: signHeight, backgroundColor: colors.bg, borderRadius: 4, alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: '#fff' }}>
@@ -805,28 +860,28 @@ export default function PreviewScreen({ navigation, route }: Props) {
 
                                 {/* Postcard Back — Invitation */}
                                 <ViewShot ref={postcardBackRef} options={{ format: 'png', quality: 1 }}>
-                                    <View style={{ width: cardWidth * 1.3, height: cardWidth * 0.92, backgroundColor: '#fff', borderRadius: 4, borderWidth: 1, borderColor: '#ddd', flexDirection: 'row', overflow: 'hidden' }}>
+                                    <View style={{ width: cardWidth * 1.3, height: cardWidth * 0.92, backgroundColor: '#fff', borderRadius: 12, borderWidth: 4, borderColor: '#ddd', flexDirection: 'row', overflow: 'hidden' }}>
                                         {/* Left — Message */}
-                                        <View style={{ flex: 1, padding: 14, justifyContent: 'center' }}>
-                                            <Text style={{ fontSize: 15, fontWeight: '900', color: colors.bg, marginBottom: 4 }}>{isWedding ? "You're Invited!" : "You're Invited!"}</Text>
-                                            <Text style={{ fontSize: 10, color: '#666', marginBottom: 4 }}>{isWedding ? 'to the wedding celebration of' : 'to celebrate the arrival of'}</Text>
-                                            <Text style={{ fontSize: 13, fontWeight: '800', color: params.nameGold ? '#FFD700' : colors.bg, marginBottom: 6 }}>{fullName}</Text>
-                                            <Text style={{ fontSize: 9, color: '#888' }}>{isWedding ? `Date: ${birthDateStr}` : `Born: ${birthDateStr}`}</Text>
-                                            {!isWedding && weight ? <Text style={{ fontSize: 9, color: '#888' }}>{weight} • {length}</Text> : null}
-                                            <View style={{ marginTop: 8 }}>
-                                                <Text style={{ fontSize: 8, color: '#aaa', marginBottom: 2 }}>{isWedding ? 'Ceremony: ________________' : 'When: ________________'}</Text>
-                                                <Text style={{ fontSize: 8, color: '#aaa', marginBottom: 2 }}>{isWedding ? 'Reception: ________________' : 'Where: ________________'}</Text>
-                                                <Text style={{ fontSize: 8, color: '#aaa' }}>RSVP: ________________</Text>
+                                        <View style={{ flex: 1, padding: cardWidth * 0.05, justifyContent: 'center' }}>
+                                            <Text style={{ fontSize: cardWidth * 0.054, fontWeight: '900', color: colors.bg, marginBottom: cardWidth * 0.015 }}>{isWedding ? "You're Invited!" : "You're Invited!"}</Text>
+                                            <Text style={{ fontSize: cardWidth * 0.036, color: '#666', marginBottom: cardWidth * 0.015 }}>{isWedding ? 'to the wedding celebration of' : 'to celebrate the arrival of'}</Text>
+                                            <Text style={{ fontSize: cardWidth * 0.047, fontWeight: '800', color: params.nameGold ? '#FFD700' : colors.bg, marginBottom: cardWidth * 0.022 }}>{fullName}</Text>
+                                            <Text style={{ fontSize: cardWidth * 0.032, color: '#888' }}>{isWedding ? `Date: ${birthDateStr}` : `Born: ${birthDateStr}`}</Text>
+                                            {!isWedding && weight ? <Text style={{ fontSize: cardWidth * 0.032, color: '#888' }}>{weight} • {length}</Text> : null}
+                                            <View style={{ marginTop: cardWidth * 0.03 }}>
+                                                <Text style={{ fontSize: cardWidth * 0.029, color: '#aaa', marginBottom: cardWidth * 0.007 }}>{isWedding ? 'Ceremony: ________________' : 'When: ________________'}</Text>
+                                                <Text style={{ fontSize: cardWidth * 0.029, color: '#aaa', marginBottom: cardWidth * 0.007 }}>{isWedding ? 'Reception: ________________' : 'Where: ________________'}</Text>
+                                                <Text style={{ fontSize: cardWidth * 0.029, color: '#aaa' }}>RSVP: ________________</Text>
                                             </View>
-                                            {parents ? <Text style={{ fontSize: 8, color: '#999', marginTop: 6 }}>{isWedding ? 'Together with their families' : `Hosted by ${parents}`}</Text> : null}
+                                            {parents ? <Text style={{ fontSize: cardWidth * 0.029, color: '#999', marginTop: cardWidth * 0.022 }}>{isWedding ? 'Together with their families' : `Hosted by ${parents}`}</Text> : null}
                                         </View>
                                         {/* Divider */}
-                                        <View style={{ width: 1, backgroundColor: '#ccc' }} />
+                                        <View style={{ width: 3, backgroundColor: '#ccc' }} />
                                         {/* Right — Address */}
-                                        <View style={{ flex: 1, padding: 14, justifyContent: 'flex-end' }}>
-                                            <View style={{ borderBottomWidth: 1, borderBottomColor: '#ddd', paddingBottom: 4, marginBottom: 8 }} />
-                                            <View style={{ borderBottomWidth: 1, borderBottomColor: '#ddd', paddingBottom: 4, marginBottom: 8 }} />
-                                            <View style={{ borderBottomWidth: 1, borderBottomColor: '#ddd', paddingBottom: 4 }} />
+                                        <View style={{ flex: 1, padding: cardWidth * 0.05, justifyContent: 'flex-end' }}>
+                                            <View style={{ borderBottomWidth: 3, borderBottomColor: '#ddd', paddingBottom: cardWidth * 0.015, marginBottom: cardWidth * 0.03 }} />
+                                            <View style={{ borderBottomWidth: 3, borderBottomColor: '#ddd', paddingBottom: cardWidth * 0.015, marginBottom: cardWidth * 0.03 }} />
+                                            <View style={{ borderBottomWidth: 3, borderBottomColor: '#ddd', paddingBottom: cardWidth * 0.015 }} />
                                         </View>
                                     </View>
                                 </ViewShot>
@@ -847,6 +902,25 @@ export default function PreviewScreen({ navigation, route }: Props) {
                                         photoUri={photoUri || undefined}
                                         backgroundColor={colors.bg}
                                         nameGold={params.nameGold}
+                                        forceFullSize
+                                    />
+                                </ViewShot>
+
+                                {/* Baseball Card Back */}
+                                <ViewShot ref={baseballBackRef} options={{ format: 'png', quality: 1 }}>
+                                    <BaseballCardBack
+                                        fullName={fullName}
+                                        lastName={babyLast}
+                                        dobISO={dobISO}
+                                        weightLb={formData.weightLb || ''}
+                                        weightOz={formData.weightOz || ''}
+                                        lengthIn={formData.lengthIn || ''}
+                                        hometown={formData.hometown || 'Hometown, USA'}
+                                        heritage={params.heritage || ''}
+                                        nationality={params.nationality || ''}
+                                        backgroundColor={colors.bg}
+                                        nameGold={params.nameGold}
+                                        forceFullSize
                                     />
                                 </ViewShot>
                             </>

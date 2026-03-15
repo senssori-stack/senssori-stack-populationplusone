@@ -10,6 +10,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import RisingStars from '../../components/RisingStars';
 import {
     CATEGORY_COLORS,
     CATEGORY_LABELS,
@@ -73,6 +74,7 @@ export default function TipOfTheDayScreen({ route, navigation }: Props) {
     return (
         <LinearGradient colors={gradients} style={styles.container}>
             <StatusBar barStyle="light-content" />
+            <RisingStars />
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
                 {/* Header */}
                 <View style={styles.header}>

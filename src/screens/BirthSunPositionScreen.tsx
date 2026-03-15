@@ -1,8 +1,9 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useRef, useState } from 'react';
-import { PanResponder, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { PanResponder, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Circle, G, Line, Path, Svg, Text as SvgText } from 'react-native-svg';
+import RisingStars from '../../components/RisingStars';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BirthSunPosition'>;
@@ -184,7 +185,66 @@ function getNearestSeason(longitude: number) {
 }
 
 export default function BirthSunPositionScreen({ route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const originalBirthDate = useMemo(() => new Date(route.params.birthDate), [route.params.birthDate]);
+    const [birthDate, setBirthDate] = useState(() => new Date(route.params.birthDate));
+
+    // ── Time Travel State ──
+    const [dayOffset, setDayOffset] = useState(0);
+    const dayOffsetRef = useRef(0);
+    const SLIDER_RANGE = 1826; // ±5 years
+    const sliderWRef = useRef(300);
+    const [sliderW, setSliderW] = useState(300);
+
+    const changeDate = useCallback((newOffset: number) => {
+        const clamped = Math.max(-SLIDER_RANGE, Math.min(SLIDER_RANGE, newOffset));
+        setDayOffset(clamped);
+        dayOffsetRef.current = clamped;
+        setBirthDate(new Date(originalBirthDate.getTime() + clamped * 86400000));
+        setAngleOffset(0);
+        spinAccumRef.current = 0;
+    }, [originalBirthDate, SLIDER_RANGE]);
+
+    const sliderStartOffsetRef = useRef(0);
+    const sliderPan = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: () => true,
+            onPanResponderGrant: () => {
+                sliderStartOffsetRef.current = dayOffsetRef.current;
+            },
+            onPanResponderMove: (_, gesture) => {
+                const daysPerPixel = (2 * SLIDER_RANGE) / sliderWRef.current;
+                changeDate(sliderStartOffsetRef.current + gesture.dx * daysPerPixel);
+            },
+            onPanResponderRelease: () => { },
+        })
+    ).current;
+
+    const jumpToToday = useCallback(() => {
+        const today = new Date();
+        const offsetDays = (today.getTime() - originalBirthDate.getTime()) / 86400000;
+        setDayOffset(offsetDays);
+        dayOffsetRef.current = offsetDays;
+        setBirthDate(today);
+        setAngleOffset(0);
+        spinAccumRef.current = 0;
+    }, [originalBirthDate]);
+
+    const formatOffset = (offset: number) => {
+        const absOffset = Math.abs(offset);
+        const sign = offset > 0 ? '+' : '−';
+        if (absOffset < 1) {
+            const hrs = Math.round(absOffset * 24);
+            return `${sign}${hrs} hr${hrs !== 1 ? 's' : ''} from birth`;
+        }
+        const totalDays = Math.round(absOffset);
+        if (totalDays < 365) return `${sign}${totalDays} day${totalDays !== 1 ? 's' : ''} from birth`;
+        const years = Math.floor(totalDays / 365.25);
+        const remDays = Math.round(totalDays - years * 365.25);
+        if (remDays === 0) return `${sign}${years} yr${years !== 1 ? 's' : ''} from birth`;
+        return `${sign}${years}y ${remDays}d from birth`;
+    };
+
     const sunPos = getSunPosition(birthDate);
     const sign = ZODIAC_SIGNS[sunPos.signIndex];
     const decanData = sunPos.decanNum === 1 ? sign.decan1 : sunPos.decanNum === 2 ? sign.decan2 : sign.decan3;
@@ -192,11 +252,56 @@ export default function BirthSunPositionScreen({ route }: Props) {
     const { season, distance: seasonDist } = getNearestSeason(sunPos.longitude);
 
     const [selectedSignIdx, setSelectedSignIdx] = useState<number | null>(null);
+    const scrollRef = useRef<ScrollView>(null);
+
+    // ── Interactive Ecliptic Bar ──
+    const eclipticWRef = useRef(300); // layout width of the ecliptic touch area
+    const [eclipticW, setEclipticW] = useState(300);
+    const [isDraggingEcliptic, setIsDraggingEcliptic] = useState(false);
+    const eclipticStartOffsetRef = useRef(0);
+
+    const eclipticPanResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dx) > 3,
+            onPanResponderGrant: (evt) => {
+                eclipticStartOffsetRef.current = dayOffsetRef.current;
+                setIsDraggingEcliptic(true);
+                scrollRef.current?.setNativeProps?.({ scrollEnabled: false });
+                // Immediately jump to tap position
+                const touchX = evt.nativeEvent.locationX;
+                const targetLon = Math.max(0, Math.min(360, (touchX / eclipticWRef.current) * 360));
+                const birthLon = getSunPosition(originalBirthDate).longitude;
+                let lonDiff = targetLon - birthLon;
+                if (lonDiff > 180) lonDiff -= 360;
+                if (lonDiff < -180) lonDiff += 360;
+                const dayDiff = lonDiff / (360 / 365.25);
+                changeDate(dayDiff);
+            },
+            onPanResponderMove: (evt) => {
+                const touchX = evt.nativeEvent.locationX;
+                const targetLon = Math.max(0, Math.min(360, (touchX / eclipticWRef.current) * 360));
+                const birthLon = getSunPosition(originalBirthDate).longitude;
+                let lonDiff = targetLon - birthLon;
+                if (lonDiff > 180) lonDiff -= 360;
+                if (lonDiff < -180) lonDiff += 360;
+                const dayDiff = lonDiff / (360 / 365.25);
+                changeDate(dayDiff);
+            },
+            onPanResponderRelease: () => {
+                setIsDraggingEcliptic(false);
+                scrollRef.current?.setNativeProps?.({ scrollEnabled: true });
+            },
+            onPanResponderTerminate: () => {
+                setIsDraggingEcliptic(false);
+                scrollRef.current?.setNativeProps?.({ scrollEnabled: true });
+            },
+        })
+    ).current;
 
     // ── Interactive Zodiac Wheel ──
     const [angleOffset, setAngleOffset] = useState(0);
     const [isSpinning, setIsSpinning] = useState(false);
-    const scrollRef = useRef<ScrollView>(null);
     const lastAngleRef = useRef<number | null>(null);
     const spinAccumRef = useRef(0);
 
@@ -255,6 +360,7 @@ export default function BirthSunPositionScreen({ route }: Props) {
     return (
         <LinearGradient colors={['#1a0a00', '#2d1500', '#0d0d2b']} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#1a0a00" />
+            <RisingStars />
             <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
                 <Text style={styles.mainTitle}>☀️ Your Birth Sun</Text>
@@ -267,191 +373,121 @@ export default function BirthSunPositionScreen({ route }: Props) {
                     <Text style={styles.heroEmoji}>{sign.emoji}</Text>
                     <Text style={styles.heroSymbol}>{sign.symbol}</Text>
                     <Text style={styles.heroName}>{sign.name}</Text>
-                    <Text style={styles.heroDetail}>
-                        {Math.round(sunPos.degreeInSign)}° {sign.name} • {sign.element} • {sign.quality}
-                    </Text>
-                    <Text style={styles.heroDetail}>Ruled by {sign.ruler}</Text>
+                    <Text style={styles.heroDetail}>{sign.element} Sign • Ruled by {sign.ruler}</Text>
                 </View>
 
-                {/* Educational Intro */}
+                {/* ── TIME TRAVEL SLIDER — right under hero so users see changes ── */}
+                <View style={styles.sliderSection}>
+                    <Text style={styles.sliderTitle}>⏳ Time Travel</Text>
+                    <Text style={[styles.cardBody, { textAlign: 'center', marginBottom: 4 }]}>Drag to change the date and watch everything on this page update.</Text>
+                    <Text style={styles.sliderDateText}>
+                        {birthDate.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                    </Text>
+                    {dayOffset !== 0 && (
+                        <Text style={styles.sliderOffsetText}>{formatOffset(dayOffset)}</Text>
+                    )}
+                    <View
+                        style={styles.sliderTrackOuter}
+                        onLayout={(e) => { const w = e.nativeEvent.layout.width; sliderWRef.current = w; setSliderW(w); }}
+                        {...sliderPan.panHandlers}
+                    >
+                        <View style={styles.sliderTrack} />
+                        <View style={[styles.sliderCenterMark, { left: sliderW / 2 - 1 }]} />
+                        <View style={[styles.sliderThumb, { left: Math.max(0, Math.min(sliderW - 24, ((dayOffset + SLIDER_RANGE) / (2 * SLIDER_RANGE)) * sliderW - 12)) }]} />
+                    </View>
+                    <View style={styles.sliderLabelsRow}>
+                        <Text style={styles.sliderEndLabel}>−5 yrs</Text>
+                        <TouchableOpacity onPress={() => changeDate(0)}>
+                            <Text style={styles.sliderResetLabel}>⟲ Birth</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={jumpToToday}>
+                            <Text style={[styles.sliderResetLabel, { color: '#40E0D0' }]}>📅 Today</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.sliderEndLabel}>+5 yrs</Text>
+                    </View>
+                </View>
+
+                {/* ── SECTION 1: Where Was the Sun? (Visual + Interactive) ── */}
                 <View style={styles.card}>
-                    <Text style={styles.cardTitle}>🌞 What Is Your Sun Sign?</Text>
+                    <Text style={styles.cardTitle}>📍 Where Was the Sun?</Text>
                     <Text style={styles.cardBody}>
-                        Your Sun sign is determined by where the Sun was positioned along the ecliptic — the apparent path it traces through the sky — at the exact moment of your birth. The ecliptic passes through 12 constellations (the zodiac), and whichever constellation the Sun was "in" becomes your sign.{'\n\n'}In astrology, the Sun represents your core identity, ego, and life purpose. It's the most fundamental piece of your birth chart — your essential self that shines through everything you do.
+                        The gold dot ☀️ shows the Sun's position — {Math.round(sunPos.degreeInSign)}° into {sign.name}. Drag the ☀️ along the bar to move through time!
                     </Text>
-                </View>
-
-                {/* Ecliptic Position */}
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>📍 Ecliptic Position</Text>
-                    <Svg width="100%" height={70} viewBox="0 0 320 70">
-                        {/* Track */}
-                        <Line x1={10} y1={35} x2={310} y2={35} stroke="rgba(255,255,255,0.15)" strokeWidth={3} />
-                        {/* Sign markers */}
-                        {ZODIAC_SIGNS.map((z, i) => {
-                            const x = 10 + (z.startDeg / 360) * 300;
-                            return (
-                                <G key={z.name}>
-                                    <Circle cx={x} cy={35} r={2.5} fill="rgba(255,255,255,0.25)" />
-                                    <SvgText x={x} y={55} fill="rgba(255,255,255,0.4)" fontSize={11} textAnchor="middle">{z.symbol}</SvgText>
-                                </G>
-                            );
-                        })}
-                        {/* Sun position */}
-                        <Circle cx={10 + (sunPos.longitude / 360) * 300} cy={35} r={8} fill="#FFD700" />
-                        <SvgText x={10 + (sunPos.longitude / 360) * 300} y={18} fill="#FFD700" fontSize={10} fontWeight="bold" textAnchor="middle">☀️</SvgText>
-                    </Svg>
+                    <View
+                        onLayout={(e) => { const w = e.nativeEvent.layout.width; eclipticWRef.current = w; setEclipticW(w); }}
+                        {...eclipticPanResponder.panHandlers}
+                        style={{ paddingVertical: 8 }}
+                    >
+                        <Svg width="100%" height={70} viewBox={`0 0 ${eclipticW} 70`}>
+                            <Line x1={0} y1={35} x2={eclipticW} y2={35} stroke="rgba(255,255,255,0.15)" strokeWidth={3} />
+                            {ZODIAC_SIGNS.map((z) => {
+                                const x = (z.startDeg / 360) * eclipticW;
+                                return (
+                                    <G key={z.name}>
+                                        <Circle cx={x} cy={35} r={2.5} fill="rgba(255,255,255,0.25)" />
+                                        <SvgText x={x} y={55} fill="rgba(255,255,255,0.4)" fontSize={11} textAnchor="middle">{z.symbol}</SvgText>
+                                    </G>
+                                );
+                            })}
+                            {isDraggingEcliptic && (
+                                <Circle cx={(sunPos.longitude / 360) * eclipticW} cy={35} r={14} fill="rgba(255,215,0,0.15)" />
+                            )}
+                            <Circle cx={(sunPos.longitude / 360) * eclipticW} cy={35} r={8} fill="#FFD700" />
+                            <SvgText x={(sunPos.longitude / 360) * eclipticW} y={18} fill="#FFD700" fontSize={10} fontWeight="bold" textAnchor="middle">☀️</SvgText>
+                        </Svg>
+                    </View>
                     <Text style={styles.cycleText}>
-                        {Math.round(sunPos.longitude * 10) / 10}° ecliptic longitude — {Math.round(sunPos.degreeInSign)}° into {sign.name}
+                        Each dot is one of the 12 signs — drag the ☀️ to explore the full year
                     </Text>
                 </View>
 
-                {/* Personality Deep-Dive */}
+                {/* ── SECTION 2: Interactive Zodiac Wheel ── */}
                 <View style={styles.card}>
-                    <Text style={styles.cardTitle}>{sign.symbol} {sign.name} Personality</Text>
-                    <Text style={styles.cardBody}>{sign.personality}</Text>
-                    <View style={styles.tagRow}>
-                        {sign.strengths.map(s => (
-                            <View key={s} style={[styles.tag, { backgroundColor: `${sign.color}22` }]}>
-                                <Text style={[styles.tagText, { color: sign.color }]}>{s}</Text>
-                            </View>
-                        ))}
-                    </View>
-                    <Text style={styles.shadowText}>⚠️ Shadow side: {sign.shadow}</Text>
-                </View>
-
-                {/* Decan */}
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>🔱 Your Decan: {sign.name} {toRoman(sunPos.decanNum)}</Text>
+                    <Text style={styles.cardTitle}>🔮 Explore the Zodiac Wheel</Text>
                     <Text style={styles.cardBody}>
-                        Each zodiac sign is divided into three 10-degree sections called "decans" — each with its own sub-ruler that adds a unique flavor to your Sun sign. You were born in the {ordinal(sunPos.decanNum)} decan of {sign.name}.
-                    </Text>
-                    <View style={styles.decanDetail}>
-                        <Text style={styles.detailLabel}>Sub-ruler</Text>
-                        <Text style={styles.detailText}>{decanData.ruler}</Text>
-                    </View>
-                    <View style={styles.decanDetail}>
-                        <Text style={styles.detailLabel}>Decan Expression</Text>
-                        <Text style={styles.detailText}>{decanData.traits}</Text>
-                    </View>
-                    <View style={styles.decanDetail}>
-                        <Text style={styles.detailLabel}>Degrees</Text>
-                        <Text style={styles.detailText}>{(sunPos.decanNum - 1) * 10}°–{sunPos.decanNum * 10}° of {sign.name} (you: {Math.round(sunPos.degreeInSign)}°)</Text>
-                    </View>
-                </View>
-
-                {/* Season & Solstice Context */}
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>🌍 Seasonal Context</Text>
-                    <Text style={styles.cardBody}>
-                        The zodiac is linked to Earth's seasons. The four cardinal points — the two equinoxes and two solstices — mark the start of Aries, Cancer, Libra, and Capricorn respectively.
-                    </Text>
-                    <View style={styles.seasonRow}>
-                        {SEASONS.map(s => (
-                            <View key={s.name} style={[styles.seasonItem, s.name === season.name && { backgroundColor: 'rgba(255,213,79,0.12)', borderColor: '#FFD54F' }]}>
-                                <Text style={styles.seasonEmoji}>{s.emoji}</Text>
-                                <Text style={[styles.seasonName, s.name === season.name && { color: '#FFD54F' }]}>{s.name}</Text>
-                            </View>
-                        ))}
-                    </View>
-                    <Text style={styles.seasonDetail}>
-                        {seasonDist < 15
-                            ? `Born just ${Math.round(seasonDist)}° from the ${season.name}! You carry the powerful transitional energy of a seasonal turning point.`
-                            : `Nearest marker: ${season.emoji} ${season.name} (${Math.round(seasonDist)}° away). Your birth Sun sits in the ${getSolarSeason(sunPos.longitude)} portion of the zodiac year.`}
-                    </Text>
-                </View>
-
-                {/* Compatibility */}
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>💕 Sun Sign Compatibility</Text>
-                    <Text style={styles.cardBody}>
-                        Sun sign compatibility is the most popular layer of astrological matchmaking — which signs naturally harmonize with yours?
-                    </Text>
-                    <View style={styles.compatSection}>
-                        <Text style={styles.compatLabel}>🔥 Best Matches</Text>
-                        <View style={styles.compatRow}>
-                            {compat.best.map(n => {
-                                const z = ZODIAC_SIGNS.find(s => s.name === n)!;
-                                return <Text key={n} style={styles.compatSign}>{z.symbol} {z.name}</Text>;
-                            })}
-                        </View>
-                    </View>
-                    <View style={styles.compatSection}>
-                        <Text style={styles.compatLabel}>✨ Good Chemistry</Text>
-                        <View style={styles.compatRow}>
-                            {compat.good.map(n => {
-                                const z = ZODIAC_SIGNS.find(s => s.name === n)!;
-                                return <Text key={n} style={styles.compatSign}>{z.symbol} {z.name}</Text>;
-                            })}
-                        </View>
-                    </View>
-                    <View style={styles.compatSection}>
-                        <Text style={styles.compatLabel}>⚡ Growth Edges</Text>
-                        <View style={styles.compatRow}>
-                            {compat.challenge.map(n => {
-                                const z = ZODIAC_SIGNS.find(s => s.name === n)!;
-                                return <Text key={n} style={styles.compatSign}>{z.symbol} {z.name}</Text>;
-                            })}
-                        </View>
-                    </View>
-                </View>
-
-                {/* ═══ Interactive Zodiac Wheel ═══ */}
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>🔮 Interactive Zodiac Wheel</Text>
-                    <Text style={styles.cardBody}>
-                        Spin the wheel to explore all 12 signs. The ☀️ marks where the Sun was at your birth.
+                        The ☀️ moves with the slider too. Spin the wheel with your finger to explore the signs.
                     </Text>
                     <View style={styles.wheelWrap} {...wheelPanResponder.panHandlers}>
                         <Svg width={320} height={320} viewBox="0 0 320 320">
-                            {/* Outer ring glow */}
                             <Circle cx={WHEEL_CX} cy={WHEEL_CY} r={WHEEL_R + 8} fill="none" stroke="rgba(255,215,0,0.06)" strokeWidth={8} />
 
-                            {/* Sign segments */}
                             {ZODIAC_SIGNS.map((z, i) => {
                                 const startAngle = degToRad(-90 + z.startDeg + angleOffset);
                                 const endAngle = degToRad(-90 + z.startDeg + 30 + angleOffset);
                                 const isCurrent = i === sunPos.signIndex;
 
-                                // Segment arc
                                 const x1 = WHEEL_CX + WHEEL_R * Math.cos(startAngle);
                                 const y1 = WHEEL_CY + WHEEL_R * Math.sin(startAngle);
                                 const x2 = WHEEL_CX + WHEEL_R * Math.cos(endAngle);
                                 const y2 = WHEEL_CY + WHEEL_R * Math.sin(endAngle);
 
-                                // Inner radius for filled segment
                                 const innerR = 50;
                                 const ix1 = WHEEL_CX + innerR * Math.cos(startAngle);
                                 const iy1 = WHEEL_CY + innerR * Math.sin(startAngle);
                                 const ix2 = WHEEL_CX + innerR * Math.cos(endAngle);
                                 const iy2 = WHEEL_CY + innerR * Math.sin(endAngle);
 
-                                // Label position (middle of segment)
                                 const midAngle = degToRad(-90 + z.startDeg + 15 + angleOffset);
                                 const labelR = WHEEL_R - 30;
                                 const lx = WHEEL_CX + labelR * Math.cos(midAngle);
                                 const ly = WHEEL_CY + labelR * Math.sin(midAngle);
 
-                                // Outer symbol position
                                 const outerR = WHEEL_R + 18;
                                 const sx = WHEEL_CX + outerR * Math.cos(midAngle);
                                 const sy = WHEEL_CY + outerR * Math.sin(midAngle);
 
                                 return (
                                     <G key={z.name}>
-                                        {/* Segment fill */}
                                         <Path
                                             d={`M ${ix1} ${iy1} L ${x1} ${y1} A ${WHEEL_R} ${WHEEL_R} 0 0 1 ${x2} ${y2} L ${ix2} ${iy2} A ${innerR} ${innerR} 0 0 0 ${ix1} ${iy1}`}
                                             fill={isCurrent ? `${z.color}33` : 'rgba(255,255,255,0.03)'}
                                             stroke={isCurrent ? z.color : 'rgba(255,255,255,0.12)'}
                                             strokeWidth={isCurrent ? 1.5 : 0.5}
                                         />
-                                        {/* Sign symbol */}
                                         <SvgText x={lx} y={ly + 5} fontSize={14} textAnchor="middle"
                                             fill={isCurrent ? z.color : 'rgba(255,255,255,0.5)'} fontWeight={isCurrent ? 'bold' : 'normal'}>
                                             {z.symbol}
                                         </SvgText>
-                                        {/* Outer label */}
                                         <SvgText x={sx} y={sy + 4} fontSize={9} textAnchor="middle"
                                             fill={isCurrent ? z.color : 'rgba(255,255,255,0.35)'}>
                                             {z.name.substring(0, 3)}
@@ -460,15 +496,12 @@ export default function BirthSunPositionScreen({ route }: Props) {
                                 );
                             })}
 
-                            {/* Center circle */}
                             <Circle cx={WHEEL_CX} cy={WHEEL_CY} r={46} fill="rgba(0,0,0,0.6)" />
                             <Circle cx={WHEEL_CX} cy={WHEEL_CY} r={46} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
 
-                            {/* Sun marker */}
                             <Circle cx={sunX} cy={sunY} r={12} fill="#FFD700" opacity={0.9} />
                             <SvgText x={sunX} y={sunY + 5} fontSize={14} textAnchor="middle">☀️</SvgText>
 
-                            {/* Center info */}
                             <SvgText x={WHEEL_CX} y={WHEEL_CY - 8} fontSize={18} textAnchor="middle" fill="#FFD700">
                                 {displaySign.symbol}
                             </SvgText>
@@ -484,55 +517,146 @@ export default function BirthSunPositionScreen({ route }: Props) {
                     </View>
                     <Text style={styles.spinHint}>
                         {isSpinning
-                            ? `${displaySign.symbol} ${displaySign.name} — ${displaySign.element}`
-                            : '☝️ Spin the wheel to explore all 12 signs'}
+                            ? `${displaySign.symbol} ${displaySign.name} — ${displaySign.element} sign`
+                            : '☝️ Swipe the wheel to spin it'}
                     </Text>
                 </View>
 
-                {/* What the Sun Represents */}
+                {/* ── SECTION 5: Plain-English Intro ── */}
                 <View style={styles.card}>
-                    <Text style={styles.cardTitle}>💡 What the Sun Represents</Text>
-                    <View style={styles.decanDetail}>
-                        <Text style={styles.detailLabel}>🪞 Identity & Ego</Text>
-                        <Text style={styles.detailText}>Your Sun sign is your core self — the "you" that comes through most clearly as you mature. It shapes your fundamental motivations, values, and sense of purpose.</Text>
-                    </View>
-                    <View style={styles.decanDetail}>
-                        <Text style={styles.detailLabel}>🔥 Vitality & Energy</Text>
-                        <Text style={styles.detailText}>The Sun rules your physical vitality and life force. Where the Moon governs emotions and instinct, the Sun powers your conscious will, creativity, and drive to express yourself.</Text>
-                    </View>
-                    <View style={styles.decanDetail}>
-                        <Text style={styles.detailLabel}>👑 Life Purpose</Text>
-                        <Text style={styles.detailText}>In traditional astrology, the Sun sign reveals the themes you're meant to master in this lifetime. It's the hero's journey you're on — shaped by your sign's element, quality, and ruling planet.</Text>
-                    </View>
-                    <View style={styles.decanDetail}>
-                        <Text style={styles.detailLabel}>☀️ vs 🌙 Sun vs Moon</Text>
-                        <Text style={styles.detailText}>Your Sun sign is who you ARE. Your Moon sign is how you FEEL. Together they form the two most important pillars of your birth chart — the conscious self and the emotional self.</Text>
-                    </View>
+                    <Text style={styles.cardTitle}>🌞 What Does This Page Mean?</Text>
+                    <Text style={styles.cardBody}>
+                        Think of the sky as a giant clock. The Sun moves through 12 sections of that clock over the course of a year — those sections are the 12 zodiac signs.{'\n\n'}Whichever section the Sun was passing through on the day you were born becomes your "Sun sign." It's the sign most people mean when they say "I'm a Leo" or "I'm a Pisces."{'\n\n'}Your Sun sign is basically your personality headline — the broadest description of who you are, what drives you, and how you show up in the world.
+                    </Text>
                 </View>
 
-                {/* Element Deep-Dive */}
+                {/* ── SECTION 6: YOUR Sign Personality ── */}
                 <View style={styles.card}>
-                    <Text style={styles.cardTitle}>{getElementEmoji(sign.element)} {sign.element} Sign</Text>
-                    <Text style={styles.cardBody}>{getElementDescription(sign.element)}</Text>
+                    <Text style={styles.cardTitle}>{sign.symbol} You're a {sign.name} — Here's What That Means</Text>
+                    <Text style={styles.cardBody}>{sign.personality}</Text>
+                    <View style={styles.tagRow}>
+                        {sign.strengths.map(s => (
+                            <View key={s} style={[styles.tag, { backgroundColor: `${sign.color}22` }]}>
+                                <Text style={[styles.tagText, { color: sign.color }]}>{s}</Text>
+                            </View>
+                        ))}
+                    </View>
+                    <Text style={styles.shadowText}>⚠️ Watch out for: {sign.shadow}</Text>
+                </View>
+
+                {/* ── SECTION 7: Your Element ── */}
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>{getElementEmoji(sign.element)} You're a {sign.element} Sign</Text>
+                    <Text style={styles.cardBody}>
+                        Every sign belongs to one of four elements: Fire, Earth, Air, or Water. Your element is like your sign's personality family — it tells you a lot about your general vibe.{'\n\n'}{getElementDescriptionSimple(sign.element)}
+                    </Text>
                     <View style={styles.elementGroup}>
-                        <Text style={styles.detailLabel}>{sign.element} Signs</Text>
+                        <Text style={styles.detailLabel}>Other {sign.element} Signs</Text>
                         <Text style={styles.detailText}>
-                            {ZODIAC_SIGNS.filter(z => z.element === sign.element).map(z => `${z.symbol} ${z.name}`).join('  •  ')}
+                            {ZODIAC_SIGNS.filter(z => z.element === sign.element && z.name !== sign.name).map(z => `${z.symbol} ${z.name}`).join('  •  ')}
                         </Text>
                     </View>
                 </View>
 
-                {/* All 12 Signs Reference */}
+                {/* ── SECTION 6: Your Decan (simplified) ── */}
                 <View style={styles.card}>
-                    <Text style={styles.cardTitle}>📖 The 12 Sun Signs</Text>
-                    {ZODIAC_SIGNS.map(z => (
-                        <View key={z.name} style={[styles.signRow, z.name === sign.name && { backgroundColor: `${z.color}15`, borderRadius: 8 }]}>
-                            <Text style={styles.signRowSymbol}>{z.symbol}</Text>
-                            <View style={{ flex: 1 }}>
-                                <Text style={[styles.signRowName, z.name === sign.name && { color: z.color }]}>{z.name}</Text>
-                                <Text style={styles.signRowDesc}>{z.element} • {z.quality} • {z.ruler}</Text>
+                    <Text style={styles.cardTitle}>🔱 Your Flavor of {sign.name}</Text>
+                    <Text style={styles.cardBody}>
+                        Not all {sign.name}s are exactly the same! Each sign is split into 3 groups called "decans" (think of it like early, middle, and late {sign.name}). You're in group {sunPos.decanNum} — which gives your personality an extra twist from the planet {decanData.ruler}.
+                    </Text>
+                    <View style={styles.decanDetail}>
+                        <Text style={styles.detailLabel}>What makes your group different</Text>
+                        <Text style={styles.detailText}>{decanData.traits}</Text>
+                    </View>
+                </View>
+
+                {/* ── SECTION 7: Compatibility ── */}
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>💕 Who Do {sign.name}s Get Along With?</Text>
+                    <Text style={styles.cardBody}>
+                        Some signs just click — kind of like how some people instantly get your humor. Here's who tends to vibe best with {sign.name}:
+                    </Text>
+                    <View style={styles.compatSection}>
+                        <Text style={styles.compatLabel}>❤️ Best Match — natural soulmates</Text>
+                        <View style={styles.compatRow}>
+                            {compat.best.map(n => {
+                                const z = ZODIAC_SIGNS.find(s => s.name === n)!;
+                                return <Text key={n} style={styles.compatSign}>{z.symbol} {z.name}</Text>;
+                            })}
+                        </View>
+                    </View>
+                    <View style={styles.compatSection}>
+                        <Text style={styles.compatLabel}>✨ Good Chemistry — easy connection</Text>
+                        <View style={styles.compatRow}>
+                            {compat.good.map(n => {
+                                const z = ZODIAC_SIGNS.find(s => s.name === n)!;
+                                return <Text key={n} style={styles.compatSign}>{z.symbol} {z.name}</Text>;
+                            })}
+                        </View>
+                    </View>
+                    <View style={styles.compatSection}>
+                        <Text style={styles.compatLabel}>⚡ Opposites Attract — takes more work</Text>
+                        <View style={styles.compatRow}>
+                            {compat.challenge.map(n => {
+                                const z = ZODIAC_SIGNS.find(s => s.name === n)!;
+                                return <Text key={n} style={styles.compatSign}>{z.symbol} {z.name}</Text>;
+                            })}
+                        </View>
+                    </View>
+                </View>
+
+                {/* ── SECTION 8: Season ── */}
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>🌍 What Season Were You Born In?</Text>
+                    <Text style={styles.cardBody}>
+                        The zodiac follows the real seasons of the year. Each season starts with a major event — a solstice or equinox — and your sign falls in the {getSolarSeason(sunPos.longitude)} part of the cycle.
+                    </Text>
+                    <View style={styles.seasonRow}>
+                        {SEASONS.map(s => (
+                            <View key={s.name} style={[styles.seasonItem, s.name === season.name && { backgroundColor: 'rgba(255,213,79,0.12)', borderColor: '#FFD54F' }]}>
+                                <Text style={styles.seasonEmoji}>{s.emoji}</Text>
+                                <Text style={[styles.seasonName, s.name === season.name && { color: '#FFD54F' }]}>{s.name}</Text>
                             </View>
-                            {z.name === sign.name && <Text style={{ color: z.color, fontWeight: '900', fontSize: 12 }}>← YOU</Text>}
+                        ))}
+                    </View>
+                    <Text style={styles.seasonDetail}>
+                        {seasonDist < 15
+                            ? `You were born right near the ${season.name} — a powerful turning point in the year!`
+                            : `Your closest seasonal marker is the ${season.emoji} ${season.name} (${Math.round(seasonDist)}° away).`}
+                    </Text>
+                </View>
+
+                {/* ── SECTION 10: Sun vs Moon (plain English) ── */}
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>💡 Quick Guide: Sun Sign vs Moon Sign</Text>
+                    <View style={styles.decanDetail}>
+                        <Text style={styles.detailLabel}>☀️ Sun Sign = Who You Are</Text>
+                        <Text style={styles.detailText}>Your personality, your ego, your main character energy. It's the "you" that people see when they first get to know you.</Text>
+                    </View>
+                    <View style={styles.decanDetail}>
+                        <Text style={styles.detailLabel}>🌙 Moon Sign = How You Feel</Text>
+                        <Text style={styles.detailText}>Your emotions, your inner world, how you deal with stress and comfort. It's the private "you" that only close people see.</Text>
+                    </View>
+                    <View style={styles.decanDetail}>
+                        <Text style={styles.detailLabel}>⬆️ Rising Sign = How You Come Across</Text>
+                        <Text style={styles.detailText}>Your first impression, your outward style, the mask you wear when you walk into a room full of strangers.</Text>
+                    </View>
+                </View>
+
+                {/* ── SECTION 11: All 12 Signs Grid ── */}
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>📖 All 12 Sun Signs at a Glance</Text>
+                    {[0, 1, 2, 3].map(row => (
+                        <View key={row} style={styles.signGridRow}>
+                            {ZODIAC_SIGNS.slice(row * 3, row * 3 + 3).map(z => (
+                                <View key={z.name} style={[styles.signGridCell, z.name === sign.name && { backgroundColor: `${z.color}15`, borderColor: z.color }]}>
+                                    <Text style={styles.signGridSymbol}>{z.symbol}</Text>
+                                    <Text style={[styles.signGridName, z.name === sign.name && { color: z.color }]}>{z.name}</Text>
+                                    <Text style={styles.signGridDetail}>{z.element}</Text>
+                                    <Text style={styles.signGridDetail}>{z.ruler}</Text>
+                                    {z.name === sign.name && <Text style={[styles.signGridYou, { color: z.color }]}>YOU</Text>}
+                                </View>
+                            ))}
                         </View>
                     ))}
                 </View>
@@ -564,12 +688,12 @@ function getElementEmoji(element: string): string {
     return element === 'Fire' ? '🔥' : element === 'Earth' ? '🌍' : element === 'Air' ? '💨' : '🌊';
 }
 
-function getElementDescription(element: string): string {
+function getElementDescriptionSimple(element: string): string {
     switch (element) {
-        case 'Fire': return 'Fire signs are passionate, dynamic, and temperamental. They get angry quickly, but they also forgive easily. They are adventurers with immense energy — physically strong and a source of inspiration for others. Fire signs are intelligent, self-aware, creative, and idealistic.';
-        case 'Earth': return 'Earth signs are grounded, practical, and stable. They are the builders of the zodiac — patient, reliable, and deeply connected to the physical world. They value security and material comfort, but also possess a deep appreciation for nature and beauty.';
-        case 'Air': return 'Air signs are intellectual, communicative, and social. They are the thinkers and connectors of the zodiac — analytical, curious, and always seeking new ideas and perspectives. They thrive on mental stimulation and meaningful conversation.';
-        case 'Water': return 'Water signs are emotional, intuitive, and deeply sensitive. They are the feelers of the zodiac — empathic, nurturing, and profoundly connected to the unseen currents of life. They experience the world through emotion and intuition first.';
+        case 'Fire': return 'Fire signs are the go-getters. They\'re passionate, energetic, and not afraid to take risks. Think of them as the people who light up a room and get things moving.';
+        case 'Earth': return 'Earth signs are the steady ones. They\'re practical, reliable, and grounded. They\'re the people you can always count on — the builders and planners of the group.';
+        case 'Air': return 'Air signs are the thinkers and talkers. They love ideas, conversation, and connecting with people. They\'re curious about everything and always asking "why?"';
+        case 'Water': return 'Water signs are the feelers. They\'re deeply emotional, intuitive, and empathetic. They pick up on vibes other people miss and feel things on a whole different level.';
         default: return '';
     }
 }
@@ -611,4 +735,24 @@ const styles = StyleSheet.create({
     signRowSymbol: { fontSize: 22 },
     signRowName: { fontSize: 14, fontWeight: '700', color: '#fff' },
     signRowDesc: { fontSize: 11, color: 'rgba(255,255,255,0.4)' },
+    signGridRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+    signGridCell: { flex: 1, alignItems: 'center', paddingVertical: 10, marginHorizontal: 3, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.04)' },
+    signGridSymbol: { fontSize: 26, marginBottom: 2 },
+    signGridName: { fontSize: 12, fontWeight: '800', color: '#fff', marginBottom: 2 },
+    signGridDetail: { fontSize: 9, color: 'rgba(255,255,255,0.45)', lineHeight: 13 },
+    signGridYou: { fontSize: 9, fontWeight: '900', marginTop: 3, letterSpacing: 1 },
+    sliderSection: { marginBottom: 14, paddingHorizontal: 8, paddingVertical: 14, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' },
+    sliderTitle: { fontSize: 16, fontWeight: '800', color: '#FFD54F', textAlign: 'center', marginBottom: 4 },
+    sliderDateText: { fontSize: 14, fontWeight: '700', color: '#fff', textAlign: 'center', marginBottom: 2 },
+    sliderOffsetText: { fontSize: 12, fontWeight: '600', color: '#FFD54F', textAlign: 'center', marginBottom: 6 },
+    sliderTrackOuter: { height: 44, justifyContent: 'center', marginHorizontal: 4, marginVertical: 8 },
+    sliderTrack: { position: 'absolute', left: 0, right: 0, height: 4, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 2 },
+    sliderCenterMark: { position: 'absolute', width: 2, height: 20, backgroundColor: 'rgba(255,213,79,0.5)', borderRadius: 1, top: 12 },
+    sliderThumb: { position: 'absolute', width: 24, height: 24, borderRadius: 12, backgroundColor: '#FFD54F', borderWidth: 2, borderColor: '#fff', top: 10, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3 },
+    sliderLabelsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 4 },
+    sliderEndLabel: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.5)' },
+    sliderResetLabel: { fontSize: 13, fontWeight: '700', color: '#FFD54F' },
+    stepRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, gap: 4 },
+    stepBtn: { flex: 1, paddingVertical: 4, paddingHorizontal: 1, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center' },
+    stepBtnText: { fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.7)' },
 });

@@ -98,6 +98,7 @@ export type RootStackParamList = {
     AnniversaryForm: undefined;
     WeddingForm: undefined;
     BusinessAnniversaryForm: undefined;
+    TradingCardForm: undefined;
     JustForFun: undefined;
     WrittenInTheStars: undefined;
     Generations: { birthDate: string };
@@ -160,6 +161,8 @@ export type RootStackParamList = {
     WeddingRSVP: { weddingId: string };
     WeddingRSVPDashboard: { weddingId: string; coupleName?: string };
     SkyWheels: { birthDate: string; birthTime?: string; birthLocation?: string };
+    SolarSystemTimeCapsule: { birthDate: string; birthTime?: string; birthLocation?: string };
+    BiblicalWheels: { birthDate: string; birthTime?: string; birthLocation?: string };
     Astrocartography: { birthDate: string; birthTime?: string; birthLocation?: string };
     FriendCompatibility: { birthDate: string; birthTime?: string; birthLocation?: string };
     BabyRegistryPortal: undefined;

@@ -202,6 +202,23 @@ export default function LandingScreen({ navigation }: Props) {
                     {/* Divider Gap */}
                     <View style={styles.sectionGap} />
 
+                    {/* Trading Cards */}
+                    <TouchableOpacity
+                        style={styles.cardButton}
+                        onPress={() => navigation.navigate('TradingCardForm')}
+                        activeOpacity={0.85}
+                    >
+                        <View style={styles.cardContent}>
+                            <View style={[styles.cardIconBox, { backgroundColor: '#8B0000' }]}>
+                                <Text style={styles.cardEmoji}>⚾</Text>
+                            </View>
+                            <View style={styles.cardTextContainer}>
+                                <Text style={styles.cardTitle}>Trading Cards</Text>
+                                <Text style={{ fontSize: 12, color: '#666', marginTop: 2, fontWeight: '700' }}>Collectible baseball-style cards for anyone</Text>
+                            </View>
+                        </View>
+                    </TouchableOpacity>
+
                     {/* Written In The Stars */}
                     <TouchableOpacity
                         style={styles.cardButton}

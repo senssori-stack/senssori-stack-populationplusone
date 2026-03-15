@@ -12,6 +12,8 @@ import {
     View,
 } from 'react-native';
 import { Circle, G, Path, Svg, Text as SvgText } from 'react-native-svg';
+import EclipticWheel from '../../components/EclipticWheel';
+import RisingStars from '../../components/RisingStars';
 import { calculateNatalChart } from '../data/utils/natal-chart-calculator';
 import { getCityCoordinates } from '../data/utils/town-coordinates';
 import type { RootStackParamList } from '../types';
@@ -146,36 +148,42 @@ export default function SkyWheelsScreen({ route }: Props) {
 
     // Shared date-change helper
     const changeDate = useCallback((newOffset: number) => {
-        setDayOffset(newOffset);
-        dayOffsetRef.current = newOffset;
-        const newDate = new Date(originalBirthDateRef.current.getTime() + newOffset * 86400000);
+        const clamped = Math.max(-SLIDER_RANGE, Math.min(SLIDER_RANGE, newOffset));
+        setDayOffset(clamped);
+        dayOffsetRef.current = clamped;
+        const newDate = new Date(originalBirthDateRef.current.getTime() + clamped * 86400000);
         setBirthDate(newDate);
     }, []);
 
     const formatOffset = (offset: number) => {
-        const sign = offset > 0 ? '+' : '';
-        const totalHours = Math.round(Math.abs(offset) * 24);
-        if (totalHours < 24) return `${sign}${offset < 0 ? '-' : ''}${totalHours} hr${totalHours !== 1 ? 's' : ''} from birth`;
-        const days = Math.floor(Math.abs(offset));
-        const hrs = totalHours - days * 24;
-        if (hrs === 0) return `${sign}${offset < 0 ? '-' : ''}${days} day${days !== 1 ? 's' : ''} from birth`;
-        return `${sign}${offset < 0 ? '-' : ''}${days}d ${hrs}h from birth`;
+        const absOffset = Math.abs(offset);
+        const sign = offset > 0 ? '+' : '\u2212';
+        if (absOffset < 1) {
+            const hrs = Math.round(absOffset * 24);
+            return `${sign}${hrs} hr${hrs !== 1 ? 's' : ''} from birth`;
+        }
+        const totalDays = Math.round(absOffset);
+        if (totalDays < 365) return `${sign}${totalDays} day${totalDays !== 1 ? 's' : ''} from birth`;
+        const years = Math.floor(totalDays / 365.25);
+        const remDays = Math.round(totalDays - years * 365.25);
+        if (remDays === 0) return `${sign}${years} yr${years !== 1 ? 's' : ''} from birth`;
+        return `${sign}${years}y ${remDays}d from birth`;
     };
     // ── Time Slider ──
-    const SLIDER_RANGE = 365;
+    const SLIDER_RANGE = 36525; // ±100 years
     const sliderWRef = useRef(300);
     const [sliderW, setSliderW] = useState(300);
+    const sliderStartOffsetRef = useRef(0);
     const sliderPan = useRef(
         PanResponder.create({
             onStartShouldSetPanResponder: () => true,
             onMoveShouldSetPanResponder: () => true,
-            onPanResponderGrant: (evt) => {
-                const ratio = Math.max(0, Math.min(1, evt.nativeEvent.locationX / sliderWRef.current));
-                changeDate(Math.round((ratio * 2 - 1) * SLIDER_RANGE));
+            onPanResponderGrant: () => {
+                sliderStartOffsetRef.current = dayOffsetRef.current;
             },
-            onPanResponderMove: (evt) => {
-                const ratio = Math.max(0, Math.min(1, evt.nativeEvent.locationX / sliderWRef.current));
-                changeDate(Math.round((ratio * 2 - 1) * SLIDER_RANGE));
+            onPanResponderMove: (_, gesture) => {
+                const daysPerPixel = (2 * SLIDER_RANGE) / sliderWRef.current;
+                changeDate(sliderStartOffsetRef.current + gesture.dx * daysPerPixel);
             },
             onPanResponderRelease: () => { },
         })
@@ -194,12 +202,35 @@ export default function SkyWheelsScreen({ route }: Props) {
     return (
         <LinearGradient colors={['#1a237e', '#283593', '#3949ab']} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#1a237e" />
+            <RisingStars />
             <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
                 <Text style={styles.pageTitle}>🎡 Sky Wheels</Text>
                 <Text style={styles.pageSubtitle}>
                     {birthDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </Text>
+                {/* ═══ ECLIPTIC ZODIAC BELT ═══ */}
+                {(() => {
+                    const screenW = Dimensions.get('window').width;
+                    const j2000d = new Date(Date.UTC(2000, 0, 1, 12, 0, 0));
+                    const d2k = (birthDate.getTime() - j2000d.getTime()) / 86400000;
+                    // Compute user's sun sign from birth date
+                    const sunLon = ((280.46 + 0.9856 * d2k) % 360 + 360) % 360;
+                    const userSign = getZodiacFromDegree(sunLon);
+                    return (
+                        <EclipticWheel
+                            width={screenW - 24}
+                            daysSinceJ2000={d2k}
+                            userSign={userSign}
+                            onDaysChange={(newD2k) => {
+                                // Convert J2000 days back to a day offset from original birth date
+                                const origD2k = (originalBirthDateRef.current.getTime() - new Date(Date.UTC(2000, 0, 1, 12, 0, 0)).getTime()) / 86400000;
+                                changeDate(newD2k - origD2k);
+                            }}
+                        />
+                    );
+                })()}
+
                 {/* ═══ SKY WHEELS — 2×2 GRID ═══ */}
                 {(() => {
                     const screenW = Dimensions.get('window').width;
@@ -231,7 +262,7 @@ export default function SkyWheelsScreen({ route }: Props) {
                     const interstellarObjs = [
                         { name: '1I', sym: '1I', periDate: Date.UTC(2017, 8, 9), q: 0.255, e: 1.1995, periLong: 115, color: '#FF5252' },   // 'Oumuamua
                         { name: '2I', sym: '2I', periDate: Date.UTC(2019, 11, 8), q: 2.007, e: 3.3572, periLong: 218, color: '#69F0AE' },  // Borisov
-                        { name: '3I', sym: '3I', periDate: Date.UTC(2025, 9, 24), q: 1.36, e: 5.18, periLong: 200, color: '#FFAB40' },     // ATLAS
+                        { name: '3I', sym: '3I', periDate: Date.UTC(2025, 9, 29), q: 1.36, e: 5.18, periLong: 200, color: '#FFAB40' },     // ATLAS
                     ];
                     const computeInterstellar = (obj: typeof interstellarObjs[0]) => {
                         const dtDays = (birthDate.getTime() - obj.periDate) / 86400000;
@@ -376,7 +407,7 @@ export default function SkyWheelsScreen({ route }: Props) {
                 <View style={styles.sliderSection}>
                     <Text style={styles.sliderTitle}>⏳ Time Travel</Text>
                     <Text style={styles.sliderDateText}>
-                        {birthDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                        {birthDate.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
                     </Text>
                     {dayOffset !== 0 && (
                         <Text style={styles.sliderOffsetText}>
@@ -393,22 +424,22 @@ export default function SkyWheelsScreen({ route }: Props) {
                         <View style={[styles.sliderThumb, { left: Math.max(0, Math.min(sliderW - 24, ((dayOffset + SLIDER_RANGE) / (2 * SLIDER_RANGE)) * sliderW - 12)) }]} />
                     </View>
                     <View style={styles.sliderLabelsRow}>
-                        <Text style={styles.sliderEndLabel}>−1 yr</Text>
+                        <Text style={styles.sliderEndLabel}>−100 yrs</Text>
                         <TouchableOpacity onPress={() => changeDate(0)}>
                             <Text style={styles.sliderResetLabel}>⟲ Reset</Text>
                         </TouchableOpacity>
-                        <Text style={styles.sliderEndLabel}>+1 yr</Text>
+                        <Text style={styles.sliderEndLabel}>+100 yrs</Text>
                     </View>
                     <View style={styles.stepRow}>
-                        {[{ label: '1yr', d: 365 }, { label: '3mo', d: 91 }, { label: '1mo', d: 30 }, { label: '10d', d: 10 }, { label: '1d', d: 1 }, { label: '12h', d: 0.5 }, { label: '6h', d: 0.25 }].map(s => (
-                            <TouchableOpacity key={'m' + s.d} onPress={() => changeDate(dayOffset - s.d)} style={styles.stepBtn}>
+                        {[{ label: '5yr', d: 1826.25 }, { label: '1yr', d: 365.25 }, { label: '6mo', d: 182.625 }, { label: '1mo', d: 30.44 }, { label: '12h', d: 0.5 }, { label: '3h', d: 0.125 }].map(s => (
+                            <TouchableOpacity key={'m' + s.label} onPress={() => changeDate(dayOffset - s.d)} style={styles.stepBtn}>
                                 <Text style={styles.stepBtnText}>◀{s.label}</Text>
                             </TouchableOpacity>
                         ))}
                     </View>
                     <View style={styles.stepRow}>
-                        {[{ label: '6h', d: 0.25 }, { label: '12h', d: 0.5 }, { label: '1d', d: 1 }, { label: '10d', d: 10 }, { label: '1mo', d: 30 }, { label: '3mo', d: 91 }, { label: '1yr', d: 365 }].map(s => (
-                            <TouchableOpacity key={'p' + s.d} onPress={() => changeDate(dayOffset + s.d)} style={styles.stepBtn}>
+                        {[{ label: '3h', d: 0.125 }, { label: '12h', d: 0.5 }, { label: '1mo', d: 30.44 }, { label: '6mo', d: 182.625 }, { label: '1yr', d: 365.25 }, { label: '5yr', d: 1826.25 }].map(s => (
+                            <TouchableOpacity key={'p' + s.label} onPress={() => changeDate(dayOffset + s.d)} style={styles.stepBtn}>
                                 <Text style={styles.stepBtnText}>{s.label}▶</Text>
                             </TouchableOpacity>
                         ))}
@@ -456,7 +487,7 @@ const styles = StyleSheet.create({
         textTransform: 'uppercase',
     },
     sliderSection: {
-        marginBottom: 16,
+        marginBottom: 14,
         paddingHorizontal: 8,
         paddingVertical: 14,
         backgroundColor: 'rgba(255,255,255,0.06)',
@@ -527,8 +558,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     stepBtnText: {
-        fontSize: 8,
-        fontWeight: '700',
+        fontSize: 10,
+        fontWeight: '800',
         color: 'rgba(255,255,255,0.7)',
     },
 });

@@ -2,6 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import RisingStars from '../../components/RisingStars';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AstrologyEducation'>;
@@ -123,6 +124,7 @@ export default function AstrologyEducationScreen({ }: Props) {
     return (
         <LinearGradient colors={['#0d0d2b', '#1a1a3e', '#2c1654']} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#0d0d2b" />
+            <RisingStars />
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
                 {/* Header */}

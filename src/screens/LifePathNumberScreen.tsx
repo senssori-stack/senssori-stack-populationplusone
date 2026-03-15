@@ -1,15 +1,16 @@
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import {
-    View,
-    Text,
+    Dimensions,
     ScrollView,
-    TouchableOpacity,
-    StyleSheet,
     StatusBar,
-    Dimensions
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import RisingStars from '../../components/RisingStars';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LifePathNumber'>;
@@ -146,6 +147,7 @@ export default function LifePathNumberScreen({ navigation, route }: Props) {
     return (
         <LinearGradient colors={['#4a148c', '#7b1fa2', '#9c27b0']} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#4a148c" />
+            <RisingStars />
 
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 {/* Header */}

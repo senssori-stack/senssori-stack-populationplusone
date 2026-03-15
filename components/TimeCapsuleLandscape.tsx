@@ -47,6 +47,7 @@ type Props = {
     heritage?: string;
     heritageWithFlags?: string;
     nationality?: string;
+    militaryBranch?: string;
     snapshot: Record<string, string>;
     zodiac: string;
     birthstone: string;
@@ -204,6 +205,7 @@ export default function TimeCapsuleLandscape(props: Props) {
         heritage,
         heritageWithFlags,
         nationality,
+        militaryBranch,
         zodiac,
         birthstone,
         lifePathNumber,
@@ -468,6 +470,10 @@ export default function TimeCapsuleLandscape(props: Props) {
         if (traits.length > 0) {
             bornSentence += `. ${babyFirstOnly} is proudly ${traits.join(' and ')}`;
         }
+        if (militaryBranch) {
+            const militaryEmojis: Record<string, string> = { Army: '\u{1FA96}', Navy: '\u2693', 'Air Force': '\u2708\uFE0F', Marines: '\u{1F985}', 'Coast Guard': '\u26F5', 'Space Force': '\u{1F680}' };
+            bornSentence += `. ${babyFirstOnly} proudly served in the ${militaryBranch} ${militaryEmojis[militaryBranch] || ''}`;
+        }
         bornSentence += ` and is now ${age} years old`;
         parts.push(bornSentence);
 
@@ -487,6 +493,10 @@ export default function TimeCapsuleLandscape(props: Props) {
         const babyTraits = [(heritageWithFlags || heritage)?.trim(), nationality?.trim()].filter(Boolean);
         if (babyTraits.length > 0) {
             birthSentence += `. ${babyFirstOnly} is proudly ${babyTraits.join(' and ')}`;
+        }
+        if (militaryBranch) {
+            const militaryEmojis: Record<string, string> = { Army: '\u{1FA96}', Navy: '\u2693', 'Air Force': '\u2708\uFE0F', Marines: '\u{1F985}', 'Coast Guard': '\u26F5', 'Space Force': '\u{1F680}' };
+            birthSentence += `. ${babyFirstOnly} proudly served in the ${militaryBranch} ${militaryEmojis[militaryBranch] || ''}`;
         }
 
         // Add weight and length if available
@@ -897,7 +907,7 @@ export default function TimeCapsuleLandscape(props: Props) {
                 <View style={{
                     width: '100%',
                     position: 'absolute',
-                    bottom: padding * 2,
+                    bottom: padding * 0.5,
                     left: 0,
                     alignItems: 'center',
                 }}>

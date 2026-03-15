@@ -15,6 +15,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import RisingStars from '../../components/RisingStars';
 import ScrollableDatePicker from '../../components/ScrollableDatePicker';
 import type { RootStackParamList } from '../types';
 
@@ -188,6 +189,7 @@ export default function FriendCompatibilityScreen({ route }: Props) {
     return (
         <LinearGradient colors={['#1a0033', '#0d1b2a', '#1b2838']} style={styles.gradient}>
             <StatusBar barStyle="light-content" />
+            <RisingStars />
             <ScrollView contentContainerStyle={styles.container}>
                 {/* Header */}
                 <Text style={styles.title}>👫 Friend Compatibility</Text>

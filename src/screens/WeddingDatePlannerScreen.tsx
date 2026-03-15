@@ -2,6 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo, useState } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import RisingStars from '../../components/RisingStars';
 import ScrollableDatePicker from '../../components/ScrollableDatePicker';
 import type { RootStackParamList } from '../types';
 
@@ -230,6 +231,7 @@ export default function WeddingDatePlannerScreen({ route }: Props) {
     return (
         <LinearGradient colors={['#1a0030', '#2d1b4e', '#1b2838']} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#1a0030" />
+            <RisingStars />
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 {/* Header */}
                 <View style={styles.header}>

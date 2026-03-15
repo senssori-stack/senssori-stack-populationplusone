@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { Circle, G, Line, Rect, Svg, Text as SvgText } from 'react-native-svg';
+import RisingStars from '../../components/RisingStars';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Chakra'>;
@@ -65,6 +66,7 @@ export default function ChakraScreen({ route }: Props) {
     return (
         <LinearGradient colors={['#0d001a', '#1a0a2a', '#0a0d1a']} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#0d001a" />
+            <RisingStars />
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
                 <Text style={styles.mainTitle}>🧘 Your Chakra Profile</Text>

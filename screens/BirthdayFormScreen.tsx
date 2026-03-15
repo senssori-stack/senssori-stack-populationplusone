@@ -163,6 +163,8 @@ export default function BirthdayFormScreen({ navigation }: Props) {
     const [selectedHeritages, setSelectedHeritages] = useState<string[]>([]);
     const [showHeritageModal, setShowHeritageModal] = useState(false);
     const [nationality, setNationality] = useState('');
+    const [militaryBranch, setMilitaryBranch] = useState('');
+    const [showMilitaryPicker, setShowMilitaryPicker] = useState(false);
     const [dobDate, setDobDate] = useState<Date>(new Date(2026, 1, 4)); // Feb 4, 2026
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedMessage, setSelectedMessage] = useState<MessageKey>('classic');
@@ -281,6 +283,7 @@ export default function BirthdayFormScreen({ navigation }: Props) {
                 hometown: hometown.trim(),
                 heritage: formatHeritageDisplay(selectedHeritages) || undefined,
                 nationality: nationality.trim() || undefined,
+                militaryBranch: militaryBranch || undefined,
                 dobISO: dobISO,
                 mode: 'milestone',
                 message: finalMessage,
@@ -442,14 +445,56 @@ export default function BirthdayFormScreen({ navigation }: Props) {
             </Modal>
 
             {/* Nationality */}
-            <Text style={styles.label}>Nationality (optional)</Text>
-            <TextInput
-                style={styles.input}
-                value={nationality}
-                onChangeText={setNationality}
-                placeholder="e.g. American"
-                placeholderTextColor="#999"
-            />
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.label}>Nationality (optional)</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={nationality}
+                        onChangeText={setNationality}
+                        placeholder="e.g. American"
+                        placeholderTextColor="#999"
+                    />
+                </View>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.label}>Military (optional)</Text>
+                    <TouchableOpacity
+                        style={styles.dropdown}
+                        onPress={() => setShowMilitaryPicker(true)}
+                    >
+                        <Text style={militaryBranch ? styles.dropdownText : styles.dropdownPlaceholder}>
+                            {militaryBranch || 'Select branch...'}
+                        </Text>
+                        <Text style={styles.dropdownArrow}>▼</Text>
+                    </TouchableOpacity>
+                    <Modal visible={showMilitaryPicker} transparent animationType="slide">
+                        <View style={styles.modalOverlay}>
+                            <View style={styles.modalContent}>
+                                <Text style={styles.modalTitle}>Select Military Branch</Text>
+                                {['Army', 'Navy', 'Air Force', 'Marines', 'Coast Guard', 'Space Force'].map(branch => (
+                                    <TouchableOpacity
+                                        key={branch}
+                                        style={[styles.modalOption, militaryBranch === branch && styles.modalOptionSelected]}
+                                        onPress={() => { setMilitaryBranch(branch); setShowMilitaryPicker(false); }}
+                                    >
+                                        <Text style={[styles.modalOptionText, militaryBranch === branch && styles.modalOptionTextSelected]}>
+                                            {branch === 'Army' ? '🪖' : branch === 'Navy' ? '⚓' : branch === 'Air Force' ? '✈️' : branch === 'Marines' ? '🦅' : branch === 'Coast Guard' ? '⛵' : '🚀'}  {branch}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                                {militaryBranch ? (
+                                    <TouchableOpacity style={styles.clearButton} onPress={() => { setMilitaryBranch(''); setShowMilitaryPicker(false); }}>
+                                        <Text style={styles.clearButtonText}>Clear Selection</Text>
+                                    </TouchableOpacity>
+                                ) : null}
+                                <TouchableOpacity style={styles.modalDone} onPress={() => setShowMilitaryPicker(false)}>
+                                    <Text style={styles.modalDoneText}>Cancel</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </Modal>
+                </View>
+            </View>
 
             {/* Hometown */}
             <Text style={styles.label}>Hometown (City, State)</Text>

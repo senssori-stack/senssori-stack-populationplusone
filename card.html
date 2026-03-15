@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Character Profile | Population +1™</title>
+    <meta name="description" content="Scan a Population +1™ Trading Card to reveal the full Main Character Profile.">
+    <meta property="og:title" content="Main Character Profile | Population +1™">
+    <meta property="og:description" content="Every new life IS A +1 that counts. Scan to reveal the full profile.">
+    <meta property="og:type" content="website">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0a2e 0%, #1a1a4e 50%, #0a0a2e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            max-width: 420px;
+            width: 100%;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #000080, #1a1aff);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #FFD700;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .header .position {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 600;
+            margin-top: 4px;
+            letter-spacing: 2px;
+        }
+
+        .section {
+            padding: 16px 20px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .stat-label {
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #fff;
+            font-size: 13px;
+            text-align: right;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.4), transparent);
+            margin: 4px 20px;
+        }
+
+        .profile-section .stat-value {
+            color: #c8a2ff;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .footer .brand {
+            font-size: 18px;
+            font-weight: 900;
+            color: #FFD700;
+            letter-spacing: 1px;
+        }
+
+        .footer .tagline {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 4px;
+        }
+
+        .footer .cta {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+            font-weight: 800;
+            font-size: 13px;
+            border-radius: 25px;
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        .footer .cta:hover {
+            opacity: 0.9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeIn 0.6s ease-out;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card" id="cardContainer"></div>
+
+    <script>
+        // Zodiac data (mirrors the app)
+        const ZODIAC_DATES = [
+            { sign: 'Capricorn', start: [1, 1], end: [1, 19], emoji: '♑' },
+            { sign: 'Aquarius', start: [1, 20], end: [2, 18], emoji: '♒' },
+            { sign: 'Pisces', start: [2, 19], end: [3, 20], emoji: '♓' },
+            { sign: 'Aries', start: [3, 21], end: [4, 19], emoji: '♈' },
+            { sign: 'Taurus', start: [4, 20], end: [5, 20], emoji: '♉' },
+            { sign: 'Gemini', start: [5, 21], end: [6, 20], emoji: '♊' },
+            { sign: 'Cancer', start: [6, 21], end: [7, 22], emoji: '♋' },
+            { sign: 'Leo', start: [7, 23], end: [8, 22], emoji: '♌' },
+            { sign: 'Virgo', start: [8, 23], end: [9, 22], emoji: '♍' },
+            { sign: 'Libra', start: [9, 23], end: [10, 22], emoji: '♎' },
+            { sign: 'Scorpio', start: [10, 23], end: [11, 21], emoji: '♏' },
+            { sign: 'Sagittarius', start: [11, 22], end: [12, 21], emoji: '♐' },
+            { sign: 'Capricorn', start: [12, 22], end: [12, 31], emoji: '♑' },
+        ];
+
+        const SPIRIT_ANIMALS = {
+            Aries: '🦅 Hawk', Taurus: '🐻 Bear', Gemini: '🐬 Dolphin', Cancer: '🐺 Wolf',
+            Leo: '🦁 Lion', Virgo: '🦊 Fox', Libra: '🦢 Swan', Scorpio: '🔥 Phoenix',
+            Sagittarius: '🐴 Horse', Capricorn: '🐐 Mountain Goat', Aquarius: '🦉 Owl', Pisces: '🐡 Seahorse',
+        };
+
+        const ELEMENTS = {
+            Aries: 'Fire 🔥', Taurus: 'Earth 🌍', Gemini: 'Air 💨', Cancer: 'Water 💧',
+            Leo: 'Fire 🔥', Virgo: 'Earth 🌍', Libra: 'Air 💨', Scorpio: 'Water 💧',
+            Sagittarius: 'Fire 🔥', Capricorn: 'Earth 🌍', Aquarius: 'Air 💨', Pisces: 'Water 💧',
+        };
+
+        const BIRTHSTONES = {
+            1: 'Garnet', 2: 'Amethyst', 3: 'Aquamarine', 4: 'Diamond',
+            5: 'Emerald', 6: 'Pearl', 7: 'Ruby', 8: 'Peridot',
+            9: 'Sapphire', 10: 'Opal', 11: 'Topaz', 12: 'Tanzanite',
+        };
+
+        const CHINESE_ANIMALS = ['Rat', 'Ox', 'Tiger', 'Rabbit', 'Dragon', 'Snake', 'Horse', 'Goat', 'Monkey', 'Rooster', 'Dog', 'Pig'];
+        const CHINESE_ELEMENTS_CYCLE = ['Metal', 'Metal', 'Water', 'Water', 'Wood', 'Wood', 'Fire', 'Fire', 'Earth', 'Earth'];
+
+        const TAROT = [
+            '🃏 The Fool', '🎩 The Magician', '🌙 The High Priestess', '👑 The Empress',
+            '🏛️ The Emperor', '📿 The Hierophant', '💕 The Lovers', '🏎️ The Chariot',
+            '🦁 Strength', '🏔️ The Hermit', '🎡 Wheel of Fortune', '⚖️ Justice',
+            '🙃 The Hanged Man', '🦋 Death', '⚗️ Temperance', '⛓️ The Devil',
+            '⚡ The Tower', '⭐ The Star', '🌕 The Moon', '☀️ The Sun',
+            '📯 Judgement', '🌍 The World',
+        ];
+
+        function getZodiac(month, day) {
+            for (const z of ZODIAC_DATES) {
+                if ((month === z.start[0] && day >= z.start[1]) || (month === z.end[0] && day <= z.end[1])) {
+                    return z;
+                }
+            }
+            return ZODIAC_DATES[0];
+        }
+
+        function getLifePath(dob) {
+            const digits = dob.replace(/-/g, '').split('').map(Number);
+            let sum = digits.reduce((a, b) => a + b, 0);
+            while (sum > 9 && sum !== 11 && sum !== 22 && sum !== 33) {
+                sum = sum.toString().split('').map(Number).reduce((a, b) => a + b, 0);
+            }
+            return sum;
+        }
+
+        function getMoonPhase(date) {
+            const known = new Date(2000, 0, 6, 18, 14);
+            const cycle = 29.53058867;
+            const diff = (date - known) / (1000 * 60 * 60 * 24);
+            const phase = ((diff % cycle) + cycle) % cycle;
+            if (phase < 1.85) return '🌑 New Moon';
+            if (phase < 7.38) return '🌒 Waxing Crescent';
+            if (phase < 9.23) return '🌓 First Quarter';
+            if (phase < 14.77) return '🌔 Waxing Gibbous';
+            if (phase < 16.61) return '🌕 Full Moon';
+            if (phase < 22.15) return '🌖 Waning Gibbous';
+            if (phase < 23.99) return '🌗 Last Quarter';
+            return '🌘 Waning Crescent';
+        }
+
+        function getTarot(dob) {
+            const d = new Date(dob + 'T00:00:00');
+            const dateStr = '' + (d.getMonth() + 1) + d.getDate() + d.getFullYear();
+            let sum = dateStr.split('').reduce((a, c) => a + parseInt(c, 10), 0);
+            while (sum > 21) sum = sum.toString().split('').reduce((a, c) => a + parseInt(c, 10), 0);
+            return TAROT[sum] || TAROT[0];
+        }
+
+        function getChineseZodiac(year) {
+            const idx = (year - 4) % 12;
+            return CHINESE_ANIMALS[idx >= 0 ? idx : idx + 12];
+        }
+
+        function getChineseElement(year) {
+            const idx = (year - 4) % 10;
+            return CHINESE_ELEMENTS_CYCLE[idx >= 0 ? idx : idx + 10];
+        }
+
+        // Parse URL params
+        const params = new URLSearchParams(window.location.search);
+        const name = params.get('n');
+        const dob = params.get('d');
+        const container = document.getElementById('cardContainer');
+
+        if (!name || !dob) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <h2>⭐ Population +1™</h2>
+                    <p>Scan a trading card QR code to view the Main Character Profile.</p>
+                    <div style="margin-top:20px">
+                        <a href="https://www.populationplusone.com" class="footer cta" style="display:inline-block;margin:0;text-decoration:none">Get the App</a>
+                    </div>
+                </div>`;
+        } else {
+            const weightLb = params.get('wl') || '';
+            const weightOz = params.get('wo') || '';
+            const lengthIn = params.get('l') || '';
+            const hometown = params.get('h') || '';
+            const heritage = params.get('hr') || '';
+            const nationality = params.get('nt') || '';
+
+            const dobDate = new Date(dob + 'T00:00:00');
+            const birthDateStr = dobDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const month = dobDate.getMonth() + 1;
+            const day = dobDate.getDate();
+            const year = dobDate.getFullYear();
+
+            const zodiacInfo = getZodiac(month, day);
+            const birthstone = BIRTHSTONES[month] || 'Unknown';
+            const moonPhase = getMoonPhase(dobDate);
+            const lifePath = getLifePath(dob);
+            const spirit = SPIRIT_ANIMALS[zodiacInfo.sign] || '—';
+            const element = ELEMENTS[zodiacInfo.sign] || '—';
+            const chZodiac = getChineseZodiac(year);
+            const chElement = getChineseElement(year);
+            const tarot = getTarot(dob);
+
+            const lastName = name.split(' ').slice(1).join(' ') || name.split(' ')[0] || '';
+            const weightStr = weightOz ? `${weightLb} lbs ${weightOz} oz` : (weightLb ? `${weightLb} lbs` : '—');
+            const heightStr = lengthIn ? (lengthIn.includes("'") ? lengthIn : `${lengthIn}"`) : '—';
+
+            let optionalRows = '';
+            if (heritage) optionalRows += `<div class="stat-row"><span class="stat-label">Heritage</span><span class="stat-value">${escapeHtml(heritage)}</span></div>`;
+            if (nationality) optionalRows += `<div class="stat-row"><span class="stat-label">Nationality</span><span class="stat-value">${escapeHtml(nationality)}</span></div>`;
+
+            container.innerHTML = `
+                <div class="header">
+                    <h1>⭐ ${escapeHtml(name.toUpperCase())} ⭐</h1>
+                    <div class="position">POSITION: MAIN CHARACTER</div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Vital Stats</div>
+                    <div class="stat-row"><span class="stat-label">Debut Date</span><span class="stat-value">${escapeHtml(birthDateStr)}</span></div>
+                    <div class="stat-row"><span class="stat-label">Weight</span><span class="stat-value">${escapeHtml(weightStr)}</span></div>
+                    <div class="stat-row"><span class="stat-label">Height</span><span class="stat-value">${escapeHtml(heightStr)}</span></div>
+                    <div class="stat-row"><span class="stat-label">Team</span><span class="stat-value">${escapeHtml(lastName)} Family</span></div>
+                    <div class="stat-row"><span class="stat-label">Hometown</span><span class="stat-value">${escapeHtml(hometown || '—')}</span></div>
+                    ${optionalRows}
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="section profile-section">
+                    <div class="section-title">Main Character Profile</div>
+                    <div class="stat-row"><span class="stat-label">Zodiac</span><span class="stat-value">${zodiacInfo.emoji} ${zodiacInfo.sign}</span></div>
+                    <div class="stat-row"><span class="stat-label">Birthstone</span><span class="stat-value">${birthstone}</span></div>
+                    <div class="stat-row"><span class="stat-label">Moon Phase</span><span class="stat-value">${moonPhase}</span></div>
+                    <div class="stat-row"><span class="stat-label">🔢 Life Path #</span><span class="stat-value">${lifePath}</span></div>
+                    <div class="stat-row"><span class="stat-label">Spirit Animal</span><span class="stat-value">${spirit}</span></div>
+                    <div class="stat-row"><span class="stat-label">Element</span><span class="stat-value">${element}</span></div>
+                    <div class="stat-row"><span class="stat-label">Chinese Zodiac</span><span class="stat-value">${chElement} ${chZodiac}</span></div>
+                    <div class="stat-row"><span class="stat-label">Tarot Card</span><span class="stat-value">${tarot}</span></div>
+                </div>
+
+                <div class="footer">
+                    <div class="brand">⭐ Population +1™ ⭐</div>
+                    <div class="tagline">Every new life IS A +1 that counts.</div>
+                    <a href="https://www.populationplusone.com" class="cta">CREATE YOUR OWN</a>
+                </div>
+            `;
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+    </script>
+</body>
+
+</html>

@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Circle, G, Rect, Svg, Text as SvgText } from 'react-native-svg';
+import RisingStars from '../../components/RisingStars';
 import ScrollableDatePicker from '../../components/ScrollableDatePicker';
 import type { RootStackParamList } from '../types';
 
@@ -104,6 +105,7 @@ export default function ZodiacCompatibilityScreen({ route }: Props) {
     return (
         <LinearGradient colors={['#1a0020', '#2d0a2a', '#0d0d2b']} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#1a0020" />
+            <RisingStars />
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
                 <Text style={styles.mainTitle}>💕 Zodiac Compatibility</Text>

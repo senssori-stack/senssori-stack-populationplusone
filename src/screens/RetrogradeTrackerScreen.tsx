@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { G, Line, Rect, Svg, Text as SvgText } from 'react-native-svg';
+import RisingStars from '../../components/RisingStars';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'RetrogradeTracker'>;
@@ -120,6 +121,7 @@ export default function RetrogradeTrackerScreen({ route }: Props) {
     return (
         <LinearGradient colors={['#0a0a1a', '#1a0020', '#0d0d2b']} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#0a0a1a" />
+            <RisingStars />
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
                 <Text style={styles.mainTitle}>☿℞ Retrograde Tracker</Text>

@@ -431,43 +431,25 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
 
             {/* Action Tiles */}
             <View style={styles.actionTileGrid}>
-                <TouchableOpacity
-                    style={[styles.actionTile, { backgroundColor: '#2563eb' }]}
-                    onPress={() => setShowDownloadModal(true)}
-                >
-                    <Text style={styles.actionTileEmoji}>📥</Text>
-                    <Text style={styles.actionTileLabel}>Save / Print</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.actionTile, { backgroundColor: '#d97706' }]}
-                    onPress={() => setShowCartModal(true)}
-                >
-                    <Text style={styles.actionTileEmoji}>🛒</Text>
-                    <Text style={styles.actionTileLabel}>View Cart</Text>
-                </TouchableOpacity>
-                {isWedding ? (
-                    <TouchableOpacity
-                        style={[styles.actionTile, { backgroundColor: '#7b1fa2' }]}
-                        onPress={() => navigation.navigate('WeddingRSVPDashboard', { weddingId, coupleName: fullName })}
-                    >
-                        <Text style={styles.actionTileEmoji}>📋</Text>
-                        <Text style={styles.actionTileLabel}>View RSVPs</Text>
-                    </TouchableOpacity>
-                ) : (
-                    <TouchableOpacity
-                        style={[styles.actionTile, { backgroundColor: '#dc2626' }]}
-                        onPress={() => navigation.navigate('GiftSuggestions', { occasion: 'newborn' })}
-                    >
-                        <Text style={styles.actionTileEmoji}>🎁</Text>
-                        <Text style={styles.actionTileLabel}>Find a Gift</Text>
-                    </TouchableOpacity>
-                )}
-                <TouchableOpacity
-                    style={[styles.actionTile, { backgroundColor: '#455a64' }]}
-                    onPress={() => navigation.goBack()}
-                >
+                <TouchableOpacity style={[styles.actionTile, { backgroundColor: '#6b7280' }]} onPress={() => navigation.goBack()}>
                     <Text style={styles.actionTileEmoji}>←</Text>
-                    <Text style={styles.actionTileLabel}>Go Back</Text>
+                    <Text style={styles.actionTileLabel}>Back</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.actionTile, { backgroundColor: '#2563eb' }]} onPress={() => setShowDownloadModal(true)}>
+                    <Text style={styles.actionTileEmoji}>📥</Text>
+                    <Text style={styles.actionTileLabel}>Save</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.actionTile, { backgroundColor: '#0000b3' }]} onPress={() => navigation.navigate('PrintService', params as any)}>
+                    <Text style={styles.actionTileEmoji}>🖨️</Text>
+                    <Text style={styles.actionTileLabel}>Print</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.actionTile, { backgroundColor: '#d97706' }]} onPress={() => setShowCartModal(true)}>
+                    <Text style={styles.actionTileEmoji}>🧾</Text>
+                    <Text style={styles.actionTileLabel}>Cart</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.actionTile, { backgroundColor: '#dc2626' }]} onPress={() => navigation.navigate('SendAsGift', params as any)}>
+                    <Text style={styles.actionTileEmoji}>🎁</Text>
+                    <Text style={styles.actionTileLabel}>Gift</Text>
                 </TouchableOpacity>
             </View>
 
@@ -723,35 +705,31 @@ const styles = StyleSheet.create({
     },
     actionTileGrid: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
         justifyContent: 'space-between',
-        paddingHorizontal: 20,
+        alignItems: 'center',
+        paddingHorizontal: 10,
         paddingVertical: 16,
-        gap: 12,
+        gap: 6,
     },
     actionTile: {
-        width: '47%',
+        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 18,
-        borderRadius: 16,
+        paddingVertical: 10,
+        borderRadius: 12,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 4,
         elevation: 3,
-        minHeight: 90,
     },
     actionTileEmoji: {
-        fontSize: 48,
-        marginBottom: 6,
-        color: '#fff',
+        fontSize: 18,
+        marginBottom: 2,
     },
     actionTileLabel: {
         color: '#fff',
-        fontSize: 20,
-        fontWeight: '800',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
+        fontSize: 10,
+        fontWeight: '700',
     },
 });

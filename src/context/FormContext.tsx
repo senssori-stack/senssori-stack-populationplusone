@@ -48,6 +48,7 @@ export type FormData = {
     heritage: string;
     heritageWithFlags: string;
     nationality: string;
+    militaryBranch: string;
 
     // Milestone specific
     personName: string;
@@ -85,6 +86,7 @@ const defaultFormData: FormData = {
     heritage: '',
     heritageWithFlags: '',
     nationality: '',
+    militaryBranch: '',
     personName: '',
     message: '',
 };

@@ -1,9 +1,8 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import {
     Image,
     ScrollView,
-    Share,
     StatusBar,
     StyleSheet,
     Text,
@@ -11,6 +10,9 @@ import {
     useWindowDimensions,
     View
 } from 'react-native';
+import ViewShot from 'react-native-view-shot';
+import CartModal from '../../components/CartModal';
+import DownloadModal, { DownloadItem } from '../../components/DownloadModal';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MemorialPreview'>;
@@ -63,16 +65,19 @@ export default function MemorialPreviewScreen({ navigation, route }: Props) {
     const displayHeight = fixedDocHeight * scale;
     const baseFontSize = displayWidth * 0.0675;
 
-    const handleShare = async () => {
-        try {
-            const message = `In Loving Memory of\n${fullName}\n${displayDates}${hometown ? `\nof ${hometown}` : ''}`;
-            await Share.share({
-                message,
-                title: `In Memory of ${fullName}`,
-            });
-        } catch (error) {
-            console.error('Share error:', error);
+    const signRef = useRef<ViewShot | null>(null);
+    const [showDownloadModal, setShowDownloadModal] = useState(false);
+    const [showCartModal, setShowCartModal] = useState(false);
+
+    const downloadItems: DownloadItem[] = [
+        { id: 'memorial-front', label: 'Memorial Sign', ref: signRef },
+    ];
+
+    const handleCapture = async (itemId: string): Promise<string | null> => {
+        if (itemId === 'memorial-front' && signRef.current) {
+            return await (signRef.current as any).capture();
         }
+        return null;
     };
 
     return (
@@ -82,107 +87,125 @@ export default function MemorialPreviewScreen({ navigation, route }: Props) {
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 {/* The Memorial Sign - matching SignFront layout exactly */}
                 <View style={styles.signWrapper}>
-                    <View
-                        style={[
-                            styles.container,
-                            {
-                                backgroundColor,
-                                width: displayWidth,
-                                height: displayHeight,
-                                padding: displayWidth * 0.024,
-                            },
-                        ]}
-                    >
-                        {/* Border frame */}
-                        <View style={styles.border}>
-                            <View style={styles.innerBorder}>
-                                {/* Content */}
-                                <View style={styles.content}>
-                                    {/* "In Loving Memory" script (like "Welcome To") */}
-                                    <Text style={[styles.script, { fontSize: baseFontSize * 0.9 }]}>
-                                        In Loving Memory
-                                    </Text>
-
-                                    {/* City, State */}
-                                    {(city || state) && (
-                                        <Text style={[styles.cityState, { fontSize: baseFontSize * 2.5 }]}>
-                                            {city.toUpperCase()}{state ? `, ${state.toUpperCase()}` : ''}
+                    <ViewShot ref={signRef} options={{ format: 'png', quality: 1 }}>
+                        <View
+                            style={[
+                                styles.container,
+                                {
+                                    backgroundColor,
+                                    width: displayWidth,
+                                    height: displayHeight,
+                                    padding: displayWidth * 0.024,
+                                },
+                            ]}
+                        >
+                            {/* Border frame */}
+                            <View style={styles.border}>
+                                <View style={styles.innerBorder}>
+                                    {/* Content */}
+                                    <View style={styles.content}>
+                                        {/* "In Loving Memory" script (like "Welcome To") */}
+                                        <Text style={[styles.script, { fontSize: baseFontSize * 0.9 }]}>
+                                            In Loving Memory
                                         </Text>
-                                    )}
 
-                                    {/* Population label */}
-                                    <Text style={[styles.populationLabel, { fontSize: baseFontSize * 1.5 }]}>
-                                        POPULATION
-                                    </Text>
+                                        {/* City, State */}
+                                        {(city || state) && (
+                                            <Text style={[styles.cityState, { fontSize: baseFontSize * 2.5 }]}>
+                                                {city.toUpperCase()}{state ? `, ${state.toUpperCase()}` : ''}
+                                            </Text>
+                                        )}
 
-                                    {/* -1 indicator */}
-                                    <Text style={[styles.minusOne, { fontSize: baseFontSize * 3.5 }]}>
-                                        -1
-                                    </Text>
-
-                                    {/* Person's name */}
-                                    <Text style={[styles.personName, { fontSize: baseFontSize * 1.8 }]}>
-                                        {fullName.toUpperCase()}
-                                    </Text>
-
-                                    {/* Dates */}
-                                    {displayDates && (
-                                        <Text style={[styles.dates, { fontSize: baseFontSize * 0.8 }]}>
-                                            {displayDates}
+                                        {/* Population label */}
+                                        <Text style={[styles.populationLabel, { fontSize: baseFontSize * 1.5 }]}>
+                                            POPULATION
                                         </Text>
-                                    )}
 
-                                    {/* Photo */}
-                                    {photoUri ? (
-                                        <Image
-                                            source={{ uri: photoUri }}
-                                            style={[
-                                                styles.photo,
-                                                {
-                                                    width: displayWidth * 0.24,
-                                                    height: displayWidth * 0.24,
-                                                },
-                                            ]}
-                                        />
-                                    ) : (
-                                        <View
-                                            style={[
-                                                styles.photoPlaceholder,
-                                                {
-                                                    width: displayWidth * 0.24,
-                                                    height: displayWidth * 0.24,
-                                                },
-                                            ]}
-                                        >
-                                            <Text style={[styles.photoPlaceholderText, { fontSize: displayWidth * 0.06 }]}>🕊️</Text>
-                                        </View>
-                                    )}
+                                        {/* -1 indicator */}
+                                        <Text style={[styles.minusOne, { fontSize: baseFontSize * 3.5 }]}>
+                                            -1
+                                        </Text>
+
+                                        {/* Person's name */}
+                                        <Text style={[styles.personName, { fontSize: baseFontSize * 1.8 }]}>
+                                            {fullName.toUpperCase()}
+                                        </Text>
+
+                                        {/* Dates */}
+                                        {displayDates && (
+                                            <Text style={[styles.dates, { fontSize: baseFontSize * 0.8 }]}>
+                                                {displayDates}
+                                            </Text>
+                                        )}
+
+                                        {/* Photo */}
+                                        {photoUri ? (
+                                            <Image
+                                                source={{ uri: photoUri }}
+                                                style={[
+                                                    styles.photo,
+                                                    {
+                                                        width: displayWidth * 0.24,
+                                                        height: displayWidth * 0.24,
+                                                    },
+                                                ]}
+                                            />
+                                        ) : (
+                                            <View
+                                                style={[
+                                                    styles.photoPlaceholder,
+                                                    {
+                                                        width: displayWidth * 0.24,
+                                                        height: displayWidth * 0.24,
+                                                    },
+                                                ]}
+                                            >
+                                                <Text style={[styles.photoPlaceholderText, { fontSize: displayWidth * 0.06 }]}>🕊️</Text>
+                                            </View>
+                                        )}
+                                    </View>
                                 </View>
                             </View>
                         </View>
-                    </View>
+                    </ViewShot>
                 </View>
 
-                {/* Action Buttons */}
-                <View style={styles.actions}>
-                    <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-                        <Text style={styles.shareButtonText}>📤 Share on Social Media</Text>
+                {/* Action Tiles */}
+                <View style={styles.actionTileGrid}>
+                    <TouchableOpacity style={[styles.actionTile, { backgroundColor: '#6b7280' }]} onPress={() => navigation.goBack()}>
+                        <Text style={styles.actionTileEmoji}>←</Text>
+                        <Text style={styles.actionTileLabel}>Back</Text>
                     </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.backSideButton}
-                        onPress={() => navigation.navigate('MemorialBack', route.params)}
-                    >
-                        <Text style={styles.backSideButtonText}>View Arrangements →</Text>
+                    <TouchableOpacity style={[styles.actionTile, { backgroundColor: '#2563eb' }]} onPress={() => setShowDownloadModal(true)}>
+                        <Text style={styles.actionTileEmoji}>📥</Text>
+                        <Text style={styles.actionTileLabel}>Save</Text>
                     </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.editButton}
-                        onPress={() => navigation.goBack()}
-                    >
-                        <Text style={styles.editButtonText}>← Edit Details</Text>
+                    <TouchableOpacity style={[styles.actionTile, { backgroundColor: '#0000b3' }]} onPress={() => navigation.navigate('PrintService', route.params as any)}>
+                        <Text style={styles.actionTileEmoji}>🖨️</Text>
+                        <Text style={styles.actionTileLabel}>Print</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.actionTile, { backgroundColor: '#d97706' }]} onPress={() => setShowCartModal(true)}>
+                        <Text style={styles.actionTileEmoji}>🧾</Text>
+                        <Text style={styles.actionTileLabel}>Cart</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.actionTile, { backgroundColor: '#dc2626' }]} onPress={() => navigation.navigate('SendAsGift', route.params as any)}>
+                        <Text style={styles.actionTileEmoji}>🎁</Text>
+                        <Text style={styles.actionTileLabel}>Gift</Text>
                     </TouchableOpacity>
                 </View>
+
+                <DownloadModal
+                    visible={showDownloadModal}
+                    onClose={() => setShowDownloadModal(false)}
+                    items={downloadItems}
+                    onCapture={handleCapture}
+                    babyName={firstName}
+                />
+
+                <CartModal
+                    visible={showCartModal}
+                    onClose={() => setShowCartModal(false)}
+                />
 
                 <View style={styles.bottomSpacer} />
             </ScrollView>
@@ -284,46 +307,34 @@ const styles = StyleSheet.create({
     photoPlaceholderText: {
         color: '#fff',
     },
-    actions: {
-        padding: 20,
-    },
-    shareButton: {
-        backgroundColor: '#000080',
-        borderRadius: 12,
-        paddingVertical: 14,
-        paddingHorizontal: 24,
+    actionTileGrid: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 12,
+        paddingHorizontal: 10,
+        paddingVertical: 16,
+        gap: 6,
     },
-    shareButtonText: {
-        fontSize: 24,
-        fontWeight: '600',
-        color: '#ffffff',
-    },
-    backSideButton: {
-        backgroundColor: '#f59e0b',
-        borderRadius: 12,
-        paddingVertical: 14,
-        paddingHorizontal: 24,
+    actionTile: {
+        flex: 1,
         alignItems: 'center',
-        marginBottom: 12,
-    },
-    backSideButtonText: {
-        fontSize: 24,
-        fontWeight: '600',
-        color: '#ffffff',
-    },
-    editButton: {
-        backgroundColor: '#000080',
+        justifyContent: 'center',
+        paddingVertical: 10,
         borderRadius: 12,
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
     },
-    editButtonText: {
-        fontSize: 24,
-        fontWeight: '600',
-        color: '#ffffff',
+    actionTileEmoji: {
+        fontSize: 18,
+        marginBottom: 2,
+    },
+    actionTileLabel: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: '700',
     },
     bottomSpacer: {
         height: 40,

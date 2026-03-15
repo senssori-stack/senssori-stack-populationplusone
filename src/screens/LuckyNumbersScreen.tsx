@@ -10,6 +10,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import RisingStars from '../../components/RisingStars';
 import { getZodiacSign, ZODIAC_DATABASE } from '../data/utils/zodiac-database';
 import type { RootStackParamList } from '../types';
 
@@ -149,6 +150,7 @@ export default function LuckyNumbersScreen({ navigation, route }: Props) {
     return (
         <LinearGradient colors={['#1a5f2a', '#2d8a3e', '#3cb371']} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#1a5f2a" />
+            <RisingStars />
 
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 {/* Header */}
