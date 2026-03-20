@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RSVP - PopulationPlusOne</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            max-width: 440px;
+            width: 100%;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .header {
+            padding: 32px 24px;
+            text-align: center;
+            color: #fff;
+        }
+
+        .header .emoji {
+            font-size: 56px;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 4px;
+        }
+
+        .header .sub {
+            font-size: 15px;
+            opacity: 0.85;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .header .honoree {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .header .date {
+            font-size: 15px;
+            opacity: 0.8;
+        }
+
+        .header .host {
+            font-size: 13px;
+            opacity: 0.65;
+            font-style: italic;
+            margin-top: 4px;
+        }
+
+        .form {
+            padding: 24px;
+        }
+
+        .form h2 {
+            font-size: 22px;
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: 4px;
+            margin-bottom: 4px;
+        }
+
+        .form .form-sub {
+            font-size: 13px;
+            color: #888;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #444;
+            margin-bottom: 6px;
+            margin-top: 14px;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f8f8f8;
+            outline: none;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: #7c3aed;
+        }
+
+        textarea {
+            height: 70px;
+            resize: none;
+        }
+
+        .count-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .count-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid #e0e0e0;
+            background: #f5f5f5;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .count-btn.selected {
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .buttons {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            text-align: center;
+            border: none;
+            transition: opacity 0.15s;
+        }
+
+        .btn:active {
+            opacity: 0.8;
+        }
+
+        .btn-accept {
+            color: #fff;
+        }
+
+        .btn-decline {
+            background: #fff;
+            border: 2px solid;
+        }
+
+        .powered {
+            text-align: center;
+            padding: 16px;
+            font-size: 11px;
+            color: #bbb;
+        }
+
+        /* Confirmation states */
+        .confirmation {
+            padding: 40px 24px;
+            text-align: center;
+            color: #fff;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .confirmation .big-emoji {
+            font-size: 72px;
+            margin-bottom: 16px;
+        }
+
+        .confirmation h2 {
+            font-size: 24px;
+            font-weight: 900;
+            margin-bottom: 12px;
+        }
+
+        .confirmation p {
+            font-size: 15px;
+            opacity: 0.9;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .gift-box {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .gift-box h3 {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .gift-box p {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-bottom: 14px;
+        }
+
+        .gift-btn {
+            background: #fff;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+            display: inline-block;
+        }
+
+        .done-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* Loading / Error */
+        .loading,
+        .error {
+            padding: 60px 24px;
+            text-align: center;
+            color: #fff;
+        }
+
+        .loading .spinner {
+            font-size: 40px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Hidden by default */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card" id="card">
+        <!-- Loading State -->
+        <div id="state-loading" class="loading header">
+            <div class="spinner">⏳</div>
+            <p style="margin-top: 16px; font-size: 16px;">Loading invitation...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="state-error" class="error header hidden" style="background: #374151;">
+            <div class="emoji">🔍</div>
+            <h2 style="margin-top: 12px;">Event Not Found</h2>
+            <p style="margin-top: 8px; opacity: 0.8;">This invitation link may have expired or is no longer valid.</p>
+        </div>
+
+        <!-- RSVP Form -->
+        <div id="state-form" class="hidden">
+            <div class="header" id="form-header">
+                <div class="emoji" id="header-emoji">🎂</div>
+                <h1>You're Invited!</h1>
+                <div class="sub" id="header-sub">to celebrate the birthday of</div>
+                <div class="honoree" id="header-honoree">Guest of Honor</div>
+                <div class="date" id="header-date"></div>
+                <div class="host" id="header-host"></div>
+            </div>
+            <div class="form">
+                <h2 id="form-title" style="color: #7c3aed;">RSVP</h2>
+                <div class="form-sub">Let the host know if you can make it</div>
+
+                <div class="label">Your Name</div>
+                <input type="text" id="guest-name" placeholder="Enter your full name" autocapitalize="words">
+
+                <div class="label">How many are coming?</div>
+                <div class="count-row" id="count-row"></div>
+
+                <div class="label">Notes for the host (optional)</div>
+                <textarea id="guest-notes" placeholder="Allergies, dietary needs, anything else..."></textarea>
+
+                <div class="buttons">
+                    <button class="btn btn-accept" id="btn-accept" onclick="submitRSVP(true)">🎉 I'll Be There!</button>
+                    <button class="btn btn-decline" id="btn-decline" onclick="submitRSVP(false)">Can't Make It</button>
+                </div>
+            </div>
+            <div class="powered">Powered by PopulationPlusOne.com</div>
+        </div>
+
+        <!-- Confirmation -->
+        <div id="state-confirm" class="hidden">
+            <div class="confirmation" id="confirm-bg">
+                <div class="big-emoji" id="confirm-emoji">🎉</div>
+                <h2 id="confirm-title">See You There!</h2>
+                <p id="confirm-message"></p>
+                <div id="gift-section" class="gift-box hidden">
+                    <h3>🎁 Send a Gift Instead?</h3>
+                    <p id="gift-text">Can't make it? You can still show some love with a thoughtful gift!</p>
+                    <a class="gift-btn" id="gift-link" href="#" style="text-decoration:none;">🎁 Browse Gift Ideas</a>
+                </div>
+                <button class="done-btn" onclick="window.location='https://populationplusone.com'">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (compat for simplicity in a single HTML file) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // ============================================
+        // Firebase config — replace at deploy time
+        // or set via __FIREBASE_CONFIG__ global
+        // ============================================
+        const firebaseConfig = {
+            apiKey: "__FIREBASE_API_KEY__",
+            authDomain: "populationplusone-a419c.firebaseapp.com",
+            projectId: "populationplusone-a419c",
+            storageBucket: "populationplusone-a419c.appspot.com",
+            messagingSenderId: "__FIREBASE_MESSAGING_SENDER_ID__",
+            appId: "__FIREBASE_APP_ID__",
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Theme config
+        const THEMES = {
+            birthday: { emoji: '🎂', gradient: 'linear-gradient(135deg, #7c3aed, #a855f7)', accent: '#7c3aed', sub: 'to celebrate the birthday of', occasion: 'birthday' },
+            wedding: { emoji: '💒', gradient: 'linear-gradient(135deg, #000080, #1a1a9e)', accent: '#000080', sub: 'to the wedding celebration of', occasion: 'wedding' },
+            'baby-shower': { emoji: '👶', gradient: 'linear-gradient(135deg, #0d9488, #14b8a6)', accent: '#0d9488', sub: 'to celebrate the arrival of', occasion: 'baby' },
+            graduation: { emoji: '🎓', gradient: 'linear-gradient(135deg, #b45309, #d97706)', accent: '#b45309', sub: 'to the graduation party of', occasion: 'graduation' },
+            anniversary: { emoji: '💍', gradient: 'linear-gradient(135deg, #be185d, #ec4899)', accent: '#be185d', sub: 'to the anniversary celebration of', occasion: 'anniversary' },
+            default: { emoji: '🎉', gradient: 'linear-gradient(135deg, #000080, #1a1a9e)', accent: '#000080', sub: 'to celebrate', occasion: 'celebration' },
+        };
+
+        let eventData = null;
+        let eventId = '';
+        let selectedCount = '1';
+
+        // Extract event ID from URL path: /rsvp/{eventId}
+        const pathParts = window.location.pathname.split('/');
+        const rsvpIdx = pathParts.indexOf('rsvp');
+        if (rsvpIdx >= 0 && pathParts[rsvpIdx + 1]) {
+            eventId = decodeURIComponent(pathParts[rsvpIdx + 1]);
+        }
+
+        // Initialize
+        if (!eventId) {
+            showError();
+        } else {
+            loadEvent();
+        }
+
+        async function loadEvent() {
+            try {
+                const docSnap = await db.collection('events').doc(eventId).get();
+                if (!docSnap.exists) {
+                    showError();
+                    return;
+                }
+                eventData = docSnap.data();
+                showForm();
+            } catch (err) {
+                console.error('Error loading event:', err);
+                showError();
+            }
+        }
+
+        function showError() {
+            document.getElementById('state-loading').classList.add('hidden');
+            document.getElementById('state-error').classList.remove('hidden');
+        }
+
+        function showForm() {
+            const type = eventData.eventType || 'default';
+            const theme = THEMES[type] || THEMES.default;
+
+            // Apply theme
+            const header = document.getElementById('form-header');
+            header.style.background = theme.gradient;
+            document.body.style.background = theme.gradient;
+
+            document.getElementById('header-emoji').textContent = theme.emoji;
+            document.getElementById('header-sub').textContent = theme.sub;
+            document.getElementById('header-honoree').textContent = eventData.honoree || 'Guest of Honor';
+            document.getElementById('header-date').textContent = eventData.eventDate || '';
+            document.getElementById('header-host').textContent = eventData.hostName ? 'Hosted by ' + eventData.hostName : '';
+            document.getElementById('form-title').style.color = theme.accent;
+
+            // Accept button
+            const btnAccept = document.getElementById('btn-accept');
+            btnAccept.style.background = theme.accent;
+            const btnDecline = document.getElementById('btn-decline');
+            btnDecline.style.borderColor = theme.accent;
+            btnDecline.style.color = theme.accent;
+
+            // Guest count buttons
+            const countRow = document.getElementById('count-row');
+            countRow.innerHTML = '';
+            for (let i = 1; i <= 4; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'count-btn' + (i === 1 ? ' selected' : '');
+                btn.textContent = i;
+                btn.style.cssText = i === 1 ? `background:${theme.accent};color:#fff;border-color:${theme.accent};` : '';
+                btn.onclick = () => {
+                    selectedCount = String(i);
+                    countRow.querySelectorAll('.count-btn').forEach(b => {
+                        b.classList.remove('selected');
+                        b.style.background = '#f5f5f5';
+                        b.style.color = '#333';
+                        b.style.borderColor = '#e0e0e0';
+                    });
+                    btn.classList.add('selected');
+                    btn.style.background = theme.accent;
+                    btn.style.color = '#fff';
+                    btn.style.borderColor = theme.accent;
+                };
+                countRow.appendChild(btn);
+            }
+
+            // Show form
+            document.getElementById('state-loading').classList.add('hidden');
+            document.getElementById('state-form').classList.remove('hidden');
+        }
+
+        async function submitRSVP(attending) {
+            const name = document.getElementById('guest-name').value.trim();
+            if (!name) {
+                alert('Please enter your name so the host knows who is responding.');
+                return;
+            }
+
+            const notes = document.getElementById('guest-notes').value.trim();
+            const guestSlug = name.toLowerCase().replace(/\s+/g, '-');
+
+            // Disable buttons
+            document.getElementById('btn-accept').disabled = true;
+            document.getElementById('btn-decline').disabled = true;
+
+            try {
+                await db.collection('events').doc(eventId).collection('rsvps').doc(guestSlug).set({
+                    guestName: name,
+                    attending: attending,
+                    guestCount: attending ? parseInt(selectedCount) || 1 : 0,
+                    dietaryNotes: attending ? notes : '',
+                    respondedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                });
+            } catch (err) {
+                console.error('Error saving RSVP:', err);
+            }
+
+            showConfirmation(attending, name);
+        }
+
+        function showConfirmation(attending, name) {
+            const type = eventData?.eventType || 'default';
+            const theme = THEMES[type] || THEMES.default;
+            const honoree = eventData?.honoree || 'the guest of honor';
+
+            const confirmBg = document.getElementById('confirm-bg');
+            confirmBg.style.background = theme.gradient;
+
+            document.getElementById('confirm-emoji').textContent = attending ? '🎉' : '💝';
+            document.getElementById('confirm-title').textContent = attending ? 'See You There!' : 'Thanks for Letting Us Know!';
+
+            const count = parseInt(selectedCount) || 1;
+            document.getElementById('confirm-message').textContent = attending
+                ? `Thank you, ${name}! Your RSVP for ${count} guest${count > 1 ? 's' : ''} has been recorded. See you at the party!`
+                : `We'll miss you, ${name}! Your response has been recorded.`;
+
+            if (!attending) {
+                const giftSection = document.getElementById('gift-section');
+                giftSection.classList.remove('hidden');
+                document.getElementById('gift-text').textContent = `Can't make it? You can still show ${honoree} some love with a thoughtful gift!`;
+                // Gift link opens the PopulationPlusOne gift page
+                document.getElementById('gift-link').href = `https://populationplusone.com/gifts?occasion=${theme.occasion}`;
+                document.getElementById('gift-link').style.color = theme.accent;
+            }
+
+            document.getElementById('state-form').classList.add('hidden');
+            document.getElementById('state-confirm').classList.remove('hidden');
+        }
+    </script>
+</body>
+
+</html>
