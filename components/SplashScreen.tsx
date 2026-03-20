@@ -11,7 +11,7 @@ export default function SplashScreen() {
                 POPULATION<Text style={{ fontSize: 14, fontWeight: '400' }}>™</Text>
             </Text>
             <Image
-                source={require('../assets/images/splash-icon.png')}
+                source={require('../assets/images/icon.png')}
                 style={styles.logo}
                 resizeMode="contain"
             />

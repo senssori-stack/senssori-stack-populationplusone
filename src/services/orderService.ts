@@ -14,11 +14,21 @@ export type OrderRecord = {
         phone?: string;
     };
     shipping: {
+        firstName?: string;
+        lastName?: string;
         address1: string;
         address2?: string;
         city: string;
         state: string;
         zipCode: string;
+    };
+    isGift?: boolean;
+    giftMessage?: string;
+    giftRecipient?: {
+        firstName: string;
+        lastName: string;
+        email?: string;
+        phone?: string;
     };
     items: Array<{
         id: string;

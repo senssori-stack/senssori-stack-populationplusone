@@ -271,7 +271,8 @@ export default function TradingCardFormScreen({ navigation }: Props) {
             <TextInput
                 style={styles.input}
                 value={hometown}
-                onChangeText={setHometown}
+                onChangeText={(t) => setHometown(t.toUpperCase())}
+                                autoCapitalize="characters"
                 placeholder="e.g. St. Louis, MO"
                 placeholderTextColor="#999"
             />

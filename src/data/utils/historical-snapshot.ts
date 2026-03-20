@@ -1,8 +1,10 @@
 // src/data/utils/historical-snapshot.ts
 // Historical data system with monthly averages from Jan 2020 and yearly before that
 
+import { doc, getDoc } from 'firebase/firestore';
 import { getBillboardNumber1ForDate, getBillboardNumber1ForMonth, getBillboardNumber1ForYear } from './billboard-api';
 import { getExtendedHistoricalData } from './extended-historical-data';
+import { db } from './firebase-config';
 
 export interface HistoricalDataPoint {
     date: string; // YYYY-MM or YYYY format
@@ -1597,6 +1599,7 @@ export function getHistoricalSnapshotForDate(targetDate: string): Record<string,
 
 /**
  * Get current snapshot with historical fallback
+ * Priority: Firestore exact-date snapshot → hardcoded historical data → current data
  */
 export async function getSnapshotWithHistorical(targetDate?: string): Promise<Record<string, string>> {
     // Import the current snapshot function
@@ -1607,7 +1610,47 @@ export async function getSnapshotWithHistorical(targetDate?: string): Promise<Re
         return await getAllSnapshotValues();
     }
 
-    // Get historical data for the target date
+    // Normalize date
+    const normalizedDate = targetDate.includes('T') ? targetDate.split('T')[0] : targetDate;
+
+    // 1. Try Firestore exact-date snapshot first (most accurate)
+    let firestoreData: Record<string, string> | null = null;
+    if (db) {
+        try {
+            const docRef = doc(db, 'snapshots', normalizedDate);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const raw = docSnap.data() as Record<string, string>;
+                firestoreData = {
+                    'GALLON OF GASOLINE': raw['gas_price'] || '',
+                    'MINIMUM WAGE': raw['minimum_wage'] || '',
+                    'LOAF OF BREAD': raw['bread_price'] || '',
+                    'DOZEN EGGS': raw['eggs_price'] || '',
+                    'GALLON OF MILK': raw['milk_price'] || '',
+                    'GOLD OZ': raw['gold_price'] || '',
+                    'SILVER OZ': raw['silver_price'] || '',
+                    'DOW JONES CLOSE': raw['dow_jones']?.toString() || '',
+                    '#1 SONG': raw['top_song'] || '',
+                    '#1 MOVIE': raw['top_movie'] || '',
+                    'WON LAST SUPERBOWL': raw['superbowl_champ'] || '',
+                    'WON LAST WORLD SERIES': raw['world_series_champ'] || '',
+                    'US POPULATION': raw['us_population'] || '',
+                    'WORLD POPULATION': raw['world_population'] || '',
+                    'PRESIDENT': raw['president'] || '',
+                    'VICE PRESIDENT': raw['vice_president'] || '',
+                };
+                // Remove empty strings so they don't override good data
+                Object.keys(firestoreData).forEach(k => {
+                    if (!firestoreData![k]) delete firestoreData![k];
+                });
+                console.log(`\u2705 Found Firestore snapshot for ${normalizedDate}:`, Object.keys(firestoreData).length, 'fields');
+            }
+        } catch (e) {
+            console.warn(`\u26a0\ufe0f Could not read Firestore snapshot for ${normalizedDate}:`, e);
+        }
+    }
+
+    // 2. Get hardcoded historical data (monthly/yearly fallback)
     const historicalData = getHistoricalSnapshotForDate(targetDate);
 
     // Parse target date for Billboard API
@@ -1664,6 +1707,6 @@ export async function getSnapshotWithHistorical(targetDate?: string): Promise<Re
     // Get current data as fallback
     const currentData = await getAllSnapshotValues();
 
-    // Merge with historical data taking precedence
-    return { ...currentData, ...historicalData };
+    // Merge: current → hardcoded historical → Firestore exact-date (highest priority)
+    return { ...currentData, ...historicalData, ...(firestoreData || {}) };
 }

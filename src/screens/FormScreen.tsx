@@ -1,4 +1,4 @@
-﻿import DateTimePicker from "@react-native-community/datetimepicker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -169,7 +169,7 @@ export default function FormScreen({ navigation, route }: Props) {
     }, [hasFormData, savedFormData]);
 
     // TEST DATA - Prefilled for easy testing
-    // ðŸ§ª For testing long names, uncomment these lines:
+    // 🧪 For testing long names, uncomment these lines:
     // const [babyFirst, setBabyFirst] = useState("Bartholomew Christopher");
     // const [babyLast, setBabyLast] = useState("Montgomery-Williams-Henderson");
     // const [hometown, setHometown] = useState("San Francisco International Airport, California");
@@ -191,7 +191,7 @@ export default function FormScreen({ navigation, route }: Props) {
     const [motherName, setMotherName] = useState("Sarah Sample");
     const [fatherName, setFatherName] = useState("Jack Sample");
     const [email, setEmail] = useState(""); // For marketing
-    const [hometown, setHometown] = useState("Kansas City, MO");
+    const [hometown, setHometown] = useState("KANSAS CITY, MO");
     const [selectedHeritages, setSelectedHeritages] = useState<string[]>([]);
     const [heritageEmojis, setHeritageEmojis] = useState<HeritageEmojiMap>({});
     const [showHeritageModal, setShowHeritageModal] = useState(false);
@@ -210,7 +210,7 @@ export default function FormScreen({ navigation, route }: Props) {
     const [population, setPopulation] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
 
-    // Letter to Baby — show all names for twins/triplets
+    // Letter to Baby � show all names for twins/triplets
     const babyDisplayName = (() => {
         const names = babies.slice(0, babyCount).map(b => (b.first || '').trim()).filter(Boolean);
         if (names.length === 0) return 'Baby';
@@ -255,38 +255,38 @@ export default function FormScreen({ navigation, route }: Props) {
             if (!hometown.trim() || hometown.length < 3) return;
             try {
                 setLoading(true);
-                console.log('ðŸ™ï¸  Fetching data for hometown:', hometown, 'birth year:', dobDate.getFullYear());
-                console.log('ðŸ“± Device info - User Agent:', navigator.userAgent);
-                console.log('ðŸŒ Network state:', navigator.onLine ? 'ONLINE' : 'OFFLINE');
+                console.log('🏙️  Fetching data for hometown:', hometown, 'birth year:', dobDate.getFullYear());
+                console.log('📱 Device info - User Agent:', navigator.userAgent);
+                console.log('🌐 Network state:', navigator.onLine ? 'ONLINE' : 'OFFLINE');
 
                 // Fetch snapshot data from Google Sheets with timeout
-                console.log('ðŸ“Š Starting snapshot fetch...');
+                console.log('📊 Starting snapshot fetch...');
                 const snapshotPromise = getAllSnapshotValues();
                 const timeoutPromise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('Network timeout after 15 seconds')), 15000)
                 );
 
                 const snapshotData = await Promise.race([snapshotPromise, timeoutPromise]) as Record<string, string>;
-                console.log('âœ… Snapshot data fetched:', Object.keys(snapshotData).length, 'entries');
-                console.log('ðŸ“Š Sample data:', Object.keys(snapshotData).slice(0, 3));
+                console.log('✅ Snapshot data fetched:', Object.keys(snapshotData).length, 'entries');
+                console.log('📊 Sample data:', Object.keys(snapshotData).slice(0, 3));
                 setSnapshot(snapshotData);
 
                 // Fetch population for the entered hometown
-                // âš ï¸ CRITICAL: Must pass DOB - if after 2020-01-01, uses Google Sheets CSV (mandatory)
-                console.log('ðŸ‘¥ Starting population fetch for:', hometown);
+                // ⚠️ CRITICAL: Must pass DOB - if after 2020-01-01, uses Google Sheets CSV (mandatory)
+                console.log('👥 Starting population fetch for:', hometown);
                 const dobISO = `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`;
                 const cityPopulation = await getPopulationForCity(hometown, dobISO);
-                console.log('âœ… Population result:', cityPopulation);
+                console.log('✅ Population result:', cityPopulation);
                 setPopulation(cityPopulation);
             } catch (error) {
-                console.error('âŒ MOBILE NETWORK ERROR:', error);
+                console.error('❌ MOBILE NETWORK ERROR:', error);
                 const err = error as Error;
                 console.error('Error type:', err.name || 'Unknown');
                 console.error('Error message:', err.message || 'Unknown error');
                 console.error('Network online status:', navigator.onLine);
 
                 // Provide fallback data for offline/error scenarios
-                console.log('ðŸ”„ Using fallback data...');
+                console.log('🔄 Using fallback data...');
                 setSnapshot({
                     'GALLON OF GASOLINE': '$3.07',
                     'US POPULATION': '342,651,000',
@@ -307,77 +307,80 @@ export default function FormScreen({ navigation, route }: Props) {
         return () => clearTimeout(timeoutId);
     }, [hometown, dobDate]);
 
-    async function pickPhotoForBaby(index?: number) {
+    async function launchPhotoPicker(useCamera: boolean): Promise<string | null> {
         try {
-            const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            const granted = (perm as any).status === 'granted' || (perm as any).granted === true;
-            if (!granted) {
-                alert('Permission required to pick a photo. Please enable Photos/Media access in Settings.');
-                return;
-            }
-            const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true, quality: 1,
-            });
-            const cancelled = (result as any).canceled === true || (result as any).cancelled === true;
-            const uri = (result as any).assets?.[0]?.uri ?? (result as any).uri ?? null;
-            if (cancelled) return;
-            if (!uri) {
-                alert('Failed to pick a photo. Please try again.');
-                return;
-            }
-            if (typeof index === 'number') {
-                setBabies(bs => {
-                    const copy = [...bs];
-                    copy[index] = { ...copy[index], photoUri: uri };
-                    return copy;
-                });
+            if (useCamera) {
+                const perm = await ImagePicker.requestCameraPermissionsAsync();
+                const granted = (perm as any).status === 'granted' || (perm as any).granted === true;
+                if (!granted) {
+                    Alert.alert('Permission Required', 'Please enable Camera access in Settings to take a photo.');
+                    return null;
+                }
             } else {
-                // Add to first empty photoUris slot
-                setPhotoUris(prev => {
-                    const copy = [...prev];
-                    const emptyIndex = copy.findIndex(p => !p);
-                    if (emptyIndex !== -1) {
-                        copy[emptyIndex] = uri;
-                    } else {
-                        copy[0] = uri;
-                    }
-                    return copy;
-                });
+                const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                const granted = (perm as any).status === 'granted' || (perm as any).granted === true;
+                if (!granted) {
+                    Alert.alert('Permission Required', 'Please enable Photos/Media access in Settings.');
+                    return null;
+                }
             }
+            const result = useCamera
+                ? await ImagePicker.launchCameraAsync({ allowsEditing: true, quality: 1 })
+                : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, quality: 1 });
+            const cancelled = (result as any).canceled === true || (result as any).cancelled === true;
+            if (cancelled) return null;
+            return (result as any).assets?.[0]?.uri ?? (result as any).uri ?? null;
         } catch (e) {
-            alert('Unable to pick a photo — an unexpected error occurred.');
+            Alert.alert('Error', 'Unable to pick a photo — an unexpected error occurred.');
+            return null;
         }
     }
 
+    function pickPhotoForBaby(index?: number) {
+        Alert.alert('Add Photo', 'Choose a source', [
+            {
+                text: '📷 Take Photo', onPress: async () => {
+                    const uri = await launchPhotoPicker(true);
+                    if (!uri) return;
+                    if (typeof index === 'number') {
+                        setBabies(bs => { const copy = [...bs]; copy[index] = { ...copy[index], photoUri: uri }; return copy; });
+                    } else {
+                        setPhotoUris(prev => { const copy = [...prev]; const ei = copy.findIndex(p => !p); if (ei !== -1) copy[ei] = uri; else copy[0] = uri; return copy; });
+                    }
+                }
+            },
+            {
+                text: '🖼️ Choose from Library', onPress: async () => {
+                    const uri = await launchPhotoPicker(false);
+                    if (!uri) return;
+                    if (typeof index === 'number') {
+                        setBabies(bs => { const copy = [...bs]; copy[index] = { ...copy[index], photoUri: uri }; return copy; });
+                    } else {
+                        setPhotoUris(prev => { const copy = [...prev]; const ei = copy.findIndex(p => !p); if (ei !== -1) copy[ei] = uri; else copy[0] = uri; return copy; });
+                    }
+                }
+            },
+            { text: 'Cancel', style: 'cancel' },
+        ]);
+    }
+
     // Pick photo into a specific slot (0, 1, or 2)
-    async function pickPhotoSlot(slotIndex: number) {
-        try {
-            const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            const granted = (perm as any).status === 'granted' || (perm as any).granted === true;
-            if (!granted) {
-                alert('Permission required to pick a photo. Please enable Photos/Media access in Settings.');
-                return;
-            }
-            const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true, quality: 1,
-            });
-            const cancelled = (result as any).canceled === true || (result as any).cancelled === true;
-            const uri = (result as any).assets?.[0]?.uri ?? (result as any).uri ?? null;
-            if (cancelled) return;
-            if (!uri) {
-                alert('Failed to pick a photo. Please try again.');
-                return;
-            }
-            setPhotoUris(prev => {
-                const copy = [...prev];
-                copy[slotIndex] = uri;
-                return copy;
-            });
-        } catch (e) {
-            alert('Unable to pick a photo — an unexpected error occurred.');
-        }
+    function pickPhotoSlot(slotIndex: number) {
+        Alert.alert('Add Photo', 'Choose a source', [
+            {
+                text: '📷 Take Photo', onPress: async () => {
+                    const uri = await launchPhotoPicker(true);
+                    if (uri) setPhotoUris(prev => { const copy = [...prev]; copy[slotIndex] = uri; return copy; });
+                }
+            },
+            {
+                text: '🖼️ Choose from Library', onPress: async () => {
+                    const uri = await launchPhotoPicker(false);
+                    if (uri) setPhotoUris(prev => { const copy = [...prev]; copy[slotIndex] = uri; return copy; });
+                }
+            },
+            { text: 'Cancel', style: 'cancel' },
+        ]);
     }
 
     function removePhotoSlot(slotIndex: number) {
@@ -416,13 +419,13 @@ export default function FormScreen({ navigation, route }: Props) {
         if (!finalPopulation) {
             try {
                 setLoading(true);
-                // âš ï¸ CRITICAL: Must pass DOB - routes to HISTORICAL CSV (before 2020) or CURRENT CSV (after 2020)
+                // ⚠️ CRITICAL: Must pass DOB - routes to HISTORICAL CSV (before 2020) or CURRENT CSV (after 2020)
                 const dobISO = `${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`;
                 finalPopulation = await getPopulationForCity(hometown.trim(), dobISO);
                 setPopulation(finalPopulation);
 
                 /**
-                 * âš ï¸ CRITICAL: CITY NOT FOUND - SHOW ERROR POPUP
+                 * ⚠️ CRITICAL: CITY NOT FOUND - SHOW ERROR POPUP
                  * Do NOT use default fallback population - user must correct the city
                  */
                 if (finalPopulation === null) {
@@ -552,13 +555,13 @@ export default function FormScreen({ navigation, route }: Props) {
                                     style={[styles.genderBtn, b.gender === 'boy' && styles.genderBtnBoy]}
                                     onPress={() => setBabies(bs => { const copy = [...bs]; copy[idx] = { ...copy[idx], gender: 'boy' }; return copy; })}
                                 >
-                                    <Text style={[styles.genderBtnText, b.gender === 'boy' && styles.genderBtnTextActive]}>👦 Boy</Text>
+                                    <Text style={[styles.genderBtnText, b.gender === 'boy' && styles.genderBtnTextActive]}>?? Boy</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[styles.genderBtn, b.gender === 'girl' && styles.genderBtnGirl]}
                                     onPress={() => setBabies(bs => { const copy = [...bs]; copy[idx] = { ...copy[idx], gender: 'girl' }; return copy; })}
                                 >
-                                    <Text style={[styles.genderBtnText, b.gender === 'girl' && styles.genderBtnTextActive]}>👧 Girl</Text>
+                                    <Text style={[styles.genderBtnText, b.gender === 'girl' && styles.genderBtnTextActive]}>?? Girl</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -609,7 +612,7 @@ export default function FormScreen({ navigation, route }: Props) {
             {/* Shared Photo Upload for Twins/Triplets */}
             {babyCount > 1 && (
                 <View style={styles.babySection}>
-                    <Text style={styles.sectionTitle}>📸 Photos</Text>
+                    <Text style={styles.sectionTitle}>?? Photos</Text>
                     <PhotoUploadGrid
                         photos={photoUris}
                         onPhotosChange={(newPhotos) => setPhotoUris(newPhotos)}
@@ -647,7 +650,7 @@ export default function FormScreen({ navigation, route }: Props) {
                 <Text style={selectedHeritages.length > 0 ? styles.dropdownText : styles.dropdownPlaceholder}>
                     {selectedHeritages.length > 0 ? formatHeritageDisplay(selectedHeritages, heritageEmojis) : 'Select heritage(s)...'}
                 </Text>
-                <Text style={styles.dropdownArrow}>▼</Text>
+                <Text style={styles.dropdownArrow}>?</Text>
             </TouchableOpacity>
 
             {/* Heritage Multi-Select Modal */}
@@ -655,7 +658,7 @@ export default function FormScreen({ navigation, route }: Props) {
                 <View style={styles.heritageModalOverlay}>
                     <View style={styles.heritageModalContent}>
                         <Text style={styles.heritageModalTitle}>Select Heritage(s)</Text>
-                        <Text style={styles.heritageModalSubtitle}>Tap to select · pick an emoji per heritage</Text>
+                        <Text style={styles.heritageModalSubtitle}>Tap to select � pick an emoji per heritage</Text>
                         <ScrollView style={styles.heritageModalScroll}>
                             {HERITAGE_OPTIONS.map(option => {
                                 const isSelected = selectedHeritages.includes(option.id);
@@ -706,7 +709,7 @@ export default function FormScreen({ navigation, route }: Props) {
                                                         <Text style={{ fontSize: 16 }}>{sym}</Text>
                                                     </TouchableOpacity>
                                                 ))}
-                                                <Text style={[styles.heritageCheckmark, { marginLeft: 4 }]}>✓</Text>
+                                                <Text style={[styles.heritageCheckmark, { marginLeft: 4 }]}>?</Text>
                                             </View>
                                         )}
                                     </TouchableOpacity>
@@ -748,7 +751,8 @@ export default function FormScreen({ navigation, route }: Props) {
                 placeholder="e.g., Springfield, MO"
                 placeholderTextColor="#999"
                 value={hometown}
-                onChangeText={setHometown}
+                onChangeText={(t) => setHometown(t.toUpperCase())}
+                autoCapitalize="characters"
                 autoCapitalize="words"
                 onBlur={() => setTouched(t => ({ ...t, hometown: true }))}
             />
@@ -768,7 +772,7 @@ export default function FormScreen({ navigation, route }: Props) {
                     <Text style={styles.label}>{mode === 'baby' ? 'Date of Birth' : 'Birthday'}</Text>
                     <TouchableOpacity style={styles.dateBtn} onPress={() => setShowDatePicker(true)}>
                         <Text style={styles.dateBtnText}>
-                            {dobDate.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "2-digit", year: "numeric" })}
+                            {`${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][dobDate.getMonth()]} ${String(dobDate.getDate()).padStart(2, '0')}, ${dobDate.getFullYear()}`}
                         </Text>
                     </TouchableOpacity>
                     <ScrollableDatePicker
@@ -846,23 +850,23 @@ export default function FormScreen({ navigation, route }: Props) {
                 </View>
             )}
 
-            {/* 💌 Letter to Baby — Separate keepsake page */}
+            {/* ?? Letter to Baby � Separate keepsake page */}
             {mode === 'baby' && (
                 <View style={styles.messageSectionContainer}>
-                    <Text style={styles.messageSectionTitle}>💌 Letter to {babyDisplayName}</Text>
+                    <Text style={styles.messageSectionTitle}>?? Letter to {babyDisplayName}</Text>
                     <Text style={styles.messageSectionSubtitle}>
                         Write a heartfelt letter for {babyDisplayName} to read someday. Tap a sample below or write your own!
                     </Text>
 
                     <View style={styles.sampleBtnRow}>
-                        <TouchableOpacity style={styles.sampleBtn} onPress={() => setLetterToBaby(`Dear ${babyDisplayName},\n\nFrom the moment we first heard your heartbeat, our lives changed forever. You are our greatest blessing, our sweetest dream come true, and the answer to every prayer we ever whispered. We spent so many nights imagining what you would look like, wondering who you would become, and dreaming about the life we would build together.\n\nNow that you're here, every single moment feels like magic. The way you curl your tiny fingers around ours, the soft sounds you make when you sleep, the way the whole room lights up just because you're in it — these are the moments we will treasure for the rest of our lives.\n\nWe promise to love you unconditionally, to protect you fiercely, to cheer you on through every triumph and hold you close through every challenge. We promise to read you stories, to answer your endless questions, to let you make messes and learn from your mistakes. We promise to be the kind of parents who listen, who laugh with you, and who always make sure you know just how extraordinary you are.\n\nWelcome to the world, little one. You are so deeply, completely, and endlessly loved.\n\nWith all our hearts,\nMom & Dad`)}>
-                            <Text style={styles.sampleBtnText}>💑 From Mom & Dad</Text>
+                        <TouchableOpacity style={styles.sampleBtn} onPress={() => setLetterToBaby(`Dear ${babyDisplayName},\n\nFrom the moment we first heard your heartbeat, our lives changed forever. You are our greatest blessing, our sweetest dream come true, and the answer to every prayer we ever whispered. We spent so many nights imagining what you would look like, wondering who you would become, and dreaming about the life we would build together.\n\nNow that you're here, every single moment feels like magic. The way you curl your tiny fingers around ours, the soft sounds you make when you sleep, the way the whole room lights up just because you're in it � these are the moments we will treasure for the rest of our lives.\n\nWe promise to love you unconditionally, to protect you fiercely, to cheer you on through every triumph and hold you close through every challenge. We promise to read you stories, to answer your endless questions, to let you make messes and learn from your mistakes. We promise to be the kind of parents who listen, who laugh with you, and who always make sure you know just how extraordinary you are.\n\nWelcome to the world, little one. You are so deeply, completely, and endlessly loved.\n\nWith all our hearts,\nMom & Dad`)}>
+                            <Text style={styles.sampleBtnText}>?? From Mom & Dad</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.sampleBtn} onPress={() => setLetterToBaby(`Dear ${babyDisplayName},\n\nI carried you beneath my heart for nine months, but I have loved you my whole life. Every flutter, every kick, every hiccup reminded me that the most incredible journey of my life was just beginning.\n\nThe moment they placed you in my arms, the whole world went quiet. Nothing else mattered — just you, your tiny perfect face, your little fingers, and the soft warmth of you against my chest. I cried the happiest tears I have ever cried.\n\nI want you to know that no matter where life takes you, no matter how big you grow, you will always be my baby. I will always be your safe place, your biggest fan, and the one who loves you more than words could ever say. I will sing to you, read to you, hold you when you're scared, and celebrate every little thing you do.\n\nYou have made me a mother, and that is the greatest gift I have ever received.\n\nI love you to the moon and back,\nMom`)}>
-                            <Text style={styles.sampleBtnText}>👩 From Mom</Text>
+                        <TouchableOpacity style={styles.sampleBtn} onPress={() => setLetterToBaby(`Dear ${babyDisplayName},\n\nI carried you beneath my heart for nine months, but I have loved you my whole life. Every flutter, every kick, every hiccup reminded me that the most incredible journey of my life was just beginning.\n\nThe moment they placed you in my arms, the whole world went quiet. Nothing else mattered � just you, your tiny perfect face, your little fingers, and the soft warmth of you against my chest. I cried the happiest tears I have ever cried.\n\nI want you to know that no matter where life takes you, no matter how big you grow, you will always be my baby. I will always be your safe place, your biggest fan, and the one who loves you more than words could ever say. I will sing to you, read to you, hold you when you're scared, and celebrate every little thing you do.\n\nYou have made me a mother, and that is the greatest gift I have ever received.\n\nI love you to the moon and back,\nMom`)}>
+                            <Text style={styles.sampleBtnText}>?? From Mom</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.sampleBtn} onPress={() => setLetterToBaby(`Dear ${babyDisplayName},\n\nI never knew my heart could feel this full until I held you for the first time. In that moment, everything changed. Every dream I ever had suddenly had a new meaning — because now, everything I do, I do for you.\n\nI promise to be the dad who shows up — for every game, every recital, every scraped knee, and every bedtime story. I promise to teach you how to ride a bike, how to throw a ball, how to be brave, and how to be kind. I promise to make you laugh, to protect you, and to always be honest with you, even when it's hard.\n\nBut most of all, I promise to love you with everything I have. You are my greatest adventure, my proudest accomplishment, and my reason to be the best man I can be.\n\nThe world is a better place because you're in it, and I will spend every day making sure you know how loved you are.\n\nForever and always,\nDad`)}>
-                            <Text style={styles.sampleBtnText}>👨 From Dad</Text>
+                        <TouchableOpacity style={styles.sampleBtn} onPress={() => setLetterToBaby(`Dear ${babyDisplayName},\n\nI never knew my heart could feel this full until I held you for the first time. In that moment, everything changed. Every dream I ever had suddenly had a new meaning � because now, everything I do, I do for you.\n\nI promise to be the dad who shows up � for every game, every recital, every scraped knee, and every bedtime story. I promise to teach you how to ride a bike, how to throw a ball, how to be brave, and how to be kind. I promise to make you laugh, to protect you, and to always be honest with you, even when it's hard.\n\nBut most of all, I promise to love you with everything I have. You are my greatest adventure, my proudest accomplishment, and my reason to be the best man I can be.\n\nThe world is a better place because you're in it, and I will spend every day making sure you know how loved you are.\n\nForever and always,\nDad`)}>
+                            <Text style={styles.sampleBtnText}>?? From Dad</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -970,7 +974,7 @@ export default function FormScreen({ navigation, route }: Props) {
                     style={[styles.toggleBtn, nameGold && { backgroundColor: '#FFD700' }]}
                     onPress={() => setNameGold(true)}
                 >
-                    <Text style={[styles.toggleText, nameGold && { color: '#333' }]}>✨ Gold</Text>
+                    <Text style={[styles.toggleText, nameGold && { color: '#333' }]}>? Gold</Text>
                 </TouchableOpacity>
             </View>
 

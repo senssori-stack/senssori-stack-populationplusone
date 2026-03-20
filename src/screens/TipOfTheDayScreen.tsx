@@ -54,7 +54,7 @@ const ZODIAC_GRADIENTS: Record<string, [string, string, string]> = {
 };
 
 export default function TipOfTheDayScreen({ route, navigation }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
     const month = birthDate.getMonth() + 1;
     const day = birthDate.getDate();
 

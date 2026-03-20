@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { Circle, G, Path, Svg, Text as SvgText } from 'react-native-svg';
 import EclipticWheel from '../../components/EclipticWheel';
-import RisingStars from '../../components/RisingStars';
 import { calculateNatalChart } from '../data/utils/natal-chart-calculator';
 import { getCityCoordinates } from '../data/utils/town-coordinates';
 import type { RootStackParamList } from '../types';
@@ -105,7 +104,7 @@ const getZodiacFromDegree = (degree: number): string => {
 };
 
 export default function SkyWheelsScreen({ route }: Props) {
-    const [birthDate, setBirthDate] = useState(() => new Date(route.params.birthDate));
+    const [birthDate, setBirthDate] = useState(() => new Date(route.params.birthDate + 'T00:00:00'));
     const initialTime = route.params.birthTime || '12:00 PM';
     const [birthTime] = useState(() => {
         if (initialTime.includes('AM') || initialTime.includes('PM')) {
@@ -125,8 +124,24 @@ export default function SkyWheelsScreen({ route }: Props) {
 
     const [dayOffset, setDayOffset] = useState(0);
     const dayOffsetRef = useRef(0);
-    const originalBirthDateRef = useRef(new Date(route.params.birthDate));
+    const originalBirthDateRef = useRef(new Date(route.params.birthDate + 'T00:00:00'));
+    const originalBirthDate = useMemo(() => new Date(route.params.birthDate + 'T00:00:00'), [route.params.birthDate]);
     const scrollRef = useRef<ScrollView>(null);
+
+    // ── Date mode & step system (matches Solar System Time Machine) ──
+    const [dateMode, setDateMode] = useState<'birth' | 'today'>('birth');
+    const baseDateRef = useRef(new Date(route.params.birthDate + 'T00:00:00'));
+    const steps = [
+        { label: '24hr', days: 1, sliderDays: 60 },
+        { label: '7 days', days: 7, sliderDays: 365 },
+        { label: '1 month', days: 30.4375, sliderDays: 1826 },
+        { label: '2.5 yrs', days: 913.125, sliderDays: 7305 },
+    ];
+    const [selectedStepIdx, setSelectedStepIdx] = useState(0);
+    const selectedStepRef = useRef(steps[0].days);
+    const sliderDaysRef = useRef(steps[0].sliderDays);
+    const FIVE_YEARS_MS = 5 * 365.25 * 86400000;
+    const END_2050_MS = Date.UTC(2050, 0, 1);
 
     // Coordinates
     const coordinates = useMemo(() => {
@@ -139,38 +154,84 @@ export default function SkyWheelsScreen({ route }: Props) {
 
     const [hours, minutes] = birthTime.split(':').map(Number);
     const adjustedBirthDate = useMemo(() => {
-        const d = new Date(birthDate);
+        const d = new Date(birthDate.getTime());
         d.setHours(hours || 12, minutes || 0, 0, 0);
         return d;
     }, [birthDate, hours, minutes]);
 
     const natalChart = useMemo(() => calculateNatalChart(adjustedBirthDate, coordinates.lat, coordinates.lng), [adjustedBirthDate, coordinates]);
 
-    // Shared date-change helper
-    const changeDate = useCallback((newOffset: number) => {
-        const clamped = Math.max(-SLIDER_RANGE, Math.min(SLIDER_RANGE, newOffset));
-        setDayOffset(clamped);
+    // Shared date-change helper (matches Solar System applyOffset pattern)
+    const applyOffset = useCallback((newOffset: number) => {
+        const stepDays = selectedStepRef.current;
+        const snapped = Math.round(newOffset / stepDays) * stepDays;
+        const baseMs = baseDateRef.current.getTime();
+        const minOff = (originalBirthDate.getTime() - FIVE_YEARS_MS - baseMs) / 86400000;
+        const maxOff = (END_2050_MS - baseMs) / 86400000;
+        const clamped = Math.max(minOff, Math.min(maxOff, snapped));
         dayOffsetRef.current = clamped;
-        const newDate = new Date(originalBirthDateRef.current.getTime() + clamped * 86400000);
-        setBirthDate(newDate);
+        setDayOffset(clamped);
+        setBirthDate(new Date(baseMs + clamped * 86400000));
+    }, []);
+
+    // Alias for EclipticWheel compatibility
+    const changeDate = applyOffset;
+
+    const switchDateMode = useCallback((mode: 'birth' | 'today') => {
+        setDateMode(mode);
+        dayOffsetRef.current = 0;
+        setDayOffset(0);
+        const base = mode === 'today' ? new Date() : new Date(originalBirthDate.getTime());
+        baseDateRef.current = base;
+        setBirthDate(base);
+    }, [originalBirthDate]);
+
+    const selectStep = useCallback((idx: number) => {
+        setSelectedStepIdx(idx);
+        selectedStepRef.current = steps[idx].days;
+        sliderDaysRef.current = steps[idx].sliderDays;
+        const stepDays = steps[idx].days;
+        const snapped = Math.round(dayOffsetRef.current / stepDays) * stepDays;
+        const baseMs = baseDateRef.current.getTime();
+        const minOff = (originalBirthDate.getTime() - FIVE_YEARS_MS - baseMs) / 86400000;
+        const maxOff = (END_2050_MS - baseMs) / 86400000;
+        const clamped = Math.max(minOff, Math.min(maxOff, snapped));
+        dayOffsetRef.current = clamped;
+        setDayOffset(clamped);
+        setBirthDate(new Date(baseMs + clamped * 86400000));
     }, []);
 
     const formatOffset = (offset: number) => {
         const absOffset = Math.abs(offset);
         const sign = offset > 0 ? '+' : '\u2212';
+        const modeLabel = dateMode === 'today' ? 'from today' : 'from birth';
         if (absOffset < 1) {
             const hrs = Math.round(absOffset * 24);
-            return `${sign}${hrs} hr${hrs !== 1 ? 's' : ''} from birth`;
+            return `${sign}${hrs} hr${hrs !== 1 ? 's' : ''} ${modeLabel}`;
         }
         const totalDays = Math.round(absOffset);
-        if (totalDays < 365) return `${sign}${totalDays} day${totalDays !== 1 ? 's' : ''} from birth`;
+        if (totalDays < 30) return `${sign}${totalDays} day${totalDays !== 1 ? 's' : ''} ${modeLabel}`;
+        if (totalDays < 365) {
+            const months = Math.floor(totalDays / 30.4375);
+            const remDays = Math.round(totalDays - months * 30.4375);
+            if (remDays === 0) return `${sign}${months} mo${months !== 1 ? 's' : ''} ${modeLabel}`;
+            return `${sign}${months}mo ${remDays}d ${modeLabel}`;
+        }
         const years = Math.floor(totalDays / 365.25);
         const remDays = Math.round(totalDays - years * 365.25);
-        if (remDays === 0) return `${sign}${years} yr${years !== 1 ? 's' : ''} from birth`;
-        return `${sign}${years}y ${remDays}d from birth`;
+        if (remDays === 0) return `${sign}${years} yr${years !== 1 ? 's' : ''} ${modeLabel}`;
+        return `${sign}${years}y ${remDays}d ${modeLabel}`;
     };
+
+    // Slider position calculations
+    const baseMs = baseDateRef.current.getTime();
+    const fullMinOff = (originalBirthDate.getTime() - FIVE_YEARS_MS - baseMs) / 86400000;
+    const fullMaxOff = (END_2050_MS - baseMs) / 86400000;
+    const fullRange = fullMaxOff - fullMinOff;
+    const sliderFrac = fullRange > 0 ? (dayOffset - fullMinOff) / fullRange : 0.5;
+    const sliderCenterFrac = fullRange > 0 ? (0 - fullMinOff) / fullRange : 0.5;
+
     // ── Time Slider ──
-    const SLIDER_RANGE = 36525; // ±100 years
     const sliderWRef = useRef(300);
     const [sliderW, setSliderW] = useState(300);
     const sliderStartOffsetRef = useRef(0);
@@ -182,8 +243,9 @@ export default function SkyWheelsScreen({ route }: Props) {
                 sliderStartOffsetRef.current = dayOffsetRef.current;
             },
             onPanResponderMove: (_, gesture) => {
-                const daysPerPixel = (2 * SLIDER_RANGE) / sliderWRef.current;
-                changeDate(sliderStartOffsetRef.current + gesture.dx * daysPerPixel);
+                const totalRange = sliderDaysRef.current;
+                const rawOffset = sliderStartOffsetRef.current + (gesture.dx / sliderWRef.current) * totalRange;
+                applyOffset(rawOffset);
             },
             onPanResponderRelease: () => { },
         })
@@ -192,7 +254,7 @@ export default function SkyWheelsScreen({ route }: Props) {
     // ── Natal Chart constants ──
     const chartRotation = 270 - (natalChart.ascendant || 0);
     const signSymbols = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
-    const planetSymbols: Record<string, string> = { 'Sun': '☉', 'Moon': '☽', 'Mercury': '☿', 'Venus': '♀', 'Mars': '♂', 'Jupiter': '♃', 'Saturn': '♄', 'Uranus': '♅', 'Neptune': '♆', 'Pluto': '♇' };
+    const planetSymbols: Record<string, string> = { 'Sun': '☀', 'Moon': '●', 'Mercury': '☿', 'Venus': '♀', 'Mars': '♂', 'Jupiter': '♃', 'Saturn': '♄', 'Uranus': '♅', 'Neptune': '♆', 'Pluto': '♇' };
 
     // ── Moon orbital data ──
     const moonAge = getMoonAge(birthDate);
@@ -202,7 +264,6 @@ export default function SkyWheelsScreen({ route }: Props) {
     return (
         <LinearGradient colors={['#1a237e', '#283593', '#3949ab']} style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#1a237e" />
-            <RisingStars />
             <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
                 <Text style={styles.pageTitle}>🎡 Sky Wheels</Text>
@@ -302,7 +363,7 @@ export default function SkyWheelsScreen({ route }: Props) {
                         { sym: '☽', r: miniSize * 0.14, color: '#C0C0C0', L0: 218.32, rate: 13.17640 },
                         { sym: '☿', r: miniSize * 0.20, color: '#B0B0B0', L0: 252.25, rate: 4.09233 },
                         { sym: '♀', r: miniSize * 0.26, color: '#FFD700', L0: 181.98, rate: 1.60213 },
-                        { sym: '☉', r: miniSize * 0.32, color: '#FFA000', L0: 280.46, rate: 0.98565 },
+                        { sym: '☀', r: miniSize * 0.32, color: '#FFD54F', L0: 280.46, rate: 0.98565, isSun: true },
                         { sym: '♂', r: miniSize * 0.38, color: '#FF6B35', L0: 355.45, rate: 0.52403 },
                         { sym: '♃', r: miniSize * 0.42, color: '#FFB74D', L0: 34.40, rate: 0.08309 },
                         { sym: '♄', r: miniSize * 0.46, color: '#BCAAA4', L0: 50.08, rate: 0.03346 },
@@ -334,6 +395,7 @@ export default function SkyWheelsScreen({ route }: Props) {
                                         <Circle cx={mCx} cy={mCy} r={8} fill="#1a6fc4" />
                                     </Svg>
                                     <Text style={styles.dashboardTileLabel}>Natal Chart</Text>
+                                    <Text style={styles.dashboardTileDesc}>Planet positions in the zodiac at birth</Text>
                                 </View>
 
                                 {/* Tile 2: Solar System */}
@@ -355,6 +417,7 @@ export default function SkyWheelsScreen({ route }: Props) {
                                         })}
                                     </Svg>
                                     <Text style={styles.dashboardTileLabel}>Solar System</Text>
+                                    <Text style={styles.dashboardTileDesc}>Where the planets were orbiting the Sun</Text>
                                 </View>
 
                                 {/* Tile 3: Moon Phase */}
@@ -362,11 +425,11 @@ export default function SkyWheelsScreen({ route }: Props) {
                                     <Svg width={miniSize} height={miniSize}>
                                         <Circle cx={miniMoonCx} cy={miniMoonCx} r={miniSize * 0.47} fill="#050520" />
                                         <Circle cx={miniMoonCx} cy={miniMoonCx} r={miniMoonR} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={0.5} strokeDasharray="4,3" />
-                                        <Circle cx={miniMoonCx} cy={miniMoonCx} r={10} fill="#1565C0" />
-                                        <SvgText x={miniMoonCx} y={miniMoonCx + 4} fontSize={8} textAnchor="middle">🌍</SvgText>
-                                        <Circle cx={miniMx} cy={miniMy} r={8} fill="#222" />
+                                        <Circle cx={miniMoonCx} cy={miniMoonCx} r={12.5} fill="#1565C0" />
+                                        <SvgText x={miniMoonCx} y={miniMoonCx + 4} fontSize={10} textAnchor="middle">🌍</SvgText>
+                                        <Circle cx={miniMx} cy={miniMy} r={10} fill="#222" />
                                         {(() => {
-                                            const mr = 8;
+                                            const mr = 10;
                                             const p = displayMoonAge / 29.53;
                                             if (p < 0.02 || p > 0.98) return null;
                                             if (p > 0.48 && p < 0.52) return <Circle cx={miniMx} cy={miniMy} r={mr} fill="#E8E8C8" />;
@@ -378,9 +441,10 @@ export default function SkyWheelsScreen({ route }: Props) {
                                             return <Path d={`M ${miniMx} ${miniMy - mr} A ${mr} ${mr} 0 0 ${sO} ${miniMx} ${miniMy + mr} A ${termRx} ${mr} 0 0 ${sT} ${miniMx} ${miniMy - mr} Z`} fill="#E8E8C8" />;
                                         })()}
                                         <SvgText x={miniMoonCx} y={miniSize - 6} fontSize={9} fontWeight="bold" textAnchor="middle" fill="#FFD54F">{displayPhase.icon} {displayPhase.name}</SvgText>
-                                        <SvgText x={10} y={miniMoonCx + 4} fontSize={10} textAnchor="middle">☀️</SvgText>
+                                        <SvgText x={10} y={miniMoonCx + 4} fontSize={20} textAnchor="middle">☀️</SvgText>
                                     </Svg>
                                     <Text style={styles.dashboardTileLabel}>Moon Phase</Text>
+                                    <Text style={styles.dashboardTileDesc}>The Moon's illumination and orbit stage</Text>
                                 </View>
 
                                 {/* Tile 4: Geocentric */}
@@ -393,56 +457,87 @@ export default function SkyWheelsScreen({ route }: Props) {
                                         {geoSpheres.map((s, i) => {
                                             const lng = (s.L0 + s.rate * daysSinceJ2kDash) % 360;
                                             const rad = dRad(lng - 90);
-                                            return <G key={i}><Circle cx={mCx + s.r * Math.cos(rad)} cy={mCy + s.r * Math.sin(rad)} r={3.5} fill={s.color} opacity={0.9} /><SvgText x={mCx + s.r * Math.cos(rad)} y={mCy + s.r * Math.sin(rad) + 3} fontSize={6} textAnchor="middle">{s.sym}</SvgText></G>;
+                                            const sx = mCx + s.r * Math.cos(rad);
+                                            const sy = mCy + s.r * Math.sin(rad);
+                                            if ((s as any).isSun) {
+                                                return <G key={i}><Circle cx={sx} cy={sy} r={8} fill="#FFD54F" opacity={0.25} /><Circle cx={sx} cy={sy} r={5.5} fill="#FFD54F" /><SvgText x={sx} y={sy + 4} fontSize={8} textAnchor="middle">☀</SvgText></G>;
+                                            }
+                                            return <G key={i}><Circle cx={sx} cy={sy} r={3.5} fill={s.color} opacity={0.9} /><SvgText x={sx} y={sy + 3} fontSize={6} textAnchor="middle">{s.sym}</SvgText></G>;
                                         })}
                                     </Svg>
                                     <Text style={styles.dashboardTileLabel}>Geocentric</Text>
+                                    <Text style={styles.dashboardTileDesc}>The sky as seen from Earth's perspective</Text>
                                 </View>
                             </View>
                         </View>
                     );
                 })()}
 
-                {/* ═══ TIME SLIDER ═══ */}
+                {/* ═══ DATE MODE TOGGLE ═══ */}
+                <View style={styles.dateModeRow}>
+                    <TouchableOpacity
+                        onPress={() => switchDateMode('birth')}
+                        style={[styles.dateModeBtn, dateMode === 'birth' && styles.dateModeBtnActive]}
+                    >
+                        <Text style={[styles.dateModeBtnText, dateMode === 'birth' && styles.dateModeBtnTextActive]}>🎂 Birth Date</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => switchDateMode('today')}
+                        style={[styles.dateModeBtn, dateMode === 'today' && styles.dateModeBtnActive]}
+                    >
+                        <Text style={[styles.dateModeBtnText, dateMode === 'today' && styles.dateModeBtnTextActive]}>📅 Today's Date</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* ═══ TIME TRAVEL CONTROLS ═══ */}
                 <View style={styles.sliderSection}>
                     <Text style={styles.sliderTitle}>⏳ Time Travel</Text>
                     <Text style={styles.sliderDateText}>
                         {birthDate.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
                     </Text>
                     {dayOffset !== 0 && (
-                        <Text style={styles.sliderOffsetText}>
-                            {formatOffset(dayOffset)}
-                        </Text>
+                        <Text style={styles.sliderOffsetText}>{formatOffset(dayOffset)}</Text>
                     )}
+                    {/* Increment selector */}
+                    <View style={styles.stepSelectorRow}>
+                        {steps.map((s, idx) => (
+                            <TouchableOpacity
+                                key={s.label}
+                                style={[styles.stepSelectorBtn, idx === selectedStepIdx && styles.stepSelectorBtnActive]}
+                                onPress={() => selectStep(idx)}
+                            >
+                                <Text style={[styles.stepSelectorText, idx === selectedStepIdx && styles.stepSelectorTextActive]}>
+                                    {s.label}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
                     <View
                         style={styles.sliderTrackOuter}
                         onLayout={(e) => { const w = e.nativeEvent.layout.width; sliderWRef.current = w; setSliderW(w); }}
                         {...sliderPan.panHandlers}
                     >
                         <View style={styles.sliderTrack} />
-                        <View style={[styles.sliderCenterMark, { left: sliderW / 2 - 1 }]} />
-                        <View style={[styles.sliderThumb, { left: Math.max(0, Math.min(sliderW - 24, ((dayOffset + SLIDER_RANGE) / (2 * SLIDER_RANGE)) * sliderW - 12)) }]} />
+                        <View style={[styles.sliderCenterMark, { left: sliderCenterFrac * sliderW - 1 }]} />
+                        <View style={[styles.sliderThumb, { left: Math.max(0, Math.min(sliderW - 24, sliderFrac * sliderW - 12)) }]} />
                     </View>
                     <View style={styles.sliderLabelsRow}>
-                        <Text style={styles.sliderEndLabel}>−100 yrs</Text>
-                        <TouchableOpacity onPress={() => changeDate(0)}>
-                            <Text style={styles.sliderResetLabel}>⟲ Reset</Text>
+                        <Text style={styles.sliderEndLabel}>{new Date(baseMs + fullMinOff * 86400000).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}</Text>
+                        <Text style={styles.sliderEndLabel}>{new Date(baseMs + fullMaxOff * 86400000).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}</Text>
+                    </View>
+
+                    {/* Forward / Back / Reset */}
+                    <View style={styles.stepRow}>
+                        <TouchableOpacity style={styles.stepBtn} onPress={() => applyOffset(dayOffsetRef.current - steps[selectedStepIdx].days)}>
+                            <Text style={styles.stepBtnText}>◀ {steps[selectedStepIdx].label}</Text>
                         </TouchableOpacity>
-                        <Text style={styles.sliderEndLabel}>+100 yrs</Text>
-                    </View>
-                    <View style={styles.stepRow}>
-                        {[{ label: '5yr', d: 1826.25 }, { label: '1yr', d: 365.25 }, { label: '6mo', d: 182.625 }, { label: '1mo', d: 30.44 }, { label: '12h', d: 0.5 }, { label: '3h', d: 0.125 }].map(s => (
-                            <TouchableOpacity key={'m' + s.label} onPress={() => changeDate(dayOffset - s.d)} style={styles.stepBtn}>
-                                <Text style={styles.stepBtnText}>◀{s.label}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                    <View style={styles.stepRow}>
-                        {[{ label: '3h', d: 0.125 }, { label: '12h', d: 0.5 }, { label: '1mo', d: 30.44 }, { label: '6mo', d: 182.625 }, { label: '1yr', d: 365.25 }, { label: '5yr', d: 1826.25 }].map(s => (
-                            <TouchableOpacity key={'p' + s.label} onPress={() => changeDate(dayOffset + s.d)} style={styles.stepBtn}>
-                                <Text style={styles.stepBtnText}>{s.label}▶</Text>
-                            </TouchableOpacity>
-                        ))}
+                        <TouchableOpacity style={[styles.stepBtn, { backgroundColor: 'rgba(255,213,79,0.15)' }]} onPress={() => applyOffset(0)}>
+                            <Text style={[styles.stepBtnText, { color: '#FFD54F' }]}>⟲ Reset</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.stepBtn} onPress={() => applyOffset(dayOffsetRef.current + steps[selectedStepIdx].days)}>
+                            <Text style={styles.stepBtnText}>{steps[selectedStepIdx].label} ▶</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -482,9 +577,17 @@ const styles = StyleSheet.create({
         color: 'rgba(255,255,255,0.75)',
         textAlign: 'center',
         marginTop: 2,
-        marginBottom: 6,
+        marginBottom: 1,
         letterSpacing: 1,
         textTransform: 'uppercase',
+    },
+    dashboardTileDesc: {
+        fontSize: 8,
+        fontWeight: '500',
+        color: 'rgba(255,255,255,0.45)',
+        textAlign: 'center',
+        marginBottom: 5,
+        paddingHorizontal: 6,
     },
     sliderSection: {
         marginBottom: 14,
@@ -543,6 +646,59 @@ const styles = StyleSheet.create({
     },
     sliderEndLabel: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.5)' },
     sliderResetLabel: { fontSize: 13, fontWeight: '700', color: '#FFD54F' },
+    dateModeRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 10,
+        marginBottom: 12,
+    },
+    dateModeBtn: {
+        paddingVertical: 8,
+        paddingHorizontal: 18,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.08)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.15)',
+    },
+    dateModeBtnActive: {
+        backgroundColor: 'rgba(255,213,79,0.2)',
+        borderColor: '#FFD54F',
+    },
+    dateModeBtnText: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: 'rgba(255,255,255,0.5)',
+    },
+    dateModeBtnTextActive: {
+        color: '#FFD54F',
+    },
+    stepSelectorRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 6,
+        marginBottom: 4,
+        marginTop: 4,
+    },
+    stepSelectorBtn: {
+        paddingVertical: 5,
+        paddingHorizontal: 12,
+        borderRadius: 14,
+        backgroundColor: 'rgba(255,255,255,0.08)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.12)',
+    },
+    stepSelectorBtnActive: {
+        backgroundColor: 'rgba(255,213,79,0.2)',
+        borderColor: '#FFD54F',
+    },
+    stepSelectorText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: 'rgba(255,255,255,0.5)',
+    },
+    stepSelectorTextActive: {
+        color: '#FFD54F',
+    },
     stepRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',

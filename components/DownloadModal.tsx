@@ -29,19 +29,22 @@ type Props = {
     babyName?: string;
     /** App mode for gift suggestions (default: 'baby') */
     appMode?: 'baby' | 'birthday' | 'graduation' | 'anniversary' | 'milestone' | 'memorial';
+    /** Callback to navigate to the print page */
+    onPrintPress?: () => void;
 };
 
-export default function DownloadModal({ visible, onClose, items, onCapture, babyName = 'Baby', appMode = 'baby' }: Props) {
+export default function DownloadModal({ visible, onClose, items, onCapture, babyName = 'Baby', appMode = 'baby', onPrintPress }: Props) {
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
     const [activeTab, setActiveTab] = useState<'download' | 'print'>('download');
     const [isDownloading, setIsDownloading] = useState(false);
     const [downloadProgress, setDownloadProgress] = useState(0);
 
-    // Reset state when modal opens/closes to prevent stuck states
+    // Reset state when modal opens — auto-select all items
     useEffect(() => {
         if (visible) {
             setIsDownloading(false);
             setDownloadProgress(0);
+            setSelectedItems(new Set(items.map(i => i.id)));
         }
     }, [visible]);
 
@@ -64,117 +67,77 @@ export default function DownloadModal({ visible, onClose, items, onCapture, baby
     };
 
     const handleDownload = async () => {
+        if (selectedItems.size === 0) {
+            Alert.alert('No items selected', 'Please select at least one item to download.');
+            return;
+        }
+
+        setIsDownloading(true);
+        setDownloadProgress(0);
+
+        const itemsToSave = Array.from(selectedItems);
+
+        // Capture all images first
+        const capturedUris: string[] = [];
+        for (let i = 0; i < itemsToSave.length; i++) {
+            const itemId = itemsToSave[i];
+            setDownloadProgress((i + 0.5) / itemsToSave.length);
+            try {
+                const uri = await onCapture(itemId);
+                if (uri) capturedUris.push(uri);
+            } catch {
+                // skip failed capture
+            }
+        }
+
+        if (capturedUris.length === 0) {
+            setIsDownloading(false);
+            setDownloadProgress(0);
+            Alert.alert('Download Failed', 'Could not capture images. Please try again.', [{ text: 'OK' }]);
+            return;
+        }
+
+        // Try saving to photo library
+        let savedCount = 0;
         try {
-            if (selectedItems.size === 0) {
-                Alert.alert('No items selected', 'Please select at least one item to download.');
-                return;
+            const perm = await MediaLibrary.requestPermissionsAsync();
+            if (perm?.status === 'granted') {
+                for (let i = 0; i < capturedUris.length; i++) {
+                    setDownloadProgress((i + 1) / capturedUris.length);
+                    try {
+                        await MediaLibrary.saveToLibraryAsync(capturedUris[i]);
+                        savedCount++;
+                    } catch {
+                        // individual save failed
+                    }
+                }
             }
+        } catch {
+            // MediaLibrary not available
+        }
 
-            const itemsToSave = Array.from(selectedItems);
-            setIsDownloading(true);
-            setDownloadProgress(0);
+        setIsDownloading(false);
+        setDownloadProgress(0);
 
-            let successCount = 0;
-            let failCount = 0;
-            const savedUris: string[] = [];
-
-            for (let i = 0; i < itemsToSave.length; i++) {
-                const itemId = itemsToSave[i];
-                setDownloadProgress((i + 1) / itemsToSave.length);
+        if (savedCount > 0) {
+            Alert.alert(
+                '✅ Saved to Photos!',
+                `${savedCount} image${savedCount > 1 ? 's' : ''} saved to your photo library!`,
+                [{ text: 'OK', onPress: onClose }]
+            );
+        } else {
+            // Fallback to sharing
+            for (const fileUri of capturedUris) {
                 try {
-                    console.log(`📸 Capturing ${itemId}...`);
-                    const uri = await onCapture(itemId);
-                    console.log(`📸 Capture result for ${itemId}:`, uri ? 'SUCCESS' : 'NULL');
-
-                    if (uri) {
-                        // Use the ViewShot URI directly — no copy needed
-                        savedUris.push(uri);
-                        console.log(`✅ Captured ${itemId}: ${uri}`);
-                        successCount++;
-                    } else {
-                        console.warn(`⚠️ Capture returned null for ${itemId}`);
-                        failCount++;
-                    }
-                } catch (error: any) {
-                    console.error(`❌ Failed to capture/save ${itemId}:`, error?.message || error);
-                    failCount++;
+                    await Sharing.shareAsync(fileUri, {
+                        mimeType: 'image/png',
+                        dialogTitle: 'Save image',
+                    });
+                } catch {
+                    // user cancelled
                 }
             }
-
-            setIsDownloading(false);
-            setDownloadProgress(0);
-
-            if (successCount > 0 && savedUris.length > 0) {
-                // Try MediaLibrary first (works in dev builds), fallback to sharing (works in Expo Go)
-                let savedToLibrary = false;
-                try {
-                    const { status } = await MediaLibrary.requestPermissionsAsync();
-                    if (status === 'granted') {
-                        for (const fileUri of savedUris) {
-                            await MediaLibrary.saveToLibraryAsync(fileUri);
-                        }
-                        savedToLibrary = true;
-                    }
-                } catch (mediaErr: any) {
-                    console.log('MediaLibrary save failed (expected in Expo Go), using share instead:', mediaErr?.message);
-                }
-
-                if (savedToLibrary) {
-                    Alert.alert(
-                        '✅ Download Complete!',
-                        `${successCount} image${successCount > 1 ? 's' : ''} saved to your photo library!${failCount > 0 ? `\n${failCount} failed.` : ''}`,
-                        [{ text: 'OK', onPress: onClose }]
-                    );
-                } else {
-                    // Fallback: share via system share sheet
-                    const canShare = await Sharing.isAvailableAsync();
-                    if (canShare) {
-                        Alert.alert(
-                            '📥 Images Ready!',
-                            `${successCount} image${successCount > 1 ? 's' : ''} captured! Tap OK to save/share ${successCount > 1 ? 'the first image' : 'it'}.\n\n(In Expo Go, images open via the share sheet — tap "Save Image" to save to your gallery)`,
-                            [{
-                                text: 'OK', onPress: async () => {
-                                    try {
-                                        // Share the first image (Android share sheet can only handle one at a time)
-                                        await Sharing.shareAsync(savedUris[0], {
-                                            mimeType: 'image/png',
-                                            dialogTitle: `Save ${babyName}'s Birth Announcement`,
-                                        });
-                                        // If there are more images, share them one by one
-                                        for (let i = 1; i < savedUris.length; i++) {
-                                            await Sharing.shareAsync(savedUris[i], {
-                                                mimeType: 'image/png',
-                                                dialogTitle: `Save ${babyName}'s Birth Announcement (${i + 1}/${savedUris.length})`,
-                                            });
-                                        }
-                                        onClose();
-                                    } catch (shareErr) {
-                                        console.log('Share cancelled or failed:', shareErr);
-                                        onClose();
-                                    }
-                                }
-                            }]
-                        );
-                    } else {
-                        Alert.alert(
-                            '✅ Images Captured!',
-                            `${successCount} image${successCount > 1 ? 's' : ''} captured but sharing is not available on this device.\n\nImages saved to: ${savedUris[0]}`,
-                            [{ text: 'OK', onPress: onClose }]
-                        );
-                    }
-                }
-            } else {
-                Alert.alert(
-                    'Download Failed',
-                    'Could not capture images. Please try again.',
-                    [{ text: 'OK' }]
-                );
-            }
-        } catch (err: any) {
-            setIsDownloading(false);
-            setDownloadProgress(0);
-            console.error('CRASH in handleDownload:', err?.message || err);
-            Alert.alert('Download Error', `Something went wrong: ${err?.message || String(err)}`);
+            onClose();
         }
     };
 
@@ -291,7 +254,8 @@ export default function DownloadModal({ visible, onClose, items, onCapture, baby
                                 {/* Postcards */}
                                 {groupedItems.postcard.length > 0 && (
                                     <View style={styles.category}>
-                                        <Text style={styles.categoryTitle}>💌 Postcards</Text>
+                                        <Text style={styles.categoryTitle}>💌 Postcards (Double-Sided — Front & Back)</Text>
+                                        <Text style={{ fontSize: 11, color: '#888', marginBottom: 8, paddingHorizontal: 4 }}>Print front and back on opposite sides of the same card, like a standard mailable postcard.</Text>
                                         {groupedItems.postcard.map(item => (
                                             <TouchableOpacity
                                                 key={item.id}
@@ -310,7 +274,8 @@ export default function DownloadModal({ visible, onClose, items, onCapture, baby
                                 {/* Trading Cards */}
                                 {groupedItems.babycard.length > 0 && (
                                     <View style={styles.category}>
-                                        <Text style={styles.categoryTitle}>⚾ Trading Cards</Text>
+                                        <Text style={styles.categoryTitle}>⚾ Trading Cards (Double-Sided — Front & Back)</Text>
+                                        <Text style={{ fontSize: 11, color: '#888', marginBottom: 8, paddingHorizontal: 4 }}>Print front and back on opposite sides of the same card, like a standard baseball trading card.</Text>
                                         {groupedItems.babycard.map(item => (
                                             <TouchableOpacity
                                                 key={item.id}
@@ -341,13 +306,19 @@ export default function DownloadModal({ visible, onClose, items, onCapture, baby
                                         </Text>
                                     </View>
                                 ) : (
-                                    <Text style={styles.downloadButtonText}>
-                                        📥 Download {selectedItems.size > 0 ? `(${selectedItems.size})` : ''} to Device
+                                    <Text style={styles.downloadButtonText} numberOfLines={1} adjustsFontSizeToFit>
+                                        📥 Download ({selectedItems.size}) to Device
                                     </Text>
                                 )}
                             </TouchableOpacity>
 
-                            <Text style={styles.freeText}>FREE - Print at home or local shop</Text>
+                            <Text style={styles.freeText}>FREE - Print at home</Text>
+                            <TouchableOpacity onPress={() => setActiveTab('print')} activeOpacity={0.7}>
+                                <Text style={styles.printCtaText}>
+                                    For high quality printing needs{' '}
+                                    <Text style={styles.printCtaLink}>click here</Text>
+                                </Text>
+                            </TouchableOpacity>
                         </>
                     ) : (
                         /* Print & Ship Tab */
@@ -534,8 +505,9 @@ const styles = StyleSheet.create({
     },
     downloadButtonText: {
         color: '#fff',
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
+        textAlign: 'center',
     },
     downloadingRow: {
         flexDirection: 'row',
@@ -547,6 +519,18 @@ const styles = StyleSheet.create({
         color: '#888',
         fontSize: 14,
         marginTop: 8,
+    },
+    printCtaText: {
+        textAlign: 'center',
+        color: '#555',
+        fontSize: 14,
+        marginTop: 12,
+        marginBottom: 8,
+    },
+    printCtaLink: {
+        color: '#0000cc',
+        textDecorationLine: 'underline',
+        fontWeight: '600',
     },
     printOptions: {
         padding: 16,

@@ -161,7 +161,7 @@ const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'];
 
 export default function BirthstoneScreen({ navigation, route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
     const month = birthDate.getMonth();
     const stone = getBirthstoneData(birthDate);
 

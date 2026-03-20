@@ -1,11 +1,11 @@
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
-import { View, SafeAreaView, ScrollView, StyleSheet } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
 import TimeCapsuleBack from '../../components/TimeCapsuleBack';
-import { getZodiacFromISO } from '../data/utils/zodiac';
 import { birthstoneFromISO } from '../data/utils/birthstone';
 import { calculateLifePath } from '../data/utils/life-path-calculator';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList, PreviewParams } from '../types';
+import { getZodiacFromISO } from '../data/utils/zodiac';
+import type { PreviewParams, RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Back'>;
 
@@ -35,6 +35,7 @@ export default function BackScreen({ route }: Props) {
                     zodiac={zodiac}
                     birthstone={birthstone}
                     lifePathNumber={lifePathNumber}
+                    militaryBranch={params.militaryBranch}
                 />
             </ScrollView>
         </SafeAreaView>

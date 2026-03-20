@@ -66,23 +66,38 @@ export default function ObituaryFormScreen({ navigation }: Props) {
     const [musicSelections, setMusicSelections] = useState('');
     const [specialThanks, setSpecialThanks] = useState('');
 
-    const pickImage = async () => {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-            Alert.alert('Permission Required', 'Please grant photo library access to upload a photo.');
-            return;
+    const launchPhotoPicker = async (useCamera: boolean): Promise<string | null> => {
+        try {
+            if (useCamera) {
+                const perm = await ImagePicker.requestCameraPermissionsAsync();
+                if (perm.status !== 'granted') {
+                    Alert.alert('Permission Required', 'Please enable Camera access in Settings to take a photo.');
+                    return null;
+                }
+            } else {
+                const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                if (perm.status !== 'granted') {
+                    Alert.alert('Permission Required', 'Please grant photo library access to upload a photo.');
+                    return null;
+                }
+            }
+            const result = useCamera
+                ? await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [3, 4], quality: 0.8 })
+                : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [3, 4], quality: 0.8 });
+            if (!result.canceled && result.assets[0]) return result.assets[0].uri;
+            return null;
+        } catch (error) {
+            Alert.alert('Error', 'Failed to pick photo');
+            return null;
         }
+    };
 
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [3, 4],
-            quality: 0.8,
-        });
-
-        if (!result.canceled && result.assets[0]) {
-            setPhotoUri(result.assets[0].uri);
-        }
+    const pickImage = () => {
+        Alert.alert('Add Photo', 'Choose a source', [
+            { text: '📷 Take Photo', onPress: async () => { const uri = await launchPhotoPicker(true); if (uri) setPhotoUri(uri); } },
+            { text: '🖼️ Choose from Library', onPress: async () => { const uri = await launchPhotoPicker(false); if (uri) setPhotoUri(uri); } },
+            { text: 'Cancel', style: 'cancel' },
+        ]);
     };
 
     const handlePreview = () => {
@@ -247,7 +262,8 @@ export default function ObituaryFormScreen({ navigation }: Props) {
                                 <TextInput
                                     style={styles.input}
                                     value={hometown}
-                                    onChangeText={setHometown}
+                                    onChangeText={(t) => setHometown(t.toUpperCase())}
+                                    autoCapitalize="characters"
                                     placeholder="City, State"
                                     placeholderTextColor="#888"
                                 />

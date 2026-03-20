@@ -397,7 +397,7 @@ function getICLongitude(mcLng: number): number {
 // ─── Main screen component ──────────────────────────────────
 
 export default function AstrocartographyScreen({ route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
     const { width: screenWidth } = Dimensions.get('window');
     const mapScale = screenWidth / MAP_WIDTH;
     const scaledHeight = MAP_HEIGHT * mapScale;

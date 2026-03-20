@@ -8,7 +8,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import { Circle, Defs, Ellipse, G, Line, Path, Rect, Stop, Svg, LinearGradient as SvgLinearGradient, Text as SvgText } from 'react-native-svg';
 import RisingStars from '../../components/RisingStars';
@@ -16,9 +16,9 @@ import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BiblicalWheels'>; // biblical cosmology screen
 
-export default function BiblicalWheelsScreen({ route }: Props) {
-    const originalBirthDate = useMemo(() => new Date(route.params.birthDate), [route.params.birthDate]);
-    const [birthDate, setBirthDate] = useState(() => new Date(route.params.birthDate));
+export default function BiblicalWheelsScreen({ route, navigation }: Props) {
+    const originalBirthDate = useMemo(() => new Date(route.params.birthDate + 'T00:00:00'), [route.params.birthDate]);
+    const [birthDate, setBirthDate] = useState(() => new Date(route.params.birthDate + 'T00:00:00'));
 
     const [dayOffset, setDayOffset] = useState(0);
     const dayOffsetRef = useRef(0);
@@ -850,6 +850,30 @@ export default function BiblicalWheelsScreen({ route }: Props) {
                         </Text>
                     </View>
                 </View>
+
+                {/* ═══ PRAGUE ASTRONOMICAL CLOCK — NAV BUTTON ═══ */}
+                <TouchableOpacity
+                    style={{
+                        marginTop: 24,
+                        backgroundColor: 'rgba(139,105,20,0.15)',
+                        borderRadius: 16,
+                        padding: 20,
+                        borderWidth: 2,
+                        borderColor: 'rgba(218,165,32,0.4)',
+                        alignItems: 'center',
+                    }}
+                    onPress={() => navigation.navigate('PragueClock', {
+                        birthDate: route.params.birthDate,
+                        birthTime: route.params.birthTime,
+                        birthLocation: route.params.birthLocation,
+                    })}
+                    activeOpacity={0.7}
+                >
+                    <Text style={{ fontSize: 44, marginBottom: 8 }}>🕰️</Text>
+                    <Text style={{ fontSize: 18, fontWeight: '900', color: '#DAA520', textAlign: 'center' }}>Prague Astronomical Clock</Text>
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.55)', textAlign: 'center', marginTop: 4 }}>Staroměstský Orloj • Installed 1410 AD</Text>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.4)', marginTop: 10 }}>Tap to Explore →</Text>
+                </TouchableOpacity>
 
                 <View style={{ height: 40 }} />
             </ScrollView>

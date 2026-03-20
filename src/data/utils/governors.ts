@@ -44,7 +44,8 @@ export async function getGovernorForStateAndDate(
         const csvText = await response.text();
         const governors = parseCSV(csvText);
 
-        const targetDate = new Date(dateISO);
+        const [ty, tm, td] = dateISO.split('-').map(Number);
+        const targetDate = new Date(ty, tm - 1, td);
         const upperStateCode = stateCode.toUpperCase().trim();
 
         // Filter governors for this state

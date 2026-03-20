@@ -49,7 +49,7 @@ function formatNumber(n: number): string {
 
 export default function DaysAliveScreen({ route, navigation }: Props) {
     const { birthDate } = route.params;
-    const birth = useMemo(() => new Date(birthDate), [birthDate]);
+    const birth = useMemo(() => new Date(birthDate + 'T00:00:00'), [birthDate]);
     const now = new Date();
 
     // ── Core calculations ─────────────────────

@@ -1889,7 +1889,7 @@ function getCelebritiesForDate(month: number, day: number): FamousPerson[] {
 }
 
 export default function FamousBirthdaysScreen({ navigation, route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
     const month = birthDate.getMonth() + 1;
     const day = birthDate.getDate();
     const [celebrities, setCelebrities] = useState<FamousPerson[]>([]);

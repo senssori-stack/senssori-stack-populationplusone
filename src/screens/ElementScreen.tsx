@@ -104,7 +104,7 @@ function getElement(sign: string): string {
 }
 
 export default function ElementScreen({ route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
     const sign = getZodiacSign(birthDate);
     const userElement = getElement(sign);
     const data = ELEMENTS[userElement as keyof typeof ELEMENTS];

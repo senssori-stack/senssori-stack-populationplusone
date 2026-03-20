@@ -106,21 +106,20 @@ const ADD_ONS: AddOn[] = [
         id: 'baseball-cards',
         name: 'Rookie Trading Cards',
         emoji: '\u26BE',
-        description: 'Double-sided, 32pt ultra-thick glossy cardstock. Rigid, collector-grade quality that won\u2019t bend, fade, or wear \u2014 built to survive decades in a wallet, scrapbook, or display case.',
+        description: 'Double-sided, 32pt ultra-thick glossy cardstock. Front photo on one side, stats on the other — just like a real baseball card. Rigid, collector-grade quality that won\u2019t bend, fade, or wear \u2014 built to survive decades in a wallet, scrapbook, or display case.',
         material: '32pt Ultra-Thick Cardstock (collector grade)',
         options: [
-            { label: '1 Sheet (9 cards)', quantity: '9', price: 12.99 },
             { label: '2 Sheets (18 cards)', quantity: '18', price: 22.99 },
             { label: '3 Sheets (27 cards)', quantity: '27', price: 29.99 },
+            { label: '4 Sheets (36 cards)', quantity: '36', price: 37.99 },
             { label: '5 Sheets (45 cards)', quantity: '45', price: 44.99 },
-            { label: '10 Sheets (90 cards)', quantity: '90', price: 79.99 },
         ],
     },
     {
         id: 'postcards',
         name: 'Announcement Postcards',
         emoji: '\uD83D\uDCEE',
-        description: 'Double-sided, 16pt high-gloss cardstock. Thick, rigid, and vibrant \u2014 the kind people save in keepsake boxes for years, not toss in the recycling.',
+        description: 'Double-sided, 16pt high-gloss cardstock. Photo announcement on the front, invitation details on the back — just like a real mailable postcard. Thick, rigid, and vibrant \u2014 the kind people save in keepsake boxes for years, not toss in the recycling.',
         material: '16pt High-Gloss Cardstock (archival quality)',
         options: [
             { label: '10 Postcards (4\u00D76")', quantity: '10', price: 14.99 },
@@ -164,6 +163,7 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
     const [selectedMaterial, setSelectedMaterial] = useState<MaterialId | null>(null);
     const [includeLetter, setIncludeLetter] = useState(true);
     const [selectedAddOns, setSelectedAddOns] = useState<Record<string, number>>({});
+    const [extraCardSheets, setExtraCardSheets] = useState<Record<string, number>>({});
     const [previewTab, setPreviewTab] = useState<'front' | 'back'>('front');
     const { width: screenWidth } = useWindowDimensions();
 
@@ -180,7 +180,7 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
             .join(' & ')
         : ((designData.babyFirst || '') + ' ' + (designData.babyMiddle || '') + ' ' + (designData.babyLast || '')).trim() || 'Baby';
 
-    const birthDate = designData.dobISO ? new Date(designData.dobISO).toLocaleDateString() : '';
+    const birthDate = designData.dobISO ? (() => { const [y, m, d] = designData.dobISO.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString(); })() : '';
 
     const babyCount = designData.babyCount || babyFirstNames.length || 1;
 
@@ -248,14 +248,14 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
                         description: `${photoCount} unique postcard designs — one per photo. Share different looks with family & friends! Save ~15% vs. buying each separately.`,
                         options: photoCount === 2 ? [
                             { label: '20 Postcards (2 designs \u00D7 10 each)', quantity: '20', price: 24.99 },
-                            { label: '50 Postcards (2 designs \u00D7 25 each)', quantity: '50', price: 49.99 },
+                            { label: '40 Postcards (2 designs \u00D7 20 each)', quantity: '40', price: 42.99 },
+                            { label: '60 Postcards (2 designs \u00D7 30 each)', quantity: '60', price: 59.99 },
                             { label: '100 Postcards (2 designs \u00D7 50 each)', quantity: '100', price: 84.99 },
-                            { label: '200 Postcards (2 designs \u00D7 100 each)', quantity: '200', price: 134.99 },
                         ] : [
                             { label: '30 Postcards (3 designs \u00D7 10 each)', quantity: '30', price: 34.99 },
-                            { label: '75 Postcards (3 designs \u00D7 25 each)', quantity: '75', price: 74.99 },
+                            { label: '60 Postcards (3 designs \u00D7 20 each)', quantity: '60', price: 64.99 },
+                            { label: '90 Postcards (3 designs \u00D7 30 each)', quantity: '90', price: 89.99 },
                             { label: '150 Postcards (3 designs \u00D7 50 each)', quantity: '150', price: 124.99 },
-                            { label: '300 Postcards (3 designs \u00D7 100 each)', quantity: '300', price: 199.99 },
                         ],
                     });
                 } else {
@@ -320,9 +320,9 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
                     description: `${babyCount} unique postcard designs (one per baby: ${allNames}). Save ~15% vs. buying each separately!`,
                     options: [
                         { label: `${babyCount * 10} Postcards (${babyCount} designs \u00D7 10 each)`, quantity: String(babyCount * 10), price: babyCount === 2 ? 24.99 : 34.99 },
-                        { label: `${babyCount * 25} Postcards (${babyCount} designs \u00D7 25 each)`, quantity: String(babyCount * 25), price: babyCount === 2 ? 49.99 : 74.99 },
+                        { label: `${babyCount * 20} Postcards (${babyCount} designs \u00D7 20 each)`, quantity: String(babyCount * 20), price: babyCount === 2 ? 42.99 : 64.99 },
+                        { label: `${babyCount * 30} Postcards (${babyCount} designs \u00D7 30 each)`, quantity: String(babyCount * 30), price: babyCount === 2 ? 57.99 : 89.99 },
                         { label: `${babyCount * 50} Postcards (${babyCount} designs \u00D7 50 each)`, quantity: String(babyCount * 50), price: babyCount === 2 ? 84.99 : 124.99 },
-                        { label: `${babyCount * 100} Postcards (${babyCount} designs \u00D7 100 each)`, quantity: String(babyCount * 100), price: babyCount === 2 ? 134.99 : 199.99 },
                     ],
                 });
             } else {
@@ -336,12 +336,17 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
         ? calculatePackagePrice(selectedSize, selectedMaterial, includeLetter)
         : 0;
 
+    const extraSheetsTotal = Object.entries(extraCardSheets).reduce((sum, [addOnId, sheets]) => {
+        if (sheets <= 0 || selectedAddOns[addOnId] === undefined) return sum;
+        return sum + Math.round(sheets * 9.99 * 100) / 100;
+    }, 0);
+
     const addOnTotal = Object.entries(selectedAddOns).reduce((sum, [addOnId, optionIndex]) => {
         if (optionIndex < 0) return sum;
         const addOn = effectiveAddOns.find(a => a.id === addOnId);
         if (!addOn) return sum;
         return sum + addOn.options[optionIndex].price;
-    }, 0);
+    }, 0) + extraSheetsTotal;
 
     const orderTotal = packagePrice + addOnTotal;
 
@@ -402,6 +407,18 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
                 productType: addOnId.startsWith('baseball-cards') ? 'babycard' :
                     addOnId.startsWith('postcards') ? 'postcard' : 'yardsign',
             });
+
+            // Add extra card sheets if any
+            const sheets = extraCardSheets[addOnId] || 0;
+            if (sheets > 0 && addOnId.startsWith('baseball-cards')) {
+                addToCart({
+                    id: addOnId + '-extra-' + Date.now(),
+                    name: '\u2795 Extra ' + addOn.name + ' Sheets',
+                    description: sheets + ' extra sheet' + (sheets !== 1 ? 's' : '') + ' (' + (sheets * 9) + ' additional cards)',
+                    price: Math.round(sheets * 9.99 * 100) / 100,
+                    productType: 'babycard',
+                });
+            }
         });
 
         Alert.alert(
@@ -744,6 +761,43 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
                                 );
                             })}
                         </View>
+                        {addOn.id.startsWith('baseball-cards') && selectedAddOns[addOn.id] !== undefined && (
+                            <View style={styles.extraSheetsSection}>
+                                <Text style={styles.extraSheetsLabel}>
+                                    {'\u2795'} Need more? Add extra 9-card sheets ($9.99/sheet)
+                                </Text>
+                                <View style={styles.stepperRow}>
+                                    <TouchableOpacity
+                                        style={[styles.stepperBtn, !(extraCardSheets[addOn.id] > 0) && styles.stepperBtnDisabled]}
+                                        onPress={() => setExtraCardSheets(prev => ({
+                                            ...prev,
+                                            [addOn.id]: Math.max(0, (prev[addOn.id] || 0) - 1)
+                                        }))}
+                                    >
+                                        <Text style={styles.stepperBtnText}>{'\u2212'}</Text>
+                                    </TouchableOpacity>
+                                    <View style={styles.stepperCountBox}>
+                                        <Text style={styles.stepperCount}>
+                                            {extraCardSheets[addOn.id] || 0} extra {(extraCardSheets[addOn.id] || 0) === 1 ? 'sheet' : 'sheets'}
+                                        </Text>
+                                        {(extraCardSheets[addOn.id] || 0) > 0 && (
+                                            <Text style={styles.stepperCountSub}>
+                                                +{(extraCardSheets[addOn.id] || 0) * 9} cards {'\u2022'} {formatPrice(Math.round((extraCardSheets[addOn.id] || 0) * 9.99 * 100) / 100)}
+                                            </Text>
+                                        )}
+                                    </View>
+                                    <TouchableOpacity
+                                        style={styles.stepperBtn}
+                                        onPress={() => setExtraCardSheets(prev => ({
+                                            ...prev,
+                                            [addOn.id]: (prev[addOn.id] || 0) + 1
+                                        }))}
+                                    >
+                                        <Text style={styles.stepperBtnText}>+</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        )}
                     </View>
                 ))}
 
@@ -778,11 +832,20 @@ export default function PrintServiceScreen({ navigation, route }: Props) {
                             if (optionIndex < 0) return null;
                             const addOn = effectiveAddOns.find(a => a.id === addOnId)!;
                             const opt = addOn.options[optionIndex];
+                            const sheets = extraCardSheets[addOnId] || 0;
                             return (
-                                <View key={addOnId} style={styles.orderLine}>
-                                    <Text style={styles.orderLineLabel}>{addOn.emoji} {opt.label}</Text>
-                                    <Text style={styles.orderLinePrice}>{formatPrice(opt.price)}</Text>
-                                </View>
+                                <React.Fragment key={addOnId}>
+                                    <View style={styles.orderLine}>
+                                        <Text style={styles.orderLineLabel}>{addOn.emoji} {opt.label}</Text>
+                                        <Text style={styles.orderLinePrice}>{formatPrice(opt.price)}</Text>
+                                    </View>
+                                    {sheets > 0 && addOnId.startsWith('baseball-cards') && (
+                                        <View style={styles.orderLine}>
+                                            <Text style={styles.orderLineLabel}>{'\u2795'} {sheets} extra sheet{sheets !== 1 ? 's' : ''} ({sheets * 9} cards)</Text>
+                                            <Text style={styles.orderLinePrice}>{formatPrice(Math.round(sheets * 9.99 * 100) / 100)}</Text>
+                                        </View>
+                                    )}
+                                </React.Fragment>
                             );
                         })}
 
@@ -1024,6 +1087,59 @@ const styles = StyleSheet.create({
     addOnOptionLabelActive: { color: '#667eea' },
     addOnOptionPrice: { fontSize: 15, fontWeight: '700', color: '#4a5568' },
     addOnOptionPriceActive: { color: '#667eea' },
+    extraSheetsSection: {
+        marginTop: 10,
+        backgroundColor: '#f0f4ff',
+        borderRadius: 10,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#d0d8f0',
+    },
+    extraSheetsLabel: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#4c63b6',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    stepperRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 12,
+    },
+    stepperBtn: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#667eea',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    stepperBtnDisabled: {
+        backgroundColor: '#cbd5e0',
+    },
+    stepperBtnText: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#fff',
+        lineHeight: 24,
+    },
+    stepperCountBox: {
+        alignItems: 'center',
+        minWidth: 120,
+    },
+    stepperCount: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#2d3748',
+    },
+    stepperCountSub: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#667eea',
+        marginTop: 2,
+    },
     giftBanner: {
         flexDirection: 'row',
         alignItems: 'center',

@@ -159,7 +159,7 @@ export default function GraduationFormScreen({ navigation }: Props) {
     const [personName, setPersonName] = useState('Jessica Sample Doe');
     const [schoolName, setSchoolName] = useState('Sample High School');
     const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]);
-    const [hometown, setHometown] = useState('Bellefontaine Neighbors, MO');
+    const [hometown, setHometown] = useState('BELLEFONTAINE NEIGHBORS, MO');
     const [birthDate, setBirthDate] = useState<Date>(new Date(2004, 0, 15)); // Jan 15, 2004 (sample DOB)
     const [showBirthDatePicker, setShowBirthDatePicker] = useState(false);
     const [gradDate, setGradDate] = useState<Date>(new Date(2026, 4, 15)); // May 15, 2026 (sample graduation)
@@ -370,7 +370,8 @@ export default function GraduationFormScreen({ navigation }: Props) {
             <TextInput
                 style={styles.input}
                 value={hometown}
-                onChangeText={setHometown}
+                onChangeText={(t) => setHometown(t.toUpperCase())}
+                                autoCapitalize="characters"
                 placeholder="e.g. St. Louis, MO"
                 placeholderTextColor="#999"
             />

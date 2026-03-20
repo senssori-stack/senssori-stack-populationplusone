@@ -88,7 +88,7 @@ export default function WeddingAnnouncementFormScreen({ navigation }: Props) {
     const [spouse1Name, setSpouse1Name] = useState('Jane Doe');
     const [spouse2Name, setSpouse2Name] = useState('John Doe');
     const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]);
-    const [hometown, setHometown] = useState('Bellefontaine Neighbors, MO');
+    const [hometown, setHometown] = useState('BELLEFONTAINE NEIGHBORS, MO');
     const [weddingDate, setWeddingDate] = useState<Date>(new Date(2026, 1, 4)); // Feb 4, 2026
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedMessage, setSelectedMessage] = useState<MessageKey>('classic');
@@ -249,7 +249,8 @@ export default function WeddingAnnouncementFormScreen({ navigation }: Props) {
             <TextInput
                 style={styles.input}
                 value={hometown}
-                onChangeText={setHometown}
+                onChangeText={(t) => setHometown(t.toUpperCase())}
+                                autoCapitalize="characters"
                 placeholder="e.g. St. Louis, MO"
                 placeholderTextColor="#999"
             />

@@ -19,6 +19,8 @@ type Props = {
     hidePlusLabel?: boolean; // Hide the +1/+2 label (e.g. for weddings)
     isMemorial?: boolean; // Death announcement: shows -1 and "In Loving Memory"
     nameGold?: boolean; // Render name in shiny gold
+    dateOfBirthOriginal?: string; // ISO date for memorial DOB display
+    dateOfDeath?: string; // ISO date for memorial DOD display
 };
 
 export default function SignFrontLandscape(props: Props) {
@@ -34,6 +36,8 @@ export default function SignFrontLandscape(props: Props) {
         hidePlusLabel = false,
         isMemorial = false,
         nameGold = false,
+        dateOfBirthOriginal,
+        dateOfDeath,
     } = props;
 
     // ⚠️ DEFENSIVE: Coerce population to number — handles string, number, or undefined
@@ -200,7 +204,7 @@ export default function SignFrontLandscape(props: Props) {
                         </Text>
                     )}
 
-                    {/* WELCOME TO - LOCKED POSITION AND SIZE - DO NOT CHANGE */}
+                    {/* WELCOME TO / IN LOVING MEMORY - LOCKED POSITION AND SIZE */}
                     <Text style={[styles.text, {
                         position: 'absolute',
                         top: welcomeToLockedMargin,
@@ -213,28 +217,8 @@ export default function SignFrontLandscape(props: Props) {
                         fontFamily: 'cursive',
                         transform: [{ scaleX: 1.25 }]
                     }]}>
-                        Welcome To
+                        {isMemorial ? 'In Loving Memory' : 'Welcome To'}
                     </Text>
-
-                    {/* MEMORIAL OVERLAY: "In Loving Memory" replaces "Welcome To" */}
-                    {isMemorial && (
-                        <Text style={[styles.text, {
-                            position: 'absolute',
-                            top: welcomeToLockedMargin,
-                            left: 0,
-                            right: 0,
-                            fontSize: welcomeToFontSize,
-                            color: '#FFFFFF',
-                            fontStyle: 'italic',
-                            fontWeight: '700',
-                            fontFamily: 'cursive',
-                            transform: [{ scaleX: 1.25 }],
-                            zIndex: 20,
-                            backgroundColor: colors.bg,
-                        }]}>
-                            In Loving Memory
-                        </Text>
-                    )}
 
                     {/* CITY, ST - SECONDARY RULE: Centers between Welcome To bottom and POPULATION top */}
                     <Text style={[styles.text, {
@@ -274,9 +258,11 @@ export default function SignFrontLandscape(props: Props) {
                                 {population.toLocaleString()}
                             </Text>
                         )}
+                        {/* MEMORIAL -1 LABEL — 50% larger than birthday +1 (1.125 vs 0.75), bold 900 */}
                         {!hidePlusLabel && (
                             <Text style={[styles.text, {
-                                fontSize: Math.round(welcomeToFontSize * 0.75),
+                                fontSize: Math.round(welcomeToFontSize * (isMemorial ? 1.125 : 0.75)),
+                                fontWeight: '900',
                                 color: '#FFFFFF',
                                 marginTop: Math.round(welcomeToFontSize * -0.14)
                             }]}>
@@ -294,10 +280,11 @@ export default function SignFrontLandscape(props: Props) {
                         )}
                     </View>
 
-                    {/* PERSON NAME - SECONDARY RULE: Centers between +1 bottom and photo top */}
+                    {/* PERSON NAME — MEMORIAL RULE: shifted up by 0.5*fontSize to close gap with POPULATION block */}
+                    {/* BIRTHDAY RULE: centers between +1 bottom and photo top */}
                     <Text style={[styles.text, {
                         position: 'absolute',
-                        top: stableTopPosition + (welcomeToFontSize * 0.75 * 2) + (displayHeight - photoBottomGapLocked - photoHeight - stableTopPosition - welcomeToFontSize * 0.75 * 2) / 2 - (personNameFontSize * 0.6),
+                        top: stableTopPosition + (welcomeToFontSize * 0.75 * 2) + (displayHeight - photoBottomGapLocked - photoHeight - stableTopPosition - welcomeToFontSize * 0.75 * 2) / 2 - (personNameFontSize * 0.6) + (isMemorial ? -personNameFontSize * 0.5 : 0),
                         left: 0,
                         right: 0,
                         fontSize: personNameFontSize,
@@ -308,11 +295,34 @@ export default function SignFrontLandscape(props: Props) {
                         {personName}
                     </Text>
 
-                    {/* Photo spacer */}
+                    {/* MEMORIAL DOB — DOD LINE - LOCKED POSITION */}
+                    {/* Font: 40% of name size | Offset: nameTop + 0.15*nameFontSize + 120px*scale */}
+                    {isMemorial && (dateOfBirthOriginal || dateOfDeath) && (() => {
+                        const fmtDate = (iso?: string) => {
+                            if (!iso) return '';
+                            const [y, m, d] = iso.split('-');
+                            return `${m}-${d}-${y}`;
+                        };
+                        const nameTop = stableTopPosition + (welcomeToFontSize * 0.75 * 2) + (displayHeight - photoBottomGapLocked - photoHeight - stableTopPosition - welcomeToFontSize * 0.75 * 2) / 2 - (personNameFontSize * 0.6) - personNameFontSize * 0.5;
+                        const datesFontSize = Math.round(personNameFontSize * 0.4);
+                        return (
+                            <Text style={[styles.text, {
+                                position: 'absolute',
+                                top: nameTop + personNameFontSize * 0.15 + (120 * previewScale),
+                                left: 0,
+                                right: 0,
+                                fontSize: datesFontSize,
+                                color: '#FFFFFF',
+                                letterSpacing: 1,
+                            }]}>
+                                {fmtDate(dateOfBirthOriginal)}{dateOfBirthOriginal && dateOfDeath ? '  —  ' : ''}{fmtDate(dateOfDeath)}
+                            </Text>
+                        );
+                    })()}
                     <View style={{ height: photoSpacerHeight }} />
 
                     {/* PHOTO PLACEMENT - LOCKED POSITION - DO NOT CHANGE */}
-                    {photoCount > 0 && (
+                    {photoCount > 0 ? (
                         <View style={{
                             position: 'absolute',
                             bottom: photoBottomGapLocked,
@@ -333,6 +343,23 @@ export default function SignFrontLandscape(props: Props) {
                                     }}
                                 />
                             ))}
+                        </View>
+                    ) : (
+                        <View style={{
+                            position: 'absolute',
+                            bottom: photoBottomGapLocked,
+                            left: (displayWidth * 0.95 - photoWidth) / 2,
+                            width: photoWidth,
+                            height: photoHeight,
+                            borderWidth: 2,
+                            borderColor: '#FFFFFF',
+                            borderStyle: 'dashed',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: 'rgba(255,255,255,0.08)',
+                        }}>
+                            <Text style={{ color: '#FFFFFF', fontSize: Math.round(photoHeight * 0.15), opacity: 0.5 }}>📷</Text>
+                            <Text style={{ color: '#FFFFFF', fontSize: Math.round(photoHeight * 0.07), opacity: 0.5, fontWeight: '600' }}>Photo</Text>
                         </View>
                     )}
 

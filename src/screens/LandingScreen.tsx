@@ -199,6 +199,32 @@ export default function LandingScreen({ navigation }: Props) {
                         </View>
                     )}
 
+                    {/* ── B2B Portal Buttons ── */}
+                    <View style={{ flexDirection: 'row', gap: 10, marginTop: 8, marginBottom: 8 }}>
+                        <TouchableOpacity
+                            style={[styles.cardButton, { flex: 1, marginBottom: 0 }]}
+                            onPress={() => navigation.navigate('FuneralHomePortal')}
+                            activeOpacity={0.85}
+                        >
+                            <View style={{ alignItems: 'center', paddingVertical: 12 }}>
+                                <Text style={{ fontSize: 28 }}>🕊️</Text>
+                                <Text style={{ fontSize: 12, fontWeight: '900', color: '#333', marginTop: 4, textAlign: 'center' }}>Funeral Directors</Text>
+                                <Text style={{ fontSize: 9, fontWeight: '600', color: '#888', marginTop: 2, textAlign: 'center' }}>Memorial Portal</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.cardButton, { flex: 1, marginBottom: 0 }]}
+                            onPress={() => navigation.navigate('HospitalLogin')}
+                            activeOpacity={0.85}
+                        >
+                            <View style={{ alignItems: 'center', paddingVertical: 12 }}>
+                                <Text style={{ fontSize: 28 }}>🏥</Text>
+                                <Text style={{ fontSize: 12, fontWeight: '900', color: '#333', marginTop: 4, textAlign: 'center' }}>Hospital Portal</Text>
+                                <Text style={{ fontSize: 9, fontWeight: '600', color: '#888', marginTop: 2, textAlign: 'center' }}>Baby Announcements</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+
                     {/* Divider Gap */}
                     <View style={styles.sectionGap} />
 

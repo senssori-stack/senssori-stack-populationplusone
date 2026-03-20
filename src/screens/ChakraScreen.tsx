@@ -58,7 +58,7 @@ function getChakraAlignment(sign: string): { chakra: ChakraData; strength: numbe
 }
 
 export default function ChakraScreen({ route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
     const sign = getZodiacSign(birthDate);
     const alignment = React.useMemo(() => getChakraAlignment(sign), [sign]);
     const primaryChakra = alignment.reduce((best, a) => a.strength > best.strength ? a : best, alignment[0]);

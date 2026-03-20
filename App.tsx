@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StripeProvider } from '@stripe/stripe-react-native';
@@ -5,6 +6,7 @@ import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import IntroVideoScreen from './components/IntroVideoScreen';
 import SplashScreen from './components/SplashScreen';
 import AnniversaryFormScreen from './screens/AnniversaryFormScreen';
 import BirthdayFormScreen from './screens/BirthdayFormScreen';
@@ -35,11 +37,14 @@ import ChineseZodiacScreen from './src/screens/ChineseZodiacScreen';
 import DaysAliveScreen from './src/screens/DaysAliveScreen';
 import DeathAnnouncementFormScreen from './src/screens/DeathAnnouncementFormScreen';
 import ElementScreen from './src/screens/ElementScreen';
+import EventRSVPDashboardScreen from './src/screens/EventRSVPDashboardScreen';
+import EventRSVPScreen from './src/screens/EventRSVPScreen';
 import FamousBirthdaysScreen from './src/screens/FamousBirthdaysScreen';
 import FormScreen from './src/screens/FormScreen';
 import FriendCompatibilityScreen from './src/screens/FriendCompatibilityScreen';
 import FullAstrologyScreen from './src/screens/FullAstrologyScreen';
 import FuneralHomePortalScreen from './src/screens/FuneralHomePortalScreen';
+import GalaxyWheelScreen from './src/screens/GalaxyWheelScreen';
 import GenerationsScreen from './src/screens/GenerationsScreen';
 import GiftSuggestionsScreen from './src/screens/GiftSuggestionsScreen';
 import GrowthTrackerScreen from './src/screens/GrowthTrackerScreen';
@@ -61,6 +66,7 @@ import OnThisDayScreen from './src/screens/OnThisDayScreen';
 import OrderConfirmationScreen from './src/screens/OrderConfirmationScreen';
 import PhonicsScreen from './src/screens/PhonicsScreen';
 import PostcardPreviewScreen from './src/screens/PostcardPreviewScreen';
+import PragueClockScreen from './src/screens/PragueClockScreen';
 import PreviewScreen from './src/screens/PreviewScreen';
 import PrintServiceScreen from './src/screens/PrintServiceScreen';
 import RabbitHoleScreen from './src/screens/RabbitHoleScreen';
@@ -133,6 +139,7 @@ class DebugErrorBoundary extends React.Component<
 
 export default function App() {
     const [isReady, setIsReady] = useState(false);
+    const [showIntro, setShowIntro] = useState<boolean | null>(null);
     const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
 
     useEffect(() => {
@@ -140,6 +147,11 @@ export default function App() {
         const timer = setTimeout(() => {
             setIsReady(true);
         }, 2000);
+
+        // Check if intro was dismissed
+        AsyncStorage.getItem('ppo_intro_dismissed').then(val => {
+            setShowIntro(val !== 'true');
+        });
 
         return () => clearTimeout(timer);
     }, []);
@@ -160,8 +172,12 @@ export default function App() {
         return () => sub.remove();
     }, []);
 
-    if (!isReady) {
+    if (!isReady || showIntro === null) {
         return <SplashScreen />;
+    }
+
+    if (showIntro) {
+        return <IntroVideoScreen onFinish={() => setShowIntro(false)} />;
     }
 
     return (
@@ -695,6 +711,15 @@ export default function App() {
                                         }}
                                     />
                                     <Stack.Screen
+                                        name="GalaxyWheel"
+                                        component={GalaxyWheelScreen}
+                                        options={{
+                                            headerStyle: { backgroundColor: '#020010' },
+                                            headerTintColor: '#fff',
+                                            title: 'Milky Way Galaxy',
+                                        }}
+                                    />
+                                    <Stack.Screen
                                         name="SolarSystemTimeCapsule"
                                         component={SolarSystemTimeCapsuleScreen}
                                         options={{
@@ -710,6 +735,15 @@ export default function App() {
                                             headerStyle: { backgroundColor: '#1a0a2e' },
                                             headerTintColor: '#fff',
                                             title: 'Biblical Wheels',
+                                        }}
+                                    />
+                                    <Stack.Screen
+                                        name="PragueClock"
+                                        component={PragueClockScreen}
+                                        options={{
+                                            headerStyle: { backgroundColor: '#1a0f0a' },
+                                            headerTintColor: '#fff',
+                                            title: 'Prague Orloj',
                                         }}
                                     />
                                     <Stack.Screen
@@ -753,6 +787,24 @@ export default function App() {
                                         component={WeddingRSVPDashboardScreen}
                                         options={{
                                             headerStyle: { backgroundColor: '#000080' },
+                                            headerTintColor: '#fff',
+                                            title: 'RSVP Dashboard',
+                                        }}
+                                    />
+                                    <Stack.Screen
+                                        name="EventRSVP"
+                                        component={EventRSVPScreen}
+                                        options={{
+                                            headerStyle: { backgroundColor: '#7c3aed' },
+                                            headerTintColor: '#fff',
+                                            title: 'RSVP',
+                                        }}
+                                    />
+                                    <Stack.Screen
+                                        name="EventRSVPDashboard"
+                                        component={EventRSVPDashboardScreen}
+                                        options={{
+                                            headerStyle: { backgroundColor: '#7c3aed' },
                                             headerTintColor: '#fff',
                                             title: 'RSVP Dashboard',
                                         }}

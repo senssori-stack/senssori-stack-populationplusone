@@ -35,7 +35,7 @@ function toRoman(num: number): string {
 }
 
 export default function RomanNumeralsScreen({ navigation, route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
 
     const month = birthDate.getMonth() + 1;
     const day = birthDate.getDate();

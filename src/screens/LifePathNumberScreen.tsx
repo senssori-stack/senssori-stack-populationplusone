@@ -134,7 +134,7 @@ function calculateLifePathNumber(date: Date): { number: number; meaning: string;
 }
 
 export default function LifePathNumberScreen({ navigation, route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
     const result = calculateLifePathNumber(birthDate);
 
     const formattedDate = birthDate.toLocaleDateString(undefined, {

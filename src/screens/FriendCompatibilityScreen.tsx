@@ -112,7 +112,7 @@ function getElementPairKey(e1: string, e2: string): string {
 
 // ─── Component ──────────────────────────────────────────────
 export default function FriendCompatibilityScreen({ route }: Props) {
-    const userBirthDate = new Date(route.params.birthDate);
+    const userBirthDate = new Date(route.params.birthDate + 'T00:00:00');
     const userSignIdx = getSign(userBirthDate);
     const userSign = SIGNS[userSignIdx];
 
@@ -153,7 +153,7 @@ export default function FriendCompatibilityScreen({ route }: Props) {
         const friend: Friend = {
             id: Date.now().toString(),
             name: trimmed,
-            birthday: newBirthday.toISOString(),
+            birthday: `${newBirthday.getFullYear()}-${String(newBirthday.getMonth() + 1).padStart(2, '0')}-${String(newBirthday.getDate()).padStart(2, '0')}`,
         };
         saveFriends([...friends, friend]);
         setNewName('');
@@ -171,7 +171,7 @@ export default function FriendCompatibilityScreen({ route }: Props) {
     const shareFriend = useCallback(async (friend: Friend, score: number) => {
         const friendSign = SIGNS[getSign(new Date(friend.birthday))];
         await Share.share({
-            message: `I just found out ${friend.name} and I are ${score}% cosmically compatible! (${userSign.symbol} ${userSign.name} + ${friendSign.symbol} ${friendSign.name}). Check your cosmic profile on Population Plus One! 🌟`,
+            message: `I just found out ${friend.name} and I are ${score}% cosmically compatible! (${userSign.symbol} ${userSign.name} + ${friendSign.symbol} ${friendSign.name}). Check your cosmic profile on Population Plus One! 🌟\n\nhttps://www.populationplusone.com`,
         });
     }, [userSign]);
 

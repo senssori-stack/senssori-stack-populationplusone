@@ -1,4 +1,18 @@
 {
+    "hosting": {
+        "public": "public",
+        "ignore": [
+            "firebase.json",
+            "**/.*",
+            "**/node_modules/**"
+        ],
+        "rewrites": [
+            {
+                "source": "/rsvp/**",
+                "destination": "/rsvp/index.html"
+            }
+        ]
+    },
     "functions": [
         {
             "source": "functions",

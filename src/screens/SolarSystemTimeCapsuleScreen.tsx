@@ -10,21 +10,21 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import { Circle, G, Line, Svg, Text as SvgText } from 'react-native-svg';
+import { Circle, Ellipse, G, Line, Svg, Text as SvgText } from 'react-native-svg';
 import RisingStars from '../../components/RisingStars';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SolarSystemTimeCapsule'>;
 
 export default function SolarSystemTimeCapsuleScreen({ route }: Props) {
-    const originalBirthDate = useMemo(() => new Date(route.params.birthDate), [route.params.birthDate]);
-    const [birthDate, setBirthDate] = useState(() => new Date(route.params.birthDate));
+    const originalBirthDate = useMemo(() => new Date(route.params.birthDate + 'T00:00:00'), [route.params.birthDate]);
+    const [birthDate, setBirthDate] = useState(() => new Date(route.params.birthDate + 'T00:00:00'));
 
     const [dayOffset, setDayOffset] = useState(0);
     const dayOffsetRef = useRef(0);
     const [isSpinning, setIsSpinning] = useState(false);
     const [dateMode, setDateMode] = useState<'birth' | 'today'>('birth');
-    const baseDateRef = useRef(new Date(route.params.birthDate));
+    const baseDateRef = useRef(new Date(route.params.birthDate + 'T00:00:00'));
 
     const steps = [
         { label: '24hr', days: 1, sliderDays: 60 },
@@ -35,8 +35,7 @@ export default function SolarSystemTimeCapsuleScreen({ route }: Props) {
     const [selectedStepIdx, setSelectedStepIdx] = useState(0);
     const selectedStepRef = useRef(steps[0].days);
     const sliderDaysRef = useRef(steps[0].sliderDays);
-    const FIVE_YEARS_MS = 5 * 365.25 * 86400000;
-    const END_2050_MS = Date.UTC(2050, 0, 1);
+    const HUNDRED_YEARS_MS = 100 * 365.25 * 86400000;
 
     const sliderWRef = useRef(300);
     const [sliderW, setSliderW] = useState(300);
@@ -45,8 +44,8 @@ export default function SolarSystemTimeCapsuleScreen({ route }: Props) {
         const stepDays = selectedStepRef.current;
         const snapped = Math.round(newOffset / stepDays) * stepDays;
         const baseMs = baseDateRef.current.getTime();
-        const minOff = (originalBirthDate.getTime() - FIVE_YEARS_MS - baseMs) / 86400000;
-        const maxOff = (END_2050_MS - baseMs) / 86400000;
+        const minOff = -HUNDRED_YEARS_MS / 86400000;
+        const maxOff = HUNDRED_YEARS_MS / 86400000;
         const clamped = Math.max(minOff, Math.min(maxOff, snapped));
         dayOffsetRef.current = clamped;
         setDayOffset(clamped);
@@ -70,8 +69,8 @@ export default function SolarSystemTimeCapsuleScreen({ route }: Props) {
         const stepDays = steps[idx].days;
         const snapped = Math.round(dayOffsetRef.current / stepDays) * stepDays;
         const baseMs = baseDateRef.current.getTime();
-        const minOff = (originalBirthDate.getTime() - FIVE_YEARS_MS - baseMs) / 86400000;
-        const maxOff = (END_2050_MS - baseMs) / 86400000;
+        const minOff = -HUNDRED_YEARS_MS / 86400000;
+        const maxOff = HUNDRED_YEARS_MS / 86400000;
         const clamped = Math.max(minOff, Math.min(maxOff, snapped));
         dayOffsetRef.current = clamped;
         setDayOffset(clamped);
@@ -155,14 +154,163 @@ export default function SolarSystemTimeCapsuleScreen({ route }: Props) {
 
     // Slider position calculations — thumb moves across full clamped range
     const baseMs = baseDateRef.current.getTime();
-    const fullMinOff = (originalBirthDate.getTime() - FIVE_YEARS_MS - baseMs) / 86400000;
-    const fullMaxOff = (END_2050_MS - baseMs) / 86400000;
+    const fullMinOff = -HUNDRED_YEARS_MS / 86400000;
+    const fullMaxOff = HUNDRED_YEARS_MS / 86400000;
     const fullRange = fullMaxOff - fullMinOff;
     const sliderFrac = fullRange > 0 ? (dayOffset - fullMinOff) / fullRange : 0.5;
     const sliderCenterFrac = fullRange > 0 ? (0 - fullMinOff) / fullRange : 0.5;
-    const sliderLeftDate = new Date(originalBirthDate.getTime() - FIVE_YEARS_MS);
-    const sliderRightDate = new Date(END_2050_MS);
+    const sliderLeftDate = new Date(baseDateRef.current.getTime() - HUNDRED_YEARS_MS);
+    const sliderRightDate = new Date(baseDateRef.current.getTime() + HUNDRED_YEARS_MS);
     const fmtSliderDate = (d: Date) => String(d.getFullYear());
+
+    // ═══ SIGNIFICANT ASTRONOMICAL & SPACE EVENTS ═══
+    const astronomicalEvents = useMemo(() => [
+        // Past events (chronological)
+        { date: Date.UTC(1930, 1, 18), emoji: '🔵', title: 'Pluto Discovered', desc: 'Clyde Tombaugh discovers Pluto at Lowell Observatory' },
+        { date: Date.UTC(1957, 9, 4), emoji: '🛰️', title: 'Sputnik 1 Launched', desc: 'First artificial satellite — the Space Age begins' },
+        { date: Date.UTC(1957, 7, 27), emoji: '🕳️', title: 'Pascal-B Manhole Cover', desc: 'Nuclear test launches a 900 kg steel cap at ~125,000 mph (6× escape velocity) — possibly the fastest human-made object ever. Whether it escaped Earth or vaporized is still debated.' },
+        { date: Date.UTC(1961, 3, 12), emoji: '🚀', title: 'First Human in Space', desc: 'Yuri Gagarin orbits Earth aboard Vostok 1' },
+        { date: Date.UTC(1962, 11, 14), emoji: '🪐', title: 'Mariner 2 Flyby of Venus', desc: 'First successful planetary flyby — confirmed Venus surface is ~460°C' },
+        { date: Date.UTC(1965, 6, 14), emoji: '📷', title: 'Mariner 4 Flyby of Mars', desc: 'First close-up photos of another planet — revealed craters on Mars' },
+        { date: Date.UTC(1966, 1, 3), emoji: '🌙', title: 'Luna 9 Lands on Moon', desc: 'First soft landing on the Moon — proved surface could support a lander' },
+        { date: Date.UTC(1969, 6, 20), emoji: '👨‍🚀', title: 'Moon Landing — Apollo 11', desc: 'Neil Armstrong & Buzz Aldrin walk on the Moon' },
+        { date: Date.UTC(1970, 3, 13), emoji: '🆘', title: 'Apollo 13 Crisis', desc: '"Houston, we\'ve had a problem" — crew returns safely' },
+        { date: Date.UTC(1971, 3, 19), emoji: '🔴', title: 'Salyut 1 — First Space Station', desc: 'First crewed space station launched by Soviet Union' },
+        { date: Date.UTC(1971, 10, 13), emoji: '🔴', title: 'Mariner 9 Orbits Mars', desc: 'First spacecraft to orbit another planet' },
+        { date: Date.UTC(1973, 11, 3), emoji: '🪐', title: 'Pioneer 10 Flyby of Jupiter', desc: 'First spacecraft to fly past Jupiter — crossed asteroid belt' },
+        { date: Date.UTC(1974, 2, 29), emoji: '☿', title: 'Mariner 10 Flyby of Mercury', desc: 'First spacecraft to visit Mercury' },
+        { date: Date.UTC(1976, 6, 20), emoji: '🔴', title: 'Viking 1 Lands on Mars', desc: 'First successful Mars landing — searched for life' },
+        { date: Date.UTC(1977, 7, 20), emoji: '🛰️', title: 'Voyager 2 Launched', desc: 'Grand Tour spacecraft — visited all 4 outer planets' },
+        { date: Date.UTC(1977, 8, 5), emoji: '🛰️', title: 'Voyager 1 Launched', desc: 'Now the farthest human-made object from Earth' },
+        { date: Date.UTC(1977, 7, 15), emoji: '📡', title: 'Wow! Signal', desc: 'Strong narrowband radio signal from Sagittarius — 72 seconds, never repeated. Origin still debated.' },
+        { date: Date.UTC(1979, 2, 5), emoji: '🪐', title: 'Voyager 1 Flyby of Jupiter', desc: 'Discovered Jupiter\'s ring system and volcanic Io' },
+        { date: Date.UTC(1980, 10, 12), emoji: '💍', title: 'Voyager 1 Flyby of Saturn', desc: 'Revealed incredible detail in Saturn\'s rings' },
+        { date: Date.UTC(1981, 3, 12), emoji: '🚀', title: 'First Space Shuttle (Columbia)', desc: 'STS-1 — first reusable spacecraft mission' },
+        { date: Date.UTC(1986, 0, 24), emoji: '🪐', title: 'Voyager 2 Flyby of Uranus', desc: 'Only spacecraft to visit Uranus — found 10 new moons' },
+        { date: Date.UTC(1986, 0, 28), emoji: '💔', title: 'Challenger Disaster', desc: 'Space Shuttle Challenger breaks apart 73 seconds after launch' },
+        { date: Date.UTC(1986, 2, 6), emoji: '☄️', title: 'Giotto Flyby of Halley\'s Comet', desc: 'First close-up images of a comet nucleus' },
+        { date: Date.UTC(1989, 7, 25), emoji: '🪐', title: 'Voyager 2 Flyby of Neptune', desc: 'Only spacecraft to visit Neptune — found the Great Dark Spot' },
+        { date: Date.UTC(1990, 3, 24), emoji: '🔭', title: 'Hubble Space Telescope Launched', desc: 'Revolutionized astronomy with deep-space imaging' },
+        { date: Date.UTC(1990, 1, 14), emoji: '🌍', title: 'Pale Blue Dot Photo', desc: 'Voyager 1 takes iconic photo of Earth from 6 billion km away' },
+        { date: Date.UTC(1994, 6, 16), emoji: '💥', title: 'Comet Shoemaker-Levy 9 Hits Jupiter', desc: '21 fragments impact Jupiter — first observed planetary collision' },
+        { date: Date.UTC(1995, 9, 6), emoji: '🌟', title: 'First Exoplanet (51 Pegasi b)', desc: 'First planet confirmed orbiting a Sun-like star' },
+        { date: Date.UTC(1997, 6, 4), emoji: '🔴', title: 'Mars Pathfinder & Sojourner', desc: 'First Mars rover — Sojourner explores for 83 sols' },
+        { date: Date.UTC(1997, 9, 15), emoji: '🪐', title: 'Cassini Launched to Saturn', desc: 'Begin of epic 20-year Saturn mission' },
+        { date: Date.UTC(2000, 4, 5), emoji: '🪐', title: 'Grand Alignment of 2000', desc: 'Mercury, Venus, Mars, Jupiter & Saturn aligned — rare visual event' },
+        { date: Date.UTC(2003, 1, 1), emoji: '💔', title: 'Columbia Disaster', desc: 'Space Shuttle Columbia disintegrates during re-entry' },
+        { date: Date.UTC(2004, 0, 4), emoji: '🔴', title: 'Spirit Rover Lands on Mars', desc: 'NASA\'s Mars Exploration Rover begins 6+ year mission' },
+        { date: Date.UTC(2004, 6, 1), emoji: '💍', title: 'Cassini Arrives at Saturn', desc: 'Enters orbit and begins 13-year study of Saturn system' },
+        { date: Date.UTC(2005, 0, 14), emoji: '🪐', title: 'Huygens Lands on Titan', desc: 'First landing in the outer solar system — reveals methane lakes' },
+        { date: Date.UTC(2006, 0, 19), emoji: '🚀', title: 'New Horizons Launched', desc: 'Fastest spacecraft ever launched — headed for Pluto' },
+        { date: Date.UTC(2006, 7, 24), emoji: '🔵', title: 'Pluto Reclassified', desc: 'IAU reclassifies Pluto as a dwarf planet' },
+        { date: Date.UTC(2009, 2, 6), emoji: '🔭', title: 'Kepler Space Telescope Launched', desc: 'Discovered 2,700+ exoplanets during its mission' },
+        { date: Date.UTC(2011, 10, 26), emoji: '🔴', title: 'Curiosity Rover Launched', desc: 'Car-size Mars rover — found evidence of ancient water' },
+        { date: Date.UTC(2012, 7, 25), emoji: '🛰️', title: 'Voyager 1 Enters Interstellar Space', desc: 'First human-made object to leave the heliosphere' },
+        { date: Date.UTC(2014, 10, 12), emoji: '☄️', title: 'Philae Lands on Comet 67P', desc: 'First landing on a comet — Rosetta mission' },
+        { date: Date.UTC(2015, 6, 14), emoji: '🔵', title: 'New Horizons Flyby of Pluto', desc: 'First close-up images of Pluto — revealed heart-shaped plain' },
+        { date: Date.UTC(2017, 1, 22), emoji: '🌟', title: 'TRAPPIST-1 System Announced', desc: '7 Earth-sized planets found around one star — 3 in habitable zone' },
+        { date: Date.UTC(2017, 7, 17), emoji: '🔊', title: 'First Neutron Star Merger Detected', desc: 'Gravitational waves + light from colliding neutron stars (GW170817)' },
+        { date: Date.UTC(2017, 9, 19), emoji: '☄️', title: '1I/\'Oumuamua Discovered', desc: 'First confirmed interstellar object passing through the solar system' },
+        { date: Date.UTC(2018, 10, 5), emoji: '🛰️', title: 'Voyager 2 Enters Interstellar Space', desc: 'Second human-made object to leave the heliosphere' },
+        { date: Date.UTC(2019, 3, 10), emoji: '🕳️', title: 'First Black Hole Image', desc: 'Event Horizon Telescope images M87* supermassive black hole' },
+        { date: Date.UTC(2019, 0, 1), emoji: '🔵', title: 'New Horizons Flyby of Arrokoth', desc: 'Most distant object ever visited — 4 billion miles from Sun' },
+        { date: Date.UTC(2020, 6, 30), emoji: '🔴', title: 'Perseverance Launched to Mars', desc: 'Carrying Ingenuity helicopter — powered flight on Mars' },
+        { date: Date.UTC(2020, 11, 21), emoji: '🪐', title: 'Great Conjunction of 2020', desc: 'Jupiter & Saturn closest in 400 years — 0.1° apart, "Christmas Star"' },
+        { date: Date.UTC(2021, 11, 25), emoji: '🔭', title: 'James Webb Space Telescope Launched', desc: 'Most powerful space telescope — seeing first galaxies after Big Bang' },
+        { date: Date.UTC(2022, 8, 26), emoji: '💥', title: 'DART Impacts Dimorphos', desc: 'First planetary defense test — successfully changed an asteroid\'s orbit' },
+        { date: Date.UTC(2023, 3, 13), emoji: '🪐', title: 'JUICE Launched to Jupiter', desc: 'ESA mission to explore Jupiter\'s icy moons Europa, Ganymede & Callisto' },
+        { date: Date.UTC(2024, 9, 14), emoji: '☄️', title: 'Comet Tsuchinshan-ATLAS (C/2023 A3)', desc: 'Spectacular naked-eye comet visible worldwide — brightest in decades' },
+        { date: Date.UTC(2025, 8, 21), emoji: '🪐', title: 'Neptune at Opposition', desc: 'Neptune closest to Earth — best viewing of the ice giant' },
+        // Comet milestones
+        { date: Date.UTC(1986, 1, 9), emoji: '☄️', title: "Halley's Comet Perihelion (1986)", desc: 'Most recent close approach of the most famous comet — visible to naked eye worldwide' },
+        { date: Date.UTC(1997, 3, 1), emoji: '☄️', title: 'Comet Hale-Bopp Perihelion', desc: 'Great Comet of 1997 — visible for 18 months, one of the brightest comets ever observed' },
+        { date: Date.UTC(1973, 11, 28), emoji: '☄️', title: 'Comet Kohoutek Perihelion', desc: 'Hyped as "comet of the century" but underperformed — still scientifically important' },
+        { date: Date.UTC(1996, 2, 25), emoji: '☄️', title: 'Comet Hyakutake Close Approach', desc: 'Passed within 0.1 AU of Earth — one of the closest cometary approaches in 200 years' },
+        { date: Date.UTC(2007, 0, 12), emoji: '☄️', title: 'Comet McNaught (Great Comet)', desc: 'Brightest comet in 40 years — visible in daylight from Southern Hemisphere' },
+        { date: Date.UTC(2013, 10, 28), emoji: '☄️', title: 'Comet ISON Disintegrates', desc: 'The "comet of the century" broke apart during its close pass by the Sun' },
+        { date: Date.UTC(2020, 6, 23), emoji: '☄️', title: 'Comet NEOWISE Perihelion', desc: 'Spectacular naked-eye comet — best Northern Hemisphere comet in 23 years' },
+        { date: Date.UTC(2023, 9, 22), emoji: '☄️', title: 'Comet Encke Perihelion (2023)', desc: 'Shortest known orbital period of any comet — returns every 3.3 years' },
+        // Interstellar object milestones
+        { date: Date.UTC(2017, 8, 9), emoji: '💫', title: "1I/'Oumuamua Perihelion", desc: 'First interstellar object reaches closest point to Sun — just 0.25 AU. Elongated shape sparked debate: asteroid, comet, or alien probe?' },
+        { date: Date.UTC(2019, 11, 8), emoji: '💫', title: '2I/Borisov Perihelion', desc: 'Second confirmed interstellar visitor reaches perihelion at 2.0 AU — clearly a comet with a coma and tail' },
+        { date: Date.UTC(2025, 9, 29), emoji: '💫', title: '3I/ATLAS Perihelion', desc: 'Third interstellar object — perihelion at 1.36 AU, strongly hyperbolic (e ≈ 5.18), retrograde orbit' },
+        { date: Date.UTC(2025, 11, 15), emoji: '💫', title: '3I/ATLAS Closest to Earth', desc: '3I/ATLAS passes nearest to Earth — outbound past Jupiter by spring 2026' },
+        // Additional notable events
+        { date: Date.UTC(1947, 6, 8), emoji: '🛸', title: 'Roswell Incident', desc: 'Alleged UFO crash in New Mexico — became the most famous UFO event in history' },
+        { date: Date.UTC(1967, 10, 28), emoji: '📡', title: 'First Pulsar Discovered', desc: 'Jocelyn Bell Burnell detects first pulsar — initially nicknamed "LGM-1" (Little Green Men)' },
+        { date: Date.UTC(1972, 11, 7), emoji: '📷', title: 'Blue Marble Photo (Apollo 17)', desc: 'Most reproduced photo in history — full disc of Earth from space' },
+        { date: Date.UTC(1998, 10, 20), emoji: '🚀', title: 'ISS Construction Begins', desc: 'First module of International Space Station launched — continuous habitation since 2000' },
+        { date: Date.UTC(2015, 8, 14), emoji: '🌊', title: 'First Gravitational Waves Detected', desc: 'LIGO detects ripples in spacetime from two merging black holes — confirmed Einstein\'s prediction' },
+        { date: Date.UTC(2023, 0, 12), emoji: '🚀', title: 'Artemis I Returns from Moon', desc: 'Orion capsule returns after lunar flyby — first step back to Moon since Apollo' },
+        // Future comet/interstellar predictions
+        { date: Date.UTC(2026, 9, 22), emoji: '☄️', title: 'Comet Encke Returns (2026)', desc: 'Encke\'s next perihelion — every 3.3 years like clockwork' },
+        { date: Date.UTC(2030, 3, 15), emoji: '☄️', title: 'Comet Encke Returns (2030)', desc: 'Another Encke perihelion — one of the most predictable comets' },
+        { date: Date.UTC(2092, 0, 1), emoji: '☄️', title: 'Comet Swift-Tuttle Returns', desc: 'Parent comet of Perseid meteor shower returns — 130-year orbit, extremely close pass possible' },
+        // Future events
+        { date: Date.UTC(2029, 3, 13), emoji: '☄️', title: 'Asteroid Apophis Close Approach', desc: '99942 Apophis passes within 31,000 km of Earth — closer than satellites' },
+        { date: Date.UTC(2030, 0, 1), emoji: '🔴', title: 'First Humans on Mars (Target)', desc: 'NASA/SpaceX targeting ~2030s for crewed Mars landing' },
+        { date: Date.UTC(2031, 6, 1), emoji: '🪐', title: 'JUICE Arrives at Jupiter', desc: 'ESA spacecraft enters Jupiter orbit — detailed study of icy moons begins' },
+        { date: Date.UTC(2032, 0, 1), emoji: '🔭', title: 'Nancy Grace Roman Telescope', desc: 'NASA\'s next great observatory — wide-field infrared, dark energy survey' },
+        { date: Date.UTC(2034, 2, 20), emoji: '🪐', title: 'Great Conjunction of 2040', desc: 'Jupiter & Saturn conjunction — next major alignment' },
+        { date: Date.UTC(2035, 8, 2), emoji: '☀️', title: 'Total Solar Eclipse (Japan/US)', desc: 'Total solar eclipse visible across Japan and western North America' },
+        { date: Date.UTC(2039, 5, 1), emoji: '🌍', title: 'Rare 5-Planet Conjunction', desc: 'Mercury, Venus, Mars, Jupiter & Saturn cluster together visually' },
+        { date: Date.UTC(2040, 4, 1), emoji: '🪐', title: 'Great Conjunction of 2040', desc: 'Jupiter & Saturn meet again — ~20-year cycle continues' },
+        { date: Date.UTC(2061, 6, 28), emoji: '☄️', title: "Halley's Comet Returns", desc: 'Next perihelion of the most famous comet — visible to naked eye' },
+        { date: Date.UTC(2065, 10, 22), emoji: '♀', title: 'Transit of Venus', desc: 'Venus passes across the face of the Sun — extremely rare, next after this: 2117' },
+        { date: Date.UTC(2079, 7, 11), emoji: '🪐', title: 'Triple Conjunction (Jupiter-Saturn-Uranus)', desc: 'Exceptionally rare three-planet conjunction' },
+        { date: Date.UTC(2080, 3, 1), emoji: '🛰️', title: 'Voyager 1 at ~300 AU', desc: 'Voyager 1 will be ~300 AU from the Sun, batteries long dead but still drifting' },
+        { date: Date.UTC(2100, 0, 1), emoji: '🌟', title: 'Year 2100', desc: 'Start of the 22nd century' },
+        { date: Date.UTC(2113, 11, 3), emoji: '♀', title: 'Transit of Venus (2117 Cycle)', desc: 'Venus transit visible from Earth — these come in pairs separated by ~8 years' },
+    ], []);
+
+    // Find events near the current displayed date (within ±3 years)
+    const nearbyEvents = useMemo(() => {
+        const currentMs = birthDate.getTime();
+        const windowMs = 3 * 365.25 * 86400000; // ±3 year window
+        return astronomicalEvents
+            .filter(e => Math.abs(e.date - currentMs) <= windowMs)
+            .sort((a, b) => Math.abs(a.date - currentMs) - Math.abs(b.date - currentMs));
+    }, [birthDate, astronomicalEvents]);
+
+    // Find the closest upcoming and closest past event
+    const closestEvent = useMemo(() => {
+        const currentMs = birthDate.getTime();
+        let closest = astronomicalEvents[0];
+        let closestDist = Math.abs(closest.date - currentMs);
+        for (const e of astronomicalEvents) {
+            const dist = Math.abs(e.date - currentMs);
+            if (dist < closestDist) {
+                closest = e;
+                closestDist = dist;
+            }
+        }
+        return { event: closest, daysAway: Math.round(closestDist / 86400000) };
+    }, [birthDate, astronomicalEvents]);
+
+    // Find next and previous events from current date for jump buttons
+    const nextEvent = useMemo(() => {
+        const currentMs = birthDate.getTime();
+        const future = astronomicalEvents.filter(e => e.date > currentMs).sort((a, b) => a.date - b.date);
+        return future.length > 0 ? future[0] : null;
+    }, [birthDate, astronomicalEvents]);
+
+    const prevEvent = useMemo(() => {
+        const currentMs = birthDate.getTime();
+        const past = astronomicalEvents.filter(e => e.date < currentMs).sort((a, b) => b.date - a.date);
+        return past.length > 0 ? past[0] : null;
+    }, [birthDate, astronomicalEvents]);
+
+    const jumpToEvent = useCallback((eventDate: number) => {
+        const baseMs = baseDateRef.current.getTime();
+        const newOffset = (eventDate - baseMs) / 86400000;
+        // Direct set without step-snapping so we land exactly on the event date
+        const minOff = -HUNDRED_YEARS_MS / 86400000;
+        const maxOff = HUNDRED_YEARS_MS / 86400000;
+        const clamped = Math.max(minOff, Math.min(maxOff, newOffset));
+        dayOffsetRef.current = clamped;
+        setDayOffset(clamped);
+        setBirthDate(new Date(baseMs + clamped * 86400000));
+    }, []);
 
     return (
         <LinearGradient colors={['#0d0d2b', '#1a1a4e', '#0d0d2b']} style={styles.container}>
@@ -193,7 +341,7 @@ export default function SolarSystemTimeCapsuleScreen({ route }: Props) {
                     </View>
 
                     {(() => {
-                        const ssSize = 402;
+                        const ssSize = 502;
                         const ssCx = ssSize / 2;
                         const ssCy = ssSize / 2;
 
@@ -201,20 +349,29 @@ export default function SolarSystemTimeCapsuleScreen({ route }: Props) {
                         const daysSinceJ2000 = (birthDate.getTime() - j2000.getTime()) / 86400000;
 
                         const solarPlanets = [
-                            { name: 'Mercury', sym: '☿', L0: 252.25, rate: 4.09233, au: 0.387, color: '#B0B0B0' },
-                            { name: 'Venus', sym: '♀', L0: 181.98, rate: 1.60213, au: 0.723, color: '#FFD700' },
-                            { name: 'Earth', sym: '🌍', L0: 100.47, rate: 0.98560, au: 1.000, color: '#4FC3F7' },
-                            { name: 'Mars', sym: '♂', L0: 355.45, rate: 0.52403, au: 1.524, color: '#FF6B35' },
-                            { name: 'Jupiter', sym: '♃', L0: 34.40, rate: 0.08309, au: 5.203, color: '#FFB74D' },
-                            { name: 'Saturn', sym: '♄', L0: 50.08, rate: 0.03346, au: 9.537, color: '#BCAAA4' },
-                            { name: 'Uranus', sym: '♅', L0: 314.06, rate: 0.01173, au: 19.19, color: '#80DEEA' },
-                            { name: 'Neptune', sym: '♆', L0: 304.35, rate: 0.00598, au: 30.07, color: '#5C6BC0' },
+                            { name: 'Mercury', sym: '☿', L0: 252.25, rate: 4.09233, au: 0.387, e: 0.2056, wBar: 77.46, color: '#8C7E6D', dotR: 4 },
+                            { name: 'Venus', sym: '♀', L0: 181.98, rate: 1.60213, au: 0.723, e: 0.0068, wBar: 131.53, color: '#E8CDA0', dotR: 6 },
+                            { name: 'Earth', sym: '🌍', L0: 100.47, rate: 0.98560, au: 1.000, e: 0.0167, wBar: 102.94, color: '#4B8BBE', dotR: 7 },
+                            { name: 'Mars', sym: '♂', L0: 355.45, rate: 0.52403, au: 1.524, e: 0.0934, wBar: 336.04, color: '#C1440E', dotR: 5 },
+                            { name: 'Jupiter', sym: '♃', L0: 34.40, rate: 0.08309, au: 5.203, e: 0.0484, wBar: 14.33, color: '#C88B3A', dotR: 12 },
+                            { name: 'Saturn', sym: '♄', L0: 50.08, rate: 0.03346, au: 9.537, e: 0.0542, wBar: 93.06, color: '#D4B36A', dotR: 10 },
+                            { name: 'Uranus', sym: '♅', L0: 314.06, rate: 0.01173, au: 19.19, e: 0.0472, wBar: 173.01, color: '#73C2D0', dotR: 8 },
+                            { name: 'Neptune', sym: '♆', L0: 304.35, rate: 0.00598, au: 30.07, e: 0.0086, wBar: 48.12, color: '#3B5DAA', dotR: 8 },
                         ];
 
+                        // Equation of center: converts mean anomaly → true anomaly (3rd-order)
+                        const eqCenter = (M: number, e: number) => {
+                            const Mr = M * Math.PI / 180;
+                            const c1 = (2 * e - e * e * e / 4) * Math.sin(Mr);
+                            const c2 = (5 / 4) * e * e * Math.sin(2 * Mr);
+                            const c3 = (13 / 12) * e * e * e * Math.sin(3 * Mr);
+                            return (c1 + c2 + c3) * 180 / Math.PI;
+                        };
+
                         const dwarfPlanets = [
-                            { name: 'Pluto', sym: '♇', L0: 238.96, rate: 0.00397, au: 39.48, color: '#CE93D8' },
-                            { name: 'Ceres', sym: '⚳', L0: 153.94, rate: 0.21408, au: 2.77, color: '#8D6E63' },
-                            { name: 'Eris', sym: '⯰', L0: 36.02, rate: 0.00176, au: 67.67, color: '#EEEEEE' },
+                            { name: 'Pluto', sym: '♇', L0: 238.96, rate: 0.00397, au: 39.48, e: 0.2488, wBar: 224.07, color: '#CE93D8' },
+                            { name: 'Ceres', sym: '⚳', L0: 153.94, rate: 0.21408, au: 2.77, e: 0.0758, wBar: 73.60, color: '#8D6E63' },
+                            { name: 'Eris', sym: '⯰', L0: 36.02, rate: 0.00176, au: 67.67, e: 0.4407, wBar: 151.64, color: '#EEEEEE' },
                         ];
 
                         const comets = [
@@ -389,12 +546,33 @@ export default function SolarSystemTimeCapsuleScreen({ route }: Props) {
                                     {/* Planets */}
                                     {solarPlanets.map((p) => {
                                         const meanLong = ((p.L0 + p.rate * daysSinceJ2000) % 360 + 360) % 360;
+                                        const M = ((meanLong - p.wBar) % 360 + 360) % 360;
+                                        const trueLong = (meanLong + eqCenter(M, p.e) + 360) % 360;
                                         const orbitR = scaleR(p.au);
-                                        const pos = ssPosOnCircle(meanLong, orbitR);
-                                        const dotR = p.name === 'Earth' ? 9 : (p.au < 2 ? 6 : (p.au < 10 ? 8 : 6));
+                                        const pos = ssPosOnCircle(trueLong, orbitR);
+                                        const dotR = p.dotR;
                                         return (
                                             <G key={`planet-${p.name}`}>
+                                                {/* Planet body */}
                                                 <Circle cx={pos.x} cy={pos.y} r={dotR} fill={p.color} />
+                                                {/* Shading highlight for 3D look */}
+                                                <Circle cx={pos.x - dotR * 0.25} cy={pos.y - dotR * 0.25} r={dotR * 0.5} fill="rgba(255,255,255,0.2)" />
+                                                {/* Saturn rings */}
+                                                {p.name === 'Saturn' && (
+                                                    <G>
+                                                        <Ellipse cx={pos.x} cy={pos.y} rx={dotR * 2.0} ry={dotR * 0.55} fill="none" stroke="#D4B36A" strokeWidth={1.2} opacity={0.7} />
+                                                        <Ellipse cx={pos.x} cy={pos.y} rx={dotR * 2.4} ry={dotR * 0.65} fill="none" stroke="#C8A850" strokeWidth={0.8} opacity={0.5} />
+                                                        <Ellipse cx={pos.x} cy={pos.y} rx={dotR * 1.6} ry={dotR * 0.45} fill="none" stroke="#BFA35A" strokeWidth={1.5} opacity={0.6} />
+                                                    </G>
+                                                )}
+                                                {/* Jupiter banding hints */}
+                                                {p.name === 'Jupiter' && (
+                                                    <G>
+                                                        <Line x1={pos.x - dotR * 0.7} y1={pos.y - dotR * 0.3} x2={pos.x + dotR * 0.7} y2={pos.y - dotR * 0.3} stroke="#A67B30" strokeWidth={1} opacity={0.4} />
+                                                        <Line x1={pos.x - dotR * 0.8} y1={pos.y + dotR * 0.15} x2={pos.x + dotR * 0.8} y2={pos.y + dotR * 0.15} stroke="#B5843A" strokeWidth={1.2} opacity={0.35} />
+                                                        <Line x1={pos.x - dotR * 0.6} y1={pos.y + dotR * 0.55} x2={pos.x + dotR * 0.6} y2={pos.y + dotR * 0.55} stroke="#A67B30" strokeWidth={0.8} opacity={0.3} />
+                                                    </G>
+                                                )}
                                                 <SvgText
                                                     x={pos.x}
                                                     y={pos.y + (dotR + 14)}
@@ -412,7 +590,9 @@ export default function SolarSystemTimeCapsuleScreen({ route }: Props) {
 
                                     {/* Dwarf planets */}
                                     {dwarfPlanets.map((dp) => {
-                                        const dpLong = ((dp.L0 + dp.rate * daysSinceJ2000) % 360 + 360) % 360;
+                                        const dpMeanLong = ((dp.L0 + dp.rate * daysSinceJ2000) % 360 + 360) % 360;
+                                        const dpM = ((dpMeanLong - dp.wBar) % 360 + 360) % 360;
+                                        const dpLong = (dpMeanLong + eqCenter(dpM, dp.e) + 360) % 360;
                                         const dpR = scaleR(dp.au);
                                         const dpPos = ssPosOnCircle(dpLong, dpR);
                                         return (
@@ -605,6 +785,81 @@ export default function SolarSystemTimeCapsuleScreen({ route }: Props) {
                         </View>
                     </View>
 
+                    {/* ═══ ASTRONOMICAL EVENTS TIMELINE ═══ */}
+                    <View style={styles.eventsSection}>
+                        <Text style={styles.eventsSectionTitle}>🌠 Notable Events Near This Date</Text>
+
+                        {/* Jump to event buttons */}
+                        <View style={styles.eventJumpRow}>
+                            <TouchableOpacity
+                                style={[styles.eventJumpBtn, !prevEvent && { opacity: 0.3 }]}
+                                onPress={() => prevEvent && jumpToEvent(prevEvent.date)}
+                                disabled={!prevEvent}
+                            >
+                                <Text style={styles.eventJumpBtnText}>◀ Prev Event</Text>
+                                {prevEvent && (
+                                    <Text style={styles.eventJumpBtnSub}>{new Date(prevEvent.date).getFullYear()}</Text>
+                                )}
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.eventJumpBtn, !nextEvent && { opacity: 0.3 }]}
+                                onPress={() => nextEvent && jumpToEvent(nextEvent.date)}
+                                disabled={!nextEvent}
+                            >
+                                <Text style={styles.eventJumpBtnText}>Next Event ▶</Text>
+                                {nextEvent && (
+                                    <Text style={styles.eventJumpBtnSub}>{new Date(nextEvent.date).getFullYear()}</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+
+                        {closestEvent && (
+                            <TouchableOpacity
+                                style={styles.closestEventBanner}
+                                onPress={() => jumpToEvent(closestEvent.event.date)}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={styles.closestEventEmoji}>{closestEvent.event.emoji}</Text>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.closestEventTitle}>
+                                        {closestEvent.daysAway === 0 ? '📍 TODAY: ' : `Nearest Event (${closestEvent.daysAway < 365 ? `${closestEvent.daysAway} days` : `${(closestEvent.daysAway / 365.25).toFixed(1)} years`} away): `}
+                                        {closestEvent.event.title}
+                                    </Text>
+                                    <Text style={styles.closestEventDate}>
+                                        {new Date(closestEvent.event.date).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                                    </Text>
+                                    <Text style={styles.closestEventDesc}>{closestEvent.event.desc}</Text>
+                                    <Text style={styles.closestEventTap}>Tap to jump to this date</Text>
+                                </View>
+                            </TouchableOpacity>
+                        )}
+                        {nearbyEvents.length > 0 ? (
+                            nearbyEvents.map((e, idx) => {
+                                const eventDate = new Date(e.date);
+                                const daysFromCurrent = Math.round((e.date - birthDate.getTime()) / 86400000);
+                                const isFuture = daysFromCurrent > 0;
+                                const absDays = Math.abs(daysFromCurrent);
+                                const timeLabel = absDays === 0 ? 'This date!' : absDays < 30 ? `${absDays} day${absDays !== 1 ? 's' : ''} ${isFuture ? 'later' : 'earlier'}` : absDays < 365 ? `${Math.round(absDays / 30.4375)} mo ${isFuture ? 'later' : 'earlier'}` : `${(absDays / 365.25).toFixed(1)} yr${absDays > 365.25 * 2 ? 's' : ''} ${isFuture ? 'later' : 'earlier'}`;
+                                return (
+                                    <View key={`evt-${idx}`} style={[styles.eventCard, absDays === 0 && styles.eventCardHighlight]}>
+                                        <Text style={styles.eventCardEmoji}>{e.emoji}</Text>
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={styles.eventCardTitle}>{e.title}</Text>
+                                            <Text style={styles.eventCardDate}>
+                                                {eventDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} — {timeLabel}
+                                            </Text>
+                                            <Text style={styles.eventCardDesc}>{e.desc}</Text>
+                                        </View>
+                                    </View>
+                                );
+                            })
+                        ) : (
+                            <Text style={styles.noEventsText}>
+                                Spin the wheel to discover events! Notable astronomical moments are highlighted as you travel through time.
+                            </Text>
+                        )}
+                    </View>
+
                     {/* Solar System Key — Planets */}
                     <Text style={styles.solarKeySectionHeader}>🪐 Planets</Text>
                     <View style={styles.solarKeyGrid}>
@@ -776,5 +1031,25 @@ const styles = StyleSheet.create({
     dateModeBtnActive: { backgroundColor: 'rgba(255,213,79,0.2)', borderColor: '#FFD54F' },
     dateModeBtnText: { fontSize: 14, fontWeight: '700' as const, color: 'rgba(255,255,255,0.5)' },
     dateModeBtnTextActive: { color: '#FFD54F' },
+    // Events timeline styles
+    eventsSection: { marginTop: 20, marginBottom: 10 },
+    eventsSectionTitle: { fontSize: 18, fontWeight: '800' as const, color: '#FFD54F', textAlign: 'center' as const, marginBottom: 14 },
+    closestEventBanner: { flexDirection: 'row' as const, backgroundColor: 'rgba(255,213,79,0.12)', borderRadius: 12, padding: 12, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(255,213,79,0.3)', alignItems: 'flex-start' as const },
+    closestEventEmoji: { fontSize: 28, marginRight: 10, marginTop: 2 },
+    closestEventTitle: { fontSize: 14, fontWeight: '800' as const, color: '#FFD54F', lineHeight: 20 },
+    closestEventDate: { fontSize: 12, fontWeight: '700' as const, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
+    closestEventDesc: { fontSize: 12, fontWeight: '600' as const, color: 'rgba(255,255,255,0.75)', marginTop: 4, lineHeight: 17 },
+    eventCard: { flexDirection: 'row' as const, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: 10, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'flex-start' as const },
+    eventCardHighlight: { backgroundColor: 'rgba(79,195,247,0.15)', borderColor: 'rgba(79,195,247,0.4)' },
+    eventCardEmoji: { fontSize: 22, marginRight: 10, marginTop: 2 },
+    eventCardTitle: { fontSize: 13, fontWeight: '800' as const, color: '#fff' },
+    eventCardDate: { fontSize: 11, fontWeight: '700' as const, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+    eventCardDesc: { fontSize: 11, fontWeight: '600' as const, color: 'rgba(255,255,255,0.65)', marginTop: 3, lineHeight: 16 },
+    noEventsText: { fontSize: 13, fontWeight: '600' as const, color: 'rgba(255,255,255,0.5)', textAlign: 'center' as const, padding: 16, lineHeight: 20 },
+    eventJumpRow: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, gap: 10, marginBottom: 14 },
+    eventJumpBtn: { flex: 1, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center' as const, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
+    eventJumpBtnText: { fontSize: 13, fontWeight: '800' as const, color: '#fff' },
+    eventJumpBtnSub: { fontSize: 11, fontWeight: '700' as const, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+    closestEventTap: { fontSize: 11, fontWeight: '700' as const, color: 'rgba(255,213,79,0.6)', marginTop: 4, fontStyle: 'italic' as const },
 
 });

@@ -20,6 +20,7 @@ type Props = {
     zodiac: string;
     birthstone: string;
     lifePathNumber?: number;
+    militaryBranch?: string;
 };
 
 const SNAP_KEYS: { label: string; key: string }[] = [
@@ -143,6 +144,11 @@ export default function TimeCapsuleBack(props: Props) {
 
     // 1) Full-name intro
     parts.push(`${namesForSentence} ${plural ? 'were' : 'was'} born on ${formatDate(props.dobISO)}` + (props.hometown && props.hometown.trim() ? ` in ${props.hometown}` : ''));
+
+    if (props.militaryBranch) {
+        const militaryEmojis: Record<string, string> = { Army: '\u{1FA96}', Navy: '\u2693', 'Air Force': '\u2708\uFE0F', Marines: '\u{1F985}', 'Coast Guard': '\u26F5', 'Space Force': '\u{1F680}' };
+        parts.push(`${babyFirstOnly || namesForSentence} proudly served in the ${props.militaryBranch} ${militaryEmojis[props.militaryBranch] || ''}`);
+    }
 
     // 2) Zodiac, Birthstone, and Life Path info
     const zodiacBirthstone = `${babyFirstOnly || namesForSentence}'s zodiac sign is ${zodiacEmoji} ${props.zodiac}, their birthstone is ${birthstoneEmoji} ${props.birthstone}, and have a life path number of ${lifePathStr}. Below are some interesting facts relevant to your birthday`;

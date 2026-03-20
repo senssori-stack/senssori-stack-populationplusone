@@ -19,10 +19,7 @@ export function getChineseZodiac(year: number): string {
  * Generate lucky numbers based on birth date (numerology-based)
  */
 export function getLuckyNumbers(dateISO: string): number[] {
-    const date = new Date(dateISO);
-    const day = date.getDate();
-    const month = date.getMonth() + 1;
-    const year = date.getFullYear();
+    const [year, month, day] = dateISO.split('-').map(Number);
 
     // Generate 6 unique lucky numbers using date digits
     const luckyNumbers: number[] = [];
@@ -86,10 +83,10 @@ export function toRomanNumerals(num: number): string {
  * Convert date to Roman numeral format (MM/DD/YYYY)
  */
 export function dateToRomanNumerals(dateISO: string): string {
-    const date = new Date(dateISO);
-    const month = toRomanNumerals(date.getMonth() + 1);
-    const day = toRomanNumerals(date.getDate());
-    const year = toRomanNumerals(date.getFullYear());
+    const [y, m, d] = dateISO.split('-').map(Number);
+    const month = toRomanNumerals(m);
+    const day = toRomanNumerals(d);
+    const year = toRomanNumerals(y);
 
     return `${month}/${day}/${year}`;
 }
@@ -98,7 +95,8 @@ export function dateToRomanNumerals(dateISO: string): string {
  * Calculate age in dog years (1 human year ≈ 7 dog years for simplicity)
  */
 export function getAgeInDogYears(dateISO: string): number {
-    const birthDate = new Date(dateISO);
+    const [y, m, d] = dateISO.split('-').map(Number);
+    const birthDate = new Date(y, m - 1, d);
     const today = new Date();
 
     // Calculate age in days for precision

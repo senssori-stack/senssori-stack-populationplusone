@@ -76,7 +76,7 @@ function calculateBirthCard(date: Date): { card1: TarotCard; card2: TarotCard | 
 }
 
 export default function TarotBirthCardScreen({ route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
     const { card1, card2 } = calculateBirthCard(birthDate);
 
     const renderCard = (card: TarotCard, label: string) => (

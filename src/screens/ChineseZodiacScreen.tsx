@@ -48,7 +48,7 @@ function getYinYang(year: number): string {
 }
 
 export default function ChineseZodiacScreen({ route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
     const year = birthDate.getFullYear();
 
     const animalName = getChineseZodiacAnimal(year);

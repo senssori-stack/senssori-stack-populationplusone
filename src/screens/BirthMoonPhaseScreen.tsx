@@ -160,8 +160,8 @@ function getIlluminationPercent(moonAge: number): number {
 }
 
 export default function BirthMoonPhaseScreen({ route }: Props) {
-    const originalBirthDate = useMemo(() => new Date(route.params.birthDate), [route.params.birthDate]);
-    const [birthDate, setBirthDate] = useState(() => new Date(route.params.birthDate));
+    const originalBirthDate = useMemo(() => new Date(route.params.birthDate + 'T00:00:00'), [route.params.birthDate]);
+    const [birthDate, setBirthDate] = useState(() => new Date(route.params.birthDate + 'T00:00:00'));
 
     // ── Time Travel State ──
     const [dayOffset, setDayOffset] = useState(0);

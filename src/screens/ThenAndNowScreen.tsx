@@ -86,7 +86,7 @@ export default function ThenAndNowScreen({ navigation, route }: Props) {
     const [snapshot, setSnapshot] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
 
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
     const birthYear = birthDate.getFullYear();
 
     // Fetch live snapshot from Google Sheets

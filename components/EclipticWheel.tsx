@@ -170,9 +170,9 @@ export default function EclipticWheel({ width, daysSinceJ2000, userSign, onDaysC
         })
     ).current;
 
-    // Moon position (tiny orbit around Earth)
+    // Moon position (orbit around Earth)
     const moonLon = ((218.32 + 13.1764 * daysSinceJ2000) % 360 + 360) % 360;
-    const moonOrbitR = 8;
+    const moonOrbitR = 18;
     const moonRad = dRad(moonLon);
     const moonX = earthPos.x + moonOrbitR * Math.cos(moonRad);
     const moonY = earthPos.y + moonOrbitR * Math.sin(moonRad);
@@ -266,24 +266,32 @@ export default function EclipticWheel({ width, daysSinceJ2000, userSign, onDaysC
                     {/* 🌍 EARTH — draggable on ecliptic */}
                     {/* Drag glow ring (visible when dragging OR as subtle hint) */}
                     <Circle cx={earthPos.x} cy={earthPos.y}
-                        r={isDragging ? 27 : 18}
+                        r={isDragging ? 36 : 28}
                         fill={isDragging ? 'rgba(79,195,247,0.12)' : 'rgba(79,195,247,0.05)'}
                         stroke={isDragging ? '#4FC3F7' : 'rgba(79,195,247,0.2)'}
                         strokeWidth={isDragging ? 1.5 : 0.8}
                         strokeDasharray={isDragging ? '' : '3,3'}
                     />
                     {/* Earth body */}
-                    <Circle cx={earthPos.x} cy={earthPos.y} r={isDragging ? 12 : 9} fill="#1565C0" stroke="#4FC3F7" strokeWidth={isDragging ? 2 : 1.5} />
-                    <Circle cx={earthPos.x} cy={earthPos.y} r={isDragging ? 7.5 : 5.25} fill="#4FC3F7" opacity={0.5} />
-                    {/* Tiny green land patches */}
-                    <Circle cx={earthPos.x - 1.5} cy={earthPos.y - 1.5} r={2.25} fill="#66BB6A" opacity={0.7} />
-                    <Circle cx={earthPos.x + 3} cy={earthPos.y + 1.5} r={1.5} fill="#66BB6A" opacity={0.7} />
+                    <Circle cx={earthPos.x} cy={earthPos.y} r={isDragging ? 30 : 24} fill="#1565C0" stroke="#4FC3F7" strokeWidth={isDragging ? 3 : 2.5} />
+                    <Circle cx={earthPos.x} cy={earthPos.y} r={isDragging ? 20 : 15} fill="#4FC3F7" opacity={0.5} />
+                    {/* Green land patches */}
+                    <Circle cx={earthPos.x - 5} cy={earthPos.y - 5} r={7} fill="#66BB6A" opacity={0.7} />
+                    <Circle cx={earthPos.x + 8} cy={earthPos.y + 4} r={5} fill="#66BB6A" opacity={0.7} />
+                    <Circle cx={earthPos.x + 2} cy={earthPos.y - 8} r={4} fill="#43A047" opacity={0.5} />
 
-                    {/* 🌙 MOON — tiny orbit around Earth */}
-                    <Circle cx={moonX} cy={moonY} r={2.5} fill="#E0E0E0" stroke="#bbb" strokeWidth={0.3} />
+                    {/* 🌙 MOON — orbit around Earth */}
+                    <Circle cx={moonX} cy={moonY} r={7} fill="#E0E0E0" stroke="#bbb" strokeWidth={0.5} />
+                    <Circle cx={moonX - 1.5} cy={moonY - 1.5} r={5} fill="#F5F5F5" opacity={0.6} />
+                    <Circle cx={moonX + 2} cy={moonY + 1} r={1.5} fill="#BDBDBD" opacity={0.5} />
+                    <Circle cx={moonX - 1} cy={moonY + 2} r={1} fill="#BDBDBD" opacity={0.4} />
+
+                    {/* Moon label */}
+                    <SvgText x={moonX} y={moonY + 12} fontSize={7} fontWeight="600"
+                        fill="#BDBDBD" textAnchor="middle">Moon</SvgText>
 
                     {/* Earth label */}
-                    <SvgText x={earthPos.x} y={earthPos.y + (isDragging ? 21 : 18)} fontSize={isDragging ? 9 : 8} fontWeight="700"
+                    <SvgText x={earthPos.x} y={earthPos.y + (isDragging ? 28 : 24)} fontSize={isDragging ? 10 : 9} fontWeight="700"
                         fill="#4FC3F7" textAnchor="middle">{isDragging ? '👆 Drag me!' : 'Earth'}</SvgText>
 
                     {/* ── CONSTELLATION STAR PATTERNS ── */}
@@ -303,7 +311,7 @@ export default function EclipticWheel({ width, daysSinceJ2000, userSign, onDaysC
                         const lineOpacity = highlight ? 0.8 : 0.25;
                         const starColor = highlight ? c.color : '#ccc';
                         const nameColor = highlight ? c.color : 'rgba(255,255,255,0.7)';
-                        const fontSize = highlight ? 9 : 7.5;
+                        const fontSize = highlight ? 18 : 15;
 
                         // Name position (slightly further out)
                         const nameR = constellationR * 1.08;
@@ -355,19 +363,7 @@ export default function EclipticWheel({ width, daysSinceJ2000, userSign, onDaysC
                                     {c.name}
                                 </SvgText>
 
-                                {/* Symbol near the ecliptic ring */}
-                                {(() => {
-                                    const symR = constellationR * 0.82;
-                                    const symX = cx + symR * Math.cos(rad);
-                                    const symY = cy + symR * 0.58 * Math.sin(rad);
-                                    return (
-                                        <SvgText x={symX} y={symY} fontSize={30} fontWeight="900"
-                                            fill={highlight ? c.color : 'rgba(255,255,255,0.4)'}
-                                            textAnchor="middle" alignmentBaseline="middle">
-                                            {c.symbol}
-                                        </SvgText>
-                                    );
-                                })()}
+
                             </G>
                         );
                     })}

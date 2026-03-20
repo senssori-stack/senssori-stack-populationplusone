@@ -321,6 +321,11 @@ function getThenAndNow(birthYear: number, snapshot: Record<string, string>): { c
     return comparisons;
 }
 
+// Helper: convert local Date to YYYY-MM-DD string without timezone conversion
+function toLocalISO(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export default function JustForFunScreen({ navigation }: Props) {
     const [selectedFeature, setSelectedFeature] = useState<FeatureType>(null);
     const [birthDate, setBirthDate] = useState<Date>(new Date(1990, 0, 1));
@@ -623,7 +628,7 @@ export default function JustForFunScreen({ navigation }: Props) {
                 <View style={styles.buttonSection}>
                     <TouchableOpacity
                         style={[styles.featureButton, selectedFeature === 'roman' && styles.featureButtonActive]}
-                        onPress={() => navigation.navigate('RomanNumerals', { birthDate: birthDate.toISOString() })}
+                        onPress={() => navigation.navigate('RomanNumerals', { birthDate: toLocalISO(birthDate) })}
                     >
                         <Text style={styles.featureEmoji}>🏛️</Text>
                         <Text style={styles.featureTitle}>Birthday in Roman Numerals</Text>
@@ -632,7 +637,7 @@ export default function JustForFunScreen({ navigation }: Props) {
 
                     <TouchableOpacity
                         style={[styles.featureButton, selectedFeature === 'famous' && styles.featureButtonActive]}
-                        onPress={() => navigation.navigate('FamousBirthdays', { birthDate: birthDate.toISOString() })}
+                        onPress={() => navigation.navigate('FamousBirthdays', { birthDate: toLocalISO(birthDate) })}
                     >
                         <Text style={styles.featureEmoji}>🌟</Text>
                         <Text style={styles.featureTitle}>Famous Birthday Twins</Text>
@@ -641,7 +646,7 @@ export default function JustForFunScreen({ navigation }: Props) {
 
                     <TouchableOpacity
                         style={[styles.featureButton, selectedFeature === 'onthisday' && styles.featureButtonActive]}
-                        onPress={() => navigation.navigate('OnThisDay', { birthDate: birthDate.toISOString() })}
+                        onPress={() => navigation.navigate('OnThisDay', { birthDate: toLocalISO(birthDate) })}
                     >
                         <Text style={styles.featureEmoji}>📅</Text>
                         <Text style={styles.featureTitle}>On This Day in History</Text>
@@ -650,7 +655,7 @@ export default function JustForFunScreen({ navigation }: Props) {
 
                     <TouchableOpacity
                         style={[styles.featureButton, selectedFeature === 'thenandnow' && styles.featureButtonActive]}
-                        onPress={() => navigation.navigate('ThenAndNow', { birthDate: birthDate.toISOString() })}
+                        onPress={() => navigation.navigate('ThenAndNow', { birthDate: toLocalISO(birthDate) })}
                     >
                         <Text style={styles.featureEmoji}>⏰</Text>
                         <Text style={styles.featureTitle}>Then & Now Time Capsule</Text>
@@ -668,7 +673,7 @@ export default function JustForFunScreen({ navigation }: Props) {
 
                     <TouchableOpacity
                         style={styles.featureButton}
-                        onPress={() => navigation.navigate('Generations', { birthDate: birthDate.toISOString() })}
+                        onPress={() => navigation.navigate('Generations', { birthDate: toLocalISO(birthDate) })}
                     >
                         <Text style={styles.featureEmoji}>👨‍👩‍👧‍👦</Text>
                         <Text style={styles.featureTitle}>What Generation Am I?</Text>
@@ -677,7 +682,7 @@ export default function JustForFunScreen({ navigation }: Props) {
 
                     <TouchableOpacity
                         style={styles.featureButton}
-                        onPress={() => navigation.navigate('DaysAlive', { birthDate: birthDate.toISOString() })}
+                        onPress={() => navigation.navigate('DaysAlive', { birthDate: toLocalISO(birthDate) })}
                     >
                         <Text style={styles.featureEmoji}>⏳</Text>
                         <Text style={styles.featureTitle}>How Many Days Have I Been Alive?</Text>

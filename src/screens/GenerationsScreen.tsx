@@ -125,7 +125,7 @@ const comparisonData = [
 ];
 
 export default function GenerationsScreen({ navigation, route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
     const birthYear = birthDate.getFullYear();
     const userGeneration = getGeneration(birthYear);
 

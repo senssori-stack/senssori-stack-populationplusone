@@ -21,52 +21,23 @@
  * they can optionally attach a gift recommendation. If the recipient (or sender)
  * buys the gift through our affiliate link, we earn a commission.
  * 
- * Affiliate Programs to set up:
- *   • Amazon Associates — ~4% on baby products
- *   • Babylist — Referral commissions
- *   • Etsy Affiliate — ~5% on handmade baby gifts
- *   • Target Circle — Registry referrals
- * 
- * SETUP INSTRUCTIONS:
- * ───────────────────
+ * Affiliate Program:
+ *   • Amazon Associates — ~4% on baby products (ACTIVE)
+ *
+ * SETUP:
+ * ──────
  * 1. PRINTFUL (retail markup — already connected):
  *    - Dashboard: https://www.printful.com/dashboard
  *    - API token already in printful-api.ts
  *    - Set retail prices in PRINT_PRICING below
- *    - Wholesale costs come from Printful API at order time
- *    - Your margin = retail price − wholesale cost − shipping
- * 
- * 2. AMAZON ASSOCIATES (gift affiliate):
- *    - Sign up: https://affiliate-program.amazon.com/
- *    - Get your Associate Tag (e.g., "populplus1-20")
- *    - Enter it in AFFILIATE_IDS.AMAZON below
- *    - Link format: https://www.amazon.com/dp/ASIN?tag=YOUR-TAG
+ *
+ * 2. AMAZON ASSOCIATES (gift affiliate — ACTIVE):
+ *    - Dashboard: https://affiliate-program.amazon.com/
+ *    - Associate Tag: populationplu-20
+ *    - Link format: https://www.amazon.com/dp/ASIN?tag=populationplu-20
  *    - Commission: ~1-4% depending on category
  *    - Baby products: 3-4%
- * 
- * 3. BABYLIST AFFILIATE:
- *    - Apply: https://www.babylist.com/affiliate
- *    - Commission: varies by program
- *    - Enter partner ID in AFFILIATE_IDS.BABYLIST below
- * 
- * 4. ETSY AFFILIATE (Awin network):
- *    - Sign up via Awin: https://www.awin.com/
- *    - Search for "Etsy" in merchant list
- *    - Commission: ~5% on sales
- *    - Enter Awin publisher ID in AFFILIATE_IDS.ETSY below
- * 
- * 5. TARGET CIRCLE / IMPACT:
- *    - Apply via Impact: https://app.impact.com/
- *    - Search for "Target" in brand list
- *    - Commission: ~1-8% depending on category
- *    - Enter campaign ID in AFFILIATE_IDS.TARGET below
- * 
- * WHEN READY TO GO LIVE:
- * ──────────────────────
- * 1. Fill in your real affiliate IDs below
- * 2. Set the feature flags to true
- * 3. Test with a real purchase to confirm tracking works
- * 4. Monitor your affiliate dashboards for confirmed commissions
+ *    - 24-hour cookie: earn on EVERYTHING they buy in 24 hours
  */
 
 // ============================================================
@@ -75,25 +46,25 @@
 
 export const FEATURE_FLAGS = {
     /** Enable Printful print ordering (retail markup model) */
-    PRINTING_ENABLED: false,
+    PRINTING_ENABLED: true,
 
     /** Enable gifting affiliate links (Amazon, Babylist, etc.) */
-    GIFTING_ENABLED: false,
+    GIFTING_ENABLED: true,
 
     /** Enable commission tracking/logging locally */
-    COMMISSION_TRACKING_ENABLED: false,
+    COMMISSION_TRACKING_ENABLED: true,
 
     /** Show print prices to customers (false = show "Coming Soon") */
-    SHOW_PRINT_PRICES: false,
+    SHOW_PRINT_PRICES: true,
 
     /** Show gift suggestions on sharing screens */
-    SHOW_GIFT_SUGGESTIONS: false,
+    SHOW_GIFT_SUGGESTIONS: true,
 
     /** Enable actual Printful API calls (false = mock/dry-run mode) */
     PRINTFUL_LIVE_MODE: false,
 
     /** Enable actual affiliate link redirects (false = log only) */
-    AFFILIATE_LINKS_LIVE: false,
+    AFFILIATE_LINKS_LIVE: true,
 };
 
 // ============================================================
@@ -101,23 +72,11 @@ export const FEATURE_FLAGS = {
 // ============================================================
 
 export const AFFILIATE_IDS = {
-    /** Amazon Associates tag — get from https://affiliate-program.amazon.com/ */
-    AMAZON: '', // e.g., 'populplus1-20'
-
-    /** Babylist partner ID */
-    BABYLIST: '', // e.g., 'populationplusone'
-
-    /** Etsy / Awin publisher ID */
-    ETSY: '', // e.g., '12345' (Awin publisher ID)
-
-    /** Target / Impact campaign ID */
-    TARGET: '', // e.g., 'campaign-12345'
+    /** Amazon Associates tag — ACTIVE */
+    AMAZON: 'populationplu-20',
 
     /** FedEx Office affiliate ID (for local pickup referrals) */
-    FEDEX: 'BIRTHSTUDIO', // Already in use
-
-    /** UPS Store — no affiliate program exists; placeholder for future */
-    UPS_STORE: '',
+    FEDEX: 'BIRTHSTUDIO',
 };
 
 // ============================================================
@@ -138,9 +97,6 @@ export const COMMISSION_RATES = {
     // ─── GIFTING AFFILIATES (what the programs pay us) ───
     GIFTING: {
         AMAZON: 0.04,     // ~4% on baby category
-        BABYLIST: 0.05,   // ~5% estimated
-        ETSY: 0.05,       // ~5% via Awin
-        TARGET: 0.03,     // ~3% estimated
     },
 };
 
@@ -342,10 +298,8 @@ export const PRINT_PRICING = {
  * Each category maps to products that make great gifts to pair
  * with a birth announcement, birthday, graduation, etc.
  * 
- * Link format per platform:
+ * Link format:
  *   Amazon: https://www.amazon.com/dp/{ASIN}?tag={AFFILIATE_IDS.AMAZON}
- *   Etsy:   https://www.awin1.com/cread.php?awinmid=6220&awinaffid={AFFILIATE_IDS.ETSY}&ued=https://www.etsy.com/listing/{LISTING_ID}
- *   Target: https://goto.target.com/c/{AFFILIATE_IDS.TARGET}/...
  */
 export interface GiftSuggestion {
     id: string;
@@ -353,8 +307,8 @@ export interface GiftSuggestion {
     description: string;
     emoji: string;
     priceRange: string;
-    platform: 'amazon' | 'babylist' | 'etsy' | 'target';
-    /** Product identifier on the platform (ASIN for Amazon, listing ID for Etsy, etc.) */
+    platform: 'amazon';
+    /** Amazon ASIN */
     productId: string;
     /** Category for filtering */
     category: 'baby' | 'mom' | 'keepsake' | 'practical' | 'milestone' | 'memorial';
@@ -364,6 +318,8 @@ export interface GiftSuggestion {
 
 export const GIFT_SUGGESTIONS: GiftSuggestion[] = [
     // ─── BABY GIFTS ───
+    // TODO: Replace '' productId with real Amazon ASINs
+    // Find ASINs at amazon.com — the 10-char code after /dp/ in the URL
     {
         id: 'gift-blanket',
         name: 'Personalized Baby Blanket',
@@ -371,7 +327,7 @@ export const GIFT_SUGGESTIONS: GiftSuggestion[] = [
         emoji: '🧸',
         priceRange: '$25-45',
         platform: 'amazon',
-        productId: '', // Fill in with real ASIN when ready
+        productId: '', // ASIN needed
         category: 'baby',
         modes: ['baby'],
     },
@@ -382,7 +338,7 @@ export const GIFT_SUGGESTIONS: GiftSuggestion[] = [
         emoji: '📖',
         priceRange: '$20-35',
         platform: 'amazon',
-        productId: '', // Fill in with real ASIN
+        productId: '', // ASIN needed
         category: 'keepsake',
         modes: ['baby'],
     },
@@ -393,7 +349,7 @@ export const GIFT_SUGGESTIONS: GiftSuggestion[] = [
         emoji: '👶',
         priceRange: '$15-25',
         platform: 'amazon',
-        productId: '',
+        productId: '', // ASIN needed
         category: 'baby',
         modes: ['baby'],
     },
@@ -404,7 +360,7 @@ export const GIFT_SUGGESTIONS: GiftSuggestion[] = [
         emoji: '🧺',
         priceRange: '$20-35',
         platform: 'amazon',
-        productId: '',
+        productId: '', // ASIN needed
         category: 'practical',
         modes: ['baby'],
     },
@@ -415,7 +371,7 @@ export const GIFT_SUGGESTIONS: GiftSuggestion[] = [
         emoji: '🖐️',
         priceRange: '$15-30',
         platform: 'amazon',
-        productId: '',
+        productId: '', // ASIN needed
         category: 'keepsake',
         modes: ['baby'],
     },
@@ -426,7 +382,7 @@ export const GIFT_SUGGESTIONS: GiftSuggestion[] = [
         emoji: '🌙',
         priceRange: '$20-40',
         platform: 'amazon',
-        productId: '',
+        productId: '', // ASIN needed
         category: 'practical',
         modes: ['baby'],
     },
@@ -439,47 +395,101 @@ export const GIFT_SUGGESTIONS: GiftSuggestion[] = [
         emoji: '👗',
         priceRange: '$30-55',
         platform: 'amazon',
-        productId: '',
+        productId: '', // ASIN needed
         category: 'mom',
         modes: ['baby'],
     },
+    // ─── BIRTHDAY GIFTS ───
     {
-        id: 'gift-meal-delivery',
-        name: 'Meal Delivery Gift Card',
-        description: 'Help new parents with ready-made meals',
-        emoji: '🍽️',
-        priceRange: '$50-100',
+        id: 'gift-stress-squishy',
+        name: 'Stress Relief Squishy Set',
+        description: 'Fun filled squishy stress relief toys — great for all ages',
+        emoji: '🧡',
+        priceRange: '$10-20',
         platform: 'amazon',
-        productId: '',
+        productId: 'B0DZVKP1X5',
         category: 'practical',
-        modes: ['baby'],
-    },
-
-    // ─── ETSY HANDMADE ───
-    {
-        id: 'gift-etsy-name-sign',
-        name: 'Custom Wooden Name Sign',
-        description: 'Handmade nursery wall décor with baby\'s name',
-        emoji: '🪵',
-        priceRange: '$25-60',
-        platform: 'etsy',
-        productId: '', // Fill in with Etsy listing ID
-        category: 'keepsake',
-        modes: ['baby'],
+        modes: ['baby', 'birthday', 'graduation', 'anniversary', 'milestone'],
     },
     {
-        id: 'gift-etsy-birth-stat-art',
-        name: 'Birth Stats Art Print',
-        description: 'Custom birth stats poster — pairs perfectly with our announcement!',
-        emoji: '🖼️',
-        priceRange: '$15-35',
-        platform: 'etsy',
-        productId: '',
-        category: 'keepsake',
-        modes: ['baby'],
+        id: 'gift-reading-glasses',
+        name: 'Stylish Reading Glasses',
+        description: 'Fashionable readers in tortoise — great practical gift',
+        emoji: '👓',
+        priceRange: '$10-20',
+        platform: 'amazon',
+        productId: 'B07TQJ775S',
+        category: 'practical',
+        modes: ['birthday', 'anniversary', 'milestone'],
+    },
+    {
+        id: 'gift-keychain-tracker',
+        name: 'Keychain Tracker Case',
+        description: 'Protective silicone case for tracking — never lose your keys',
+        emoji: '🔑',
+        priceRange: '$5-15',
+        platform: 'amazon',
+        productId: 'B0DS1PX96H',
+        category: 'practical',
+        modes: ['baby', 'birthday', 'graduation', 'anniversary', 'milestone'],
+    },
+    {
+        id: 'gift-trending-1',
+        name: 'Trending Gift Pick',
+        description: 'Top-rated gift — a great surprise for any occasion',
+        emoji: '⭐',
+        priceRange: '$15-30',
+        platform: 'amazon',
+        productId: 'B0DB794BKQ',
+        category: 'practical',
+        modes: ['baby', 'birthday', 'graduation', 'anniversary', 'milestone'],
+    },
+    {
+        id: 'gift-trending-2',
+        name: 'Popular Gift Find',
+        description: 'Highly rated and loved — perfect for gifting',
+        emoji: '🎯',
+        priceRange: '$15-30',
+        platform: 'amazon',
+        productId: 'B0F9W34NXC',
+        category: 'practical',
+        modes: ['baby', 'birthday', 'graduation', 'anniversary', 'milestone'],
+    },
+    {
+        id: 'gift-funny-slippers',
+        name: 'Funny Animal Slippers',
+        description: 'Cartoon animal slippers — cozy and hilarious',
+        emoji: '🐾',
+        priceRange: '$15-25',
+        platform: 'amazon',
+        productId: 'B09P4WSXYW',
+        category: 'practical',
+        modes: ['birthday', 'graduation', 'anniversary', 'milestone'],
+    },
+    {
+        id: 'gift-flashlight',
+        name: 'Rechargeable Flashlight',
+        description: 'Ultra-light waterproof LED flashlight — always handy',
+        emoji: '🔦',
+        priceRange: '$15-25',
+        platform: 'amazon',
+        productId: 'B08D66HCXW',
+        category: 'practical',
+        modes: ['birthday', 'graduation', 'anniversary', 'milestone'],
+    },
+    {
+        id: 'gift-gag-survival',
+        name: 'Shart Survival Kit',
+        description: 'Hilarious gag gift set — guaranteed laughs',
+        emoji: '😂',
+        priceRange: '$15-25',
+        platform: 'amazon',
+        productId: 'B0DWDSKX8P',
+        category: 'practical',
+        modes: ['birthday', 'graduation', 'milestone'],
     },
 
-    // ─── MILESTONE / BIRTHDAY GIFTS ───
+    // ─── BIRTHDAY GIFTS ───
     {
         id: 'gift-photo-frame',
         name: 'Digital Photo Frame',
@@ -487,18 +497,68 @@ export const GIFT_SUGGESTIONS: GiftSuggestion[] = [
         emoji: '📸',
         priceRange: '$50-120',
         platform: 'amazon',
-        productId: '',
+        productId: '', // ASIN needed
         category: 'milestone',
         modes: ['birthday', 'anniversary', 'milestone'],
     },
     {
-        id: 'gift-time-capsule-box',
-        name: 'Wooden Time Capsule Box',
-        description: 'Beautiful keepsake box to store mementos from the day',
+        id: 'gift-birthday-basket',
+        name: 'Birthday Gift Basket',
+        description: 'Curated birthday treats & goodies',
+        emoji: '🎂',
+        priceRange: '$30-60',
+        platform: 'amazon',
+        productId: '', // ASIN needed
+        category: 'milestone',
+        modes: ['birthday'],
+    },
+
+    // ─── GRADUATION GIFTS ───
+    {
+        id: 'gift-grad-journal',
+        name: 'Leather Journal',
+        description: 'Premium leather-bound journal for their next chapter',
+        emoji: '📓',
+        priceRange: '$20-40',
+        platform: 'amazon',
+        productId: '', // ASIN needed
+        category: 'keepsake',
+        modes: ['graduation'],
+    },
+
+    // ─── MEMORIAL / SYMPATHY GIFTS ───
+    {
+        id: 'gift-sympathy-candle',
+        name: 'Memorial Candle',
+        description: 'Comforting remembrance candle with heartfelt message',
+        emoji: '🕯️',
+        priceRange: '$20-35',
+        platform: 'amazon',
+        productId: '', // ASIN needed
+        category: 'memorial',
+        modes: ['memorial'],
+    },
+    {
+        id: 'gift-memorial-frame',
+        name: 'Memorial Picture Frame',
+        description: 'Beautiful frame to honor a cherished memory',
+        emoji: '🖼️',
+        priceRange: '$20-40',
+        platform: 'amazon',
+        productId: '', // ASIN needed
+        category: 'memorial',
+        modes: ['memorial'],
+    },
+
+    // ─── KEEPSAKE (multi-mode) ───
+    {
+        id: 'gift-keepsake-box',
+        name: 'Keepsake Memory Box',
+        description: 'Beautiful wooden box to store mementos from the day',
         emoji: '📦',
-        priceRange: '$30-50',
-        platform: 'etsy',
-        productId: '',
+        priceRange: '$25-45',
+        platform: 'amazon',
+        productId: '', // ASIN needed
         category: 'keepsake',
         modes: ['baby', 'birthday', 'graduation', 'milestone'],
     },
@@ -514,34 +574,13 @@ export const GIFT_SUGGESTIONS: GiftSuggestion[] = [
  */
 export function buildAffiliateUrl(suggestion: GiftSuggestion): string | null {
     if (!FEATURE_FLAGS.AFFILIATE_LINKS_LIVE) {
-        console.log(`[Affiliate] Link not live — would open ${suggestion.platform}/${suggestion.productId}`);
+        console.log(`[Affiliate] Link not live — would open amazon/${suggestion.productId}`);
         return null;
     }
 
-    switch (suggestion.platform) {
-        case 'amazon': {
-            const tag = AFFILIATE_IDS.AMAZON;
-            if (!tag || !suggestion.productId) return null;
-            return `https://www.amazon.com/dp/${suggestion.productId}?tag=${tag}`;
-        }
-        case 'etsy': {
-            const pubId = AFFILIATE_IDS.ETSY;
-            if (!pubId || !suggestion.productId) return null;
-            return `https://www.awin1.com/cread.php?awinmid=6220&awinaffid=${pubId}&ued=https%3A%2F%2Fwww.etsy.com%2Flisting%2F${suggestion.productId}`;
-        }
-        case 'babylist': {
-            const partnerId = AFFILIATE_IDS.BABYLIST;
-            if (!partnerId || !suggestion.productId) return null;
-            return `https://www.babylist.com/gp/${suggestion.productId}?ref=${partnerId}`;
-        }
-        case 'target': {
-            const campaignId = AFFILIATE_IDS.TARGET;
-            if (!campaignId || !suggestion.productId) return null;
-            return `https://goto.target.com/c/${campaignId}/1/product/${suggestion.productId}`;
-        }
-        default:
-            return null;
-    }
+    const tag = AFFILIATE_IDS.AMAZON;
+    if (!tag || !suggestion.productId) return null;
+    return `https://www.amazon.com/dp/${suggestion.productId}?tag=${tag}`;
 }
 
 /**
@@ -567,9 +606,6 @@ export function getGiftSuggestions(
 export function getActiveAffiliatePrograms(): string[] {
     const active: string[] = [];
     if (AFFILIATE_IDS.AMAZON) active.push('Amazon Associates');
-    if (AFFILIATE_IDS.BABYLIST) active.push('Babylist');
-    if (AFFILIATE_IDS.ETSY) active.push('Etsy (Awin)');
-    if (AFFILIATE_IDS.TARGET) active.push('Target (Impact)');
     return active;
 }
 

@@ -57,7 +57,7 @@ function getZodiacSign(date: Date): string {
 }
 
 export default function SpiritAnimalScreen({ route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
     const sign = getZodiacSign(birthDate);
     const data = SPIRIT_ANIMALS[sign];
     const stats = [

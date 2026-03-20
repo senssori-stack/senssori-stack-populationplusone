@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Population Plus One — Promo Video</title>
+    <style>
+        /* ===== GLOBAL ===== */
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&family=Playfair+Display:wght@700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #0B1929;
+            --navy-light: #112240;
+            --gold: #F5A623;
+            --gold-bright: #FFB800;
+            --white: #FFFFFF;
+            --green-light: #7AC943;
+            --green-dark: #228B22;
+            --blue-rim: #2E86C1;
+        }
+
+        body {
+            background: var(--navy);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Phone-sized canvas 9:16 */
+        .canvas {
+            width: 390px;
+            height: 844px;
+            background: var(--navy);
+            position: relative;
+            overflow: hidden;
+            /* border: 2px solid #1a3a5c; */
+        }
+
+        /* ===== SCENES ===== */
+        .scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            padding: 40px 24px;
+            text-align: center;
+        }
+
+        /* ===== SCENE 1: "Every second..." ===== */
+        .scene-1 {
+            animation: scene-1-timing 30s ease forwards;
+        }
+
+        @keyframes scene-1-timing {
+            0% {
+                opacity: 0;
+            }
+
+            1% {
+                opacity: 1;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            13% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .scene-1 .line {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 36px;
+            color: var(--white);
+            line-height: 1.3;
+            opacity: 0;
+        }
+
+        .scene-1 .line-1 {
+            animation: fadeUp 1s 0.3s ease forwards;
+        }
+
+        .scene-1 .line-2 {
+            animation: fadeUp 1s 0.8s ease forwards;
+        }
+
+        .scene-1 .line-3 {
+            animation: fadeUp 1s 1.3s ease forwards;
+        }
+
+        /* ===== SCENE 2: Population Counter → then +1 Impact ===== */
+        .scene-2 {
+            animation: scene-2-timing 30s ease forwards;
+        }
+
+        @keyframes scene-2-timing {
+            0% {
+                opacity: 0;
+            }
+
+            13% {
+                opacity: 0;
+            }
+
+            14% {
+                opacity: 1;
+            }
+
+            42% {
+                opacity: 1;
+            }
+
+            45% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* Population counter appears first and STAYS */
+        .scene-2 .pop-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            animation: fadeUp 0.8s 4.2s ease forwards;
+        }
+
+        .scene-2 .label {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 28px;
+            color: var(--white);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .scene-2 .counter {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 64px;
+            color: var(--white);
+            letter-spacing: 2px;
+        }
+
+        .scene-2 .sub {
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 12px;
+        }
+
+        /* Pulse on the counter */
+        .counter-pulse {
+            animation: counterPulse 1s 5.5s ease infinite;
+        }
+
+        @keyframes counterPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.03);
+                color: var(--gold);
+            }
+        }
+
+        /* +1 appears below the counter on the same screen */
+        .scene-2 .plus-one-intro {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 160px;
+            color: var(--gold-bright);
+            -webkit-text-stroke: 3px #E09800;
+            text-shadow: 0 0 60px rgba(245, 166, 35, 0.7), 0 0 120px rgba(245, 166, 35, 0.3), 0 6px 20px rgba(0, 0, 0, 0.5);
+            letter-spacing: -6px;
+            margin-top: 20px;
+            opacity: 0;
+            animation: plusOneSlam 0.6s 7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes plusOneSlam {
+            0% {
+                opacity: 0;
+                transform: scale(3);
+            }
+
+            60% {
+                opacity: 1;
+                transform: scale(0.95);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Rings that expand on +1 impact */
+        .scene-2 .ring {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border: 3px solid var(--gold);
+            border-radius: 50%;
+            opacity: 0;
+            animation: ringExpand 1.2s 7.2s ease-out forwards;
+        }
+
+        @keyframes ringExpand {
+            0% {
+                opacity: 0.8;
+                transform: scale(0.3);
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(2.5);
+            }
+        }
+
+        .scene-2 .ring-2 {
+            animation-delay: 7.5s;
+        }
+
+        .scene-2 .yours-text {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 22px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 16px;
+            opacity: 0;
+            animation: fadeUp 0.8s 8s ease forwards;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+        }
+
+        /* ===== SCENE 4: Features Showcase ===== */
+        .scene-4 {
+            animation: scene-4-timing 30s ease forwards;
+        }
+
+        @keyframes scene-4-timing {
+            0% {
+                opacity: 0;
+            }
+
+            45% {
+                opacity: 0;
+            }
+
+            47% {
+                opacity: 1;
+            }
+
+            66% {
+                opacity: 1;
+            }
+
+            69% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .feature-card {
+            background: var(--navy-light);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin: 5px 0;
+            width: 100%;
+            text-align: left;
+            opacity: 0;
+            transform: translateX(-40px);
+        }
+
+        .feature-card:nth-child(1) {
+            animation: slideIn 0.6s 13.8s ease forwards;
+        }
+
+        .feature-card:nth-child(2) {
+            animation: slideIn 0.6s 14.3s ease forwards;
+        }
+
+        .feature-card:nth-child(3) {
+            animation: slideIn 0.6s 14.8s ease forwards;
+        }
+
+        .feature-card:nth-child(4) {
+            animation: slideIn 0.6s 15.3s ease forwards;
+        }
+
+        .feature-card:nth-child(5) {
+            animation: slideIn 0.6s 15.8s ease forwards;
+        }
+
+        .feature-card:nth-child(6) {
+            animation: slideIn 0.6s 16.3s ease forwards;
+        }
+
+        .feature-card:nth-child(7) {
+            animation: slideIn 0.6s 16.8s ease forwards;
+        }
+
+        .feature-card:nth-child(8) {
+            animation: slideIn 0.6s 17.3s ease forwards;
+        }
+
+        @keyframes slideIn {
+            0% {
+                opacity: 0;
+                transform: translateX(-40px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .feature-card .emoji {
+            font-size: 22px;
+            margin-bottom: 2px;
+        }
+
+        .feature-card .feat-title {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--gold);
+        }
+
+        .feature-card .feat-desc {
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 1px;
+        }
+
+        .scene-4-header {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 22px;
+            color: var(--white);
+            margin-bottom: 12px;
+            opacity: 0;
+            animation: fadeUp 0.6s 13.5s ease forwards;
+        }
+
+        /* ===== SCENE 5: "Zero ads..." trust badges ===== */
+        .scene-5 {
+            animation: scene-5-timing 30s ease forwards;
+        }
+
+        @keyframes scene-5-timing {
+            0% {
+                opacity: 0;
+            }
+
+            69% {
+                opacity: 0;
+            }
+
+            71% {
+                opacity: 1;
+            }
+
+            82% {
+                opacity: 1;
+            }
+
+            85% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .badge-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            width: 100%;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(245, 166, 35, 0.3);
+            border-radius: 12px;
+            padding: 20px 12px;
+            text-align: center;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .badge:nth-child(1) {
+            animation: popIn 0.5s 21.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .badge:nth-child(2) {
+            animation: popIn 0.5s 21.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .badge:nth-child(3) {
+            animation: popIn 0.5s 22.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .badge:nth-child(4) {
+            animation: popIn 0.5s 22.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .badge:nth-child(5) {
+            animation: popIn 0.5s 22.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .badge:nth-child(6) {
+            animation: popIn 0.5s 23.0s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .badge .check {
+            font-size: 28px;
+            color: var(--green-light);
+        }
+
+        .badge .badge-text {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--white);
+            margin-top: 6px;
+        }
+
+        /* ===== SCENE 6: Logo + CTA ===== */
+        .scene-6 {
+            animation: scene-6-timing 30s ease forwards;
+        }
+
+        @keyframes scene-6-timing {
+            0% {
+                opacity: 0;
+            }
+
+            85% {
+                opacity: 0;
+            }
+
+            87% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .logo-container {
+            margin-bottom: 8px;
+            opacity: 0;
+            animation: fadeUp 1s 25.8s ease forwards;
+        }
+
+        /* Globe */
+        .globe-wrapper {
+            width: 380px;
+            height: 380px;
+            margin: 0 auto -10px;
+        }
+
+        .globe-img {
+            width: 380px;
+            height: 380px;
+        }
+
+        .brand-name {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 28px;
+            color: var(--white);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: fadeUp 0.8s 26.5s ease forwards;
+        }
+
+        .brand-plusone {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 60px;
+            color: var(--gold-bright);
+            letter-spacing: 3px;
+            margin-top: 4px;
+            opacity: 0;
+            animation: fadeUp 0.8s 26.8s ease forwards;
+        }
+
+        .brand-sub {
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 2px;
+            margin-top: 4px;
+            opacity: 0;
+            animation: fadeUp 0.8s 26.8s ease forwards;
+        }
+
+        .tagline-final {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 26px;
+            color: var(--gold);
+            margin-top: 40px;
+            opacity: 0;
+            animation: fadeUp 0.8s 27.3s ease forwards;
+            letter-spacing: 3px;
+        }
+
+        .website {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--white);
+            margin-top: 12px;
+            opacity: 0;
+            animation: fadeUp 0.8s 27.8s ease forwards;
+        }
+
+        .download-btn {
+            margin-top: 28px;
+            background: var(--gold);
+            color: var(--navy);
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 18px;
+            padding: 16px 48px;
+            border-radius: 50px;
+            border: none;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: fadeUp 0.8s 28.2s ease forwards;
+            box-shadow: 0 4px 24px rgba(245, 166, 35, 0.4);
+        }
+
+        /* ===== PARTICLES (background ambiance) ===== */
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float linear infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-844px) translateX(20px);
+                opacity: 0;
+            }
+        }
+
+        /* ===== UTILITY ANIMATIONS ===== */
+        @keyframes fadeUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: var(--gold);
+            animation: progress 30s linear forwards;
+        }
+
+        @keyframes progress {
+            0% {
+                width: 0%;
+            }
+
+            100% {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Click to start overlay -->
+    <div id="startOverlay"
+        style="position:fixed;top:0;left:0;width:100%;height:100%;background:#0B1929;display:flex;align-items:center;justify-content:center;z-index:9999;cursor:pointer;flex-direction:column;">
+        <div id="startText"
+            style="color:white;font-family:Inter,sans-serif;font-size:28px;font-weight:700;text-align:center;">Click
+            anywhere to start<br><span style='font-size:16px;opacity:0.5;'>Start your screen recording first
+                (Win+Alt+R)</span></div>
+    </div>
+    <div class="canvas" style="animation-play-state:paused;" id="mainCanvas">
+
+        <!-- Background particles -->
+        <div class="particle" style="left:12%;top:90%;animation-duration:8s;animation-delay:0s;"></div>
+        <div class="particle" style="left:28%;top:95%;animation-duration:12s;animation-delay:1s;"></div>
+        <div class="particle" style="left:45%;top:88%;animation-duration:10s;animation-delay:2s;"></div>
+        <div class="particle" style="left:62%;top:92%;animation-duration:9s;animation-delay:0.5s;"></div>
+        <div class="particle" style="left:78%;top:96%;animation-duration:11s;animation-delay:3s;"></div>
+        <div class="particle" style="left:35%;top:85%;animation-duration:14s;animation-delay:4s;"></div>
+        <div class="particle" style="left:55%;top:90%;animation-duration:7s;animation-delay:1.5s;"></div>
+        <div class="particle" style="left:88%;top:93%;animation-duration:13s;animation-delay:2.5s;"></div>
+        <div class="particle" style="left:8%;top:80%;animation-duration:15s;animation-delay:5s;"></div>
+        <div class="particle" style="left:72%;top:87%;animation-duration:10s;animation-delay:6s;"></div>
+
+        <!-- SCENE 1: Opening Hook (0s - 4s) -->
+        <div class="scene scene-1">
+            <div class="line line-1">Every second</div>
+            <div class="line line-2">a new life enters</div>
+            <div class="line line-3">the world.</div>
+        </div>
+
+        <!-- SCENE 2: Population Counter → +1 appears on same screen (4s - 13.5s) -->
+        <div class="scene scene-2">
+            <div class="pop-section">
+                <div class="label">WORLD POPULATION</div>
+                <div class="counter counter-pulse" id="popCounter">8,153,420,117</div>
+                <div class="sub">and counting...</div>
+            </div>
+            <div class="ring"></div>
+            <div class="ring ring-2"></div>
+            <div class="plus-one-intro">+1</div>
+            <div class="yours-text">Make your baby count</div>
+        </div>
+
+        <!-- SCENE 4: Feature Showcase (13.5s - 21s) -->
+        <div class="scene scene-4">
+            <div class="scene-4-header">Everything in one app</div>
+            <div class="feature-card">
+                <div class="emoji">👶</div>
+                <div class="feat-title">Birth Announcements</div>
+                <div class="feat-desc">Beautiful keepsakes for singles, twins & triplets</div>
+            </div>
+            <div class="feature-card">
+                <div class="emoji">🔮</div>
+                <div class="feat-title">Interactive Natal Birth Charts</div>
+                <div class="feat-desc">Sun, Moon & Rising signs with full horoscopes</div>
+            </div>
+            <div class="feature-card">
+                <div class="emoji">🌌</div>
+                <div class="feat-title">Advanced Interactive Astrology Maps</div>
+                <div class="feat-desc">Daily horoscopes, compatibility guides & more</div>
+            </div>
+            <div class="feature-card">
+                <div class="emoji">⏳</div>
+                <div class="feat-title">Time Capsule</div>
+                <div class="feat-desc">Capture the world the day they arrived</div>
+            </div>
+            <div class="feature-card">
+                <div class="emoji">⚾</div>
+                <div class="feat-title">Rookie Trading Cards</div>
+                <div class="feat-desc">Baby's first stats — the most unique keepsake ever</div>
+            </div>
+            <div class="feature-card">
+                <div class="emoji">📊</div>
+                <div class="feat-title">Milestone & Growth Tracker</div>
+                <div class="feat-desc">CDC-backed milestones from newborn to 36 months</div>
+            </div>
+            <div class="feature-card">
+                <div class="emoji">🎉</div>
+                <div class="feat-title">Announcements for Life's Big Moments!</div>
+                <div class="feat-desc">Birthdays, graduations, anniversaries & memorials</div>
+            </div>
+        </div>
+
+        <!-- SCENE 5: Trust Badges (21s - 25.5s) -->
+        <div class="scene scene-5">
+            <div class="badge-grid">
+                <div class="badge">
+                    <div class="check">✓</div>
+                    <div class="badge-text">Zero Ads</div>
+                </div>
+                <div class="badge">
+                    <div class="check">✓</div>
+                    <div class="badge-text">No Subscriptions</div>
+                </div>
+                <div class="badge">
+                    <div class="check">✓</div>
+                    <div class="badge-text">No Login Required</div>
+                </div>
+                <div class="badge">
+                    <div class="check">✓</div>
+                    <div class="badge-text">No Data Collection</div>
+                </div>
+                <div class="badge">
+                    <div class="check">✓</div>
+                    <div class="badge-text">Works Offline</div>
+                </div>
+                <div class="badge">
+                    <div class="check">✓</div>
+                    <div class="badge-text">300 DPI Print</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCENE 6: Logo + CTA (25.5s - 30s) -->
+        <div class="scene scene-6">
+            <div class="logo-container">
+                <div class="globe-wrapper">
+                    <img class="globe-img" src="globe-logo.png" alt="Population Plus One Globe" />
+                </div>
+            </div>
+            <div class="brand-name">Population</div>
+            <div class="brand-plusone" style="position:relative;">+1<span
+                    style="position:absolute;right:-24px;bottom:-2px;font-size:14px;font-weight:400;opacity:0.7;">™</span>
+            </div>
+            <div class="tagline-final">MAKE YOURS COUNT</div>
+            <div class="website">PopulationPlusOne.com</div>
+            <button class="download-btn">Download Free</button>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="progress"></div>
+    </div>
+
+    <script>
+        // Animate the population counter incrementing
+        // Wait for click to start
+        const overlay = document.getElementById('startOverlay');
+        const canvas = document.getElementById('mainCanvas');
+        const startText = document.getElementById('startText');
+        overlay.addEventListener('click', function () {
+            startText.innerHTML = '<span style="font-size:72px;">3</span>';
+            setTimeout(() => { startText.innerHTML = '<span style="font-size:72px;">2</span>'; }, 1000);
+            setTimeout(() => { startText.innerHTML = '<span style="font-size:72px;">1</span>'; }, 2000);
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                // Restart all animations
+                canvas.style.animationPlayState = 'running';
+                canvas.getAnimatedElements = true;
+                // Force restart by re-adding to DOM
+                const parent = canvas.parentNode;
+                const clone = canvas.cloneNode(true);
+                clone.style.animationPlayState = '';
+                clone.id = 'mainCanvas';
+                parent.replaceChild(clone, canvas);
+                // Start population counter
+                const counterEl2 = document.getElementById('popCounter');
+                let pop2 = 8153420117;
+                setTimeout(() => {
+                    setInterval(() => {
+                        pop2 += Math.floor(Math.random() * 3) + 1;
+                        counterEl2.textContent = pop2.toLocaleString();
+                    }, 400);
+                }, 4500);
+            }, 3000);
+        });
+    </script>
+</body>
+
+</html>

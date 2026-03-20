@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import { GestureHandlerRootView, PanGestureHandler, PinchGestureHandler, State, TapGestureHandler } from 'react-native-gesture-handler';
 import ViewShot from 'react-native-view-shot';
-import BaseballCard from '../../components/BaseballCard';
 import BaseballCardBack from '../../components/BaseballCardBack';
 import CartModal from '../../components/CartModal';
 import DownloadModal, { DownloadItem } from '../../components/DownloadModal';
@@ -94,10 +93,10 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
     const params = route.params || {};
     const isMemorial = !!params.isMemorial;
 
-    // Get baby info
+    // Get baby info — extract lastName from personName when babies array isn't available (e.g. trading card form route)
     const babyFirst = params.babies?.[0]?.first || params.babyFirst || (isMemorial ? '' : 'Baby');
     const babyMiddle = params.babies?.[0]?.middle || params.babyMiddle || '';
-    const babyLast = params.babies?.[0]?.last || params.babyLast || '';
+    const babyLast = params.babies?.[0]?.last || params.babyLast || (params.personName ? params.personName.trim().split(/\s+/).pop() || '' : '');
     const fullName = params.personName || [babyFirst, babyMiddle, babyLast].filter(Boolean).join(' ');
     // Resolve photo from all possible sources (photoUris array from 3-slot picker, babies array, or direct photoUri)
     const photoUri = params.photoUri || params.photoUris?.find((u: string | null) => u) || params.babies?.[0]?.photoUris?.find((u: string | null | undefined) => u) || params.babies?.[0]?.photoUri || null;
@@ -159,6 +158,11 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
     const cardWidth = Math.min(width * 0.65, 280);
     const cardHeight = cardWidth * (3.5 / 2.5);
 
+    // Hi-res dimensions for download capture (same design, 3× base res)
+    const dlW = 750 * 3;   // 2250px
+    const dlH = dlW * 1.4; // 3150px
+    const dlS = dlW / cardWidth; // scale factor for fixed pixel values
+
     // Refs for capturing
     const frontRef = useRef<ViewShot | null>(null);
     const backRef = useRef<ViewShot | null>(null);
@@ -188,8 +192,8 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
 
     // Download items
     const downloadItems: DownloadItem[] = [
-        { id: 'babycard-front', label: isMemorial ? 'Memorial Card Front' : 'Card Front', category: 'babycard' },
-        { id: 'babycard-back', label: isMemorial ? 'Memorial Card Back (Prayer)' : 'Card Back (Stats)', category: 'babycard' },
+        { id: 'babycard-front', label: isMemorial ? 'Memorial Card Front (Side 1)' : 'Trading Card Front (Side 1)', category: 'babycard' },
+        { id: 'babycard-back', label: isMemorial ? 'Memorial Card Back (Side 2 — Prayer)' : 'Trading Card Back (Side 2 — Stats)', category: 'babycard' },
     ];
 
     // Simple capture function — use offscreen full-size refs for download
@@ -752,6 +756,7 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
                 onClose={() => setShowDownloadModal(false)}
                 items={downloadItems}
                 onCapture={handleCapture}
+                onPrintPress={() => navigation.navigate('PrintService', params as any)}
                 babyName={babyFirst}
             />
 
@@ -763,22 +768,150 @@ export default function BaseballCardPreviewScreen({ route, navigation }: Props) 
             {/* Offscreen full-size cards for high-res download */}
             <View style={{ position: 'absolute', left: -9999, top: 0, opacity: 0 }}>
                 <ViewShot ref={downloadFrontRef} options={{ format: 'png', quality: 1 }}>
-                    <BaseballCard
-                        babyName={fullName}
-                        birthDate={birthDateStr}
-                        birthTime={params.timeOfBirth || ''}
-                        weight={weightLb && weightOz ? `${weightLb} lbs ${weightOz} oz` : weightLb ? `${weightLb} lbs` : ''}
-                        length={lengthIn || ''}
-                        city={hometown.split(',')[0]?.trim() || ''}
-                        state={hometown.split(',').slice(1).join(',')?.trim() || ''}
-                        zodiacSign={zodiac}
-                        birthstone={birthstone}
-                        lifePathNumber={lifePathNumber}
-                        photoUri={photoUri || undefined}
-                        backgroundColor={colors.bg}
-                        nameGold={params.nameGold}
-                        forceFullSize
-                    />
+                    {isMemorial ? (
+                        <View style={{ width: dlW, height: dlH, backgroundColor: '#ffffff', borderRadius: 12 * dlS, overflow: 'hidden' }}>
+                            {cardStyle === 'classic' && (
+                                <View style={{ flex: 1, backgroundColor: '#FAF3E0', borderWidth: 3 * dlS, borderColor: '#C5A55A', borderRadius: 10 * dlS, padding: 2 * dlS }}>
+                                    <Text style={{ position: 'absolute', top: 2 * dlS, left: 4 * dlS, fontSize: dlW * 0.07, color: '#C5A55A' }}>❧</Text>
+                                    <Text style={{ position: 'absolute', top: 2 * dlS, right: 4 * dlS, fontSize: dlW * 0.07, color: '#C5A55A', transform: [{ scaleX: -1 }] }}>❧</Text>
+                                    <Text style={{ position: 'absolute', bottom: 2 * dlS, left: 4 * dlS, fontSize: dlW * 0.07, color: '#C5A55A', transform: [{ scaleY: -1 }] }}>❧</Text>
+                                    <Text style={{ position: 'absolute', bottom: 2 * dlS, right: 4 * dlS, fontSize: dlW * 0.07, color: '#C5A55A', transform: [{ scaleX: -1 }, { scaleY: -1 }] }}>❧</Text>
+                                    <View style={{ flex: 1, borderWidth: 1 * dlS, borderColor: '#D4AF37', borderRadius: 6 * dlS, alignItems: 'center', justifyContent: 'center', padding: 8 * dlS }}>
+                                        <View style={{ width: dlW * 0.55, height: dlW * 0.55, borderWidth: 1 * dlS, borderColor: '#C5A55A', backgroundColor: '#E8E0D0', marginTop: 8 * dlS, justifyContent: 'center', alignItems: 'center' }}>
+                                            {photoUri ? (
+                                                <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+                                            ) : (
+                                                <Text style={{ fontSize: dlW * 0.12, color: '#C5A55A' }}>🕊️</Text>
+                                            )}
+                                        </View>
+                                        <Text style={{ fontSize: dlW * 0.065, fontWeight: '700', color: '#333', marginTop: 10 * dlS, textAlign: 'center' }}>{fullName}</Text>
+                                        <Text style={{ fontSize: dlW * 0.033, color: '#777', marginTop: 4 * dlS }}>{actualDobStr}  —  {dodStr}</Text>
+                                        <Text style={{ fontSize: dlW * 0.1, color: '#C5A55A', marginTop: 8 * dlS }}>♡</Text>
+                                    </View>
+                                </View>
+                            )}
+                            {cardStyle === 'dove' && (
+                                <View style={{ flex: 1, backgroundColor: '#B8D4E8', borderRadius: 10 * dlS, alignItems: 'center', justifyContent: 'center', padding: 10 * dlS }}>
+                                    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', backgroundColor: '#8FB8D8', borderTopLeftRadius: 10 * dlS, borderTopRightRadius: 10 * dlS, opacity: 0.5 }} />
+                                    <Text style={{ fontSize: dlW * 0.15, marginBottom: 4 * dlS, zIndex: 1 }}>🕊️</Text>
+                                    <View style={{ width: dlW * 0.5, height: dlW * 0.5, borderRadius: 8 * dlS, borderWidth: 2 * dlS, borderColor: '#fff', backgroundColor: '#d0e4f0', overflow: 'hidden', zIndex: 1 }}>
+                                        {photoUri ? (
+                                            <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+                                        ) : (
+                                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                                <Text style={{ fontSize: dlW * 0.1, color: '#8FB8D8' }}>📷</Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                    <Text style={{ fontSize: dlW * 0.042, fontStyle: 'italic', color: '#2C3E50', marginTop: 10 * dlS, zIndex: 1 }}>In Loving Memory of</Text>
+                                    <Text style={{ fontSize: dlW * 0.065, fontWeight: '800', color: '#1a3050', marginTop: 4 * dlS, textAlign: 'center', zIndex: 1 }}>{fullName}</Text>
+                                    <Text style={{ fontSize: dlW * 0.032, color: '#4a6a8a', marginTop: 4 * dlS, zIndex: 1 }}>{actualDobStr}  —  {dodStr}</Text>
+                                    <Text style={{ fontSize: dlW * 0.038, fontStyle: 'italic', color: '#2C3E50', marginTop: 8 * dlS, zIndex: 1 }}>Rest In Peace</Text>
+                                </View>
+                            )}
+                            {cardStyle === 'floral' && (
+                                <View style={{ flex: 1, backgroundColor: '#FFFFFF', borderRadius: 10 * dlS, alignItems: 'center', justifyContent: 'center', padding: 12 * dlS }}>
+                                    <View style={{ position: 'absolute', top: 6 * dlS, right: 6 * dlS, flexDirection: 'row' }}>
+                                        <Text style={{ fontSize: dlW * 0.06, opacity: 0.6 }}>🌿</Text>
+                                        <Text style={{ fontSize: dlW * 0.05, opacity: 0.4, marginLeft: -4 * dlS }}>🍃</Text>
+                                    </View>
+                                    <View style={{ position: 'absolute', bottom: 6 * dlS, left: 6 * dlS, flexDirection: 'row' }}>
+                                        <Text style={{ fontSize: dlW * 0.05, opacity: 0.4 }}>🍃</Text>
+                                        <Text style={{ fontSize: dlW * 0.06, opacity: 0.6, marginLeft: -4 * dlS }}>🌿</Text>
+                                    </View>
+                                    <Text style={{ fontSize: dlW * 0.048, fontStyle: 'italic', color: '#556B2F', marginBottom: 8 * dlS }}>In Loving Memory</Text>
+                                    <View style={{ width: dlW * 0.52, height: dlW * 0.58, borderRadius: 4 * dlS, borderWidth: 1 * dlS, borderColor: '#ccc', backgroundColor: '#f9f9f9', overflow: 'hidden' }}>
+                                        {photoUri ? (
+                                            <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+                                        ) : (
+                                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                                <Text style={{ fontSize: dlW * 0.1, color: '#bbb' }}>📷</Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                    <Text style={{ fontSize: dlW * 0.058, fontWeight: '700', color: '#2E2E2E', marginTop: 10 * dlS, textAlign: 'center' }}>{fullName.toUpperCase()}</Text>
+                                    <Text style={{ fontSize: dlW * 0.032, color: '#888', marginTop: 4 * dlS }}>{actualDobStr}  —  {dodStr}</Text>
+                                </View>
+                            )}
+                            {cardStyle === 'simple' && (
+                                <View style={{ flex: 1, backgroundColor: '#E8EFF5', borderRadius: 10 * dlS, alignItems: 'center', justifyContent: 'center', padding: 10 * dlS }}>
+                                    <Text style={{ position: 'absolute', top: '15%', right: '8%', fontSize: dlW * 0.12, opacity: 0.12 }}>🕊️</Text>
+                                    <Text style={{ position: 'absolute', bottom: '20%', left: '5%', fontSize: dlW * 0.09, opacity: 0.08 }}>🕊️</Text>
+                                    <View style={{ width: dlW * 0.48, height: dlW * 0.48, borderRadius: dlW * 0.24, borderWidth: 3 * dlS, borderColor: '#fff', backgroundColor: '#dde5ee', overflow: 'hidden' }}>
+                                        {photoUri ? (
+                                            <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+                                        ) : (
+                                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                                <Text style={{ fontSize: dlW * 0.12, color: '#aabbcc' }}>🕊️</Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                    <Text style={{ fontSize: dlW * 0.042, fontStyle: 'italic', color: '#5a6a7a', marginTop: 12 * dlS }}>In Loving Memory of</Text>
+                                    <Text style={{ fontSize: dlW * 0.06, fontWeight: '800', color: '#1C2833', marginTop: 4 * dlS, textAlign: 'center' }}>{fullName}</Text>
+                                    <Text style={{ fontSize: dlW * 0.032, color: '#6a7a8a', marginTop: 6 * dlS }}>{actualDobStr}  —  {dodStr}</Text>
+                                    <Text style={{ fontSize: dlW * 0.036, fontStyle: 'italic', color: '#5a6a7a', marginTop: 10 * dlS }}>Rest In Peace</Text>
+                                </View>
+                            )}
+                            {cardStyle === 'cross' && (
+                                <View style={{ flex: 1, backgroundColor: '#FFF9F0', borderWidth: 2 * dlS, borderColor: '#C5A55A', borderRadius: 10 * dlS, padding: 4 * dlS }}>
+                                    <View style={{ flex: 1, borderWidth: 1 * dlS, borderColor: '#D4B96A', borderRadius: 6 * dlS, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', padding: 8 * dlS }}>
+                                        <Text style={{ position: 'absolute', top: 0, left: 2 * dlS, fontSize: dlW * 0.055, color: '#C5A55A' }}>❦</Text>
+                                        <Text style={{ position: 'absolute', top: 0, right: 2 * dlS, fontSize: dlW * 0.055, color: '#C5A55A', transform: [{ scaleX: -1 }] }}>❦</Text>
+                                        <Text style={{ position: 'absolute', bottom: 0, left: 2 * dlS, fontSize: dlW * 0.055, color: '#C5A55A', transform: [{ scaleY: -1 }] }}>❦</Text>
+                                        <Text style={{ position: 'absolute', bottom: 0, right: 2 * dlS, fontSize: dlW * 0.055, color: '#C5A55A', transform: [{ scaleX: -1 }, { scaleY: -1 }] }}>❦</Text>
+                                        <Text style={{ fontSize: dlW * 0.12, color: '#8B7D3C', marginBottom: 4 * dlS }}>✝️</Text>
+                                        <View style={{ width: dlW * 0.5, height: dlW * 0.5, borderWidth: 2 * dlS, borderColor: '#D4B96A', backgroundColor: '#F0EBE0', overflow: 'hidden' }}>
+                                            {photoUri ? (
+                                                <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+                                            ) : (
+                                                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                                    <Text style={{ fontSize: dlW * 0.1, color: '#C5A55A' }}>📷</Text>
+                                                </View>
+                                            )}
+                                        </View>
+                                        <Text style={{ fontSize: dlW * 0.06, fontWeight: '700', color: '#3D3424', marginTop: 8 * dlS, textAlign: 'center' }}>{fullName}</Text>
+                                        <Text style={{ fontSize: dlW * 0.032, color: '#8B7D5C', marginTop: 4 * dlS }}>{actualDobStr}  —  {dodStr}</Text>
+                                        <Text style={{ fontSize: dlW * 0.036, fontStyle: 'italic', color: '#6B5D3C', marginTop: 6 * dlS }}>Rest In Peace</Text>
+                                    </View>
+                                </View>
+                            )}
+                        </View>
+                    ) : (
+                        <View style={{ width: dlW, height: dlH, backgroundColor: '#ffffff', borderRadius: 12 * dlS, overflow: 'hidden' }}>
+                            <View style={{ flex: 1, borderWidth: 6 * dlS, borderColor: colors.bg, borderRadius: 10 * dlS, overflow: 'hidden' }}>
+                                {/* Photo area */}
+                                <View style={{ flex: 1, backgroundColor: '#eee' }}>
+                                    {photoUri ? (
+                                        <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+                                    ) : (
+                                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg }}>
+                                            <Text style={{ fontSize: 60 * dlS }}>👶</Text>
+                                        </View>
+                                    )}
+                                </View>
+                                {/* Name banner */}
+                                <View style={{ backgroundColor: colors.bg, paddingVertical: 6 * dlS, paddingHorizontal: 8 * dlS, alignItems: 'center' }}>
+                                    <Text style={[{ color: '#ffffff', fontWeight: '900', letterSpacing: 2 * dlS, fontSize: dlW * 0.06 }, params.nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: dlS, height: dlS }, textShadowRadius: 3 * dlS }]}>
+                                        {fullName.toUpperCase()}
+                                    </Text>
+                                </View>
+                                {/* Team/Location */}
+                                <View style={{ backgroundColor: '#f5f5f5', paddingVertical: 6 * dlS, alignItems: 'center' }}>
+                                    <Text style={{ color: '#666', fontSize: dlW * 0.04 }}>
+                                        +1 TEAM {(babyLast || fullName.split(' ').pop() || '').toUpperCase()}
+                                    </Text>
+                                </View>
+                                {/* Rookie badge */}
+                                <View style={{ position: 'absolute', top: 10 * dlS, right: 10 * dlS, backgroundColor: colors.bg, paddingHorizontal: 8 * dlS, paddingVertical: 4 * dlS, borderRadius: 4 * dlS, transform: [{ rotate: '15deg' }] }}>
+                                    <Text style={{ color: '#ffffff', fontSize: 10 * dlS, fontWeight: 'bold' }}>ROOKIE</Text>
+                                </View>
+                                {/* Brand logo - top left */}
+                                <View style={{ position: 'absolute', top: 8 * dlS, left: 8 * dlS, zIndex: 10 }}>
+                                    <TradingCardLogo size={dlW * 0.107} bgColor={colors.bg} />
+                                </View>
+                            </View>
+                        </View>
+                    )}
                 </ViewShot>
                 <ViewShot ref={downloadBackRef} options={{ format: 'png', quality: 1 }}>
                     <BaseballCardBack

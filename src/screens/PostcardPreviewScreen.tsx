@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
     ScrollView,
+    Share,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -11,10 +12,10 @@ import {
     useWindowDimensions
 } from 'react-native';
 import { GestureHandlerRootView, PanGestureHandler, PinchGestureHandler, State, TapGestureHandler } from 'react-native-gesture-handler';
+import QRCode from 'react-native-qrcode-svg';
 import ViewShot from 'react-native-view-shot';
 import CartModal from '../../components/CartModal';
 import DownloadModal, { DownloadItem } from '../../components/DownloadModal';
-import QRCodePlaceholder from '../../components/QRCodePlaceholder';
 import SignFrontLandscape from '../../components/SignFrontLandscape';
 import { PRODUCT_PRICES, useCart } from '../context/CartContext';
 import { COLOR_SCHEMES } from '../data/utils/colors';
@@ -56,32 +57,50 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
     const length = lengthIn ? `${lengthIn}"` : '';
 
     const isWedding = !!params.hidePlusLabel;
+    const isBirthday = params.mode === 'milestone' && (params.message || '').toLowerCase().includes('birthday');
 
-    // Generate a stable wedding ID for RSVP
-    const [weddingId] = useState(() => {
-        if (!isWedding) return '';
-        return `wedding-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+    // Determine event type for RSVP
+    const eventType = isWedding ? 'wedding' : isBirthday ? 'birthday' : 'baby-shower';
+    const hasRSVP = isWedding || isBirthday;
+
+    // Generate a stable event ID for RSVP
+    const [eventId] = useState(() => {
+        if (!hasRSVP) return '';
+        const prefix = isBirthday ? 'bday' : 'wedding';
+        return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
     });
-    const rsvpUrl = weddingId ? `https://populationplusone.com/rsvp/${weddingId}` : '';
+    const rsvpUrl = eventId ? `https://populationplusone.com/rsvp/${eventId}` : '';
 
-    // Create wedding document in Firebase when wedding postcard is generated
+    // Create event document in Firebase when postcard is generated
     useEffect(() => {
-        if (!isWedding || !weddingId || !db) return;
-        const createWeddingDoc = async () => {
+        if (!hasRSVP || !eventId || !db) return;
+        const createEventDoc = async () => {
             try {
-                await setDoc(doc(db, 'weddings', weddingId), {
-                    coupleName: fullName,
-                    weddingDate: birthDateStr,
+                if (isWedding) {
+                    // Keep backward compat: also write to weddings collection
+                    await setDoc(doc(db, 'weddings', eventId), {
+                        coupleName: fullName,
+                        weddingDate: birthDateStr,
+                        hometown,
+                        theme,
+                        createdAt: serverTimestamp(),
+                    });
+                }
+                await setDoc(doc(db, 'events', eventId), {
+                    eventType,
+                    honoree: fullName,
+                    hostName: parents || '',
+                    eventDate: birthDateStr,
                     hometown,
                     theme,
                     createdAt: serverTimestamp(),
                 });
             } catch (error) {
-                console.error('Error creating wedding doc:', error);
+                console.error('Error creating event doc:', error);
             }
         };
-        createWeddingDoc();
-    }, [isWedding, weddingId]);
+        createEventDoc();
+    }, [hasRSVP, eventId]);
 
     const theme = params.theme || 'green';
     const colors = COLOR_SCHEMES[theme] || COLOR_SCHEMES.green;
@@ -112,8 +131,8 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
 
     // Download items
     const downloadItems: DownloadItem[] = [
-        { id: 'postcard-front', label: 'Postcard Front', category: 'postcard' },
-        { id: 'postcard-back', label: 'Postcard Back (Invitation)', category: 'postcard' },
+        { id: 'postcard-front', label: 'Postcard Front (Side 1)', category: 'postcard' },
+        { id: 'postcard-back', label: 'Postcard Back (Side 2 — Invitation)', category: 'postcard' },
     ];
 
     // Simple capture function for a single view
@@ -285,10 +304,10 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
                                                         {/* LEFT SIDE - Message/Content Area (per USPS rules) */}
                                                         <View style={styles.messageHalf}>
                                                             <Text style={[styles.inviteHeader, { color: colors.bg, fontSize: cardWidth * 0.045 }]}>
-                                                                {isWedding ? 'You\'re Invited!' : 'You\'re Invited!'}
+                                                                {isBirthday ? '🎂 You\'re Invited!' : 'You\'re Invited!'}
                                                             </Text>
                                                             <Text style={[styles.inviteSubheader, { fontSize: cardWidth * 0.025 }]}>
-                                                                {isWedding ? 'to the wedding celebration of' : 'to celebrate the arrival of'}
+                                                                {isWedding ? 'to the wedding celebration of' : isBirthday ? 'to celebrate the birthday of' : 'to celebrate the arrival of'}
                                                             </Text>
                                                             <Text style={[styles.inviteBabyName, { color: params.nameGold ? '#FFD700' : colors.bg, fontSize: cardWidth * 0.04 }, params.nameGold && { textShadowColor: '#B8860B', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 }]}>
                                                                 {fullName}
@@ -297,9 +316,9 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
                                                             {/* Stats - Compact */}
                                                             <View style={styles.statsCompact}>
                                                                 <Text style={[styles.statLine, { fontSize: cardWidth * 0.022 }]}>
-                                                                    {isWedding ? `Date: ${birthDateStr}` : `Born: ${birthDateStr}`}
+                                                                    {isWedding ? `Date: ${birthDateStr}` : isBirthday ? `Birthday: ${birthDateStr}` : `Born: ${birthDateStr}`}
                                                                 </Text>
-                                                                {!isWedding && weight ? (
+                                                                {!isWedding && !isBirthday && weight ? (
                                                                     <Text style={[styles.statLine, { fontSize: cardWidth * 0.022 }]}>
                                                                         {weight} • {length}
                                                                     </Text>
@@ -323,7 +342,7 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
                                                                 </View>
                                                                 <View style={styles.detailRowCompact}>
                                                                     <Text style={[styles.detailLabelCompact, { fontSize: cardWidth * 0.02 }]}>RSVP:</Text>
-                                                                    {isWedding ? (
+                                                                    {hasRSVP ? (
                                                                         <Text style={[styles.detailLabelCompact, { fontSize: cardWidth * 0.017, color: '#666', flex: 1 }]}>Scan QR →</Text>
                                                                     ) : (
                                                                         <View style={[styles.blankLineCompact, { borderBottomColor: colors.bg }]} />
@@ -333,7 +352,7 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
 
                                                             {parents && (
                                                                 <Text style={[styles.hostedBy, { fontSize: cardWidth * 0.018 }]}>
-                                                                    {isWedding ? `Together with their families` : `Hosted by ${parents}`}
+                                                                    {isWedding ? `Together with their families` : isBirthday ? `Celebrating with ${parents}` : `Hosted by ${parents}`}
                                                                 </Text>
                                                             )}
                                                         </View>
@@ -343,14 +362,15 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
 
                                                         {/* RIGHT SIDE - Address Area (per USPS rules) */}
                                                         <View style={styles.addressHalf}>
-                                                            {isWedding ? (
+                                                            {hasRSVP ? (
                                                                 <>
                                                                     {/* QR Code for RSVP */}
                                                                     <View style={styles.qrSection}>
-                                                                        <QRCodePlaceholder
+                                                                        <QRCode
+                                                                            value={rsvpUrl || 'https://populationplusone.com'}
                                                                             size={cardWidth * 0.18}
-                                                                            value={rsvpUrl}
-                                                                            label=""
+                                                                            backgroundColor="#fff"
+                                                                            color="#000"
                                                                         />
                                                                         <Text style={[styles.qrLabel, { fontSize: cardWidth * 0.016 }]}>
                                                                             Scan to RSVP
@@ -451,13 +471,37 @@ export default function PostcardPreviewScreen({ route, navigation }: Props) {
                     <Text style={styles.actionTileEmoji}>🎁</Text>
                     <Text style={styles.actionTileLabel}>Gift</Text>
                 </TouchableOpacity>
+                {hasRSVP && (
+                    <TouchableOpacity
+                        style={[styles.actionTile, { backgroundColor: '#7c3aed' }]}
+                        onPress={() => navigation.navigate('EventRSVPDashboard' as any, { eventId, eventName: fullName, eventType })}
+                    >
+                        <Text style={styles.actionTileEmoji}>📋</Text>
+                        <Text style={styles.actionTileLabel}>RSVPs</Text>
+                    </TouchableOpacity>
+                )}
             </View>
+
+            {/* Share RSVP Link (for text/social sharing) */}
+            {hasRSVP && (
+                <View style={{ paddingHorizontal: 10, marginBottom: 12 }}>
+                    <TouchableOpacity
+                        style={{ backgroundColor: '#7c3aed', borderRadius: 12, paddingVertical: 14, alignItems: 'center' }}
+                        onPress={() => Share.share({
+                            message: `You're invited to ${fullName}'s ${isBirthday ? 'birthday' : isWedding ? 'wedding' : 'celebration'}! RSVP here: ${rsvpUrl}`,
+                        })}
+                    >
+                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>📤 Share RSVP Link via Text / Social</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
 
             <DownloadModal
                 visible={showDownloadModal}
                 onClose={() => setShowDownloadModal(false)}
                 items={downloadItems}
                 onCapture={handleCapture}
+                onPrintPress={() => navigation.navigate('PrintService', params as any)}
                 babyName={babyFirst}
             />
 

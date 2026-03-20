@@ -37,7 +37,7 @@ export default function BabyAnnouncementFormScreen() {
     const [babies, setBabies] = useState<Baby[]>([{ first: 'Emily', middle: 'Grace', last: 'Sample' }]);
     const [motherName, setMotherName] = useState('Sarah Sample');
     const [fatherName, setFatherName] = useState('Jack Sample');
-    const [hometown, setHometown] = useState('Kansas City, MO');
+    const [hometown, setHometown] = useState('KANSAS CITY, MO');
     const [selectedHeritages, setSelectedHeritages] = useState<string[]>([]);
     const [showHeritageModal, setShowHeritageModal] = useState(false);
     const [dobDate, setDobDate] = useState(new Date(2026, 1, 14));
@@ -72,29 +72,48 @@ export default function BabyAnnouncementFormScreen() {
         }
     };
 
-    const pickPhoto = async (babyIndex: number) => {
+    const launchPhotoPicker = async (useCamera: boolean): Promise<string | null> => {
         try {
-            const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (permission.status !== 'granted') {
-                Alert.alert('Permission required', 'Please allow access to your photo library');
-                return;
+            if (useCamera) {
+                const perm = await ImagePicker.requestCameraPermissionsAsync();
+                if (perm.status !== 'granted') {
+                    Alert.alert('Permission Required', 'Please enable Camera access in Settings to take a photo.');
+                    return null;
+                }
+            } else {
+                const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                if (perm.status !== 'granted') {
+                    Alert.alert('Permission Required', 'Please allow access to your photo library.');
+                    return null;
+                }
             }
-
-            const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [1, 1],
-                quality: 1,
-            });
-
-            if (!result.canceled) {
-                const updated = [...babies];
-                updated[babyIndex].photoUri = result.assets[0].uri;
-                setBabies(updated);
-            }
+            const result = useCamera
+                ? await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [1, 1], quality: 1 })
+                : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 1 });
+            if (!result.canceled && result.assets[0]) return result.assets[0].uri;
+            return null;
         } catch (error) {
             Alert.alert('Error', 'Failed to pick photo');
+            return null;
         }
+    };
+
+    const pickPhoto = (babyIndex: number) => {
+        Alert.alert('Add Photo', 'Choose a source', [
+            {
+                text: '📷 Take Photo', onPress: async () => {
+                    const uri = await launchPhotoPicker(true);
+                    if (uri) { const updated = [...babies]; updated[babyIndex].photoUri = uri; setBabies(updated); }
+                }
+            },
+            {
+                text: '🖼️ Choose from Library', onPress: async () => {
+                    const uri = await launchPhotoPicker(false);
+                    if (uri) { const updated = [...babies]; updated[babyIndex].photoUri = uri; setBabies(updated); }
+                }
+            },
+            { text: 'Cancel', style: 'cancel' },
+        ]);
     };
 
     const removePhoto = (babyIndex: number) => {
@@ -288,13 +307,14 @@ export default function BabyAnnouncementFormScreen() {
                 style={styles.input}
                 placeholder="e.g., Springfield, MO"
                 value={hometown}
-                onChangeText={setHometown}
+                onChangeText={(t) => setHometown(t.toUpperCase())}
+                autoCapitalize="characters"
             />
 
             {/* Date of Birth */}
             <Text style={styles.label}>Date of Birth</Text>
             <TouchableOpacity style={styles.dateBtn} onPress={() => setShowDatePicker(true)}>
-                <Text style={styles.dateBtnText}>{dobDate.toLocaleDateString()}</Text>
+                <Text style={styles.dateBtnText}>{`${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][dobDate.getMonth()]} ${dobDate.getDate()}, ${dobDate.getFullYear()}`}</Text>
             </TouchableOpacity>
             {showDatePicker && (
                 <DateTimePicker value={dobDate} mode="date" display="default" onChange={handleDateChange} />

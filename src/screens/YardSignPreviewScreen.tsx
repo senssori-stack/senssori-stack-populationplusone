@@ -516,6 +516,7 @@ export default function YardSignPreviewScreen({ route, navigation }: Props) {
                 onClose={() => setShowDownloadModal(false)}
                 items={downloadItems}
                 onCapture={handleCapture}
+                onPrintPress={() => navigation.navigate('PrintService', params as any)}
                 babyName={babyName}
             />
 

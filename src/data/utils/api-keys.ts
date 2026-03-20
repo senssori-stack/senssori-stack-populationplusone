@@ -29,6 +29,12 @@ export const API_KEYS = {
     STRIPE: {
         publishableKey: 'pk_test_51T3LiORrqgpktGAGkYZsfCjOaP7VkXTHm7cNnOc3gupEl6uYEtjym2HU0aUOMo09tUX9M0JhZQicUGQzMkcIQKPC00DDNPETIN',
     },
+
+    // EIA (U.S. Energy Information Administration) for gas prices
+    EIA: {
+        key: 'qwNCLcWq2VDKaOSfCBITUFjWXtQEdZbnIqLXkZ4e',
+        baseUrl: 'https://api.eia.gov/v2',
+    },
 };
 
 export const FIREBASE_CONFIG = {

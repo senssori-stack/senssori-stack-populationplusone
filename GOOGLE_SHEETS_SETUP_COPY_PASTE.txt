@@ -26,8 +26,8 @@ WON LAST SUPERBOWL	Philadelphia Eagles (LIX)	Manual
 WON LAST WORLD SERIES	Los Angeles Dodgers	Manual
 US POPULATION	340,000,000	Manual
 WORLD POPULATION	8,200,000,000	Manual
-PRESIDENT	Joe Biden	Manual
-VICE PRESIDENT	Kamala Harris	Manual
+PRESIDENT	Donald Trump	Manual
+VICE PRESIDENT	JD Vance	Manual
 ────────────────────────────────────────────────────────────────
 
 5. Name the sheet: "Birth Announcement Snapshot Data"
@@ -45,6 +45,7 @@ STEP 2: ADD THE AUTO-UPDATE SCRIPT
 const ALPHA_VANTAGE_KEY = '8NT72TK4I1W8CNWY';
 const LASTFM_KEY = 'dac11fa9b12d7418fa7cf062e93f2391';
 const TMDB_KEY = '3dd040c35b40b0652e8750d74dc30a64';
+const EIA_KEY = 'qwNCLcWq2VDKaOSfCBITUFjWXtQEdZbnIqLXkZ4e';
 
 // ═══════════════════════════════════════════════════════════════
 // GOLD & SILVER — handled by the APP (GoldPrice.org, free, works from phone)
@@ -99,11 +100,22 @@ function updateLiveData() {
   updateCell(sheet, 'DOW JONES CLOSE', fetchDowJones(), timestamp);
   updateCell(sheet, '#1 SONG', fetchTopSong(), timestamp);
   updateCell(sheet, '#1 MOVIE', fetchTopMovie(), timestamp);
+  updateCell(sheet, 'US POPULATION', fetchUSPopulation(), timestamp);
+  updateCell(sheet, 'WORLD POPULATION', fetchWorldPopulation(), timestamp);
+  
+  var groceries = fetchGroceryPrices();
+  updateCell(sheet, 'LOAF OF BREAD', groceries.bread, timestamp);
+  updateCell(sheet, 'DOZEN EGGS', groceries.eggs, timestamp);
+  updateCell(sheet, 'GALLON OF MILK', groceries.milk, timestamp);
   
   Logger.log('✅ All data updated at ' + timestamp);
 }
 
 function updateCell(sheet, fieldName, value, timestamp) {
+  if (value === null || value === undefined) {
+    Logger.log('  ⏭️ ' + fieldName + ': fetch failed, keeping last value');
+    return; // don't overwrite — keep previous good data
+  }
   var data = sheet.getDataRange().getValues();
   for (var i = 1; i < data.length; i++) {
     if (data[i][0] === fieldName) {
@@ -142,20 +154,119 @@ function fetchDowJones() {
 }
 
 function fetchGasPrice() {
-  // Gas price requires manual update or EIA API registration
-  return '$3.15';
+  // EIA API - Weekly U.S. Regular Conventional Retail Gasoline Prices
+  try {
+    var url = 'https://api.eia.gov/v2/petroleum/pri/gnd/data/?api_key=' + EIA_KEY + '&frequency=weekly&data[0]=value&facets[series][]=EMM_EPMRU_PTE_NUS_DPG&sort[0][column]=period&sort[0][direction]=desc&length=1';
+    var response = UrlFetchApp.fetch(url);
+    var data = JSON.parse(response.getContentText());
+    var price = data.response.data[0].value;
+    return '$' + Number(price).toFixed(2);
+  } catch (e) {
+    Logger.log('⚠️ EIA Gas API failed: ' + e);
+    return null; // keep last value in sheet
+  }
+}
+
+function fetchUSPopulation() {
+  // U.S. Census Bureau Population Estimates
+  try {
+    var url = 'https://api.census.gov/data/2021/pep/natmonthly?get=POP&for=us:*&MONTHLY=13';
+    var response = UrlFetchApp.fetch(url);
+    var data = JSON.parse(response.getContentText());
+    var basePop = parseInt(data[1][0]);
+    var yearsFromBase = (new Date().getFullYear()) - 2021;
+    var estimated = Math.round(basePop * Math.pow(1.005, yearsFromBase));
+    return estimated.toLocaleString('en-US');
+  } catch (e) {
+    Logger.log('⚠️ Census US Pop API failed: ' + e);
+    return null; // keep last value in sheet
+  }
+}
+
+function fetchWorldPopulation() {
+  // U.S. Census Bureau International Database - World Population
+  try {
+    var year = new Date().getFullYear();
+    var url = 'https://api.census.gov/data/timeseries/idb/1year?get=POP&YR=' + year + '&NAME=World';
+    var response = UrlFetchApp.fetch(url);
+    var data = JSON.parse(response.getContentText());
+    var pop = parseInt(data[1][0]);
+    return pop.toLocaleString('en-US');
+  } catch (e) {
+    Logger.log('⚠️ Census World Pop API failed: ' + e);
+    return null; // keep last value in sheet
+  }
+}
+
+function fetchGroceryPrices() {
+  // BLS (Bureau of Labor Statistics) Average Price Data
+  // Bread: APU0000702111, Eggs: APU0000708111, Milk: APU0000709112
+  try {
+    var payload = JSON.stringify({
+      seriesid: ['APU0000702111', 'APU0000708111', 'APU0000709112'],
+      latest: true
+    });
+    var options = {
+      method: 'post',
+      contentType: 'application/json',
+      payload: payload,
+      muteHttpExceptions: true
+    };
+    var response = UrlFetchApp.fetch('https://api.bls.gov/publicAPI/v2/timeseries/data/', options);
+    var data = JSON.parse(response.getContentText());
+    var results = { bread: null, eggs: null, milk: null };
+    var seriesMap = {
+      'APU0000702111': 'bread',
+      'APU0000708111': 'eggs',
+      'APU0000709112': 'milk'
+    };
+    for (var i = 0; i < data.Results.series.length; i++) {
+      var series = data.Results.series[i];
+      var key = seriesMap[series.seriesID];
+      if (key && series.data && series.data[0]) {
+        results[key] = '$' + Number(series.data[0].value).toFixed(2);
+        Logger.log('  🛒 ' + key + ': ' + results[key]);
+      }
+    }
+    return results;
+  } catch (e) {
+    Logger.log('⚠️ BLS Grocery API failed: ' + e);
+    return { bread: null, eggs: null, milk: null }; // keep last values in sheet
+  }
 }
 
 function fetchTopSong() {
+  // Scrape Billboard Hot 100 #1 song
   try {
-    const url = 'http://ws.audioscrobbler.com/2.0/?method=chart.gettoptracks&api_key=' + LASTFM_KEY + '&format=json&limit=1';
-    const response = UrlFetchApp.fetch(url);
-    const data = JSON.parse(response.getContentText());
-    const track = data.tracks.track[0];
+    var response = UrlFetchApp.fetch('https://www.billboard.com/charts/hot-100/', {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' },
+      muteHttpExceptions: true
+    });
+    var html = response.getContentText();
+    // Billboard #1 song title is in an h3 with specific class inside the first chart row
+    var titleMatch = html.match(/<li[^>]*class="[^"]*o-chart-results-list__item[^"]*"[^>]*>[\s\S]*?<h3[^>]*id="title-of-a-story"[^>]*>\s*([^<]+)\s*<\/h3>/i);
+    var artistMatch = html.match(/<li[^>]*class="[^"]*o-chart-results-list__item[^"]*"[^>]*>[\s\S]*?<h3[^>]*id="title-of-a-story"[^>]*>[^<]*<\/h3>\s*<span[^>]*>\s*([^<]+)\s*<\/span>/i);
+    if (titleMatch && titleMatch[1]) {
+      var title = titleMatch[1].trim();
+      var artist = artistMatch && artistMatch[1] ? artistMatch[1].trim() : '';
+      var result = artist ? title + ' - ' + artist : title;
+      Logger.log('Billboard #1: ' + result);
+      return result;
+    }
+    Logger.log('Billboard parse failed, trying Last.fm fallback');
+  } catch (e) {
+    Logger.log('Billboard scrape failed: ' + e);
+  }
+  // Fallback: Last.fm
+  try {
+    var url = 'http://ws.audioscrobbler.com/2.0/?method=chart.gettoptracks&api_key=' + LASTFM_KEY + '&format=json&limit=1';
+    var response = UrlFetchApp.fetch(url);
+    var data = JSON.parse(response.getContentText());
+    var track = data.tracks.track[0];
     return track.name + ' - ' + track.artist.name;
   } catch (e) {
-    Logger.log('⚠️ Last.fm API failed: ' + e);
-    return 'Espresso - Sabrina Carpenter';
+    Logger.log('Last.fm also failed: ' + e);
+    return null;
   }
 }
 

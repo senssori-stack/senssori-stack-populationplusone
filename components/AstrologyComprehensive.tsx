@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Circle, ClipPath, Defs, Ellipse, G, Line, Svg, Text as SvgText } from 'react-native-svg';
-import { BirthChartData, getDailyHoroscope, getWesternBirthChart } from '../src/data/utils/astrology-api';
 import { dateToRomanNumerals, getAgeInDogYears, getChineseElement, getChineseYinYang, getChineseZodiac, getLuckyNumbers } from '../src/data/utils/astrology-utils';
 import { birthstoneFromISO } from '../src/data/utils/birthstone';
 import { COLOR_SCHEMES } from '../src/data/utils/colors';
+import { getLocalDailyHoroscope } from '../src/data/utils/horoscope-engine';
 import { calculateLifePath } from '../src/data/utils/life-path-calculator';
 import { calculateNatalChart } from '../src/data/utils/natal-chart-calculator';
 import { getZodiacInfo } from '../src/data/utils/zodiac-database';
@@ -39,9 +39,7 @@ export default function AstrologyComprehensive(props: Props) {
         previewScale = 0.2,
     } = props;
 
-    const [chartData, setChartData] = useState<BirthChartData | null>(null);
     const [horoscope, setHoroscope] = useState<string>('');
-    const [loading, setLoading] = useState(true);
     const [zoomedQuadrant, setZoomedQuadrant] = useState<number | null>(null);
     const lastTapRef = useRef<{ quadrant: number; time: number } | null>(null);
 
@@ -60,24 +58,11 @@ export default function AstrologyComprehensive(props: Props) {
     };
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                // Fetch birth chart
-                const chart = await getWesternBirthChart(dobISO, timeOfBirth, latitude, longitude);
-                setChartData(chart);
-
-                // Fetch daily horoscope
-                const horoscopeText = await getDailyHoroscope(zodiacSign);
-                setHoroscope(horoscopeText || 'Horoscope not available');
-            } catch (error) {
-                console.error('Failed to fetch astrology data:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [dobISO, timeOfBirth, latitude, longitude, zodiacSign]);
+        // Generate horoscope locally — no external API needed
+        const birthDateForHoroscope = new Date(dobISO + 'T00:00:00');
+        const text = getLocalDailyHoroscope(zodiacSign, birthDateForHoroscope, latitude, longitude);
+        setHoroscope(text || 'Horoscope not available');
+    }, [dobISO, latitude, longitude, zodiacSign]);
 
     const colors = COLOR_SCHEMES[theme];
     const displayWidth = LANDSCAPE_WIDTH * previewScale;

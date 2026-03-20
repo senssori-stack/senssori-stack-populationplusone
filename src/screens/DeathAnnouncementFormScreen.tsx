@@ -9,9 +9,11 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
+    useWindowDimensions,
     View
 } from "react-native";
 import PhotoUploadGrid from '../../components/PhotoUploadGrid';
+import SignFrontLandscape from '../../components/SignFrontLandscape';
 
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { COLOR_SCHEMES } from "../data/utils/colors";
@@ -182,6 +184,10 @@ export default function DeathAnnouncementFormScreen({ navigation }: Props) {
     // Location
     const [hometown, setHometown] = useState("");
 
+    // Service details
+    const [serviceLocation, setServiceLocation] = useState("");
+    const [serviceTime, setServiceTime] = useState("");
+
     // Photos
     const [photoUris, setPhotoUris] = useState<(string | null)[]>([null, null, null]);
 
@@ -279,13 +285,15 @@ export default function DeathAnnouncementFormScreen({ navigation }: Props) {
             timeCapsuleOrientation: 'landscape',
             nameGold,
             jointLetter: message || undefined,
+            serviceLocation: serviceLocation.trim() || undefined,
+            serviceTime: serviceTime.trim() || undefined,
         });
     }
 
     const formatDate = (d: Date) =>
         `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}/${d.getFullYear()}`;
 
-    const C = COLOR_SCHEMES[theme as keyof typeof COLOR_SCHEMES];
+    const { width: screenWidth } = useWindowDimensions();
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -362,13 +370,34 @@ export default function DeathAnnouncementFormScreen({ navigation }: Props) {
                 placeholder="City, State (e.g., Springfield, IL)"
                 placeholderTextColor="#999"
                 value={hometown}
-                onChangeText={setHometown}
+                onChangeText={(t) => setHometown(t.toUpperCase())}
+                autoCapitalize="characters"
                 onBlur={() => setTouched(t => ({ ...t, hometown: true }))}
             />
             {loading && <Text style={styles.loadingText}>Looking up population...</Text>}
             {population !== null && (
                 <Text style={styles.populationText}>Population: {population.toLocaleString()}</Text>
             )}
+
+            {/* Service Location */}
+            <Text style={styles.label}>Location of Services</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Church, funeral home, or venue name & address"
+                placeholderTextColor="#999"
+                value={serviceLocation}
+                onChangeText={setServiceLocation}
+            />
+
+            {/* Service Time */}
+            <Text style={styles.label}>Time of Services</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="e.g., Saturday, March 22 at 11:00 AM"
+                placeholderTextColor="#999"
+                value={serviceTime}
+                onChangeText={setServiceTime}
+            />
 
             {/* Photo Upload */}
             <Text style={styles.label}>Photo</Text>
@@ -439,6 +468,20 @@ export default function DeathAnnouncementFormScreen({ navigation }: Props) {
                 />
             </View>
 
+            {/* Gift / Send Money Section */}
+            <View style={styles.messageSectionContainer}>
+                <Text style={styles.messageSectionTitle}>💝 Send Gifts or Donations</Text>
+                <Text style={styles.messageSectionSubtitle}>
+                    Help the family with funeral expenses. Gift cards with cash are available after the announcement is created.
+                </Text>
+                <View style={{ backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12, padding: 16, marginTop: 12 }}>
+                    <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', marginBottom: 8 }}>After you build the announcement:</Text>
+                    <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, marginBottom: 4 }}>• Tap the 🎁 Gift tile to send a gift card</Text>
+                    <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, marginBottom: 4 }}>• Share the announcement with family & friends</Text>
+                    <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>• Recipients can send cash donations via gift card to help with services</Text>
+                </View>
+            </View>
+
             {/* Color Picker */}
             <Text style={[styles.label, { textAlign: 'center', marginTop: 20 }]}>Background Color</Text>
             <Text style={styles.hint}>Choose your announcement color (text will be white)</Text>
@@ -495,15 +538,20 @@ export default function DeathAnnouncementFormScreen({ navigation }: Props) {
                 </TouchableOpacity>
             </View>
 
-            {/* Preview */}
-            <View style={[styles.previewBox, { backgroundColor: C.bg }]}>
-                <Text style={styles.previewScript}>In Loving Memory</Text>
-                <Text style={styles.previewCity}>{hometown.toUpperCase() || 'CITY, STATE'}</Text>
-                <Text style={styles.previewPopLabel}>POPULATION</Text>
-                <Text style={styles.previewMinus}>-1</Text>
-                <Text style={[styles.previewName, nameGold && { color: '#FFD700' }]}>
-                    {fullName.toUpperCase() || 'FULL NAME'}
-                </Text>
+            {/* Preview — uses same SignFrontLandscape as the birthday preview page */}
+            <View style={{ alignItems: 'center', marginTop: 24 }}>
+                <SignFrontLandscape
+                    theme={theme}
+                    previewScale={screenWidth * 0.85 / 3300}
+                    photoUris={photoUris.filter((p): p is string => !!p)}
+                    hometown={hometown.trim() || 'CITY, ST'}
+                    population={population ?? undefined}
+                    personName={fullName.toUpperCase() || 'FULL NAME'}
+                    isMemorial
+                    nameGold={nameGold}
+                    dateOfBirthOriginal={`${dobDate.getFullYear()}-${String(dobDate.getMonth() + 1).padStart(2, '0')}-${String(dobDate.getDate()).padStart(2, '0')}`}
+                    dateOfDeath={`${dodDate.getFullYear()}-${String(dodDate.getMonth() + 1).padStart(2, '0')}-${String(dodDate.getDate()).padStart(2, '0')}`}
+                />
             </View>
 
             {/* Build Button */}
@@ -594,19 +642,7 @@ const styles = StyleSheet.create({
     nameStyleBtnActive: { backgroundColor: 'rgba(255,255,255,0.25)', borderColor: '#fff' },
     nameStyleText: { fontSize: 14, color: 'rgba(255,255,255,0.6)', fontWeight: '600' },
     nameStyleTextActive: { color: '#fff', fontWeight: '800' },
-    previewBox: {
-        marginTop: 24,
-        borderRadius: 12,
-        padding: 20,
-        alignItems: 'center',
-        borderWidth: 2,
-        borderColor: '#fff',
-    },
-    previewScript: { color: '#fff', fontSize: 14, fontStyle: 'italic', fontWeight: '300', marginBottom: 4 },
-    previewCity: { color: '#fff', fontSize: 22, fontWeight: '900', letterSpacing: 2, textAlign: 'center' },
-    previewPopLabel: { color: '#fff', fontSize: 12, fontWeight: '900', letterSpacing: 1, marginTop: 4 },
-    previewMinus: { color: '#fff', fontSize: 32, fontWeight: '900', marginVertical: 2 },
-    previewName: { color: '#fff', fontSize: 16, fontWeight: '900', letterSpacing: 1 },
+
     buildButton: {
         backgroundColor: '#000080',
         borderRadius: 14,

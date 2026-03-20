@@ -25,7 +25,7 @@ export default function PopulationLogo({ scale = 1, showWebsite = true, darkMode
                 POPULATION<Text style={{ fontSize: 14 * scale, fontWeight: '400' }}>™</Text>
             </Text>
             <Image
-                source={require('../assets/images/splash-icon.png')}
+                source={require('../assets/images/icon.png')}
                 style={{ width: 200 * scale, height: 200 * scale, marginBottom: 12 * scale }}
                 resizeMode="contain"
             />

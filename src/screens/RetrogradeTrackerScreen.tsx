@@ -99,7 +99,7 @@ function getNextRetrograde(planet: PlanetRetro, date: Date): { start: Date; days
 }
 
 export default function RetrogradeTrackerScreen({ route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
     const today = new Date();
 
     const statusData = useMemo(() => {

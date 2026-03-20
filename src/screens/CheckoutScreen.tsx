@@ -54,10 +54,24 @@ export default function CheckoutScreen() {
 
     const [isProcessing, setIsProcessing] = useState(false);
     const [termsAccepted, setTermsAccepted] = useState(false);
+    const [isGift, setIsGift] = useState(false);
+    const [giftRecipient, setGiftRecipient] = useState<ShippingAddress>({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        address1: '',
+        address2: '',
+        city: '',
+        state: '',
+        zipCode: '',
+    });
+    const [giftMessage, setGiftMessage] = useState('');
 
     const formatPrice = (price: number) => `$${price.toFixed(2)}`;
 
     const validateForm = (): boolean => {
+        // Buyer info
         if (!shipping.firstName.trim()) {
             Alert.alert('Missing Information', 'Please enter your first name.');
             return false;
@@ -70,21 +84,51 @@ export default function CheckoutScreen() {
             Alert.alert('Missing Information', 'Please enter a valid email address.');
             return false;
         }
-        if (!shipping.address1.trim()) {
-            Alert.alert('Missing Information', 'Please enter your street address.');
-            return false;
+        // If NOT a gift, buyer address is the shipping address — must be filled
+        if (!isGift) {
+            if (!shipping.address1.trim()) {
+                Alert.alert('Missing Information', 'Please enter your street address.');
+                return false;
+            }
+            if (!shipping.city.trim()) {
+                Alert.alert('Missing Information', 'Please enter your city.');
+                return false;
+            }
+            if (!shipping.state.trim()) {
+                Alert.alert('Missing Information', 'Please enter your state.');
+                return false;
+            }
+            if (!shipping.zipCode.trim() || shipping.zipCode.length < 5) {
+                Alert.alert('Missing Information', 'Please enter a valid ZIP code.');
+                return false;
+            }
         }
-        if (!shipping.city.trim()) {
-            Alert.alert('Missing Information', 'Please enter your city.');
-            return false;
-        }
-        if (!shipping.state.trim()) {
-            Alert.alert('Missing Information', 'Please enter your state.');
-            return false;
-        }
-        if (!shipping.zipCode.trim() || shipping.zipCode.length < 5) {
-            Alert.alert('Missing Information', 'Please enter a valid ZIP code.');
-            return false;
+        // If IS a gift, recipient address is the shipping address
+        if (isGift) {
+            if (!giftRecipient.firstName.trim()) {
+                Alert.alert('Missing Information', 'Please enter the recipient\'s first name.');
+                return false;
+            }
+            if (!giftRecipient.lastName.trim()) {
+                Alert.alert('Missing Information', 'Please enter the recipient\'s last name.');
+                return false;
+            }
+            if (!giftRecipient.address1.trim()) {
+                Alert.alert('Missing Information', 'Please enter the recipient\'s street address.');
+                return false;
+            }
+            if (!giftRecipient.city.trim()) {
+                Alert.alert('Missing Information', 'Please enter the recipient\'s city.');
+                return false;
+            }
+            if (!giftRecipient.state.trim()) {
+                Alert.alert('Missing Information', 'Please enter the recipient\'s state.');
+                return false;
+            }
+            if (!giftRecipient.zipCode.trim() || giftRecipient.zipCode.length < 5) {
+                Alert.alert('Missing Information', 'Please enter a valid ZIP code for the recipient.');
+                return false;
+            }
         }
         if (!termsAccepted) {
             Alert.alert('Terms Required', 'Please confirm that all details are correct and accept the Terms of Service to continue.');
@@ -153,6 +197,9 @@ export default function CheckoutScreen() {
 
             // 4. Payment succeeded!
 
+            // Determine the ship-to address
+            const shipTo = isGift ? giftRecipient : shipping;
+
             // Save order record to Firebase
             await saveOrderRecord({
                 orderId,
@@ -164,12 +211,24 @@ export default function CheckoutScreen() {
                     phone: shipping.phone.trim() || undefined,
                 },
                 shipping: {
-                    address1: shipping.address1.trim(),
-                    address2: shipping.address2.trim() || undefined,
-                    city: shipping.city.trim(),
-                    state: shipping.state.trim(),
-                    zipCode: shipping.zipCode.trim(),
+                    firstName: shipTo.firstName.trim(),
+                    lastName: shipTo.lastName.trim(),
+                    address1: shipTo.address1.trim(),
+                    address2: shipTo.address2.trim() || undefined,
+                    city: shipTo.city.trim(),
+                    state: shipTo.state.trim(),
+                    zipCode: shipTo.zipCode.trim(),
                 },
+                isGift,
+                ...(isGift ? {
+                    giftMessage: giftMessage.trim() || undefined,
+                    giftRecipient: {
+                        firstName: giftRecipient.firstName.trim(),
+                        lastName: giftRecipient.lastName.trim(),
+                        email: giftRecipient.email.trim() || undefined,
+                        phone: giftRecipient.phone.trim() || undefined,
+                    },
+                } : {}),
                 items: items.map(item => ({
                     id: item.id,
                     name: item.name,
@@ -252,7 +311,8 @@ export default function CheckoutScreen() {
 
                 {/* Shipping Address */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Shipping Address</Text>
+                    <Text style={styles.sectionTitle}>Your Information</Text>
+                    <Text style={styles.sectionSubtitle}>This is who is placing (and paying for) the order</Text>
 
                     <View style={styles.row}>
                         <View style={styles.halfInput}>
@@ -350,7 +410,135 @@ export default function CheckoutScreen() {
                     </View>
                 </View>
 
-                {/* Payment Info */}
+                {/* Gift Toggle */}
+                <View style={styles.section}>
+                    <TouchableOpacity
+                        style={styles.giftToggleRow}
+                        onPress={() => setIsGift(!isGift)}
+                        activeOpacity={0.7}
+                    >
+                        <View style={[styles.checkbox, isGift && styles.checkboxChecked]}>
+                            {isGift && <Text style={styles.checkmark}>{"\u2713"}</Text>}
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.giftToggleTitle}>{"\uD83C\uDF81"} Ship to someone else</Text>
+                            <Text style={styles.giftToggleDesc}>Send this order as a gift directly to the recipient</Text>
+                        </View>
+                    </TouchableOpacity>
+
+                    {isGift && (
+                        <View style={styles.giftRecipientForm}>
+                            <Text style={styles.giftFormTitle}>{"\uD83D\uDCE6"} Recipient{"\u2019"}s Shipping Address</Text>
+                            <Text style={styles.giftFormSubtitle}>This is where the package will be delivered</Text>
+
+                            <View style={styles.row}>
+                                <View style={styles.halfInput}>
+                                    <Text style={styles.label}>Recipient First Name *</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={giftRecipient.firstName}
+                                        onChangeText={(text) => setGiftRecipient({ ...giftRecipient, firstName: text })}
+                                        placeholder="Jane"
+                                        autoCapitalize="words"
+                                    />
+                                </View>
+                                <View style={styles.halfInput}>
+                                    <Text style={styles.label}>Recipient Last Name *</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={giftRecipient.lastName}
+                                        onChangeText={(text) => setGiftRecipient({ ...giftRecipient, lastName: text })}
+                                        placeholder="Doe"
+                                        autoCapitalize="words"
+                                    />
+                                </View>
+                            </View>
+
+                            <Text style={styles.label}>Street Address *</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={giftRecipient.address1}
+                                onChangeText={(text) => setGiftRecipient({ ...giftRecipient, address1: text })}
+                                placeholder="456 Oak Avenue"
+                                autoCapitalize="words"
+                            />
+
+                            <Text style={styles.label}>Apt, Suite, Unit (optional)</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={giftRecipient.address2}
+                                onChangeText={(text) => setGiftRecipient({ ...giftRecipient, address2: text })}
+                                placeholder="Suite 200"
+                                autoCapitalize="words"
+                            />
+
+                            <View style={styles.row}>
+                                <View style={styles.cityInput}>
+                                    <Text style={styles.label}>City *</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={giftRecipient.city}
+                                        onChangeText={(text) => setGiftRecipient({ ...giftRecipient, city: text })}
+                                        placeholder="Los Angeles"
+                                        autoCapitalize="words"
+                                    />
+                                </View>
+                                <View style={styles.stateInput}>
+                                    <Text style={styles.label}>State *</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={giftRecipient.state}
+                                        onChangeText={(text) => setGiftRecipient({ ...giftRecipient, state: text.toUpperCase() })}
+                                        placeholder="CA"
+                                        maxLength={2}
+                                        autoCapitalize="characters"
+                                    />
+                                </View>
+                                <View style={styles.zipInput}>
+                                    <Text style={styles.label}>ZIP *</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={giftRecipient.zipCode}
+                                        onChangeText={(text) => setGiftRecipient({ ...giftRecipient, zipCode: text })}
+                                        placeholder="90001"
+                                        keyboardType="number-pad"
+                                        maxLength={10}
+                                    />
+                                </View>
+                            </View>
+
+                            <Text style={styles.label}>Recipient Email (optional)</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={giftRecipient.email}
+                                onChangeText={(text) => setGiftRecipient({ ...giftRecipient, email: text })}
+                                placeholder="jane@example.com"
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                            />
+
+                            <Text style={styles.label}>Recipient Phone (optional)</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={giftRecipient.phone}
+                                onChangeText={(text) => setGiftRecipient({ ...giftRecipient, phone: text })}
+                                placeholder="(555) 987-6543"
+                                keyboardType="phone-pad"
+                            />
+
+                            <Text style={[styles.label, { marginTop: 16 }]}>{"\uD83D\uDCAC"} Gift Message (optional)</Text>
+                            <TextInput
+                                style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
+                                value={giftMessage}
+                                onChangeText={setGiftMessage}
+                                placeholder="Congratulations! We're so happy for you..."
+                                multiline
+                                maxLength={300}
+                            />
+                            <Text style={styles.charCount}>{giftMessage.length}/300</Text>
+                        </View>
+                    )}
+                </View>
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Payment</Text>
                     <View style={styles.paymentInfo}>
@@ -683,5 +871,49 @@ const styles = StyleSheet.create({
         color: '#000080',
         fontWeight: '600',
         textDecorationLine: 'underline',
+    },
+    sectionSubtitle: {
+        fontSize: 13,
+        color: '#888',
+        marginTop: -10,
+        marginBottom: 12,
+    },
+    giftToggleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    giftToggleTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#333',
+    },
+    giftToggleDesc: {
+        fontSize: 13,
+        color: '#888',
+        marginTop: 2,
+    },
+    giftRecipientForm: {
+        marginTop: 16,
+        paddingTop: 16,
+        borderTopWidth: 1,
+        borderTopColor: '#eee',
+    },
+    giftFormTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#9a3412',
+        marginBottom: 4,
+    },
+    giftFormSubtitle: {
+        fontSize: 13,
+        color: '#c2410c',
+        marginBottom: 4,
+    },
+    charCount: {
+        fontSize: 12,
+        color: '#aaa',
+        textAlign: 'right',
+        marginTop: 4,
     },
 });

@@ -268,7 +268,7 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
     const [spouse2, setSpouse2] = useState('John Doe');
     const [lastName, setLastName] = useState('Doe');
     const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]);
-    const [hometown, setHometown] = useState('Bellefontaine Neighbors, MO');
+    const [hometown, setHometown] = useState('BELLEFONTAINE NEIGHBORS, MO');
     const [dobDate, setDobDate] = useState<Date>(new Date(2026, 1, 4)); // Feb 4, 2026
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedMessage, setSelectedMessage] = useState<MessageKey>('classic');
@@ -936,7 +936,8 @@ export default function LifeMilestonesFormScreen({ navigation }: Props) {
                 style={styles.input}
                 placeholder="e.g., Springfield, MO"
                 value={hometown}
-                onChangeText={setHometown}
+                onChangeText={(t) => setHometown(t.toUpperCase())}
+                                autoCapitalize="characters"
             />
 
             {/* Message Selection */}

@@ -101,11 +101,21 @@ export default function BaseballCardBack({
     const { width } = useWindowDimensions();
 
     // Standard trading card: 2.5" x 3.5" at 300 DPI = 750 x 1050 pixels
-    const fixedDocWidth = 750;
-    const fixedDocHeight = 1050;
-    const scale = forceFullSize ? 1 : previewWidth ? (previewWidth / fixedDocWidth) : Math.min((width * 0.65) / fixedDocWidth, 1);
+    // Hi-res multiplier for download: 3× → 2250 x 3150 pixels
+    const baseDocWidth = 750;
+    const baseDocHeight = 1050;
+    const hiRes = forceFullSize ? 3 : 1;
+    const fixedDocWidth = baseDocWidth * hiRes;
+    const fixedDocHeight = baseDocHeight * hiRes;
+    const scale = forceFullSize ? 1 : previewWidth ? (previewWidth / baseDocWidth) : Math.min((width * 0.65) / baseDocWidth, 1);
     const cardWidth = fixedDocWidth * scale;
     const cardHeight = fixedDocHeight * scale;
+
+    // Proportional spacing — keeps preview & hi-res download visually identical
+    const sp = (px: number) => cardWidth * (px / 750);
+
+    // Extract lastName from fullName when not provided directly
+    const resolvedLastName = lastName || fullName.trim().split(/\s+/).pop() || '';
 
     // Compute stats from DOB — parse directly from ISO string, no timezone-sensitive Date methods
     const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -128,6 +138,17 @@ export default function BaseballCardBack({
     const zodiacEmoji = zodiac ? ZODIAC_EMOJIS[zodiac] || '' : '';
     const tarot = getTarotBirthCard(dobDate);
 
+    // Scaled font sizes — everything proportional to card width
+    const fs = {
+        statLabel: cardWidth * 0.0273,   // ~7.6px at 280, ~20.5px at 750
+        statValue: cardWidth * 0.0273,
+        sectionHeader: cardWidth * 0.0311,
+        profileHeader: cardWidth * 0.0296,
+        cardNumber: cardWidth * 0.019,
+        brand: cardWidth * 0.019,
+        url: cardWidth * 0.02,
+    };
+
     // Build QR code URL with card data encoded as params
     const qrParams = new URLSearchParams({
         n: fullName,
@@ -142,17 +163,27 @@ export default function BaseballCardBack({
     const qrValue = `https://populationplusone.com/card?${qrParams.toString()}`;
     const qrSize = cardWidth * 0.1;
 
+    // Format weight display
+    const weightDisplay = weightLb
+        ? (weightOz ? `${weightLb} lbs ${weightOz} oz` : `${weightLb} lbs`)
+        : '';
+
+    // Format height display
+    const heightDisplay = lengthIn
+        ? (lengthIn.includes("'") ? lengthIn : `${lengthIn}"`)
+        : '';
+
     return (
-        <View style={[styles.card, styles.cardBack, { width: cardWidth, height: cardHeight }]}>
+        <View style={[styles.card, styles.cardBack, { width: cardWidth, height: cardHeight, borderRadius: sp(30) }]}>
             {/* Header */}
-            <View style={[styles.backHeader, { backgroundColor }]}>
-                <View style={{ position: 'absolute', left: 12, top: 0, bottom: 0, justifyContent: 'center', zIndex: 1 }}>
+            <View style={[styles.backHeader, { backgroundColor, paddingVertical: cardWidth * 0.027, paddingHorizontal: cardWidth * 0.04 }]}>
+                <View style={{ position: 'absolute', left: cardWidth * 0.04, top: 0, bottom: 0, justifyContent: 'center', zIndex: 1 }}>
                     <Image source={US_FLAG_IMAGE} style={{ width: cardWidth * 0.084, height: cardWidth * 0.049, resizeMode: 'contain' }} />
                 </View>
-                <View style={{ position: 'absolute', right: 12, top: 0, bottom: 0, justifyContent: 'center', zIndex: 1 }}>
+                <View style={{ position: 'absolute', right: cardWidth * 0.04, top: 0, bottom: 0, justifyContent: 'center', zIndex: 1 }}>
                     <Image source={AMERICA250_WHITE} style={{ width: cardWidth * 0.084, height: cardWidth * 0.049, resizeMode: 'contain' }} />
                 </View>
-                <Text style={[styles.backName, { fontSize: cardWidth * 0.0421 }, nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 }]}>
+                <Text style={[styles.backName, { fontSize: cardWidth * 0.0421, letterSpacing: sp(3) }, nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: sp(2), height: sp(2) }, textShadowRadius: sp(7) }]}>
                     {fullName}
                 </Text>
                 <Text style={[styles.backPosition, { fontSize: cardWidth * 0.0207 }]}>
@@ -160,100 +191,104 @@ export default function BaseballCardBack({
                 </Text>
             </View>
 
-            <View style={styles.statsTable}>
-                <Text style={[styles.statsHeader, { fontSize: cardWidth * 0.0311 }]}>
+            <View style={[styles.statsTable, { paddingHorizontal: cardWidth * 0.04, paddingVertical: cardWidth * 0.02 }]}>
+                <Text style={[styles.statsHeader, { fontSize: fs.sectionHeader, marginBottom: cardWidth * 0.013, letterSpacing: sp(3) }]}>
                     VITAL STATS
                 </Text>
 
-                <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Debut Date</Text>
-                    <Text style={styles.statValue}>{birthDateStr}</Text>
+                <View style={[styles.statRow, { paddingVertical: cardWidth * 0.008 }]}>
+                    <Text style={[styles.statLabel, { fontSize: fs.statLabel }]}>Debut Date</Text>
+                    <Text style={[styles.statValue, { fontSize: fs.statValue }]}>{birthDateStr}</Text>
                 </View>
 
-                <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Weight</Text>
-                    <Text style={styles.statValue}>{weightOz ? `${weightLb} lbs ${weightOz} oz` : `${weightLb} lbs`}</Text>
+                {weightDisplay ? (
+                    <View style={[styles.statRow, { paddingVertical: cardWidth * 0.008 }]}>
+                        <Text style={[styles.statLabel, { fontSize: fs.statLabel }]}>Weight</Text>
+                        <Text style={[styles.statValue, { fontSize: fs.statValue }]}>{weightDisplay}</Text>
+                    </View>
+                ) : null}
+
+                {heightDisplay ? (
+                    <View style={[styles.statRow, { paddingVertical: cardWidth * 0.008 }]}>
+                        <Text style={[styles.statLabel, { fontSize: fs.statLabel }]}>Height</Text>
+                        <Text style={[styles.statValue, { fontSize: fs.statValue }]}>{heightDisplay}</Text>
+                    </View>
+                ) : null}
+
+                <View style={[styles.statRow, { paddingVertical: cardWidth * 0.008 }]}>
+                    <Text style={[styles.statLabel, { fontSize: fs.statLabel }]}>Team</Text>
+                    <Text style={[styles.statValue, { fontSize: fs.statValue }]}>{resolvedLastName} Family</Text>
                 </View>
 
-                <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Height</Text>
-                    <Text style={styles.statValue}>{lengthIn.includes("'") ? lengthIn : `${lengthIn}"`}</Text>
-                </View>
-
-                <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Team</Text>
-                    <Text style={styles.statValue}>{lastName || 'TBD'}  Family</Text>
-                </View>
-
-                <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Hometown</Text>
-                    <Text style={styles.statValue}>{hometown}</Text>
+                <View style={[styles.statRow, { paddingVertical: cardWidth * 0.008 }]}>
+                    <Text style={[styles.statLabel, { fontSize: fs.statLabel }]}>Hometown</Text>
+                    <Text style={[styles.statValue, { fontSize: fs.statValue }]}>{hometown}</Text>
                 </View>
 
                 {heritage ? (
-                    <View style={styles.statRow}>
-                        <Text style={styles.statLabel}>Heritage</Text>
-                        <Text style={styles.statValue}>{heritage}</Text>
+                    <View style={[styles.statRow, { paddingVertical: cardWidth * 0.008 }]}>
+                        <Text style={[styles.statLabel, { fontSize: fs.statLabel }]}>Heritage</Text>
+                        <Text style={[styles.statValue, { fontSize: fs.statValue }]}>{heritage}</Text>
                     </View>
                 ) : null}
                 {nationality ? (
-                    <View style={styles.statRow}>
-                        <Text style={styles.statLabel}>Nationality</Text>
-                        <Text style={styles.statValue}>{nationality}</Text>
+                    <View style={[styles.statRow, { paddingVertical: cardWidth * 0.008 }]}>
+                        <Text style={[styles.statLabel, { fontSize: fs.statLabel }]}>Nationality</Text>
+                        <Text style={[styles.statValue, { fontSize: fs.statValue }]}>{nationality}</Text>
                     </View>
                 ) : null}
 
-                <Text style={[styles.statsHeader, { fontSize: cardWidth * 0.0296, marginTop: 3 }]}>
+                <Text style={[styles.statsHeader, { fontSize: fs.profileHeader, marginTop: cardWidth * 0.013, marginBottom: cardWidth * 0.013, letterSpacing: sp(3) }]}>
                     MAIN CHARACTER PROFILE
                 </Text>
 
-                <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Zodiac</Text>
-                    <Text style={styles.statValue}>{zodiacEmoji} {zodiac || 'Unknown'}</Text>
+                <View style={[styles.statRow, { paddingVertical: cardWidth * 0.008 }]}>
+                    <Text style={[styles.statLabel, { fontSize: fs.statLabel }]}>Zodiac</Text>
+                    <Text style={[styles.statValue, { fontSize: fs.statValue }]}>{zodiacEmoji} {zodiac || 'Unknown'}</Text>
                 </View>
 
-                <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Birthstone</Text>
-                    <Text style={styles.statValue}>{birthstone || 'Unknown'}</Text>
+                <View style={[styles.statRow, { paddingVertical: cardWidth * 0.008 }]}>
+                    <Text style={[styles.statLabel, { fontSize: fs.statLabel }]}>Birthstone</Text>
+                    <Text style={[styles.statValue, { fontSize: fs.statValue }]}>{birthstone || 'Unknown'}</Text>
                 </View>
 
-                <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Moon Phase</Text>
-                    <Text style={styles.statValue}>{moonPhaseData.emoji} {moonPhaseData.phase}</Text>
+                <View style={[styles.statRow, { paddingVertical: cardWidth * 0.008 }]}>
+                    <Text style={[styles.statLabel, { fontSize: fs.statLabel }]}>Moon Phase</Text>
+                    <Text style={[styles.statValue, { fontSize: fs.statValue }]}>{moonPhaseData.emoji} {moonPhaseData.phase}</Text>
                 </View>
 
-                <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>🔢 Life Path #</Text>
-                    <Text style={styles.statValue}>{lifePathNumber || '—'}</Text>
+                <View style={[styles.statRow, { paddingVertical: cardWidth * 0.008 }]}>
+                    <Text style={[styles.statLabel, { fontSize: fs.statLabel }]}>🔢 Life Path #</Text>
+                    <Text style={[styles.statValue, { fontSize: fs.statValue }]}>{lifePathNumber || '—'}</Text>
                 </View>
 
-                <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Spirit Animal</Text>
-                    <Text style={styles.statValue}>{spiritAnimal ? `${spiritAnimal.emoji} ${spiritAnimal.animal}` : '—'}</Text>
+                <View style={[styles.statRow, { paddingVertical: cardWidth * 0.008 }]}>
+                    <Text style={[styles.statLabel, { fontSize: fs.statLabel }]}>Spirit Animal</Text>
+                    <Text style={[styles.statValue, { fontSize: fs.statValue }]}>{spiritAnimal ? `${spiritAnimal.emoji} ${spiritAnimal.animal}` : '—'}</Text>
                 </View>
 
-                <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Element</Text>
-                    <Text style={styles.statValue}>{westernElement || '—'}</Text>
+                <View style={[styles.statRow, { paddingVertical: cardWidth * 0.008 }]}>
+                    <Text style={[styles.statLabel, { fontSize: fs.statLabel }]}>Element</Text>
+                    <Text style={[styles.statValue, { fontSize: fs.statValue }]}>{westernElement || '—'}</Text>
                 </View>
 
-                <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Chinese Zodiac</Text>
-                    <Text style={styles.statValue}>{chineseElement} {chineseZodiac}</Text>
+                <View style={[styles.statRow, { paddingVertical: cardWidth * 0.008 }]}>
+                    <Text style={[styles.statLabel, { fontSize: fs.statLabel }]}>Chinese Zodiac</Text>
+                    <Text style={[styles.statValue, { fontSize: fs.statValue }]}>{chineseElement} {chineseZodiac}</Text>
                 </View>
 
-                <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Tarot Card</Text>
-                    <Text style={styles.statValue}>{tarot.soul.symbol} {tarot.soul.name}</Text>
+                <View style={[styles.statRow, { paddingVertical: cardWidth * 0.008, borderBottomWidth: 0 }]}>
+                    <Text style={[styles.statLabel, { fontSize: fs.statLabel }]}>Tarot Card</Text>
+                    <Text style={[styles.statValue, { fontSize: fs.statValue }]}>{tarot.soul.symbol} {tarot.soul.name}</Text>
                 </View>
             </View>
 
             {/* Footer */}
-            <View style={styles.backFooter}>
-                <View style={styles.footerLeft}>
-                    <Text style={styles.cardNumber}>#{cardNumber}{editionSize ? `/${editionSize}` : ''}</Text>
+            <View style={[styles.backFooter, { paddingVertical: cardWidth * 0.02, paddingHorizontal: cardWidth * 0.033 }]}>
+                <View style={[styles.footerLeft, { gap: cardWidth * 0.02 }]}>
+                    <Text style={[styles.cardNumber, { fontSize: fs.cardNumber }]}>#{cardNumber}{editionSize ? `/${editionSize}` : ''}</Text>
                     <TradingCardLogo size={cardWidth * 0.067} bgColor={backgroundColor} />
-                    <Text style={styles.brand}>Population +1™</Text>
+                    <Text style={[styles.brand, { fontSize: fs.brand }]}>Population +1™</Text>
                 </View>
                 <View style={styles.qrContainer}>
                     <QRCode
@@ -264,7 +299,7 @@ export default function BaseballCardBack({
                     />
                 </View>
             </View>
-            <Text style={styles.url}>www.populationplusone.com</Text>
+            <Text style={[styles.url, { fontSize: fs.url, paddingBottom: cardWidth * 0.007 }]}>www.populationplusone.com</Text>
         </View>
     );
 }
@@ -279,8 +314,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#f8f8f8',
     },
     backHeader: {
-        paddingVertical: 8,
-        paddingHorizontal: 12,
         alignItems: 'center',
     },
     backName: {
@@ -294,44 +327,36 @@ const styles = StyleSheet.create({
     },
     statsTable: {
         flex: 1,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
+        justifyContent: 'center',
     },
     statsHeader: {
         fontWeight: '900',
         color: '#333',
         textAlign: 'center',
-        marginBottom: 4,
         letterSpacing: 1,
     },
     statRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingVertical: 2,
-        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomWidth: 1,
         borderBottomColor: '#ddd',
     },
     statLabel: {
         fontWeight: '700',
         color: '#555',
-        fontSize: 8.5,
     },
     statValue: {
         fontWeight: '600',
         color: '#222',
-        fontSize: 8.5,
     },
     backFooter: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: 6,
-        paddingHorizontal: 10,
     },
     footerLeft: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
         flex: 1,
     },
     qrContainer: {
@@ -339,19 +364,15 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     cardNumber: {
-        fontSize: 5.7,
         color: '#999',
         fontWeight: '700',
     },
     brand: {
-        fontSize: 5.7,
         color: '#999',
         fontWeight: '700',
     },
     url: {
-        fontSize: 5.9,
         color: '#bbb',
         textAlign: 'center',
-        paddingBottom: 2,
     },
 });

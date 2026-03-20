@@ -121,7 +121,7 @@ const COLOR_HEX: { [key: string]: string } = {
 };
 
 export default function LuckyNumbersScreen({ navigation, route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
 
     // Calculate all numerology numbers
     const lifePathNumber = calculateLifePathNumber(birthDate);

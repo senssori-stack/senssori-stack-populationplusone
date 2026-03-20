@@ -1,6 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import React from 'react';
 import {
+    Alert,
     Image,
     StyleSheet,
     Text,
@@ -35,20 +36,27 @@ export default function PhotoUploadGrid({
         photoSlots.push(null);
     }
 
-    const pickPhoto = async (index: number) => {
+    const launchPicker = async (index: number, useCamera: boolean) => {
         try {
-            const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            const granted = (perm as any).status === 'granted' || (perm as any).granted === true;
-            if (!granted) {
-                alert('Permission required to pick a photo. Please enable Photos/Media access in Settings.');
-                return;
+            if (useCamera) {
+                const perm = await ImagePicker.requestCameraPermissionsAsync();
+                const granted = (perm as any).status === 'granted' || (perm as any).granted === true;
+                if (!granted) {
+                    Alert.alert('Permission Required', 'Please enable Camera access in Settings to take a photo.');
+                    return;
+                }
+            } else {
+                const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                const granted = (perm as any).status === 'granted' || (perm as any).granted === true;
+                if (!granted) {
+                    Alert.alert('Permission Required', 'Please enable Photos/Media access in Settings.');
+                    return;
+                }
             }
 
-            const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                quality: 0.8,
-            });
+            const result = useCamera
+                ? await ImagePicker.launchCameraAsync({ allowsEditing: true, quality: 0.8 })
+                : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, quality: 0.8 });
 
             const cancelled = (result as any).canceled === true || (result as any).cancelled === true;
             if (cancelled) return;
@@ -60,8 +68,16 @@ export default function PhotoUploadGrid({
                 onPhotosChange(newPhotos.slice(0, maxPhotos));
             }
         } catch (e) {
-            alert('Unable to pick a photo — an unexpected error occurred.');
+            Alert.alert('Error', 'Unable to pick a photo — an unexpected error occurred.');
         }
+    };
+
+    const pickPhoto = (index: number) => {
+        Alert.alert('Add Photo', 'Choose a source', [
+            { text: '📷 Take Photo', onPress: () => launchPicker(index, true) },
+            { text: '🖼️ Choose from Library', onPress: () => launchPicker(index, false) },
+            { text: 'Cancel', style: 'cancel' },
+        ]);
     };
 
     const removePhoto = (index: number) => {
@@ -88,7 +104,7 @@ export default function PhotoUploadGrid({
                                 <Image source={{ uri: photo }} style={styles.image} />
                             ) : (
                                 <View style={styles.emptyContent}>
-                                    <Text style={styles.plusIcon}>+</Text>
+                                    <Text style={styles.plusIcon}>📷</Text>
                                     <Text style={styles.slotLabel}>Photo {index + 1}</Text>
                                 </View>
                             )}

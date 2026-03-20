@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 const OUTPUT_DIR = path.join(__dirname, '..', 'assets', 'lullabies');
-const SAMPLE_RATE = 44100;
+const SAMPLE_RATE = 11025;
 const BPM_DEFAULT = 100;
 
 // ── Note frequency map ────────────────────────────────────────

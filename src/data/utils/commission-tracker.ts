@@ -15,7 +15,7 @@
  * 
  * 2. GIFT AFFILIATES (referral commissions)
  *    - Customer clicks our affiliate link to buy a gift
- *    - Platform (Amazon, Etsy, etc.) pays us a % of the sale
+ *    - Platform (Amazon) pays us a % of the sale
  *    - We log the click; actual commission confirmed by the platform
  * 
  * SWITCH: All tracking respects FEATURE_FLAGS.COMMISSION_TRACKING_ENABLED
@@ -66,7 +66,7 @@ export interface CommissionRecord {
     commission: number;
 
     // ─── Source tracking ───
-    /** Which platform fulfilled this ('printful', 'fedex', 'amazon', 'etsy', etc.) */
+    /** Which platform fulfilled this ('printful', 'fedex', 'amazon', etc.) */
     platform: string;
     /** External order ID from the platform (Printful order ID, etc.) */
     externalOrderId?: string;
@@ -171,7 +171,7 @@ export async function logPrintCommission(params: {
 export async function logGiftAffiliateClick(params: {
     productId: string;
     productName: string;
-    platform: 'amazon' | 'babylist' | 'etsy' | 'target';
+    platform: 'amazon';
     estimatedCommissionRate: number;
     estimatedProductPrice?: number;
     appMode?: string;

@@ -161,15 +161,15 @@ export function getBirthstoneLink(birthstone: string): string | null {
  * Example: https://www.thehoroscope.co/birthday-analyser/November-15-1971-horoscope-and-zodiac-sign-meanings-7998.html
  */
 export function getZodiacBirthdayUrl(dateISO: string): string {
-    const date = new Date(dateISO);
+    const [yearNum, monthNum, dayNum] = dateISO.split('-').map(Number);
     const monthNames = [
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ];
 
-    const month = monthNames[date.getMonth()];
-    const day = date.getDate();
-    const year = date.getFullYear();
+    const month = monthNames[monthNum - 1];
+    const day = dayNum;
+    const year = yearNum;
 
     // Calculate unique ID (appears to be sequential from a base date)
     // Using approximate formula: days since Jan 1, 1900 + base offset

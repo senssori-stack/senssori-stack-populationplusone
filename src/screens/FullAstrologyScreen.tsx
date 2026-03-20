@@ -118,7 +118,7 @@ const getZodiacFromDegree = (degree: number): string => {
 };
 
 export default function FullAstrologyScreen({ navigation, route }: Props) {
-    const [birthDate, setBirthDate] = useState(() => new Date(route.params.birthDate));
+    const [birthDate, setBirthDate] = useState(() => new Date(route.params.birthDate + 'T00:00:00'));
     const [showDateModal, setShowDateModal] = useState(false);
     // Use route params if provided, otherwise defaults
     const initialTime = route.params.birthTime || '12:00 PM';
@@ -146,7 +146,7 @@ export default function FullAstrologyScreen({ navigation, route }: Props) {
     const dayOffsetRef = useRef(0);
     const spinAccum = useRef(0);
     const lastAngle = useRef<number | null>(null);
-    const originalBirthDateRef = useRef(new Date(route.params.birthDate));
+    const originalBirthDateRef = useRef(new Date(route.params.birthDate + 'T00:00:00'));
     const scrollRef = useRef<ScrollView>(null);
 
     // Time Travel: slider + speed + autoplay

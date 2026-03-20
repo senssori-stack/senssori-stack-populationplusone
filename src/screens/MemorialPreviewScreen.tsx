@@ -199,6 +199,7 @@ export default function MemorialPreviewScreen({ navigation, route }: Props) {
                     onClose={() => setShowDownloadModal(false)}
                     items={downloadItems}
                     onCapture={handleCapture}
+                    onPrintPress={() => navigation.navigate('PrintService', route.params as any)}
                     babyName={firstName}
                 />
 

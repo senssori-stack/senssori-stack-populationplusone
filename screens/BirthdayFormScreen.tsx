@@ -23,17 +23,17 @@ type Props = NativeStackScreenProps<RootStackParamList, 'BirthdayForm'>;
 
 const BIRTHDAY_OPTIONS = [
     { id: 'birthday', label: '🎂 General Birthday', emoji: '🎂' },
-    { id: 'sweet16', label: '🎀 Sweet 16th Birthday', emoji: '🎀' },
-    { id: '21st', label: '🍾 21st Birthday', emoji: '🍾' },
+    { id: 'sweet16', label: '💖 Sweet 16th Birthday', emoji: '💖' },
+    { id: '21st', label: '🍻 21st Birthday', emoji: '🍻' },
     { id: 'overthehill', label: '⛰️ Over The Hill Birthday', emoji: '⛰️' },
-    { id: '30th', label: '🎉 30th Birthday', emoji: '🎉' },
-    { id: '40th', label: '🎊 40th Birthday', emoji: '🎊' },
-    { id: '50th', label: '🥳 50th Birthday', emoji: '🥳' },
-    { id: '60th', label: '🎈 60th Birthday', emoji: '🎈' },
-    { id: '70th', label: '🎂 70th Birthday', emoji: '🎂' },
-    { id: '80th', label: '🎁 80th Birthday', emoji: '🎁' },
-    { id: '90th', label: '🌟 90th Birthday', emoji: '🌟' },
-    { id: '100th', label: '💯 100th Birthday', emoji: '💯' },
+    { id: '30th', label: '🌟 30th Birthday', emoji: '🌟' },
+    { id: '40th', label: '🎉 40th Birthday', emoji: '🎉' },
+    { id: '50th', label: '🏆 50th Birthday', emoji: '🏆' },
+    { id: '60th', label: '💎 60th Birthday', emoji: '💎' },
+    { id: '70th', label: '🌿 70th Birthday', emoji: '🌿' },
+    { id: '80th', label: '⭐ 80th Birthday', emoji: '⭐' },
+    { id: '90th', label: '👑 90th Birthday', emoji: '👑' },
+    { id: '100th', label: '🎊 100th Birthday', emoji: '🎊' },
 ];
 
 const MESSAGES: Record<string, { classic: string; celebration: string; heartfelt: string }> = {
@@ -58,13 +58,13 @@ const MESSAGES: Record<string, { classic: string; celebration: string; heartfelt
         heartfelt: '{fullName} has reached a beautiful milestone. With age comes wisdom, and {firstName} has plenty of both! Here\'s to many more years of love and laughter.',
     },
     '30th': {
-        classic: 'Dirty thirty looks amazing on {fullName}! The twenties were just the warm-up — the real adventure starts now. Welcome to the best decade yet!',
+        classic: 'Dirty thirty looks amazing on {fullName}! The twenties were just the warm-up � the real adventure starts now. Welcome to the best decade yet!',
         celebration: '{fullName} is 30! Three decades of being awesome, and {firstName} is just getting started. Time to celebrate this milestone in style!',
         heartfelt: 'Thirty years of {fullName} making the world brighter, kinder, and more fun. We\'re so proud of everything {firstName} has accomplished and can\'t wait to see what the next chapter brings.',
     },
     '40th': {
         classic: '{fullName} is 40 and absolutely fabulous! They say life begins at 40, and if that\'s true, {firstName} is about to have the time of their life!',
-        celebration: 'Four decades of being incredible! {fullName} is proof that 40 is the new 30 — only better, wiser, and with way more confidence. Let\'s celebrate {firstName}!',
+        celebration: 'Four decades of being incredible! {fullName} is proof that 40 is the new 30 � only better, wiser, and with way more confidence. Let\'s celebrate {firstName}!',
         heartfelt: 'At 40, {fullName} has built a life filled with love, laughter, and meaning. We admire {firstName}\'s strength, kindness, and the way they make everyone around them feel special. Happy 40th!',
     },
     '50th': {
@@ -159,7 +159,7 @@ export default function BirthdayFormScreen({ navigation }: Props) {
     const [showBirthdayModal, setShowBirthdayModal] = useState(false);
     const [personName, setPersonName] = useState('Jessica Sample Doe');
     const [photos, setPhotos] = useState<(string | null)[]>([null, null, null]);
-    const [hometown, setHometown] = useState('Bellefontaine Neighbors, MO');
+    const [hometown, setHometown] = useState('BELLEFONTAINE NEIGHBORS, MO');
     const [selectedHeritages, setSelectedHeritages] = useState<string[]>([]);
     const [showHeritageModal, setShowHeritageModal] = useState(false);
     const [nationality, setNationality] = useState('');
@@ -325,7 +325,7 @@ export default function BirthdayFormScreen({ navigation }: Props) {
                 onPress={() => setShowBirthdayModal(true)}
             >
                 <Text style={styles.dropdownText}>{getSelectedBirthdayLabel()}</Text>
-                <Text style={styles.dropdownArrow}>▼</Text>
+                <Text style={styles.dropdownArrow}>?</Text>
             </TouchableOpacity>
 
             {/* Birthday Type Modal */}
@@ -379,7 +379,7 @@ export default function BirthdayFormScreen({ navigation }: Props) {
                 <Text style={selectedHeritages.length > 0 ? styles.dropdownText : styles.dropdownPlaceholder}>
                     {selectedHeritages.length > 0 ? formatHeritageDisplay(selectedHeritages) : 'Select 1–4 heritages...'}
                 </Text>
-                <Text style={styles.dropdownArrow}>▼</Text>
+                <Text style={styles.dropdownArrow}>?</Text>
             </TouchableOpacity>
 
             {/* Heritage Multi-Select Modal */}
@@ -445,7 +445,7 @@ export default function BirthdayFormScreen({ navigation }: Props) {
             </Modal>
 
             {/* Nationality */}
-            <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-end' }}>
                 <View style={{ flex: 1 }}>
                     <Text style={styles.label}>Nationality (optional)</Text>
                     <TextInput
@@ -465,7 +465,7 @@ export default function BirthdayFormScreen({ navigation }: Props) {
                         <Text style={militaryBranch ? styles.dropdownText : styles.dropdownPlaceholder}>
                             {militaryBranch || 'Select branch...'}
                         </Text>
-                        <Text style={styles.dropdownArrow}>▼</Text>
+                        <Text style={styles.dropdownArrow}>?</Text>
                     </TouchableOpacity>
                     <Modal visible={showMilitaryPicker} transparent animationType="slide">
                         <View style={styles.modalOverlay}>
@@ -478,7 +478,7 @@ export default function BirthdayFormScreen({ navigation }: Props) {
                                         onPress={() => { setMilitaryBranch(branch); setShowMilitaryPicker(false); }}
                                     >
                                         <Text style={[styles.modalOptionText, militaryBranch === branch && styles.modalOptionTextSelected]}>
-                                            {branch === 'Army' ? '🪖' : branch === 'Navy' ? '⚓' : branch === 'Air Force' ? '✈️' : branch === 'Marines' ? '🦅' : branch === 'Coast Guard' ? '⛵' : '🚀'}  {branch}
+                                            {branch === 'Army' ? '🏖️' : branch === 'Navy' ? '⚓' : branch === 'Air Force' ? '✈️' : branch === 'Marines' ? '🪖' : branch === 'Coast Guard' ? '⚓' : '🏅'}  {branch}
                                         </Text>
                                     </TouchableOpacity>
                                 ))}
@@ -501,7 +501,8 @@ export default function BirthdayFormScreen({ navigation }: Props) {
             <TextInput
                 style={styles.input}
                 value={hometown}
-                onChangeText={setHometown}
+                onChangeText={(t) => setHometown(t.toUpperCase())}
+                autoCapitalize="characters"
                 placeholder="e.g. St. Louis, MO"
                 placeholderTextColor="#999"
             />
@@ -513,7 +514,7 @@ export default function BirthdayFormScreen({ navigation }: Props) {
                 onPress={() => setShowDatePicker(true)}
             >
                 <Text style={styles.dateText}>
-                    {dobDate.toLocaleDateString()}
+                    {`${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][dobDate.getMonth()]} ${dobDate.getDate()}, ${dobDate.getFullYear()}`}
                 </Text>
             </TouchableOpacity>
             <ScrollableDatePicker
@@ -643,6 +644,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 8,
         padding: 12,
+        height: 48,
         fontSize: 16,
         color: '#333',
     },
@@ -654,6 +656,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 8,
         padding: 12,
+        height: 48,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',

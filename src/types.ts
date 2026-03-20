@@ -160,9 +160,13 @@ export type RootStackParamList = {
     LifeEventsTiming: { birthDate?: string; birthTime?: string; birthLocation?: string };
     WeddingRSVP: { weddingId: string };
     WeddingRSVPDashboard: { weddingId: string; coupleName?: string };
+    EventRSVP: { eventId: string };
+    EventRSVPDashboard: { eventId: string; eventName?: string; eventType?: string };
     SkyWheels: { birthDate: string; birthTime?: string; birthLocation?: string };
+    GalaxyWheel: { birthDate: string; birthTime?: string; birthLocation?: string };
     SolarSystemTimeCapsule: { birthDate: string; birthTime?: string; birthLocation?: string };
     BiblicalWheels: { birthDate: string; birthTime?: string; birthLocation?: string };
+    PragueClock: { birthDate: string; birthTime?: string; birthLocation?: string };
     Astrocartography: { birthDate: string; birthTime?: string; birthLocation?: string };
     FriendCompatibility: { birthDate: string; birthTime?: string; birthLocation?: string };
     BabyRegistryPortal: undefined;

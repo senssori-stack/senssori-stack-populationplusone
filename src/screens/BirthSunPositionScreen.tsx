@@ -1,7 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { PanResponder, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, PanResponder, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Circle, G, Line, Path, Svg, Text as SvgText } from 'react-native-svg';
 import RisingStars from '../../components/RisingStars';
 import type { RootStackParamList } from '../types';
@@ -185,8 +185,11 @@ function getNearestSeason(longitude: number) {
 }
 
 export default function BirthSunPositionScreen({ route }: Props) {
-    const originalBirthDate = useMemo(() => new Date(route.params.birthDate), [route.params.birthDate]);
-    const [birthDate, setBirthDate] = useState(() => new Date(route.params.birthDate));
+    const originalBirthDate = useMemo(() => new Date(route.params.birthDate + 'T00:00:00'), [route.params.birthDate]);
+    const [birthDate, setBirthDate] = useState(() => new Date(route.params.birthDate + 'T00:00:00'));
+
+    // ── Sign detail modal ──
+    const [selectedSign, setSelectedSign] = useState<typeof ZODIAC_SIGNS[number] | null>(null);
 
     // ── Time Travel State ──
     const [dayOffset, setDayOffset] = useState(0);
@@ -351,11 +354,12 @@ export default function BirthSunPositionScreen({ route }: Props) {
     const sunX = WHEEL_CX + (WHEEL_R - 25) * Math.cos(sunAngleRad);
     const sunY = WHEEL_CY + (WHEEL_R - 25) * Math.sin(sunAngleRad);
 
-    // Hovered sign from spinning
-    const hoveredIdx = isSpinning
+    // Wheel-selected sign (updates hero at top when wheel is spun)
+    const wheelSignIdx = angleOffset !== 0
         ? Math.floor(normDeg(-angleOffset) / 30) % 12
         : null;
-    const displaySign = hoveredIdx !== null ? ZODIAC_SIGNS[hoveredIdx] : sign;
+    const displaySign = wheelSignIdx !== null ? ZODIAC_SIGNS[wheelSignIdx] : sign;
+    const heroSign = displaySign;
 
     return (
         <LinearGradient colors={['#1a0a00', '#2d1500', '#0d0d2b']} style={styles.container}>
@@ -370,10 +374,10 @@ export default function BirthSunPositionScreen({ route }: Props) {
 
                 {/* Sun Sign Hero */}
                 <View style={styles.heroContainer}>
-                    <Text style={styles.heroEmoji}>{sign.emoji}</Text>
-                    <Text style={styles.heroSymbol}>{sign.symbol}</Text>
-                    <Text style={styles.heroName}>{sign.name}</Text>
-                    <Text style={styles.heroDetail}>{sign.element} Sign • Ruled by {sign.ruler}</Text>
+                    <Text style={styles.heroEmoji}>{heroSign.emoji}</Text>
+                    <Text style={styles.heroSymbol}>{heroSign.symbol}</Text>
+                    <Text style={styles.heroName}>{heroSign.name}</Text>
+                    <Text style={styles.heroDetail}>{heroSign.element} Sign • Ruled by {heroSign.ruler}</Text>
                 </View>
 
                 {/* ── TIME TRAVEL SLIDER — right under hero so users see changes ── */}
@@ -411,30 +415,36 @@ export default function BirthSunPositionScreen({ route }: Props) {
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>📍 Where Was the Sun?</Text>
                     <Text style={styles.cardBody}>
-                        The gold dot ☀️ shows the Sun's position — {Math.round(sunPos.degreeInSign)}° into {sign.name}. Drag the ☀️ along the bar to move through time!
+                        The gold dot ☀️ shows the Sun's position — {Math.round(sunPos.degreeInSign)}° into {heroSign.name}. Drag the ☀️ along the bar to move through time!
                     </Text>
                     <View
                         onLayout={(e) => { const w = e.nativeEvent.layout.width; eclipticWRef.current = w; setEclipticW(w); }}
                         {...eclipticPanResponder.panHandlers}
                         style={{ paddingVertical: 8 }}
                     >
-                        <Svg width="100%" height={70} viewBox={`0 0 ${eclipticW} 70`}>
-                            <Line x1={0} y1={35} x2={eclipticW} y2={35} stroke="rgba(255,255,255,0.15)" strokeWidth={3} />
-                            {ZODIAC_SIGNS.map((z) => {
-                                const x = (z.startDeg / 360) * eclipticW;
-                                return (
-                                    <G key={z.name}>
-                                        <Circle cx={x} cy={35} r={2.5} fill="rgba(255,255,255,0.25)" />
-                                        <SvgText x={x} y={55} fill="rgba(255,255,255,0.4)" fontSize={11} textAnchor="middle">{z.symbol}</SvgText>
-                                    </G>
-                                );
-                            })}
-                            {isDraggingEcliptic && (
-                                <Circle cx={(sunPos.longitude / 360) * eclipticW} cy={35} r={14} fill="rgba(255,215,0,0.15)" />
-                            )}
-                            <Circle cx={(sunPos.longitude / 360) * eclipticW} cy={35} r={8} fill="#FFD700" />
-                            <SvgText x={(sunPos.longitude / 360) * eclipticW} y={18} fill="#FFD700" fontSize={10} fontWeight="bold" textAnchor="middle">☀️</SvgText>
-                        </Svg>
+                        {(() => {
+                            const barLon = normDeg(sunPos.longitude + angleOffset);
+                            const barX = (barLon / 360) * eclipticW;
+                            return (
+                                <Svg width="100%" height={70} viewBox={`0 0 ${eclipticW} 70`}>
+                                    <Line x1={0} y1={35} x2={eclipticW} y2={35} stroke="rgba(255,255,255,0.15)" strokeWidth={3} />
+                                    {ZODIAC_SIGNS.map((z) => {
+                                        const x = (z.startDeg / 360) * eclipticW;
+                                        return (
+                                            <G key={z.name}>
+                                                <Circle cx={x} cy={35} r={2.5} fill="rgba(255,255,255,0.25)" />
+                                                <SvgText x={x} y={55} fill="rgba(255,255,255,0.4)" fontSize={11} textAnchor="middle">{z.symbol}</SvgText>
+                                            </G>
+                                        );
+                                    })}
+                                    {isDraggingEcliptic && (
+                                        <Circle cx={barX} cy={35} r={14} fill="rgba(255,215,0,0.15)" />
+                                    )}
+                                    <Circle cx={barX} cy={35} r={8} fill="#FFD700" />
+                                    <SvgText x={barX} y={18} fill="#FFD700" fontSize={10} fontWeight="bold" textAnchor="middle">☀️</SvgText>
+                                </Svg>
+                            );
+                        })()}
                     </View>
                     <Text style={styles.cycleText}>
                         Each dot is one of the 12 signs — drag the ☀️ to explore the full year
@@ -646,16 +656,18 @@ export default function BirthSunPositionScreen({ route }: Props) {
                 {/* ── SECTION 11: All 12 Signs Grid ── */}
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>📖 All 12 Sun Signs at a Glance</Text>
+                    <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, textAlign: 'center', marginBottom: 6 }}>Tap any sign to explore</Text>
                     {[0, 1, 2, 3].map(row => (
                         <View key={row} style={styles.signGridRow}>
                             {ZODIAC_SIGNS.slice(row * 3, row * 3 + 3).map(z => (
-                                <View key={z.name} style={[styles.signGridCell, z.name === sign.name && { backgroundColor: `${z.color}15`, borderColor: z.color }]}>
+                                <TouchableOpacity key={z.name} activeOpacity={0.7} onPress={() => setSelectedSign(z)}
+                                    style={[styles.signGridCell, z.name === sign.name && { backgroundColor: `${z.color}15`, borderColor: z.color }]}>
                                     <Text style={styles.signGridSymbol}>{z.symbol}</Text>
                                     <Text style={[styles.signGridName, z.name === sign.name && { color: z.color }]}>{z.name}</Text>
                                     <Text style={styles.signGridDetail}>{z.element}</Text>
                                     <Text style={styles.signGridDetail}>{z.ruler}</Text>
                                     {z.name === sign.name && <Text style={[styles.signGridYou, { color: z.color }]}>YOU</Text>}
-                                </View>
+                                </TouchableOpacity>
                             ))}
                         </View>
                     ))}
@@ -663,6 +675,87 @@ export default function BirthSunPositionScreen({ route }: Props) {
 
                 <View style={{ height: 40 }} />
             </ScrollView>
+
+            {/* ── Sign Detail Modal ── */}
+            <Modal visible={selectedSign !== null} transparent animationType="slide" onRequestClose={() => setSelectedSign(null)}>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        {selectedSign && (() => {
+                            const s = selectedSign;
+                            const compat = COMPATIBILITY[s.name];
+                            const isYou = s.name === sign.name;
+                            return (
+                                <ScrollView showsVerticalScrollIndicator={false}>
+                                    {/* Header */}
+                                    <View style={{ alignItems: 'center', marginBottom: 12 }}>
+                                        <Text style={{ fontSize: 48 }}>{s.symbol}</Text>
+                                        <Text style={{ fontSize: 26, fontWeight: '900', color: s.color, marginTop: 4 }}>{s.name} {s.emoji}</Text>
+                                        {isYou && <Text style={{ fontSize: 13, fontWeight: '800', color: s.color, marginTop: 2 }}>⭐ YOUR SUN SIGN</Text>}
+                                        <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 4 }}>
+                                            {s.element} · {s.quality} · Ruled by {s.ruler}
+                                        </Text>
+                                    </View>
+
+                                    {/* Personality */}
+                                    <View style={styles.modalSection}>
+                                        <Text style={styles.modalSectionTitle}>✨ Personality</Text>
+                                        <Text style={styles.modalText}>{s.personality}</Text>
+                                    </View>
+
+                                    {/* Strengths */}
+                                    <View style={styles.modalSection}>
+                                        <Text style={styles.modalSectionTitle}>💪 Strengths</Text>
+                                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                                            {s.strengths.map(str => (
+                                                <View key={str} style={{ backgroundColor: `${s.color}20`, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: `${s.color}40` }}>
+                                                    <Text style={{ color: s.color, fontSize: 12, fontWeight: '700' }}>{str}</Text>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    </View>
+
+                                    {/* Shadow */}
+                                    <View style={styles.modalSection}>
+                                        <Text style={styles.modalSectionTitle}>🌑 Shadow Side</Text>
+                                        <Text style={styles.modalText}>{s.shadow}</Text>
+                                    </View>
+
+                                    {/* Decans */}
+                                    <View style={styles.modalSection}>
+                                        <Text style={styles.modalSectionTitle}>🔮 The Three Decans</Text>
+                                        {[s.decan1, s.decan2, s.decan3].map((d, i) => (
+                                            <View key={i} style={{ marginTop: 6, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 8 }}>
+                                                <Text style={{ color: s.color, fontSize: 12, fontWeight: '800' }}>{ordinal(i + 1)} Decan — Ruled by {d.ruler}</Text>
+                                                <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 2 }}>{d.traits}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+
+                                    {/* Compatibility */}
+                                    {compat && (
+                                        <View style={styles.modalSection}>
+                                            <Text style={styles.modalSectionTitle}>💕 Compatibility</Text>
+                                            <View style={{ marginTop: 4 }}>
+                                                <Text style={{ color: '#4CAF50', fontSize: 13, fontWeight: '700' }}>🔥 Best Match: {compat.best.join(', ')}</Text>
+                                                <Text style={{ color: '#FFD54F', fontSize: 13, fontWeight: '700', marginTop: 3 }}>👍 Good Match: {compat.good.join(', ')}</Text>
+                                                <Text style={{ color: '#EF5350', fontSize: 13, fontWeight: '700', marginTop: 3 }}>⚡ Challenge: {compat.challenge.join(', ')}</Text>
+                                            </View>
+                                        </View>
+                                    )}
+
+                                    {/* Close button */}
+                                    <TouchableOpacity onPress={() => setSelectedSign(null)}
+                                        style={{ marginTop: 16, alignSelf: 'center', backgroundColor: s.color, borderRadius: 20, paddingHorizontal: 32, paddingVertical: 10 }}>
+                                        <Text style={{ color: '#000', fontSize: 14, fontWeight: '800' }}>Close</Text>
+                                    </TouchableOpacity>
+                                    <View style={{ height: 20 }} />
+                                </ScrollView>
+                            );
+                        })()}
+                    </View>
+                </View>
+            </Modal>
+
         </LinearGradient>
     );
 }
@@ -755,4 +848,9 @@ const styles = StyleSheet.create({
     stepRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, gap: 4 },
     stepBtn: { flex: 1, paddingVertical: 4, paddingHorizontal: 1, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center' },
     stepBtnText: { fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.7)' },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 60 },
+    modalContent: { flex: 1, backgroundColor: '#1a1a2e', borderRadius: 20, padding: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
+    modalSection: { marginBottom: 14 },
+    modalSectionTitle: { fontSize: 15, fontWeight: '800', color: '#FFE082', marginBottom: 4 },
+    modalText: { fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 20 },
 });

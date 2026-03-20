@@ -45,12 +45,19 @@ export default function BaseballCard({
     const { width } = useWindowDimensions();
 
     // Standard trading card: 2.5" x 3.5" at 300 DPI = 750 x 1050 pixels
-    const fixedDocWidth = 750;
-    const fixedDocHeight = 1050;
-    const scale = forceFullSize ? 1 : Math.min((width * 0.85) / fixedDocWidth, 1);
+    // Hi-res multiplier for download: 3× → 2250 x 3150 pixels
+    const baseDocWidth = 750;
+    const baseDocHeight = 1050;
+    const hiRes = forceFullSize ? 3 : 1;
+    const fixedDocWidth = baseDocWidth * hiRes;
+    const fixedDocHeight = baseDocHeight * hiRes;
+    const scale = forceFullSize ? 1 : Math.min((width * 0.85) / baseDocWidth, 1);
     const displayWidth = fixedDocWidth * scale;
     const displayHeight = fixedDocHeight * scale;
     const baseFontSize = displayWidth * 0.048;
+
+    // Proportional spacing — keeps preview & hi-res download visually identical
+    const sp = (px: number) => displayWidth * (px / 750);
 
     // Extract first name for the "card name"
     const firstName = babyName.split(' ')[0] || babyName;
@@ -71,13 +78,13 @@ export default function BaseballCard({
             <View style={[styles.cardBorder, { borderWidth: displayWidth * 0.015 }]}>
                 {/* Header - Team name style */}
                 <View style={[styles.header, { backgroundColor, height: displayHeight * 0.08 }]}>
-                    <View style={{ position: 'absolute', left: 10, top: 0, bottom: 0, justifyContent: 'center' }}>
+                    <View style={{ position: 'absolute', left: sp(23), top: 0, bottom: 0, justifyContent: 'center' }}>
                         <Image source={US_FLAG_IMAGE} style={{ width: displayWidth * 0.084, height: displayWidth * 0.049, resizeMode: 'contain' }} />
                     </View>
-                    <Text style={[styles.teamName, { fontSize: baseFontSize * 0.9 }]}>
+                    <Text style={[styles.teamName, { fontSize: baseFontSize * 0.9, letterSpacing: sp(5) }]}>
                         ⭐ POPULATION +1™ ⭐
                     </Text>
-                    <View style={{ position: 'absolute', right: 10, top: 0, bottom: 0, justifyContent: 'center' }}>
+                    <View style={{ position: 'absolute', right: sp(23), top: 0, bottom: 0, justifyContent: 'center' }}>
                         <Image source={AMERICA250_WHITE} style={{ width: displayWidth * 0.084, height: displayWidth * 0.049, resizeMode: 'contain' }} />
                     </View>
                 </View>
@@ -93,6 +100,7 @@ export default function BaseballCard({
                                     width: displayWidth * 0.75,
                                     height: displayHeight * 0.40,
                                     borderRadius: displayWidth * 0.02,
+                                    borderWidth: sp(7),
                                 },
                             ]}
                             resizeMode="cover"
@@ -105,6 +113,7 @@ export default function BaseballCard({
                                     width: displayWidth * 0.75,
                                     height: displayHeight * 0.40,
                                     borderRadius: displayWidth * 0.02,
+                                    borderWidth: sp(7),
                                 },
                             ]}
                         >
@@ -116,58 +125,58 @@ export default function BaseballCard({
                 </View>
 
                 {/* Name plate */}
-                <View style={[styles.namePlate, { backgroundColor, paddingVertical: displayHeight * 0.015 }]}>
-                    <Text style={[styles.playerName, { fontSize: baseFontSize * 1.3 }, nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 }]}>
+                <View style={[styles.namePlate, { backgroundColor, paddingVertical: displayHeight * 0.015, paddingHorizontal: sp(18) }]}>
+                    <Text style={[styles.playerName, { fontSize: baseFontSize * 1.3, letterSpacing: sp(5) }, nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: sp(2), height: sp(2) }, textShadowRadius: sp(7) }]}>
                         {babyName.toUpperCase()}
                     </Text>
                 </View>
 
                 {/* Stats section */}
-                <View style={[styles.statsSection, { paddingHorizontal: displayWidth * 0.05 }]}>
-                    <Text style={[styles.statsHeader, { fontSize: baseFontSize * 0.7 }]}>
+                <View style={[styles.statsSection, { paddingHorizontal: displayWidth * 0.05, paddingVertical: sp(9) }]}>
+                    <Text style={[styles.statsHeader, { fontSize: baseFontSize * 0.7, letterSpacing: sp(5), marginBottom: sp(9) }]}>
                         ROOKIE STATS
                     </Text>
 
-                    <View style={styles.statsGrid}>
+                    <View style={[styles.statsGrid, { gap: sp(5) }]}>
                         {/* Row 1 */}
                         <View style={styles.statRow}>
-                            <View style={styles.statItem}>
-                                <Text style={[styles.statLabel, { fontSize: baseFontSize * 0.55 }]}>DEBUT</Text>
+                            <View style={[styles.statItem, { paddingVertical: sp(5) }]}>
+                                <Text style={[styles.statLabel, { fontSize: baseFontSize * 0.55, letterSpacing: sp(2) }]}>DEBUT</Text>
                                 <Text style={[styles.statValue, { fontSize: baseFontSize * 0.7 }]}>{birthDate || '—'}</Text>
                             </View>
-                            <View style={styles.statItem}>
-                                <Text style={[styles.statLabel, { fontSize: baseFontSize * 0.55 }]}>TIME</Text>
+                            <View style={[styles.statItem, { paddingVertical: sp(5) }]}>
+                                <Text style={[styles.statLabel, { fontSize: baseFontSize * 0.55, letterSpacing: sp(2) }]}>TIME</Text>
                                 <Text style={[styles.statValue, { fontSize: baseFontSize * 0.7 }]}>{birthTime || '—'}</Text>
                             </View>
                         </View>
 
                         {/* Row 2 */}
                         <View style={styles.statRow}>
-                            <View style={styles.statItem}>
-                                <Text style={[styles.statLabel, { fontSize: baseFontSize * 0.55 }]}>WEIGHT</Text>
+                            <View style={[styles.statItem, { paddingVertical: sp(5) }]}>
+                                <Text style={[styles.statLabel, { fontSize: baseFontSize * 0.55, letterSpacing: sp(2) }]}>WEIGHT</Text>
                                 <Text style={[styles.statValue, { fontSize: baseFontSize * 0.7 }]}>{weight || '—'}</Text>
                             </View>
-                            <View style={styles.statItem}>
-                                <Text style={[styles.statLabel, { fontSize: baseFontSize * 0.55 }]}>LENGTH</Text>
+                            <View style={[styles.statItem, { paddingVertical: sp(5) }]}>
+                                <Text style={[styles.statLabel, { fontSize: baseFontSize * 0.55, letterSpacing: sp(2) }]}>LENGTH</Text>
                                 <Text style={[styles.statValue, { fontSize: baseFontSize * 0.7 }]}>{length || '—'}</Text>
                             </View>
                         </View>
 
                         {/* Row 3 - Mystical stats */}
                         <View style={styles.statRow}>
-                            <View style={styles.statItem}>
-                                <Text style={[styles.statLabel, { fontSize: baseFontSize * 0.55 }]}>SIGN</Text>
+                            <View style={[styles.statItem, { paddingVertical: sp(5) }]}>
+                                <Text style={[styles.statLabel, { fontSize: baseFontSize * 0.55, letterSpacing: sp(2) }]}>SIGN</Text>
                                 <Text style={[styles.statValue, { fontSize: baseFontSize * 0.7 }]}>{zodiacSign || '—'}</Text>
                             </View>
-                            <View style={styles.statItem}>
-                                <Text style={[styles.statLabel, { fontSize: baseFontSize * 0.55 }]}>STONE</Text>
+                            <View style={[styles.statItem, { paddingVertical: sp(5) }]}>
+                                <Text style={[styles.statLabel, { fontSize: baseFontSize * 0.55, letterSpacing: sp(2) }]}>STONE</Text>
                                 <Text style={[styles.statValue, { fontSize: baseFontSize * 0.7 }]}>{birthstone || '—'}</Text>
                             </View>
                         </View>
                     </View>
 
                     {/* Team Name */}
-                    <View style={[styles.hometownSection, { marginTop: displayHeight * 0.01 }]}>
+                    <View style={[styles.hometownSection, { marginTop: displayHeight * 0.01, borderTopWidth: sp(2), paddingTop: sp(9) }]}>
                         <Text style={[styles.hometownValue, { fontSize: baseFontSize * 0.65 }]}>
                             +1 TEAM {(lastName || babyName.split(' ').pop() || '').toUpperCase()}
                         </Text>
@@ -189,11 +198,6 @@ const styles = StyleSheet.create({
     container: {
         overflow: 'hidden',
         backgroundColor: '#fff',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 8,
     },
     cardBorder: {
         flex: 1,

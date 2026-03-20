@@ -1,11 +1,12 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import * as FileSystem from 'expo-file-system';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Sharing from 'expo-sharing';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Image, Platform, ScrollView, Share, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { GestureHandlerRootView, PanGestureHandler, PinchGestureHandler, State, TapGestureHandler } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ViewShot from 'react-native-view-shot';
-import BaseballCard from '../../components/BaseballCard';
 import BaseballCardBack from '../../components/BaseballCardBack';
 import CartModal from '../../components/CartModal';
 import CelebrationOverlay from '../../components/CelebrationOverlay';
@@ -15,6 +16,7 @@ import NatalChartBack from '../../components/NatalChartBack';
 import NatalChartPrintable from '../../components/NatalChartPrintable';
 import SignFrontLandscape from '../../components/SignFrontLandscape';
 import TimeCapsuleLandscape from '../../components/TimeCapsuleLandscape';
+import TradingCardLogo from '../../components/TradingCardLogo';
 import { PRODUCT_PRICES, useCart } from '../context/CartContext';
 import { birthstoneFromISO } from '../data/utils/birthstone';
 import { COLOR_SCHEMES } from '../data/utils/colors';
@@ -69,9 +71,6 @@ export default function PreviewScreen({ navigation, route }: Props) {
     const letterRef = useRef<ViewShot | null>(null);
 
     // Offscreen capture refs for extra keepsakes
-    const yardClassicRef = useRef<ViewShot | null>(null);
-    const yardWelcomeRef = useRef<ViewShot | null>(null);
-    const yardMinimalRef = useRef<ViewShot | null>(null);
     const postcardBackRef = useRef<ViewShot | null>(null);
     const baseballFrontRef = useRef<ViewShot | null>(null);
     const baseballBackRef = useRef<ViewShot | null>(null);
@@ -85,6 +84,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
     // Cart functionality
     const { addToCart, getItemCount } = useCart();
     const [showCartModal, setShowCartModal] = useState(false);
+    const [isSharing, setIsSharing] = useState(false);
 
     // Add current view to cart
     const handleAddToCart = () => {
@@ -107,18 +107,15 @@ export default function PreviewScreen({ navigation, route }: Props) {
         { id: 'back', label: 'Time Capsule (Back)', category: 'yardsign' },
         { id: 'natal', label: 'Natal Chart (Page 1)', category: 'yardsign' },
         { id: 'natalback', label: 'Chart Reading Guide (Page 2)', category: 'yardsign' },
-        { id: 'letter', label: 'Letter to Baby', category: 'yardsign' },
-        ...(params.mode !== 'milestone' || (params.message || '').toLowerCase().includes('birthday') ? [
-            { id: 'yard-classic', label: 'Yard Sign — Classic', category: 'yardsign' as const },
-            { id: 'yard-welcome', label: 'Yard Sign — Welcome', category: 'yardsign' as const },
-            { id: 'yard-minimal', label: 'Yard Sign — Minimal', category: 'yardsign' as const },
+        ...((params.motherLetter || params.fatherLetter || params.jointLetter) ? [
+            { id: 'letter', label: 'Letter to Baby', category: 'yardsign' as const },
         ] : []),
         ...(!params.hidePostcard ? [
-            { id: 'postcard-back', label: 'Postcard Back (Invitation)', category: 'postcard' as const },
+            { id: 'postcard-back', label: 'Postcard Back (Side 2 — Invitation)', category: 'postcard' as const },
         ] : []),
         ...(params.mode !== 'milestone' || (params.message || '').toLowerCase().includes('birthday') ? [
-            { id: 'baseball-front', label: 'Baseball Card (Front)', category: 'babycard' as const },
-            { id: 'baseball-back', label: 'Baseball Card (Back)', category: 'babycard' as const },
+            { id: 'baseball-front', label: 'Trading Card Front (Side 1)', category: 'babycard' as const },
+            { id: 'baseball-back', label: 'Trading Card Back (Side 2 — Stats)', category: 'babycard' as const },
         ] : []),
     ];
 
@@ -131,9 +128,6 @@ export default function PreviewScreen({ navigation, route }: Props) {
             if (itemId === 'natal') ref = natalRef;
             if (itemId === 'natalback') ref = natalBackRef;
             if (itemId === 'letter') ref = letterRef;
-            if (itemId === 'yard-classic') ref = yardClassicRef;
-            if (itemId === 'yard-welcome') ref = yardWelcomeRef;
-            if (itemId === 'yard-minimal') ref = yardMinimalRef;
             if (itemId === 'postcard-back') ref = postcardBackRef;
             if (itemId === 'baseball-front') ref = baseballFrontRef;
             if (itemId === 'baseball-back') ref = baseballBackRef;
@@ -152,7 +146,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
     const handleCapture = async (itemId: string): Promise<string | null> => {
         try {
             // Offscreen items don't need viewMode switching — they're always mounted
-            const offscreenIds = ['front', 'yard-classic', 'yard-welcome', 'yard-minimal', 'postcard-back', 'baseball-front', 'baseball-back'];
+            const offscreenIds = ['front', 'postcard-back', 'baseball-front', 'baseball-back'];
             if (offscreenIds.includes(itemId)) {
                 await new Promise(r => setTimeout(r, 600));
                 return await captureView(itemId);
@@ -416,6 +410,8 @@ export default function PreviewScreen({ navigation, route }: Props) {
                             hidePlusLabel={params.hidePlusLabel}
                             isMemorial={params.isMemorial}
                             nameGold={params.nameGold}
+                            dateOfBirthOriginal={params.dateOfBirthOriginal}
+                            dateOfDeath={params.dateOfDeath}
                         />
                     </View>
                 </ViewShot>
@@ -478,7 +474,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
                     <TouchableOpacity
                         style={styles.deepDiveLink}
                         onPress={() => navigation.navigate('FullAstrology', {
-                            birthDate: dobISO ? new Date(dobISO + 'T12:00:00').toISOString() : new Date().toISOString(),
+                            birthDate: dobISO || new Date().toISOString().split('T')[0],
                             birthTime: params.timeOfBirth || undefined,
                             birthLocation: formData.hometown || undefined,
                             babyName: babyName || undefined,
@@ -624,18 +620,6 @@ export default function PreviewScreen({ navigation, route }: Props) {
                             <View style={styles.addOnDivider} />
                             <Text style={styles.addOnLabel}>ALSO INCLUDED WITH YOUR +1</Text>
                             <View style={styles.tabRow}>
-                                {(params.mode !== 'milestone' || occasionType === 'birthday') && (
-                                    <TouchableOpacity
-                                        style={[styles.tab, { backgroundColor: '#d97706' }]}
-                                        onPress={() => {
-                                            const resolvedPhoto = params.photoUris?.find(u => u) || params.babies?.[0]?.photoUri || params.photoUri || null;
-                                            navigation.navigate('YardSignPreview', { ...params, photoUri: resolvedPhoto });
-                                        }}
-                                    >
-                                        <Text style={styles.tabIcon}>🏡</Text>
-                                        <Text style={styles.tabText}>Yard Signs</Text>
-                                    </TouchableOpacity>
-                                )}
                                 {!params.hidePostcard && (
                                     <TouchableOpacity
                                         style={[styles.tab, { backgroundColor: '#0ea5e9' }]}
@@ -746,6 +730,54 @@ export default function PreviewScreen({ navigation, route }: Props) {
                                     <Text style={styles.tileEmoji}>🎁</Text>
                                     <Text style={styles.tileLabel}>Gift</Text>
                                 </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.tileButton, { backgroundColor: '#7c3aed' }]}
+                                    disabled={isSharing}
+                                    onPress={async () => {
+                                        const name = params.babyFirst || params.personName || 'our new arrival';
+                                        setIsSharing(true);
+                                        try {
+                                            // Capture the front announcement image
+                                            const uri = await handleCapture('front');
+                                            if (uri) {
+                                                // Copy to a sharable location with a nice filename
+                                                const fileName = `PopulationPlusOne_${(name || 'announcement').replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+                                                const dest = FileSystem.cacheDirectory + fileName;
+                                                await FileSystem.copyAsync({ from: uri, to: dest });
+
+                                                if (await Sharing.isAvailableAsync()) {
+                                                    await Sharing.shareAsync(dest, {
+                                                        mimeType: 'image/png',
+                                                        dialogTitle: `Share ${name}'s announcement`,
+                                                        UTI: 'public.png',
+                                                    });
+                                                } else {
+                                                    // Fallback to text share on unsupported platforms
+                                                    await Share.share({
+                                                        message: `Check out ${name}'s announcement from Population +1! 🎉`,
+                                                    });
+                                                }
+                                            } else {
+                                                // Capture failed — fall back to text share
+                                                await Share.share({
+                                                    message: `Check out ${name}'s announcement from Population +1! 🎉`,
+                                                });
+                                            }
+                                        } catch (e) {
+                                            console.warn('Share error:', e);
+                                            Alert.alert('Share', 'Could not share the image. Please try again.');
+                                        } finally {
+                                            setIsSharing(false);
+                                        }
+                                    }}
+                                >
+                                    {isSharing ? (
+                                        <ActivityIndicator size="small" color="#fff" />
+                                    ) : (
+                                        <Text style={styles.tileEmoji}>📤</Text>
+                                    )}
+                                    <Text style={styles.tileLabel}>{isSharing ? 'Sharing...' : 'Share'}</Text>
+                                </TouchableOpacity>
                             </View>
                         </View>
                     </View>
@@ -756,6 +788,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
                     onClose={() => setShowDownloadModal(false)}
                     items={downloadItems}
                     onCapture={handleCapture}
+                    onPrintPress={() => navigation.navigate('PrintService', params as any)}
                     babyName={(() => {
                         const names = (params.babies || []).map((b: any) => (b.first || '').trim()).filter(Boolean);
                         if (names.length === 0) return params.babyFirst || params.personName || 'Baby';
@@ -782,8 +815,6 @@ export default function PreviewScreen({ navigation, route }: Props) {
                         const babyName = [babyFirst, babyMiddle].filter(Boolean).join(' ') || params.personName || 'Baby';
                         const fullName = [babyFirst, babyMiddle, babyLast].filter(Boolean).join(' ') || params.personName || 'Baby';
                         const plusLabel = `+${params.babyCount || 1}`;
-                        const signWidth = 2400;
-                        const signHeight = 1800;
                         const dobISO = `${formData.dobDate.getFullYear()}-${String(formData.dobDate.getMonth() + 1).padStart(2, '0')}-${String(formData.dobDate.getDate()).padStart(2, '0')}`;
                         const zodiac = getZodiacFromISO(dobISO);
                         const birthstone = birthstoneFromISO(dobISO);
@@ -800,6 +831,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
                         const cardWidth = 1800;
                         const cardHeight = cardWidth * 1.4;
                         const isWedding = !!params.hidePlusLabel;
+                        const isBirthday = params.mode === 'milestone' && (params.message || '').toLowerCase().includes('birthday');
 
                         // Collect photoUris for hi-res front — same logic as renderCurrentView
                         let hiResPhotoUris: (string | null | undefined)[] = [];
@@ -827,35 +859,9 @@ export default function PreviewScreen({ navigation, route }: Props) {
                                         hidePlusLabel={params.hidePlusLabel}
                                         isMemorial={params.isMemorial}
                                         nameGold={params.nameGold}
+                                        dateOfBirthOriginal={params.dateOfBirthOriginal}
+                                        dateOfDeath={params.dateOfDeath}
                                     />
-                                </ViewShot>
-
-                                {/* Yard Sign — Classic */}
-                                <ViewShot ref={yardClassicRef} options={{ format: 'png', quality: 1 }}>
-                                    <View style={{ width: signWidth, height: signHeight, backgroundColor: colors.bg, borderRadius: 4, alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: '#fff' }}>
-                                        <View style={{ alignItems: 'center' }}>
-                                            <Text style={{ fontSize: signWidth * 0.28, fontWeight: '900', color: '#fff' }}>{plusLabel}</Text>
-                                            <Text style={{ fontSize: signWidth * 0.09, fontWeight: '900', color: params.nameGold ? '#FFD700' : '#fff', letterSpacing: 2, textAlign: 'center' }}>{babyName.toUpperCase()}</Text>
-                                        </View>
-                                    </View>
-                                </ViewShot>
-
-                                {/* Yard Sign — Welcome */}
-                                <ViewShot ref={yardWelcomeRef} options={{ format: 'png', quality: 1 }}>
-                                    <View style={{ width: signWidth, height: signHeight, backgroundColor: colors.bg, borderRadius: 4, alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: '#fff' }}>
-                                        <Text style={{ fontSize: signWidth * 0.28, fontWeight: '900', color: '#fff', marginBottom: -10 }}>{plusLabel}</Text>
-                                        <Text style={{ fontSize: signWidth * 0.065, fontWeight: '700', color: 'rgba(255,255,255,0.85)', marginBottom: 4 }}>Welcome To</Text>
-                                        <Text style={{ fontSize: signWidth * 0.09, fontWeight: '900', color: params.nameGold ? '#FFD700' : '#fff', letterSpacing: 2, textAlign: 'center' }}>{babyName.toUpperCase()}</Text>
-                                    </View>
-                                </ViewShot>
-
-                                {/* Yard Sign — Minimal */}
-                                <ViewShot ref={yardMinimalRef} options={{ format: 'png', quality: 1 }}>
-                                    <View style={{ width: signWidth, height: signHeight, backgroundColor: '#fff', borderRadius: 4, alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: colors.bg }}>
-                                        <Text style={{ fontSize: signWidth * 0.28, fontWeight: '900', color: colors.bg }}>{plusLabel}</Text>
-                                        <Text style={{ fontSize: signWidth * 0.065, fontWeight: '700', fontStyle: 'italic', color: colors.bg, marginTop: -10, marginBottom: 4 }}>Welcome To</Text>
-                                        <Text style={{ fontSize: signWidth * 0.09, fontWeight: '900', color: params.nameGold ? '#FFD700' : colors.bg, letterSpacing: 2, textAlign: 'center' }}>{babyName.toUpperCase()}</Text>
-                                    </View>
                                 </ViewShot>
 
                                 {/* Postcard Back — Invitation */}
@@ -863,17 +869,17 @@ export default function PreviewScreen({ navigation, route }: Props) {
                                     <View style={{ width: cardWidth * 1.3, height: cardWidth * 0.92, backgroundColor: '#fff', borderRadius: 12, borderWidth: 4, borderColor: '#ddd', flexDirection: 'row', overflow: 'hidden' }}>
                                         {/* Left — Message */}
                                         <View style={{ flex: 1, padding: cardWidth * 0.05, justifyContent: 'center' }}>
-                                            <Text style={{ fontSize: cardWidth * 0.054, fontWeight: '900', color: colors.bg, marginBottom: cardWidth * 0.015 }}>{isWedding ? "You're Invited!" : "You're Invited!"}</Text>
-                                            <Text style={{ fontSize: cardWidth * 0.036, color: '#666', marginBottom: cardWidth * 0.015 }}>{isWedding ? 'to the wedding celebration of' : 'to celebrate the arrival of'}</Text>
+                                            <Text style={{ fontSize: cardWidth * 0.054, fontWeight: '900', color: colors.bg, marginBottom: cardWidth * 0.015 }}>{isWedding ? "You're Invited!" : isBirthday ? "You're Invited!" : "You're Invited!"}</Text>
+                                            <Text style={{ fontSize: cardWidth * 0.036, color: '#666', marginBottom: cardWidth * 0.015 }}>{isWedding ? 'to the wedding celebration of' : isBirthday ? 'to the birthday celebration of' : 'to celebrate the arrival of'}</Text>
                                             <Text style={{ fontSize: cardWidth * 0.047, fontWeight: '800', color: params.nameGold ? '#FFD700' : colors.bg, marginBottom: cardWidth * 0.022 }}>{fullName}</Text>
-                                            <Text style={{ fontSize: cardWidth * 0.032, color: '#888' }}>{isWedding ? `Date: ${birthDateStr}` : `Born: ${birthDateStr}`}</Text>
-                                            {!isWedding && weight ? <Text style={{ fontSize: cardWidth * 0.032, color: '#888' }}>{weight} • {length}</Text> : null}
+                                            <Text style={{ fontSize: cardWidth * 0.032, color: '#888' }}>{isWedding ? `Date: ${birthDateStr}` : isBirthday ? `Birthday: ${birthDateStr}` : `Born: ${birthDateStr}`}</Text>
+                                            {!isWedding && !isBirthday && weight ? <Text style={{ fontSize: cardWidth * 0.032, color: '#888' }}>{weight} • {length}</Text> : null}
                                             <View style={{ marginTop: cardWidth * 0.03 }}>
                                                 <Text style={{ fontSize: cardWidth * 0.029, color: '#aaa', marginBottom: cardWidth * 0.007 }}>{isWedding ? 'Ceremony: ________________' : 'When: ________________'}</Text>
                                                 <Text style={{ fontSize: cardWidth * 0.029, color: '#aaa', marginBottom: cardWidth * 0.007 }}>{isWedding ? 'Reception: ________________' : 'Where: ________________'}</Text>
                                                 <Text style={{ fontSize: cardWidth * 0.029, color: '#aaa' }}>RSVP: ________________</Text>
                                             </View>
-                                            {parents ? <Text style={{ fontSize: cardWidth * 0.029, color: '#999', marginTop: cardWidth * 0.022 }}>{isWedding ? 'Together with their families' : `Hosted by ${parents}`}</Text> : null}
+                                            {parents ? <Text style={{ fontSize: cardWidth * 0.029, color: '#999', marginTop: cardWidth * 0.022 }}>{isWedding ? 'Together with their families' : isBirthday ? `Celebrating with ${parents}` : `Hosted by ${parents}`}</Text> : null}
                                         </View>
                                         {/* Divider */}
                                         <View style={{ width: 3, backgroundColor: '#ccc' }} />
@@ -888,22 +894,42 @@ export default function PreviewScreen({ navigation, route }: Props) {
 
                                 {/* Baseball Card Front */}
                                 <ViewShot ref={baseballFrontRef} options={{ format: 'png', quality: 1 }}>
-                                    <BaseballCard
-                                        babyName={fullName}
-                                        birthDate={birthDateStr}
-                                        birthTime={params.timeOfBirth || ''}
-                                        weight={weight}
-                                        length={length}
-                                        city={formData.hometown.split(',')[0]?.trim() || ''}
-                                        state={formData.hometown.split(',').slice(1).join(',')?.trim() || ''}
-                                        zodiacSign={zodiac}
-                                        birthstone={birthstone}
-                                        lifePathNumber={String(lifePathResult.number)}
-                                        photoUri={photoUri || undefined}
-                                        backgroundColor={colors.bg}
-                                        nameGold={params.nameGold}
-                                        forceFullSize
-                                    />
+                                    {(() => {
+                                        const dlW = 750 * 3;
+                                        const dlH = dlW * 1.4;
+                                        const dlS = dlW / 280;
+                                        return (
+                                            <View style={{ width: dlW, height: dlH, backgroundColor: '#ffffff', borderRadius: 12 * dlS, overflow: 'hidden' }}>
+                                                <View style={{ flex: 1, borderWidth: 6 * dlS, borderColor: colors.bg, borderRadius: 10 * dlS, overflow: 'hidden' }}>
+                                                    <View style={{ flex: 1, backgroundColor: '#eee' }}>
+                                                        {photoUri ? (
+                                                            <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+                                                        ) : (
+                                                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg }}>
+                                                                <Text style={{ fontSize: 60 * dlS }}>👶</Text>
+                                                            </View>
+                                                        )}
+                                                    </View>
+                                                    <View style={{ backgroundColor: colors.bg, paddingVertical: 6 * dlS, paddingHorizontal: 8 * dlS, alignItems: 'center' }}>
+                                                        <Text style={[{ color: '#ffffff', fontWeight: '900', letterSpacing: 2 * dlS, fontSize: dlW * 0.06 }, params.nameGold && { color: '#FFD700', textShadowColor: '#B8860B', textShadowOffset: { width: dlS, height: dlS }, textShadowRadius: 3 * dlS }]}>
+                                                            {fullName.toUpperCase()}
+                                                        </Text>
+                                                    </View>
+                                                    <View style={{ backgroundColor: '#f5f5f5', paddingVertical: 6 * dlS, alignItems: 'center' }}>
+                                                        <Text style={{ color: '#666', fontSize: dlW * 0.04 }}>
+                                                            +1 TEAM {(babyLast || fullName.split(' ').pop() || '').toUpperCase()}
+                                                        </Text>
+                                                    </View>
+                                                    <View style={{ position: 'absolute', top: 10 * dlS, right: 10 * dlS, backgroundColor: colors.bg, paddingHorizontal: 8 * dlS, paddingVertical: 4 * dlS, borderRadius: 4 * dlS, transform: [{ rotate: '15deg' }] }}>
+                                                        <Text style={{ color: '#ffffff', fontSize: 10 * dlS, fontWeight: 'bold' }}>ROOKIE</Text>
+                                                    </View>
+                                                    <View style={{ position: 'absolute', top: 8 * dlS, left: 8 * dlS, zIndex: 10 }}>
+                                                        <TradingCardLogo size={dlW * 0.107} bgColor={colors.bg} />
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        );
+                                    })()}
                                 </ViewShot>
 
                                 {/* Baseball Card Back */}
@@ -938,7 +964,6 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: -9999,
         top: 0,
-        opacity: 0,
     },
     container: {
         flex: 1,

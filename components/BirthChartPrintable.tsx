@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
-import { BirthChartData, getWesternBirthChart } from '../src/data/utils/astrology-api';
+import { StyleSheet, Text, View } from 'react-native';
 import { COLOR_SCHEMES } from '../src/data/utils/colors';
+import { calculateNatalChart, NatalChartData } from '../src/data/utils/natal-chart-calculator';
 import type { ThemeName } from '../src/types';
 
 // Landscape 11x8.5 at 300 DPI = 3300x2550 pixels
@@ -18,6 +18,19 @@ function lightenColor(hex: string, amount: number): string {
     const lg = Math.round(g + (255 - g) * amount);
     const lb = Math.round(b + (255 - b) * amount);
     return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
+}
+
+const ZODIAC_SIGNS = [
+    'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+    'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+];
+
+function lonToSign(lon: number): string {
+    return ZODIAC_SIGNS[Math.floor(((lon % 360) + 360) % 360 / 30)];
+}
+
+function lonToDegreeInSign(lon: number): number {
+    return ((lon % 360) + 360) % 360 % 30;
 }
 
 type Props = {
@@ -43,25 +56,20 @@ export default function BirthChartPrintable(props: Props) {
         previewScale = 0.2,
     } = props;
 
-    const [chartData, setChartData] = useState<BirthChartData | null>(null);
+    const [chartData, setChartData] = useState<NatalChartData | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchChartData = async () => {
-            try {
-                console.log('Fetching chart for:', dobISO, timeOfBirth, latitude, longitude);
-                const data = await getWesternBirthChart(dobISO, timeOfBirth, latitude, longitude);
-                console.log('Chart data received:', data ? 'Success' : 'Failed');
-                setChartData(data);
-            } catch (error) {
-                console.error('Failed to fetch birth chart:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchChartData();
-    }, [dobISO, timeOfBirth, latitude, longitude]);
+        try {
+            const birthDateObj = new Date(dobISO + 'T00:00:00');
+            const data = calculateNatalChart(birthDateObj, latitude, longitude);
+            setChartData(data);
+        } catch (error) {
+            console.error('Failed to calculate birth chart:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [dobISO, latitude, longitude]);
 
     const colors = COLOR_SCHEMES[theme];
     const lighterBg = lightenColor(colors.bg, 0.55);
@@ -168,19 +176,17 @@ export default function BirthChartPrintable(props: Props) {
                         </View>
                     </View>
 
-                    {/* Main content: Chart SVG on left, data on right */}
+                    {/* Main content: Chart info on left, data on right */}
                     <View style={{ flexDirection: 'row', flex: 1 }}>
-                        {/* Left: Birth Chart Wheel */}
-                        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                            {chartData.chartSvg ? (
-                                <Image
-                                    source={{ uri: `data:image/svg+xml;utf8,${encodeURIComponent(chartData.chartSvg)}` }}
-                                    style={{ width: '90%', height: '90%' }}
-                                    resizeMode="contain"
-                                />
-                            ) : (
-                                <Text style={{ fontSize: bodySize, color: colors.text }}>Chart visual unavailable</Text>
-                            )}
+                        {/* Left: Chart Summary */}
+                        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: padding * 0.5 }}>
+                            <Text style={{ fontSize: titleSize * 0.5, color: colors.text, opacity: 0.6, marginBottom: 8 }}>✦ CELESTIAL SNAPSHOT ✦</Text>
+                            {chartData.planets.slice(0, 10).map((planet, idx) => (
+                                <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', width: '80%', marginBottom: 4, paddingVertical: 3, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.1)' }}>
+                                    <Text style={{ fontSize: bodySize, color: colors.text, fontWeight: 'bold' }}>{planet.symbol} {planet.name}</Text>
+                                    <Text style={{ fontSize: bodySize, color: colors.text }}>{planet.zodiac} {planet.degree.toFixed(1)}°{planet.retrograde ? ' ℞' : ''}</Text>
+                                </View>
+                            ))}
                         </View>
 
                         {/* Right: Data panels */}
@@ -192,31 +198,15 @@ export default function BirthChartPrintable(props: Props) {
                                 </Text>
                                 <View style={styles.dataRow}>
                                     <Text style={[styles.dataLabel, { fontSize: labelSize, color: colors.text }]}>☀️ Sun Sign:</Text>
-                                    <Text style={[styles.dataValue, { fontSize: labelSize, color: colors.text }]}>{chartData.sunSign}</Text>
+                                    <Text style={[styles.dataValue, { fontSize: labelSize, color: colors.text }]}>{chartData.planets.find(p => p.name === 'Sun')?.zodiac || 'Unknown'}</Text>
                                 </View>
                                 <View style={styles.dataRow}>
                                     <Text style={[styles.dataLabel, { fontSize: labelSize, color: colors.text }]}>🌙 Moon Sign:</Text>
-                                    <Text style={[styles.dataValue, { fontSize: labelSize, color: colors.text }]}>{chartData.moonSign}</Text>
+                                    <Text style={[styles.dataValue, { fontSize: labelSize, color: colors.text }]}>{chartData.planets.find(p => p.name === 'Moon')?.zodiac || 'Unknown'}</Text>
                                 </View>
                                 <View style={styles.dataRow}>
                                     <Text style={[styles.dataLabel, { fontSize: labelSize, color: colors.text }]}>⬆️ Rising Sign:</Text>
-                                    <Text style={[styles.dataValue, { fontSize: labelSize, color: colors.text }]}>{chartData.risingSign}</Text>
-                                </View>
-                            </View>
-
-                            {/* Planetary Positions */}
-                            <View style={[styles.section, { marginBottom: padding * 0.3 }]}>
-                                <Text style={[styles.sectionTitle, { fontSize: headerSize, color: colors.text }]}>
-                                    Planetary Positions
-                                </Text>
-                                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                                    {chartData.planets.slice(0, 10).map((planet, idx) => (
-                                        <View key={idx} style={{ width: '50%', marginBottom: 2 }}>
-                                            <Text style={{ fontSize: labelSize * 0.85, color: colors.text }}>
-                                                {planet.name}: {planet.sign} {planet.degree.toFixed(1)}°
-                                            </Text>
-                                        </View>
-                                    ))}
+                                    <Text style={[styles.dataValue, { fontSize: labelSize, color: colors.text }]}>{chartData.ascendantZodiac}</Text>
                                 </View>
                             </View>
 
@@ -226,10 +216,10 @@ export default function BirthChartPrintable(props: Props) {
                                     House Cusps
                                 </Text>
                                 <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                                    {chartData.houses.slice(0, 12).map((house, idx) => (
+                                    {chartData.houses.slice(0, 12).map((houseLon, idx) => (
                                         <View key={idx} style={{ width: '33%', marginBottom: 2 }}>
                                             <Text style={{ fontSize: labelSize * 0.8, color: colors.text }}>
-                                                {house.house}: {house.sign} {house.degree.toFixed(0)}°
+                                                {idx + 1}: {lonToSign(houseLon)} {lonToDegreeInSign(houseLon).toFixed(0)}°
                                             </Text>
                                         </View>
                                     ))}
@@ -243,7 +233,7 @@ export default function BirthChartPrintable(props: Props) {
                                 </Text>
                                 {chartData.aspects.slice(0, 8).map((aspect, idx) => (
                                     <Text key={idx} style={{ fontSize: labelSize * 0.85, color: colors.text, marginBottom: 2 }}>
-                                        {aspect.planet1} {aspect.aspect} {aspect.planet2} ({aspect.angle.toFixed(1)}°)
+                                        {aspect.planet1} {aspect.type} {aspect.planet2} ({aspect.angle.toFixed(1)}°)
                                     </Text>
                                 ))}
                             </View>
@@ -259,7 +249,7 @@ export default function BirthChartPrintable(props: Props) {
                         borderTopColor: 'rgba(255, 255, 255, 0.2)'
                     }}>
                         <Text style={{ fontSize: labelSize * 0.75, color: colors.text, opacity: 0.8 }}>
-                            Chart calculated using Placidus house system • Western Tropical Zodiac
+                            Chart calculated using Celestine (NASA/JPL) • Placidus house system • Western Tropical Zodiac
                         </Text>
                         <Text style={{ fontSize: labelSize * 0.7, color: colors.text, opacity: 0.6, marginTop: 4 }}>
                             Certificate generated on {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}

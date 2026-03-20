@@ -64,9 +64,7 @@ export default function GiftSuggestionsPanel({
 
     const handleGiftTap = async (gift: GiftSuggestion) => {
         // Log the affiliate click for commission tracking
-        const commissionRate = COMMISSION_RATES.GIFTING[
-            gift.platform.toUpperCase() as keyof typeof COMMISSION_RATES.GIFTING
-        ] || 0.03;
+        const commissionRate = COMMISSION_RATES.GIFTING.AMAZON;
 
         await logGiftAffiliateClick({
             productId: gift.id,
@@ -93,21 +91,13 @@ export default function GiftSuggestionsPanel({
             // Links not live yet — show info
             Alert.alert(
                 `${gift.emoji} ${gift.name}`,
-                `${gift.description}\n\nPrice: ${gift.priceRange}\nAvailable on: ${gift.platform.charAt(0).toUpperCase() + gift.platform.slice(1)}\n\n🔜 Direct purchase links coming soon!`,
+                `${gift.description}\n\nPrice: ${gift.priceRange}\nAvailable on: Amazon\n\n🔜 Direct purchase links coming soon!`,
                 [{ text: 'OK' }]
             );
         }
     };
 
-    const platformLabel = (platform: string) => {
-        switch (platform) {
-            case 'amazon': return '🛒 Amazon';
-            case 'etsy': return '🧶 Etsy';
-            case 'babylist': return '🍼 Babylist';
-            case 'target': return '🎯 Target';
-            default: return platform;
-        }
-    };
+    const platformLabel = () => '🛒 Amazon';
 
     const modeTitle = () => {
         switch (mode) {
@@ -169,7 +159,7 @@ export default function GiftSuggestionsPanel({
                             <Text style={styles.giftName}>{gift.name}</Text>
                             <Text style={styles.giftDescription} numberOfLines={2}>{gift.description}</Text>
                             <View style={styles.giftMeta}>
-                                <Text style={styles.giftPlatform}>{platformLabel(gift.platform)}</Text>
+                                <Text style={styles.giftPlatform}>{platformLabel()}</Text>
                                 <Text style={styles.giftPrice}>{gift.priceRange}</Text>
                             </View>
                         </View>

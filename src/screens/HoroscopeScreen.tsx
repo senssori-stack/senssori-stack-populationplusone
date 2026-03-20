@@ -342,7 +342,7 @@ async function cancelDailyReminder() {
 
 // ─── Component ──────────────────────────────────────────────
 export default function HoroscopeScreen({ navigation, route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
     const [birthTime, setBirthTime] = useState(route.params.birthTime || '12:00');
     const [birthLocation, setBirthLocation] = useState(route.params.birthLocation || '');
     const [showTimeModal, setShowTimeModal] = useState(false);

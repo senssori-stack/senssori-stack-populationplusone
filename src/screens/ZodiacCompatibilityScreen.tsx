@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Circle, G, Rect, Svg, Text as SvgText } from 'react-native-svg';
 import RisingStars from '../../components/RisingStars';
-import ScrollableDatePicker from '../../components/ScrollableDatePicker';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ZodiacCompatibility'>;
@@ -77,14 +76,14 @@ function getElementPairKey(e1: string, e2: string): string {
 }
 
 export default function ZodiacCompatibilityScreen({ route }: Props) {
-    const birthDate1 = new Date(route.params.birthDate);
-    const [birthDate2, setBirthDate2] = useState(new Date(1992, 5, 15));
-    const [showPicker, setShowPicker] = useState(false);
-
+    const birthDate1 = new Date(route.params.birthDate + 'T00:00:00');
     const sign1 = getSign(birthDate1);
-    const sign2 = getSign(birthDate2);
     const idx1 = SIGNS.indexOf(sign1);
-    const idx2 = SIGNS.indexOf(sign2);
+    const defaultIdx2 = (idx1 + 4) % 12; // default to a traditionally compatible sign
+    const [selectedIdx2, setSelectedIdx2] = useState<number>(defaultIdx2);
+
+    const sign2 = SIGNS[selectedIdx2];
+    const idx2 = selectedIdx2;
     const overallScore = COMPAT_MATRIX[idx1][idx2];
     const elementKey = getElementPairKey(sign1.element, sign2.element);
     const elementDesc = COMPAT_DESCRIPTIONS[elementKey] || 'A unique pairing with its own special dynamics.';
@@ -125,15 +124,31 @@ export default function ZodiacCompatibilityScreen({ route }: Props) {
                         <Text style={{ fontSize: 36 }}>💕</Text>
                     </View>
 
-                    <TouchableOpacity style={styles.signCard} onPress={() => setShowPicker(true)}>
+                    <View style={[styles.signCard, { borderColor: sign2.color + '66', borderWidth: 2 }]}>
                         <Text style={styles.signSymbol}>{sign2.symbol}</Text>
                         <Text style={styles.signName}>{sign2.name}</Text>
                         <Text style={styles.signDates}>{sign2.dates}</Text>
                         <View style={[styles.elementBadge, { backgroundColor: sign2.color + '33' }]}>
                             <Text style={[styles.elementBadgeText, { color: sign2.color }]}>{sign2.element}</Text>
                         </View>
-                        <Text style={styles.tapHint}>Tap to change</Text>
-                    </TouchableOpacity>
+                    </View>
+                </View>
+
+                {/* Zodiac symbol row — right below the two cards */}
+                <View style={styles.symbolRow}>
+                    {SIGNS.map((s, i) => {
+                        const isSelected = i === idx2;
+                        return (
+                            <TouchableOpacity
+                                key={s.name}
+                                style={[styles.symbolBtn, isSelected && { backgroundColor: 'rgba(255,215,0,0.15)', borderColor: '#FFD54F' }]}
+                                onPress={() => setSelectedIdx2(i)}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={{ fontSize: 22 }}>{s.symbol}</Text>
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
 
                 {/* Overall Score - Ring Chart */}
@@ -175,36 +190,8 @@ export default function ZodiacCompatibilityScreen({ route }: Props) {
                     </Svg>
                 </View>
 
-                {/* All Signs Mini Grid */}
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>🔮 {sign1.name} Compatibility With All Signs</Text>
-                    <View style={styles.miniGrid}>
-                        {SIGNS.map((s, i) => {
-                            const score = COMPAT_MATRIX[idx1][i];
-                            const color = score >= 80 ? '#4CAF50' : score >= 60 ? '#FFC107' : score >= 40 ? '#FF9800' : '#F44336';
-                            return (
-                                <View key={s.name} style={[styles.miniCell, i === idx2 && { borderColor: '#FFD54F', borderWidth: 2 }]}>
-                                    <Text style={{ fontSize: 20 }}>{s.symbol}</Text>
-                                    <Text style={[styles.miniScore, { color }]}>{score}%</Text>
-                                    <Text style={styles.miniName}>{s.name}</Text>
-                                </View>
-                            );
-                        })}
-                    </View>
-                </View>
-
                 <View style={{ height: 40 }} />
             </ScrollView>
-
-            <ScrollableDatePicker
-                visible={showPicker}
-                date={birthDate2}
-                onDateChange={setBirthDate2}
-                onClose={() => setShowPicker(false)}
-                title="Select Partner's Birthday"
-                minimumDate={new Date(1900, 0, 1)}
-                maximumDate={new Date()}
-            />
         </LinearGradient>
     );
 }
@@ -227,8 +214,6 @@ const styles = StyleSheet.create({
     card: { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
     cardTitle: { fontSize: 17, fontWeight: '800', color: '#fff', marginBottom: 10 },
     cardBody: { fontSize: 14, color: 'rgba(255,255,255,0.85)', lineHeight: 22 },
-    miniGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'center' },
-    miniCell: { width: 72, alignItems: 'center', padding: 8, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-    miniScore: { fontSize: 13, fontWeight: '900', marginTop: 2 },
-    miniName: { fontSize: 9, color: 'rgba(255,255,255,0.5)' },
+    symbolRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginBottom: 20 },
+    symbolBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', backgroundColor: 'rgba(255,255,255,0.04)' },
 });

@@ -282,7 +282,7 @@ const elementColors: Record<string, [string, string, ...string[]]> = {
 };
 
 export default function ZodiacSignScreen({ navigation, route }: Props) {
-    const birthDate = new Date(route.params.birthDate);
+    const birthDate = new Date(route.params.birthDate + 'T00:00:00');
     const zodiac = getZodiacData(birthDate);
     const colors = elementColors[zodiac.element];
 

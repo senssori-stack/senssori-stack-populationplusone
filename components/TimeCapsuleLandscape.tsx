@@ -328,10 +328,10 @@ export default function TimeCapsuleLandscape(props: Props) {
 
     // Font sizes - ALL fonts reduced by 20% for better spacing
     const titleSize = Math.round(displayHeight * 0.0354 * 2.0 * 0.8 * 0.8); // Baby name: reduced by 20% more
-    const timeCapsuleSize = Math.round(displayHeight * 0.01654 * 4.0 * 0.68 * 0.8); // TIME CAPSULE: reduced by 20% more
+    const timeCapsuleSize = Math.round(displayHeight * 0.01654 * 4.0 * 0.68 * 0.8 * 0.75); // TIME CAPSULE: reduced by additional 25%
     const bodySize = Math.round(displayHeight * 0.0152 * 1.32 * 0.8); // Body text: reduced by 20%
-    const labelSize = Math.round(displayHeight * 0.016 * 1.2 * 0.8); // Labels: reduced by 20%
-    const valueSize = Math.round(displayHeight * 0.016 * 1.2 * 0.8); // Values: reduced by 20%
+    const labelSize = Math.round(displayHeight * 0.016 * 1.2 * 0.8 * 0.85); // Labels: reduced by 35% total
+    const valueSize = Math.round(displayHeight * 0.016 * 1.2 * 0.8 * 0.85); // Values: reduced by 35% total
     const sourcesSize = Math.round(displayHeight * 0.01107421875 * 1.2 * 0.8); // Sources: reduced by 20%
 
     // Border and padding
@@ -719,187 +719,200 @@ export default function TimeCapsuleLandscape(props: Props) {
                     </View>
 
                     {/* Body text - Combined intro + message as one paragraph */}
-                    <Text style={[styles.body, {
-                        fontSize: bodySize,
-                        color: colors.text,
-                        marginTop: padding * 0.2,
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        lineHeight: bodySize * 1.1
-                    }]}>
-                        {isMilestoneMode && milestoneMessage
-                            ? `${intro || 'Welcome to the world!'}. ${milestoneMessage}`
-                            : (intro || 'Welcome to the world!')}
-                    </Text>
-
-                    {/* Zodiac, Birthstone, and Life Path Info with Clickable Emojis - BABY MODE ONLY */}
-                    {!isMilestoneMode && (
-                        <View style={{ width: '100%', alignItems: 'center', marginTop: padding * 0.1 }}>
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
-                                <Text style={{ fontSize: bodySize, color: colors.text, marginRight: 4, fontWeight: 'bold' }}>
-                                    {`${babyFirstOnly || namesForSentence}'s zodiac sign is ${zodiac}`}
-                                </Text>
-                                <ClickableEmoji
-                                    emoji={zodiacEmoji}
-                                    url={getZodiacLink(zodiac, dobISO)}
-                                    tooltip="ABOUT YOUR SIGN AND HOROSCOPES"
-                                    style={{ fontSize: bodySize, color: colors.text, marginRight: 4 }}
-                                />
-                                <Text style={{ fontSize: bodySize, color: colors.text, marginRight: 4, fontWeight: 'bold' }}>
-                                    {'birthstone is ' + birthstone}
-                                </Text>
-                                <ClickableEmoji
-                                    emoji={birthstoneEmoji}
-                                    url={getBirthstoneLink(birthstone)}
-                                    style={{ fontSize: bodySize, color: colors.text, marginRight: 4 }}
-                                />
-                                {lifePathNumber != null && lifePathNumber > 0 ? (
-                                    <>
-                                        <Text style={{ fontSize: bodySize, color: colors.text, marginRight: 4, fontWeight: 'bold' }}>
-                                            {'and has a life path number of ' + lifePathNumber}
-                                        </Text>
-                                        <ClickableEmoji
-                                            emoji="🔢"
-                                            url={getLifePathLink(lifePathNumber)}
-                                            style={{ fontSize: bodySize, color: colors.text }}
-                                        />
-                                    </>
-                                ) : null}
-                            </View>
-                            <Text style={{ fontSize: bodySize, color: colors.text, marginTop: padding * 0.15, fontWeight: 'bold', textAlign: 'center' }}>
-                                {`Here are some interesting facts surrounding ${babyFirstOnly || namesForSentence}'s birthday.`}
-                            </Text>
-                        </View>
-                    )}
-
-                    {/* Data rows with THEN and NOW columns */}
-                    <View style={{ width: '100%', alignSelf: 'center', marginTop: padding * 1.6, paddingHorizontal: padding * 0.3 }}>
-                        {/* Row with City, ST | Coordinates | Flag (over THEN) | Governor */}
-                        <View style={[styles.row, {
-                            paddingVertical: Math.round(displayHeight * 0.003),
-                            borderBottomWidth: 1.5,
-                            borderBottomColor: colors.border || '#FFFFFF',
-                            backgroundColor: 'transparent'
+                    <View style={{ flex: 1, width: '100%', justifyContent: 'flex-start' }}>
+                        <Text style={[styles.body, {
+                            fontSize: bodySize,
+                            color: colors.text,
+                            marginTop: padding * 0.2,
+                            fontWeight: 'bold',
+                            textAlign: 'center',
+                            lineHeight: bodySize * 1.1
                         }]}>
-                            {/* City, ST + Coordinates on left - aligned with label column */}
-                            <View style={{ width: '40%', flexDirection: 'row', alignItems: 'center' }}>
-                                <Text style={{ fontSize: labelSize * 0.85, color: colors.text, fontWeight: '700' }}>
-                                    {toTitleCase(hometown)}
-                                </Text>
-                                {coordinates ? (
-                                    <Text style={{ fontSize: labelSize * 0.7, color: colors.text, fontWeight: '700', marginLeft: 12 }}>
-                                        {coordinates}
+                            {isMilestoneMode && milestoneMessage
+                                ? `${intro || 'Welcome to the world!'}. ${milestoneMessage}`
+                                : (intro || 'Welcome to the world!')}
+                        </Text>
+
+                        {/* Zodiac, Birthstone, and Life Path Info with Clickable Emojis - BABY MODE ONLY */}
+                        {!isMilestoneMode && (
+                            <View style={{ width: '100%', alignItems: 'center', marginTop: padding * 0.1 }}>
+                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
+                                    <Text style={{ fontSize: bodySize, color: colors.text, marginRight: 4, fontWeight: 'bold' }}>
+                                        {`${babyFirstOnly || namesForSentence}'s zodiac sign is ${zodiac}`}
                                     </Text>
-                                ) : null}
-                            </View>
-                            {/* Flag centered over THEN column (or where THEN would be for baby mode) */}
-                            <View style={{ width: '20%', alignItems: 'center', justifyContent: 'center' }}>
-                                {stateCode ? (
-                                    <Pressable
-                                        onPress={() => {
-                                            const url = getStateFlagLink(stateCode);
-                                            if (url) Linking.openURL(url);
-                                        }}
-                                    >
-                                        <Image
-                                            source={{ uri: getStateFlagImage(stateCode) || '' }}
-                                            style={{
-                                                width: labelSize * 3.75,
-                                                height: labelSize * 2.55,
-                                                resizeMode: 'contain',
-                                                borderWidth: 0.5,
-                                                borderColor: '#FFFFFF',
-                                                borderRadius: 1,
-                                            }}
-                                        />
-                                    </Pressable>
-                                ) : null}
-                            </View>
-                            {/* Governor on far right - aligned with NOW column */}
-                            <View style={{ width: '40%', alignItems: 'flex-end', justifyContent: 'center' }}>
-                                <Text style={{ fontSize: labelSize, color: colors.text, fontWeight: '500' }}>
-                                    Gov {currentGovernor}
+                                    <ClickableEmoji
+                                        emoji={zodiacEmoji}
+                                        url={getZodiacLink(zodiac, dobISO)}
+                                        tooltip="ABOUT YOUR SIGN AND HOROSCOPES"
+                                        style={{ fontSize: bodySize, color: colors.text, marginRight: 4 }}
+                                    />
+                                    <Text style={{ fontSize: bodySize, color: colors.text, marginRight: 4, fontWeight: 'bold' }}>
+                                        {'birthstone is ' + birthstone}
+                                    </Text>
+                                    <ClickableEmoji
+                                        emoji={birthstoneEmoji}
+                                        url={getBirthstoneLink(birthstone)}
+                                        style={{ fontSize: bodySize, color: colors.text, marginRight: 4 }}
+                                    />
+                                    {lifePathNumber != null && lifePathNumber > 0 ? (
+                                        <>
+                                            <Text style={{ fontSize: bodySize, color: colors.text, marginRight: 4, fontWeight: 'bold' }}>
+                                                {'and has a life path number of ' + lifePathNumber}
+                                            </Text>
+                                            <ClickableEmoji
+                                                emoji="🔢"
+                                                url={getLifePathLink(lifePathNumber)}
+                                                style={{ fontSize: bodySize, color: colors.text }}
+                                            />
+                                        </>
+                                    ) : null}
+                                </View>
+                                <Text style={{ fontSize: bodySize, color: colors.text, marginTop: padding * 0.15, fontWeight: 'bold', textAlign: 'center' }}>
+                                    {`Here are some interesting facts surrounding ${babyFirstOnly || namesForSentence}'s birthday.`}
                                 </Text>
                             </View>
-                        </View>
+                        )}
 
-                        {/* Column Headers */}
-                        <View style={[styles.row, {
-                            paddingVertical: Math.round(displayHeight * 0.003),
-                            borderBottomWidth: 1.2,
-                            borderBottomColor: colors.border || '#FFFFFF',
-                            backgroundColor: 'transparent'
-                        }]}>
-                            <Text style={[styles.label, { fontSize: labelSize * 0.9, color: colors.text, width: '40%', fontWeight: '900' }]}>
-                                {/* Empty space for label column */}
-                            </Text>
-                            {showThenColumn && (
-                                <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, width: '20%', textAlign: 'center', fontWeight: '900' }]}>
-                                    THEN
-                                </Text>
-                            )}
-                            {!showThenColumn && (
-                                <View style={{ width: '20%' }} />
-                            )}
-                            <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, width: '40%', textAlign: 'right', fontWeight: '900' }]}>
-                                NOW
-                            </Text>
-                        </View>
-
-                        {rows.map(([label, thenValue, nowValue, emoji]) => {
-                            const emojiUrl = getSnapshotEmojiLink(emoji);
-                            // Extract the label text without emoji for display
-                            const labelText = label.replace(/\s+[^\s]*$/g, '').trim();
-
-                            // Extract Roman numerals for Super Bowl and World Series from THEN and NOW values
-                            let thenRomanNumeral = '';
-                            let nowRomanNumeral = '';
-                            if (emoji === '🏈' || emoji === '⚾') {
-                                // Extract Roman numeral from value like "Kansas City Chiefs (LVIII)"
-                                const thenMatch = thenValue.match(/\(([IVXLCDM]+)\)/);
-                                const nowMatch = nowValue.match(/\(([IVXLCDM]+)\)/);
-                                if (thenMatch) thenRomanNumeral = thenMatch[1];
-                                if (nowMatch) nowRomanNumeral = nowMatch[1];
-                            }
-
-                            return (
-                                <View key={label} style={[styles.row, {
-                                    paddingVertical: Math.round(displayHeight * 0.004),
-                                    borderBottomWidth: 0.8,
-                                    borderBottomColor: colors.border || '#FFFFFF'
-                                }]}>
-                                    <View style={[styles.label, { width: '40%', flexDirection: 'row', alignItems: 'center' }]}>
-                                        <Text style={{ fontSize: labelSize, color: colors.text }}>
-                                            {labelText}
-                                        </Text>
-                                        <ClickableEmoji
-                                            emoji={emoji}
-                                            url={emojiUrl}
-                                            style={{ fontSize: labelSize, color: colors.text, marginLeft: 4 }}
-                                        />
-                                    </View>
-                                    {showThenColumn && (
-                                        <Text
-                                            style={[styles.value, {
-                                                fontSize: valueSize,
-                                                color: colors.text,
-                                                width: '20%',
-                                                textAlign: 'center'
-                                            }]}
-                                            numberOfLines={1}
-                                        >
-                                            {thenRomanNumeral ? `${thenRomanNumeral} ` : ''}{thenValue}
-                                        </Text>
-                                    )}
-                                    {!showThenColumn && (
-                                        <View style={{ width: '20%' }} />
-                                    )}
-                                    <Text style={[styles.value, { fontSize: valueSize, color: colors.text, width: '40%', textAlign: 'right' }]} numberOfLines={1}>
-                                        {nowRomanNumeral ? `${nowRomanNumeral} ` : ''}{nowValue}
+                        {/* Data rows with THEN and NOW columns */}
+                        <View style={{ width: '100%', alignSelf: 'center', marginTop: padding * 0.3, paddingHorizontal: padding * 0.3 }}>
+                            {/* Row with City, ST | Coordinates | Flag | Military Emoji | Governor */}
+                            <View style={[styles.row, {
+                                paddingVertical: Math.round(displayHeight * 0.003),
+                                borderBottomWidth: 1.5,
+                                borderBottomColor: colors.border || '#FFFFFF',
+                                backgroundColor: 'transparent'
+                            }]}>
+                                {/* City, ST on far left */}
+                                <View style={{ width: '25%', alignItems: 'flex-start', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: labelSize * 0.85, color: colors.text, fontWeight: '700' }}>
+                                        {toTitleCase(hometown)}
                                     </Text>
                                 </View>
-                            );
-                        })}
+                                {/* Coordinates centered between city and flag */}
+                                <View style={{ width: '15%', alignItems: 'center', justifyContent: 'center' }}>
+                                    {coordinates ? (
+                                        <Text style={{ fontSize: labelSize * 0.65, color: colors.text, fontWeight: '700', textAlign: 'center' }}>
+                                            {coordinates}
+                                        </Text>
+                                    ) : null}
+                                </View>
+                                {/* State Flag centered */}
+                                <View style={{ width: '20%', alignItems: 'center', justifyContent: 'center' }}>
+                                    {stateCode ? (
+                                        <Pressable
+                                            onPress={() => {
+                                                const url = getStateFlagLink(stateCode);
+                                                if (url) Linking.openURL(url);
+                                            }}
+                                        >
+                                            <Image
+                                                source={{ uri: getStateFlagImage(stateCode) || '' }}
+                                                style={{
+                                                    width: labelSize * 3.75,
+                                                    height: labelSize * 2.55,
+                                                    resizeMode: 'contain',
+                                                    borderWidth: 0.5,
+                                                    borderColor: '#FFFFFF',
+                                                    borderRadius: 1,
+                                                }}
+                                            />
+                                        </Pressable>
+                                    ) : null}
+                                </View>
+                                {/* Military branch emoji between flag and governor */}
+                                <View style={{ width: '10%', alignItems: 'center', justifyContent: 'center' }}>
+                                    {militaryBranch ? (
+                                        <Text style={{ fontSize: labelSize * 1.6, textAlign: 'center' }}>
+                                            {{ Army: '🎖️', Navy: '⚓', 'Air Force': '🛩️', Marines: '⚔️', 'Coast Guard': '🛟', 'Space Force': '🚀' }[militaryBranch] || ''}
+                                        </Text>
+                                    ) : null}
+                                </View>
+                                {/* Governor on far right */}
+                                <View style={{ width: '30%', alignItems: 'flex-end', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: labelSize, color: colors.text, fontWeight: '500' }}>
+                                        Gov {currentGovernor}
+                                    </Text>
+                                </View>
+                            </View>
+
+                            {/* Column Headers */}
+                            <View style={[styles.row, {
+                                paddingVertical: Math.round(displayHeight * 0.003),
+                                borderBottomWidth: 1.2,
+                                borderBottomColor: colors.border || '#FFFFFF',
+                                backgroundColor: 'transparent'
+                            }]}>
+                                <Text style={[styles.label, { fontSize: labelSize * 0.9, color: colors.text, width: '40%', fontWeight: '900' }]}>
+                                    {/* Empty space for label column */}
+                                </Text>
+                                {showThenColumn && (
+                                    <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, width: '20%', textAlign: 'center', fontWeight: '900' }]}>
+                                        THEN
+                                    </Text>
+                                )}
+                                {!showThenColumn && (
+                                    <View style={{ width: '20%' }} />
+                                )}
+                                <Text style={[styles.value, { fontSize: labelSize * 0.8, color: colors.text, width: '40%', textAlign: 'right', fontWeight: '900' }]}>
+                                    NOW
+                                </Text>
+                            </View>
+
+                            {rows.map(([label, thenValue, nowValue, emoji]) => {
+                                const emojiUrl = getSnapshotEmojiLink(emoji);
+                                // Extract the label text without emoji for display
+                                const labelText = label.replace(/\s+[^\s]*$/g, '').trim();
+
+                                // Extract Roman numerals for Super Bowl and World Series from THEN and NOW values
+                                let thenRomanNumeral = '';
+                                let nowRomanNumeral = '';
+                                if (emoji === '🏈' || emoji === '⚾') {
+                                    // Extract Roman numeral from value like "Kansas City Chiefs (LVIII)"
+                                    const thenMatch = thenValue.match(/\(([IVXLCDM]+)\)/);
+                                    const nowMatch = nowValue.match(/\(([IVXLCDM]+)\)/);
+                                    if (thenMatch) thenRomanNumeral = thenMatch[1];
+                                    if (nowMatch) nowRomanNumeral = nowMatch[1];
+                                }
+
+                                return (
+                                    <View key={label} style={[styles.row, {
+                                        paddingVertical: Math.round(displayHeight * 0.004),
+                                        borderBottomWidth: 0.8,
+                                        borderBottomColor: colors.border || '#FFFFFF'
+                                    }]}>
+                                        <View style={[styles.label, { width: '40%', flexDirection: 'row', alignItems: 'center' }]}>
+                                            <Text style={{ fontSize: labelSize, color: colors.text }}>
+                                                {labelText}
+                                            </Text>
+                                            <ClickableEmoji
+                                                emoji={emoji}
+                                                url={emojiUrl}
+                                                style={{ fontSize: labelSize, color: colors.text, marginLeft: 4 }}
+                                            />
+                                        </View>
+                                        {showThenColumn && (
+                                            <Text
+                                                style={[styles.value, {
+                                                    fontSize: valueSize,
+                                                    color: colors.text,
+                                                    width: '20%',
+                                                    textAlign: 'center'
+                                                }]}
+                                                numberOfLines={1}
+                                            >
+                                                {thenRomanNumeral ? `${thenRomanNumeral} ` : ''}{thenValue}
+                                            </Text>
+                                        )}
+                                        {!showThenColumn && (
+                                            <View style={{ width: '20%' }} />
+                                        )}
+                                        <Text style={[styles.value, { fontSize: valueSize, color: colors.text, width: '40%', textAlign: 'right' }]} numberOfLines={1}>
+                                            {nowRomanNumeral ? `${nowRomanNumeral} ` : ''}{nowValue}
+                                        </Text>
+                                    </View>
+                                );
+                            })}
+                        </View>
                     </View>
                 </View>
 
